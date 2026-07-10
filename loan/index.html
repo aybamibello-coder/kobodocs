@@ -4,11 +4,19 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Loan Repayment Schedule Generator Nigeria | KoboDocs</title>
-<meta name="description" content="Salary-advance and cooperative loan schedules, Nigeria-style.">
+<meta name="description" content="Generate a loan repayment schedule for salary advances or cooperative loans in Naira, free — no login. Download as PDF.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Work+Sans:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/assets/style.css">
+<style>
+  .schedule-table{ width:100%; border-collapse:collapse; margin-top:10px; font-size:0.82rem; }
+  .schedule-table th{ text-align:right; font-size:0.68rem; text-transform:uppercase; opacity:0.55; padding-bottom:8px; border-bottom:1.5px solid var(--charcoal); }
+  .schedule-table th:first-child{ text-align:left; }
+  .schedule-table td{ padding:7px 4px; text-align:right; font-family:'Space Mono', monospace; font-size:0.78rem; border-bottom:1px dashed var(--line); }
+  .schedule-table td:first-child{ text-align:left; font-family:'Work Sans', sans-serif; }
+  .schedule-scroll{ max-height:340px; overflow-y:auto; margin-top:8px; }
+</style>
 </head>
 <body>
 
@@ -38,12 +46,77 @@
   </nav>
 </header>
 
-<div class="coming-soon">
-  <div class="stamp red" style="--tilt:-6deg"><span class="stamp-label">Loan</span></div>
-  <h2>Loan Repayment Schedule Generator Nigeria</h2>
-  <p>Salary-advance and cooperative loan schedules, Nigeria-style. This tool is being built next — the invoice generator shipped first since it's our highest-demand tool. Check back shortly, or try what's live today.</p>
-  <a href="/invoice/" class="btn btn-primary">Try the invoice generator</a>
-</div>
+<section class="page-header">
+  <div class="wrap">
+    <a href="/">&larr; Back to KoboDocs</a>
+    <h1>Loan Repayment Schedule Generator Nigeria</h1>
+    <p>Built for salary advances and cooperative/thrift loans — set the amount, rate, and tenure, and get a month-by-month repayment schedule.</p>
+  </div>
+</section>
+
+<section class="generator">
+  <div class="wrap">
+
+    <div class="form-panel">
+      <div class="field-group">
+        <label for="lenderName">Lender / cooperative name</label>
+        <input type="text" id="lenderName" placeholder="Lekki Traders' Cooperative">
+      </div>
+      <div class="field-group">
+        <label for="borrowerName">Borrower name</label>
+        <input type="text" id="borrowerName" placeholder="Chinedu Okafor">
+      </div>
+
+      <div class="field-row">
+        <div class="field-group">
+          <label for="loanAmount">Loan amount (₦)</label>
+          <input type="number" id="loanAmount" value="500000" min="0">
+        </div>
+        <div class="field-group">
+          <label for="loanRate">Interest rate (% per year)</label>
+          <input type="number" id="loanRate" value="18" min="0" step="0.1">
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field-group">
+          <label for="loanMonths">Tenure (months)</label>
+          <input type="number" id="loanMonths" value="6" min="1" max="60">
+        </div>
+        <div class="field-group">
+          <label for="loanStart">First repayment date</label>
+          <input type="date" id="loanStart">
+        </div>
+      </div>
+
+      <p style="font-size:0.82rem; opacity:0.65; margin-top:-6px;">Uses reducing-balance monthly amortization — interest is charged only on the remaining balance, the same method most cooperative and bank loans use.</p>
+
+      <div class="action-row">
+        <button type="button" class="btn btn-primary" id="downloadBtn">Download PDF schedule</button>
+        <button type="button" class="btn btn-ghost" id="waBtn" style="border-color:var(--line); color:var(--ink-green-deep);">Share summary on WhatsApp</button>
+      </div>
+    </div>
+
+    <div class="preview-panel">
+      <div class="doc-preview" id="docPreview">
+        <div class="stamp red"><span class="stamp-label">Loan</span></div>
+        <div class="doc-head">
+          <div>
+            <div class="biz" id="pLender">Lender name</div>
+            <div class="biz-sub" id="pBorrower">Borrower name</div>
+          </div>
+        </div>
+        <div class="doc-totals" id="pSummary" style="margin-left:0; max-width:none; display:flex; gap:24px; flex-wrap:wrap;"></div>
+        <div class="schedule-scroll">
+          <table class="schedule-table">
+            <thead><tr><th>Month</th><th>Payment</th><th>Interest</th><th>Principal</th><th>Balance</th></tr></thead>
+            <tbody id="pSchedule"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
 
 <footer>
   <div class="wrap">
@@ -74,6 +147,8 @@
   </div>
 </footer>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
 <script src="/assets/app.js" defer></script>
+<script src="/loan/loan.js" defer></script>
 </body>
 </html>

@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Free Budget Planner Nigeria | KoboDocs</title>
-<meta name="description" content="A simple monthly income-vs-expense layout in Naira.">
+<meta name="description" content="Plan a monthly budget in Naira, free — no login. See your income, expenses, and balance at a glance.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Work+Sans:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
@@ -38,12 +38,61 @@
   </nav>
 </header>
 
-<div class="coming-soon">
-  <div class="stamp " style="--tilt:5deg"><span class="stamp-label">Budget</span></div>
-  <h2>Free Budget Planner Nigeria</h2>
-  <p>A simple monthly income-vs-expense layout in Naira. This tool is being built next — the invoice generator shipped first since it's our highest-demand tool. Check back shortly, or try what's live today.</p>
-  <a href="/invoice/" class="btn btn-primary">Try the invoice generator</a>
-</div>
+<section class="page-header">
+  <div class="wrap">
+    <a href="/">&larr; Back to KoboDocs</a>
+    <h1>Free Budget Planner Nigeria</h1>
+    <p>List what's coming in and what's going out this month. No spreadsheet, no account — just a clear Naira picture of where you stand.</p>
+  </div>
+</section>
+
+<section class="generator">
+  <div class="wrap">
+
+    <div class="form-panel">
+      <div class="field-group">
+        <label for="budgetMonth">Month</label>
+        <input type="month" id="budgetMonth">
+      </div>
+
+      <div class="field-group">
+        <label>Income sources</label>
+        <div id="incomeRows"></div>
+        <button type="button" class="add-item-btn" id="addIncomeBtn">+ Add income</button>
+      </div>
+
+      <div class="field-group">
+        <label>Expenses</label>
+        <div id="expenseRows"></div>
+        <button type="button" class="add-item-btn" id="addExpenseBtn">+ Add expense</button>
+      </div>
+
+      <div class="action-row">
+        <button type="button" class="btn btn-primary" id="downloadBtn">Download PDF</button>
+        <button type="button" class="btn btn-ghost" id="waBtn" style="border-color:var(--line); color:var(--ink-green-deep);">Share on WhatsApp</button>
+      </div>
+    </div>
+
+    <div class="preview-panel">
+      <div class="doc-preview" id="docPreview">
+        <div class="stamp"><span class="stamp-label">Budget</span></div>
+        <div class="doc-head">
+          <div><div class="biz" id="pMonth">This month</div></div>
+        </div>
+        <table class="doc-items">
+          <thead><tr><th>Income</th><th class="num">Amount</th></tr></thead>
+          <tbody id="pIncome"></tbody>
+        </table>
+        <table class="doc-items" style="margin-top:16px;">
+          <thead><tr><th>Expenses</th><th class="num">Amount</th></tr></thead>
+          <tbody id="pExpenses"></tbody>
+        </table>
+        <div class="doc-totals" id="pTotals"></div>
+      </div>
+    </div>
+
+  </div>
+</section>
 
 <footer>
   <div class="wrap">
@@ -74,6 +123,8 @@
   </div>
 </footer>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
 <script src="/assets/app.js" defer></script>
+<script src="/budget/budget.js" defer></script>
 </body>
 </html>

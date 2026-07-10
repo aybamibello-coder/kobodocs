@@ -3,12 +3,26 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Ajo & Esusu Contribution Tracker | KoboDocs</title>
-<meta name="description" content="Rotation order and contribution ledger for your thrift circle — no app, no login, and KoboDocs never touches the money.">
+<title>Ajo &amp; Esusu Contribution Tracker | KoboDocs</title>
+<meta name="description" content="Track your ajo, esusu, or adashe rotation and contributions, free — no login, no app. KoboDocs never holds or moves your money.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Work+Sans:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/assets/style.css">
+<style>
+  .member-row{ display:grid; grid-template-columns:32px 1fr 130px 90px 90px 32px; gap:10px; align-items:center; margin-bottom:10px; }
+  .member-row .order-num{ font-family:'Space Mono', monospace; font-size:0.85rem; opacity:0.5; text-align:center; }
+  .member-row input{ padding:9px 11px; font-size:0.9rem; }
+  .reorder-btn{ background:none; border:1px solid var(--line); border-radius:4px; width:28px; height:28px; cursor:pointer; font-size:0.85rem; color:var(--ink-green-deep); }
+  .reorder-btn:hover{ border-color:var(--stamp-gold); }
+  .ajo-member-list{ list-style:none; padding:0; margin:0; }
+  .ajo-member-list li{ display:flex; justify-content:space-between; align-items:center; padding:12px 0; border-bottom:1px solid var(--line); }
+  .ajo-member-list li:last-child{ border-bottom:none; }
+  .member-info strong{ font-family:'Fraunces', serif; display:block; }
+  .member-info span{ font-size:0.8rem; opacity:0.6; }
+  .paid-toggle{ display:flex; align-items:center; gap:8px; cursor:pointer; font-size:0.85rem; font-weight:600; }
+  .paid-toggle input{ width:18px; height:18px; accent-color:var(--stamp-gold); }
+</style>
 </head>
 <body>
 
@@ -38,12 +52,87 @@
   </nav>
 </header>
 
-<div class="coming-soon">
-  <div class="stamp " style="--tilt:4deg"><span class="stamp-label">Ajo</span></div>
-  <h2>Ajo & Esusu Contribution Tracker</h2>
-  <p>Rotation order and contribution ledger for your thrift circle — no app, no login, and KoboDocs never touches the money. This tool is being built next — the invoice generator shipped first since it's our highest-demand tool. Check back shortly, or try what's live today.</p>
-  <a href="/invoice/" class="btn btn-primary">Try the invoice generator</a>
-</div>
+<section class="page-header">
+  <div class="wrap">
+    <a href="/">&larr; Back to KoboDocs</a>
+    <h1>Ajo &amp; Esusu Contribution Tracker</h1>
+    <p>Set your rotation order, log who's paid this cycle, and share a clear record with the group. KoboDocs only keeps the record — we never hold or move anyone's money. This session is temporary; nothing is saved once you close the tab unless you download it.</p>
+  </div>
+</section>
+
+<section class="generator">
+  <div class="wrap">
+
+    <div class="form-panel">
+      <div class="field-group">
+        <label for="circleName">Circle name</label>
+        <input type="text" id="circleName" placeholder="Lekki Traders' Circle">
+      </div>
+      <div class="field-row">
+        <div class="field-group">
+          <label for="contribution">Contribution per member (₦)</label>
+          <input type="number" id="contribution" value="20000" min="0">
+        </div>
+        <div class="field-group">
+          <label for="frequency">Frequency</label>
+          <select id="frequency">
+            <option>Weekly</option>
+            <option selected>Monthly</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="field-group">
+        <label>Members, in rotation order</label>
+        <div id="memberRows"></div>
+        <button type="button" class="add-item-btn" id="addMemberBtn">+ Add member</button>
+      </div>
+
+      <div class="action-row">
+        <button type="button" class="btn btn-primary" id="downloadBtn">Download PDF record</button>
+        <button type="button" class="btn btn-ghost" id="waBtn" style="border-color:var(--line); color:var(--ink-green-deep);">Share status on WhatsApp</button>
+      </div>
+    </div>
+
+    <div class="preview-panel">
+      <div class="doc-preview" id="docPreview">
+        <div class="stamp"><span class="stamp-label">Ajo</span></div>
+        <div class="doc-head">
+          <div>
+            <div class="biz" id="pCircleName">Circle name</div>
+            <div class="biz-sub" id="pCycleInfo">Cycle 1</div>
+          </div>
+          <div class="meta" id="pPotInfo"></div>
+        </div>
+        <ul class="ajo-member-list" id="pMemberList"></ul>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<section id="faq">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <span class="eyebrow mono">How it works</span>
+      <h2>No disputes over who paid, or who's next</h2>
+    </div>
+    <div class="faq-list">
+      <details class="faq-item reveal" open>
+        <summary>Does KoboDocs hold or move the money?<span class="faq-plus"></span></summary>
+        <p>No. This tool only keeps the record — rotation order and who's paid. Contributions still happen directly between members, the way your circle already does it.</p>
+      </details>
+      <details class="faq-item reveal">
+        <summary>Is this saved anywhere?<span class="faq-plus"></span></summary>
+        <p>Not yet on the free tier — this session is temporary and clears when you close the tab. Download the PDF or share on WhatsApp to keep a copy. Persistent, shareable circles are coming to Pro.</p>
+      </details>
+      <details class="faq-item reveal">
+        <summary>Who collects next?<span class="faq-plus"></span></summary>
+        <p>The first member in your list who hasn't collected yet, in the order you set them — reorder anyone with the arrow buttons.</p>
+      </details>
+    </div>
+  </div>
+</section>
 
 <footer>
   <div class="wrap">
@@ -74,6 +163,8 @@
   </div>
 </footer>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
 <script src="/assets/app.js" defer></script>
+<script src="/ajo/ajo.js" defer></script>
 </body>
 </html>

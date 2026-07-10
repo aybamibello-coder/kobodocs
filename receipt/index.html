@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Free Receipt Generator Online Nigeria | KoboDocs</title>
-<meta name="description" content="Clean, printable payment receipts for cash, transfer or card sales.">
+<meta name="description" content="Create a payment receipt in Naira, free — no login. Download as PDF or share straight to WhatsApp.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Work+Sans:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
@@ -38,12 +38,102 @@
   </nav>
 </header>
 
-<div class="coming-soon">
-  <div class="stamp red" style="--tilt:-5deg"><span class="stamp-label">Receipt</span></div>
-  <h2>Free Receipt Generator Online Nigeria</h2>
-  <p>Clean, printable payment receipts for cash, transfer or card sales. This tool is being built next — the invoice generator shipped first since it's our highest-demand tool. Check back shortly, or try what's live today.</p>
-  <a href="/invoice/" class="btn btn-primary">Try the invoice generator</a>
-</div>
+<section class="page-header">
+  <div class="wrap">
+    <a href="/">&larr; Back to KoboDocs</a>
+    <h1>Free Receipt Generator Online Nigeria</h1>
+    <p>Confirm a payment you've received, in seconds. Download as a PDF or send it straight to WhatsApp — no account needed.</p>
+  </div>
+</section>
+
+<section class="generator">
+  <div class="wrap">
+
+    <div class="form-panel">
+      <div class="field-group">
+        <label for="bizName">Your business name</label>
+        <input type="text" id="bizName" placeholder="Adaeze Fabrics Co.">
+      </div>
+      <div class="field-row">
+        <div class="field-group">
+          <label for="bizPhone">Phone / WhatsApp</label>
+          <input type="text" id="bizPhone" placeholder="0803 000 0000">
+        </div>
+        <div class="field-group">
+          <label for="payMethod">Payment method</label>
+          <select id="payMethod">
+            <option>Cash</option>
+            <option>Bank transfer</option>
+            <option>POS / Card</option>
+            <option>Mobile money</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="field-row">
+        <div class="field-group">
+          <label for="recNumber">Receipt number</label>
+          <input type="text" id="recNumber" value="RCT-0001">
+        </div>
+        <div class="field-group">
+          <label for="recDate">Date</label>
+          <input type="date" id="recDate">
+        </div>
+      </div>
+
+      <div class="field-group">
+        <label for="payerName">Received from</label>
+        <input type="text" id="payerName" placeholder="Chinedu Okafor">
+      </div>
+
+      <div class="field-group">
+        <label>Items / description</label>
+        <div id="itemRows"></div>
+        <button type="button" class="add-item-btn" id="addItemBtn">+ Add item</button>
+      </div>
+
+      <div class="field-group">
+        <label for="recNote">Note (optional)</label>
+        <textarea id="recNote" rows="2" placeholder="e.g. Payment in full"></textarea>
+      </div>
+
+      <div class="action-row">
+        <button type="button" class="btn btn-primary" id="downloadBtn">Download PDF</button>
+        <button type="button" class="btn btn-ghost" id="waBtn" style="border-color:var(--line); color:var(--ink-green-deep);">Share on WhatsApp</button>
+      </div>
+    </div>
+
+    <div class="preview-panel">
+      <div class="doc-preview" id="docPreview">
+        <div class="stamp red"><span class="stamp-label">Received</span></div>
+        <div class="doc-head">
+          <div>
+            <div class="biz" id="pBizName">Your business name</div>
+            <div class="biz-sub" id="pBizContact">Phone</div>
+          </div>
+          <div class="meta">
+            <span id="pRecNumber">RCT-0001</span><br>
+            <span id="pRecDate">—</span>
+          </div>
+        </div>
+        <div class="doc-to">
+          <span style="opacity:0.6;">Received from</span>
+          <strong id="pPayerName">Payer name</strong>
+        </div>
+        <table class="doc-items">
+          <thead>
+            <tr><th>Description</th><th class="num">Qty</th><th class="num">Amount</th></tr>
+          </thead>
+          <tbody id="pItemsBody"></tbody>
+        </table>
+        <div class="doc-totals" id="pTotals"></div>
+        <div class="doc-note" id="pMethod" style="font-weight:600;"></div>
+        <div class="doc-note" id="pNote" style="display:none;"></div>
+      </div>
+    </div>
+
+  </div>
+</section>
 
 <footer>
   <div class="wrap">
@@ -74,6 +164,8 @@
   </div>
 </footer>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
 <script src="/assets/app.js" defer></script>
+<script src="/receipt/receipt.js" defer></script>
 </body>
 </html>
