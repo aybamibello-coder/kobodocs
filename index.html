@@ -1,0 +1,751 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Free Invoice Generator Online Nigeria | KoboDocs</title>
+<meta name="description" content="Free invoice generator online for Nigeria — plus receipts, quotations, payslips, budgets and loan schedules. No login. Naira-ready, VAT &amp; PAYE built in.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Work+Sans:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink-green: #14342B;
+    --ink-green-deep: #0D2620;
+    --bone: #EEEAE0;
+    --paper: #FBFAF6;
+    --charcoal: #232722;
+    --stamp-gold: #C79A3C;
+    --stamp-red: #A8342A;
+    --line: rgba(35,39,34,0.12);
+    --line-light: rgba(238,234,224,0.18);
+    --radius: 4px;
+    --max: 1180px;
+  }
+
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  @media (prefers-reduced-motion: reduce){
+    html{scroll-behavior:auto;}
+    *{animation-duration:0.001ms !important; animation-iteration-count:1 !important; transition-duration:0.001ms !important;}
+  }
+
+  body{
+    margin:0;
+    font-family:'Work Sans', sans-serif;
+    color:var(--charcoal);
+    background:var(--paper);
+    -webkit-font-smoothing:antialiased;
+    line-height:1.5;
+    overflow-x:hidden;
+  }
+
+  h1,h2,h3{
+    font-family:'Fraunces', serif;
+    font-weight:600;
+    line-height:1.08;
+    margin:0;
+    letter-spacing:-0.01em;
+  }
+
+  .mono{ font-family:'Space Mono', monospace; }
+
+  a{ color:inherit; text-decoration:none; }
+  img,svg{ display:block; max-width:100%; }
+
+  :focus-visible{
+    outline:3px solid var(--stamp-gold);
+    outline-offset:3px;
+  }
+
+  .wrap{
+    max-width:var(--max);
+    margin:0 auto;
+    padding:0 24px;
+  }
+
+  /* ---------- NAV ---------- */
+  header{
+    position:sticky; top:0; z-index:50;
+    background:rgba(251,250,246,0.92);
+    backdrop-filter:blur(8px);
+    border-bottom:1px solid var(--line);
+  }
+  .nav{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:16px 24px;
+    max-width:var(--max); margin:0 auto;
+  }
+  .logo{
+    display:flex; align-items:center; gap:10px;
+    font-family:'Fraunces', serif; font-weight:700; font-size:1.35rem;
+    color:var(--ink-green-deep);
+  }
+  .logo .mark{ width:30px; height:30px; }
+  .nav-links{
+    display:flex; gap:32px; align-items:center;
+    font-size:0.95rem; font-weight:500;
+  }
+  .nav-links a{ color:var(--charcoal); opacity:0.75; transition:opacity .15s; }
+  .nav-links a:hover{ opacity:1; }
+  .nav-cta{
+    background:var(--ink-green-deep); color:var(--paper) !important;
+    padding:10px 20px; border-radius:var(--radius);
+    font-weight:600; opacity:1 !important;
+    transition:background .15s;
+  }
+  .nav-cta:hover{ background:var(--stamp-red); }
+  .menu-btn{ display:none; background:none; border:none; cursor:pointer; padding:8px; }
+  .menu-btn span{ display:block; width:22px; height:2px; background:var(--charcoal); margin:5px 0; }
+
+  @media (max-width:820px){
+    .nav-links{
+      position:absolute; top:100%; left:0; right:0;
+      background:var(--paper); flex-direction:column; align-items:flex-start;
+      padding:20px 24px 28px; gap:18px;
+      border-bottom:1px solid var(--line);
+      display:none;
+    }
+    .nav-links.open{ display:flex; }
+    .menu-btn{ display:block; }
+  }
+
+  /* ---------- STAMP FILTER (signature element) ---------- */
+  .stamp{
+    --sc: var(--stamp-gold);
+    width:100px; height:100px; border-radius:50%;
+    position:relative; flex-shrink:0;
+    display:flex; align-items:center; justify-content:center;
+    filter:url(#roughen);
+    transform:rotate(var(--tilt, -6deg));
+  }
+  .stamp::before,.stamp::after{
+    content:''; position:absolute; inset:0; border-radius:50%;
+    border:2.5px solid var(--sc);
+  }
+  .stamp::after{ inset:10px; border-width:1.5px; }
+  .stamp .stamp-label{
+    font-family:'Space Mono', monospace; font-weight:700; font-size:0.62rem;
+    letter-spacing:0.06em; color:var(--sc); text-align:center; z-index:1;
+    text-transform:uppercase;
+  }
+  .stamp.red{ --sc: var(--stamp-red); }
+
+  /* ---------- HERO ---------- */
+  .hero{
+    background:var(--ink-green-deep);
+    color:var(--bone);
+    padding:88px 0 100px;
+    position:relative;
+    overflow:hidden;
+  }
+  .hero .wrap{
+    display:grid; grid-template-columns:1.1fr 0.9fr; gap:56px; align-items:center;
+  }
+  .eyebrow{
+    font-family:'Space Mono', monospace; font-size:0.78rem; letter-spacing:0.12em;
+    text-transform:uppercase; color:var(--stamp-gold); margin-bottom:18px; display:block;
+  }
+  .hero h1{
+    font-size:clamp(2.3rem, 4.4vw, 3.6rem);
+    color:var(--paper);
+  }
+  .hero h1 em{ font-style:italic; color:var(--stamp-gold); }
+  .hero p.lede{
+    font-size:1.15rem; color:var(--bone); opacity:0.82; max-width:46ch;
+    margin-top:22px;
+  }
+  .hero-ctas{ display:flex; gap:16px; margin-top:34px; flex-wrap:wrap; }
+  .btn{
+    display:inline-flex; align-items:center; gap:8px;
+    padding:14px 26px; border-radius:var(--radius);
+    font-weight:600; font-size:0.98rem; cursor:pointer; border:none;
+    transition:transform .15s ease, background .15s ease;
+  }
+  .btn:hover{ transform:translateY(-1px); }
+  .btn-primary{ background:var(--stamp-gold); color:var(--ink-green-deep); }
+  .btn-primary:hover{ background:#dcae4d; }
+  .btn-ghost{ background:transparent; color:var(--bone); border:1.5px solid var(--line-light); }
+  .btn-ghost:hover{ border-color:var(--stamp-gold); color:var(--stamp-gold); }
+
+  .hero-doc{
+    background:var(--paper); color:var(--charcoal);
+    border-radius:6px; padding:28px 26px;
+    transform:rotate(2.5deg);
+    box-shadow:0 30px 60px -20px rgba(0,0,0,0.5);
+    position:relative;
+  }
+  .hero-doc .stamp{ position:absolute; top:-20px; right:-14px; width:88px; height:88px; --tilt:9deg; }
+  .hero-doc-head{ display:flex; justify-content:space-between; border-bottom:2px solid var(--charcoal); padding-bottom:14px; margin-bottom:16px; }
+  .hero-doc-head .co{ font-family:'Fraunces', serif; font-weight:600; font-size:1.05rem; }
+  .hero-doc-head .no{ font-family:'Space Mono', monospace; font-size:0.78rem; opacity:0.6; text-align:right; }
+  .hero-doc-row{ display:flex; justify-content:space-between; font-size:0.88rem; padding:8px 0; border-bottom:1px dashed var(--line); }
+  .hero-doc-row span:last-child{ font-family:'Space Mono', monospace; }
+  .hero-doc-total{ display:flex; justify-content:space-between; margin-top:14px; padding-top:14px; border-top:2px solid var(--charcoal); font-weight:700; }
+  .hero-doc-total span:last-child{ font-family:'Space Mono', monospace; color:var(--stamp-red); }
+
+  @media (max-width:900px){
+    .hero .wrap{ grid-template-columns:1fr; }
+    .hero{ padding:56px 0 64px; }
+    .hero-doc{ transform:none; max-width:400px; margin:0 auto; }
+  }
+
+  /* ---------- TRUST BAR ---------- */
+  .trust{
+    background:var(--bone); border-bottom:1px solid var(--line);
+  }
+  .trust .wrap{
+    display:flex; flex-wrap:wrap; gap:14px 40px; justify-content:center;
+    padding:22px 24px; font-size:0.88rem; font-weight:600; color:var(--ink-green-deep);
+  }
+  .trust .item{ display:flex; align-items:center; gap:8px; }
+  .trust .item::before{ content:'✓'; color:var(--stamp-red); font-weight:700; }
+
+  /* ---------- SECTION SHARED ---------- */
+  section{ padding:96px 0; }
+  .section-head{ max-width:640px; margin-bottom:56px; }
+  .section-head .eyebrow{ color:var(--stamp-red); }
+  .section-head h2{ font-size:clamp(1.8rem, 3vw, 2.5rem); color:var(--ink-green-deep); }
+  .section-head p{ margin-top:16px; font-size:1.05rem; color:var(--charcoal); opacity:0.75; }
+
+  /* ---------- TOOLS GRID ---------- */
+  .tools-grid{
+    display:grid; grid-template-columns:repeat(3, 1fr); gap:2px;
+    background:var(--line); border:1px solid var(--line);
+  }
+  .tool-card{
+    background:var(--paper); padding:36px 30px;
+    display:flex; flex-direction:column; gap:18px;
+    transition:background .15s;
+  }
+  .tool-card:hover{ background:var(--bone); }
+  .tool-card .stamp{ width:64px; height:64px; }
+  .tool-card .stamp .stamp-label{ font-size:0.52rem; }
+  .tool-card h3{ font-size:1.2rem; color:var(--ink-green-deep); }
+  .tool-card p{ font-size:0.92rem; opacity:0.72; flex-grow:1; }
+  .tool-card .go{ font-weight:600; font-size:0.9rem; color:var(--stamp-red); }
+  .tool-card .go::after{ content:' →'; }
+
+  @media (max-width:900px){ .tools-grid{ grid-template-columns:repeat(2, 1fr); } }
+  @media (max-width:600px){ .tools-grid{ grid-template-columns:1fr; } }
+
+  /* ---------- AJO SPOTLIGHT ---------- */
+  .ajo{
+    background:var(--ink-green-deep); color:var(--bone);
+    position:relative; overflow:hidden;
+  }
+  .ajo .bg-stamp{
+    position:absolute; width:520px; height:520px; opacity:0.05;
+    right:-140px; top:-100px; --sc:var(--paper); filter:url(#roughen);
+  }
+  .ajo .wrap{ display:grid; grid-template-columns:1fr 1fr; gap:60px; align-items:center; position:relative; }
+  .ajo .section-head{ margin-bottom:0; }
+  .ajo .section-head h2{ color:var(--paper); }
+  .ajo .section-head p{ color:var(--bone); opacity:0.8; }
+  .ajo-list{ list-style:none; padding:0; margin:26px 0 0; display:flex; flex-direction:column; gap:14px; }
+  .ajo-list li{ display:flex; gap:12px; font-size:0.96rem; }
+  .ajo-list li::before{ content:'●'; color:var(--stamp-gold); font-size:0.6rem; margin-top:7px; }
+
+  .ajo-card{
+    background:var(--paper); color:var(--charcoal); border-radius:6px;
+    padding:26px; box-shadow:0 30px 60px -24px rgba(0,0,0,0.5);
+  }
+  .ajo-card h4{ font-family:'Fraunces', serif; font-weight:600; margin:0 0 16px; }
+  .ajo-row{ display:flex; justify-content:space-between; align-items:center; padding:10px 0; border-bottom:1px solid var(--line); font-size:0.9rem; }
+  .ajo-row:last-child{ border-bottom:none; }
+  .ajo-tag{ font-family:'Space Mono', monospace; font-size:0.72rem; padding:3px 8px; border-radius:20px; background:var(--bone); color:var(--ink-green-deep); }
+  .ajo-tag.next{ background:var(--stamp-gold); color:var(--ink-green-deep); }
+
+  @media (max-width:900px){ .ajo .wrap{ grid-template-columns:1fr; } }
+
+  /* ---------- PRICING ---------- */
+  .pricing-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:24px; }
+  .plan{
+    border:1px solid var(--line); border-radius:6px; padding:34px 28px;
+    background:var(--paper); display:flex; flex-direction:column;
+  }
+  .plan.featured{
+    background:var(--ink-green-deep); color:var(--bone); border-color:var(--ink-green-deep);
+    transform:translateY(-10px);
+  }
+  .plan-tag{
+    font-family:'Space Mono', monospace; font-size:0.7rem; letter-spacing:0.08em;
+    text-transform:uppercase; color:var(--stamp-red); margin-bottom:10px;
+  }
+  .plan.featured .plan-tag{ color:var(--stamp-gold); }
+  .plan h3{ font-size:1.3rem; }
+  .plan.featured h3{ color:var(--paper); }
+  .plan-price{ font-family:'Fraunces', serif; font-size:2.2rem; margin:16px 0 4px; font-weight:600; }
+  .plan-price span{ font-family:'Work Sans', sans-serif; font-size:0.95rem; font-weight:500; opacity:0.6; }
+  .plan-note{ font-size:0.82rem; opacity:0.6; margin-bottom:22px; }
+  .plan-features{ list-style:none; padding:0; margin:0 0 28px; flex-grow:1; display:flex; flex-direction:column; gap:12px; font-size:0.92rem; }
+  .plan-features li{ display:flex; gap:10px; }
+  .plan-features li::before{ content:'✓'; color:var(--stamp-red); font-weight:700; flex-shrink:0; }
+  .plan.featured .plan-features li::before{ color:var(--stamp-gold); }
+  .plan .btn{ width:100%; justify-content:center; }
+  .plan:not(.featured) .btn-primary{ background:var(--ink-green-deep); color:var(--paper); }
+  .plan:not(.featured) .btn-primary:hover{ background:var(--stamp-red); }
+
+  @media (max-width:900px){
+    .pricing-grid{ grid-template-columns:1fr; }
+    .plan.featured{ transform:none; }
+  }
+
+  /* ---------- REVEAL ON SCROLL ---------- */
+  .reveal{ opacity:0; transform:translateY(28px); transition:opacity .7s ease, transform .7s ease; }
+  .reveal.visible{ opacity:1; transform:translateY(0); }
+  .reveal-stagger.visible{ transition-delay:calc(var(--i, 0) * 90ms); }
+
+  /* ---------- STATS ---------- */
+  .stats{ background:var(--paper); border-bottom:1px solid var(--line); }
+  .stats-grid{
+    display:grid; grid-template-columns:repeat(4,1fr); gap:1px;
+    background:var(--line); border:1px solid var(--line); margin-top:8px;
+  }
+  .stat-card{
+    background:var(--paper); padding:36px 24px; text-align:center;
+  }
+  .stat-num{
+    font-family:'Fraunces', serif; font-weight:700; font-size:clamp(2rem,4vw,2.7rem);
+    color:var(--ink-green-deep); display:flex; align-items:baseline; justify-content:center; gap:2px;
+  }
+  .stat-num .unit{ font-size:0.55em; color:var(--stamp-red); font-family:'Space Mono',monospace; }
+  .stat-label{ font-size:0.85rem; opacity:0.65; margin-top:8px; }
+  @media (max-width:700px){ .stats-grid{ grid-template-columns:repeat(2,1fr); } }
+
+  /* ---------- MARQUEE ---------- */
+  .marquee-wrap{ overflow:hidden; border-top:1px solid var(--line-light); border-bottom:1px solid var(--line-light); background:var(--ink-green-deep); padding:14px 0; }
+  .marquee{ display:flex; width:max-content; animation:scroll-left 26s linear infinite; }
+  .marquee span{ font-family:'Space Mono', monospace; font-size:0.85rem; color:var(--bone); opacity:0.7; padding:0 28px; white-space:nowrap; display:flex; align-items:center; gap:28px; }
+  .marquee span::after{ content:'✦'; color:var(--stamp-gold); opacity:0.8; }
+  @keyframes scroll-left{ from{ transform:translateX(0); } to{ transform:translateX(-50%); } }
+  @media (prefers-reduced-motion: reduce){ .marquee{ animation:none; } }
+
+  /* ---------- FAQ ---------- */
+  .faq-list{ max-width:820px; }
+  .faq-item{
+    border-bottom:1px solid var(--line); padding:6px 0;
+  }
+  .faq-item summary{
+    list-style:none; cursor:pointer; padding:20px 4px;
+    display:flex; justify-content:space-between; align-items:center; gap:20px;
+    font-family:'Fraunces', serif; font-weight:600; font-size:1.08rem; color:var(--ink-green-deep);
+  }
+  .faq-item summary::-webkit-details-marker{ display:none; }
+  .faq-plus{
+    flex-shrink:0; width:26px; height:26px; border-radius:50%;
+    border:1.5px solid var(--stamp-red); position:relative;
+    transition:transform .25s ease;
+  }
+  .faq-plus::before,.faq-plus::after{
+    content:''; position:absolute; background:var(--stamp-red);
+    top:50%; left:50%; transform:translate(-50%,-50%);
+  }
+  .faq-plus::before{ width:11px; height:1.5px; }
+  .faq-plus::after{ width:1.5px; height:11px; transition:opacity .2s ease; }
+  .faq-item[open] .faq-plus{ transform:rotate(45deg); }
+  .faq-item p{ padding:0 4px 22px; font-size:0.96rem; opacity:0.75; max-width:64ch; }
+
+  /* ---------- FOOTER ---------- */
+  footer{ background:var(--bone); border-top:1px solid var(--line); padding:56px 0 32px; }
+  .footer-top{ display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:32px; margin-bottom:40px; }
+  .footer-logo{ font-family:'Fraunces', serif; font-weight:700; font-size:1.3rem; color:var(--ink-green-deep); }
+  .footer-note{ font-size:0.88rem; opacity:0.6; max-width:36ch; margin-top:10px; }
+  .footer-links{ display:flex; gap:48px; flex-wrap:wrap; }
+  .footer-links div{ display:flex; flex-direction:column; gap:10px; font-size:0.9rem; }
+  .footer-links strong{ font-size:0.78rem; text-transform:uppercase; letter-spacing:0.06em; opacity:0.5; margin-bottom:4px; }
+  .footer-bottom{ border-top:1px solid var(--line); padding-top:24px; font-size:0.8rem; opacity:0.55; display:flex; justify-content:space-between; flex-wrap:wrap; gap:10px; }
+
+  /* ---------- SMALL PHONES (≤480px) ---------- */
+  @media (max-width:480px){
+    .wrap{ padding:0 18px; }
+    section{ padding:64px 0; }
+    .hero{ padding:48px 0 52px; }
+    .hero h1{ font-size:1.85rem; }
+    .hero p.lede{ font-size:1rem; }
+    .hero-ctas{ flex-direction:column; align-items:stretch; }
+    .hero-ctas .btn{ justify-content:center; }
+    .hero-doc{ padding:22px 18px; }
+    .trust .wrap{ gap:10px 20px; padding:18px 18px; font-size:0.8rem; }
+    .section-head h2{ font-size:1.55rem; }
+    .stats-grid{ grid-template-columns:1fr; }
+    .stat-card{ padding:26px 20px; }
+    .tool-card{ padding:28px 22px; }
+    .plan{ padding:28px 22px; }
+    .plan.featured{ transform:none; }
+    .plan-price{ font-size:1.9rem; }
+    .marquee span{ padding:0 18px; font-size:0.78rem; }
+    .footer-top{ flex-direction:column; gap:28px; }
+    .footer-links{ gap:32px; width:100%; }
+    .footer-bottom{ flex-direction:column; align-items:flex-start; }
+    .nav{ padding:14px 18px; }
+    .logo{ font-size:1.15rem; }
+    .faq-item summary{ font-size:0.98rem; gap:14px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- SVG filter definition for the ink-stamp roughen effect (signature element) -->
+<svg width="0" height="0" style="position:absolute">
+  <filter id="roughen" x="-20%" y="-20%" width="140%" height="140%">
+    <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed="7" result="noise"/>
+    <feDisplacementMap in="SourceGraphic" in2="noise" scale="4"/>
+  </filter>
+</svg>
+
+<header>
+  <nav class="nav">
+    <a href="#" class="logo">
+      <svg class="mark" viewBox="0 0 32 32" fill="none">
+        <circle cx="16" cy="16" r="14" stroke="#C79A3C" stroke-width="2.5"/>
+        <circle cx="16" cy="16" r="8" stroke="#C79A3C" stroke-width="1.5"/>
+      </svg>
+      KoboDocs
+    </a>
+    <button class="menu-btn" aria-label="Toggle menu" id="menuBtn"><span></span><span></span><span></span></button>
+    <div class="nav-links" id="navLinks">
+      <a href="#tools">Tools</a>
+      <a href="#ajo">Ajo &amp; Esusu</a>
+      <a href="#pricing">Pricing</a>
+      <a href="#pricing" class="nav-cta">Start free</a>
+    </div>
+  </nav>
+</header>
+
+<section class="hero">
+  <div class="wrap">
+    <div>
+      <span class="eyebrow">No login · Naira-ready · FIRS-aligned</span>
+      <h1>Free Invoice Generator Online Nigeria — <em>stamped</em> and ready to send.</h1>
+      <p class="lede">Plus receipts, payslips, quotations, budgets and loan schedules — built for how Nigerian businesses actually get paid. Fill it in, download the PDF, send it on WhatsApp. No account required.</p>
+      <div class="hero-ctas">
+        <a href="#tools" class="btn btn-primary">Create an invoice — free</a>
+        <a href="#ajo" class="btn btn-ghost">See the Ajo &amp; Esusu tracker</a>
+      </div>
+    </div>
+    <div class="hero-doc">
+      <div class="stamp"><span class="stamp-label">Paid</span></div>
+      <div class="hero-doc-head">
+        <div class="co">Adaeze Fabrics Co.</div>
+        <div class="no">INV-00214<br>10 Jul 2026</div>
+      </div>
+      <div class="hero-doc-row"><span>Ankara print, 6 yards</span><span>₦42,000</span></div>
+      <div class="hero-doc-row"><span>Delivery — Lekki</span><span>₦3,500</span></div>
+      <div class="hero-doc-row"><span>VAT (7.5%)</span><span>₦3,412</span></div>
+      <div class="hero-doc-total"><span>Total due</span><span>₦48,912</span></div>
+    </div>
+  </div>
+</section>
+
+<div class="trust">
+  <div class="wrap">
+    <span class="item">NGN &amp; VAT ready</span>
+    <span class="item">PAYE, pension &amp; NHF built in</span>
+    <span class="item">WhatsApp delivery</span>
+    <span class="item">No account needed to start</span>
+  </div>
+</div>
+
+<div class="marquee-wrap" aria-hidden="true">
+  <div class="marquee">
+    <span>Invoices</span><span>Receipts</span><span>Quotations</span><span>Payslips</span><span>Budgets</span><span>Loan schedules</span><span>Ajo &amp; Esusu</span>
+    <span>Invoices</span><span>Receipts</span><span>Quotations</span><span>Payslips</span><span>Budgets</span><span>Loan schedules</span><span>Ajo &amp; Esusu</span>
+  </div>
+</div>
+
+<section class="stats">
+  <div class="wrap" style="padding-top:56px;">
+    <div class="stats-grid">
+      <div class="stat-card reveal reveal-stagger" style="--i:0">
+        <div class="stat-num"><span class="count" data-target="7">0</span></div>
+        <div class="stat-label">Document types, one suite</div>
+      </div>
+      <div class="stat-card reveal reveal-stagger" style="--i:1">
+        <div class="stat-num"><span class="unit">₦</span><span class="count" data-target="0">0</span></div>
+        <div class="stat-label">To create your first document</div>
+      </div>
+      <div class="stat-card reveal reveal-stagger" style="--i:2">
+        <div class="stat-num"><span class="count" data-target="60">0</span><span class="unit">s</span></div>
+        <div class="stat-label">Typical time to a finished PDF</div>
+      </div>
+      <div class="stat-card reveal reveal-stagger" style="--i:3">
+        <div class="stat-num"><span class="count" data-target="0">0</span></div>
+        <div class="stat-label">Logins required to start</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="tools">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <span class="eyebrow mono">The suite</span>
+      <h2>Seven documents. One stamp of approval.</h2>
+      <p>Pick a document, fill in the details, download the PDF. Every free tool works without an account — nothing to sign up for, nothing saved unless you want it to be.</p>
+    </div>
+    <div class="tools-grid">
+      <div class="tool-card reveal reveal-stagger" style="--i:0">
+        <div class="stamp" style="--tilt:-4deg"><span class="stamp-label">Invoice</span></div>
+        <h3>Invoice generator</h3>
+        <p>Itemised invoices with VAT, WHT and bank or Paystack payment details, ready in under a minute.</p>
+        <a href="#" class="go">Create free</a>
+      </div>
+      <div class="tool-card reveal reveal-stagger" style="--i:1">
+        <div class="stamp red" style="--tilt:5deg"><span class="stamp-label">Receipt</span></div>
+        <h3>Receipt generator</h3>
+        <p>Clean, printable payment receipts for cash, transfer or card sales — proof for both sides.</p>
+        <a href="#" class="go">Create free</a>
+      </div>
+      <div class="tool-card reveal reveal-stagger" style="--i:2">
+        <div class="stamp" style="--tilt:-7deg"><span class="stamp-label">Quote</span></div>
+        <h3>Quotation generator</h3>
+        <p>Professional quotes with validity dates, so your pricing conversation starts on the right foot.</p>
+        <a href="#" class="go">Create free</a>
+      </div>
+      <div class="tool-card reveal reveal-stagger" style="--i:3">
+        <div class="stamp red" style="--tilt:3deg"><span class="stamp-label">Payslip</span></div>
+        <h3>Payslip / salary slip</h3>
+        <p>PAYE, pension and NHF pre-loaded. Built for loan applications, visas and payroll records.</p>
+        <a href="#" class="go">Create free</a>
+      </div>
+      <div class="tool-card reveal reveal-stagger" style="--i:4">
+        <div class="stamp" style="--tilt:6deg"><span class="stamp-label">Budget</span></div>
+        <h3>Budget planner</h3>
+        <p>A straightforward monthly income-vs-expense layout in Naira. No spreadsheets required.</p>
+        <a href="#" class="go">Create free</a>
+      </div>
+      <div class="tool-card reveal reveal-stagger" style="--i:5">
+        <div class="stamp red" style="--tilt:-5deg"><span class="stamp-label">Loan</span></div>
+        <h3>Loan schedule</h3>
+        <p>Salary-advance and cooperative loan repayment schedules — built around how Nigerians actually borrow.</p>
+        <a href="#" class="go">Create free</a>
+      </div>
+      <div class="tool-card reveal reveal-stagger" style="--i:6">
+        <div class="stamp" style="--tilt:4deg"><span class="stamp-label">Ajo</span></div>
+        <h3>Ajo &amp; Esusu tracker</h3>
+        <p>Rotation order and contribution ledger for your thrift circle — see below.</p>
+        <a href="#ajo" class="go">Learn more</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="ajo" id="ajo">
+  <div class="bg-stamp stamp"><span class="stamp-label"></span></div>
+  <div class="wrap">
+    <div>
+      <div class="section-head">
+        <span class="eyebrow mono">Built for the circle</span>
+        <h2>No more disputes over who paid, and who's next.</h2>
+        <p>Ajo, esusu and adashe run on trust — and trust breaks when the record lives in someone's memory or a lost notebook. KoboDocs keeps the record instead. We never hold or move anyone's money.</p>
+      </div>
+      <ul class="ajo-list">
+        <li>Set your rotation order once — everyone can see whose turn is next.</li>
+        <li>Log contributions as they come in, from any phone, no app install.</li>
+        <li>Share a read-only ledger link on WhatsApp — no arguments about the numbers.</li>
+        <li>Print a clean record for the group's files at the end of a cycle.</li>
+      </ul>
+    </div>
+    <div class="ajo-card">
+      <h4>Lekki Traders' Circle — Cycle 4</h4>
+      <div class="ajo-row"><span>Adaeze O.</span><span class="ajo-tag">Paid</span></div>
+      <div class="ajo-row"><span>Chinedu K.</span><span class="ajo-tag">Paid</span></div>
+      <div class="ajo-row"><span>Funmi A.</span><span class="ajo-tag next">Collects next</span></div>
+      <div class="ajo-row"><span>Segun T.</span><span class="ajo-tag">Pending</span></div>
+    </div>
+  </div>
+</section>
+
+<section id="pricing">
+  <div class="wrap">
+    <div class="section-head">
+      <span class="eyebrow mono">Pricing</span>
+      <h2>Free covers the paperwork. Pro saves the time.</h2>
+      <p>Every document generator is free, forever, with no account required. Pro adds the parts that save real time once you're doing this every week.</p>
+    </div>
+    <div class="pricing-grid">
+      <div class="plan">
+        <span class="plan-tag">Free</span>
+        <h3>Get started</h3>
+        <div class="plan-price">₦0</div>
+        <p class="plan-note">No login, no watermark</p>
+        <ul class="plan-features">
+          <li>Unlimited invoices, receipts, quotes &amp; payslips</li>
+          <li>VAT, PAYE, pension &amp; NHF presets</li>
+          <li>PDF export, WhatsApp share</li>
+          <li>One Ajo/Esusu circle</li>
+          <li>Basic budget planner</li>
+        </ul>
+        <a href="#" class="btn btn-primary">Start free</a>
+      </div>
+      <div class="plan featured">
+        <span class="plan-tag">Most popular</span>
+        <h3>Pro</h3>
+        <div class="plan-price">₦1,500<span>/month</span></div>
+        <p class="plan-note">or ₦12,000/year — save 33%</p>
+        <ul class="plan-features">
+          <li>Everything in Free</li>
+          <li>Saved clients &amp; employee lists</li>
+          <li>Document history &amp; search</li>
+          <li>Custom branding &amp; logo</li>
+          <li>Batch payslip generation</li>
+          <li>Recurring invoices &amp; payment links</li>
+          <li>Unlimited Ajo/Esusu circles + reminders</li>
+        </ul>
+        <a href="#" class="btn btn-primary">Upgrade to Pro</a>
+      </div>
+      <div class="plan">
+        <span class="plan-tag">Business</span>
+        <h3>Teams</h3>
+        <div class="plan-price">₦5,000<span>/month</span></div>
+        <p class="plan-note">or ₦45,000/year</p>
+        <ul class="plan-features">
+          <li>Everything in Pro</li>
+          <li>Multiple business profiles</li>
+          <li>Multi-user access</li>
+          <li>Priority WhatsApp support</li>
+          <li>Early access to new tools</li>
+        </ul>
+        <a href="#" class="btn btn-primary">Talk to us</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="faq">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <span class="eyebrow mono">Questions</span>
+      <h2>Before you start</h2>
+      <p>The things people usually ask before creating their first document.</p>
+    </div>
+    <div class="faq-list">
+      <details class="faq-item reveal" open>
+        <summary>Do I need to create an account?<span class="faq-plus"></span></summary>
+        <p>No. Every free tool works without signing up — open it, fill it in, download the PDF. An account is only needed for Pro features like saved clients and document history.</p>
+      </details>
+      <details class="faq-item reveal">
+        <summary>Is my data stored anywhere?<span class="faq-plus"></span></summary>
+        <p>On the free tier, everything is processed in your browser for that session only — nothing is saved once you close the tab. Pro accounts securely store saved clients, employees, and document history.</p>
+      </details>
+      <details class="faq-item reveal">
+        <summary>Does KoboDocs hold or move my Ajo/Esusu money?<span class="faq-plus"></span></summary>
+        <p>No. KoboDocs only keeps the record — rotation order, who's paid, who's next. Contributions are still made directly between members; we never touch or hold funds.</p>
+      </details>
+      <details class="faq-item reveal">
+        <summary>Are the payslip tax figures accurate?<span class="faq-plus"></span></summary>
+        <p>The PAYE, pension and NHF presets reflect current published rates, but tax rules change and individual circumstances vary — always confirm final figures with your accountant or FIRS before relying on them for compliance.</p>
+      </details>
+      <details class="faq-item reveal">
+        <summary>What does Pro cost, and can I cancel anytime?<span class="faq-plus"></span></summary>
+        <p>Pro is ₦1,500/month or ₦12,000/year. Business is ₦5,000/month or ₦45,000/year. Both are month-to-month or annual with no lock-in — cancel whenever you like.</p>
+      </details>
+      <details class="faq-item reveal">
+        <summary>Is KoboDocs a bank or a licensed lender?<span class="faq-plus"></span></summary>
+        <p>No. KoboDocs is a document and record-keeping tool. It doesn't disburse loans, hold deposits, or move money on anyone's behalf.</p>
+      </details>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div class="footer-top">
+      <div>
+        <div class="footer-logo">KoboDocs</div>
+        <p class="footer-note">Every business document, stamped and sent — built for Nigeria, one Naira at a time.</p>
+      </div>
+      <div class="footer-links">
+        <div>
+          <strong>Tools</strong>
+          <a href="#">Invoice</a>
+          <a href="#">Receipt</a>
+          <a href="#">Payslip</a>
+          <a href="#ajo">Ajo &amp; Esusu</a>
+        </div>
+        <div>
+          <strong>Company</strong>
+          <a href="#pricing">Pricing</a>
+          <a href="#">About</a>
+          <a href="#">Contact</a>
+        </div>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2026 KoboDocs. Not a financial institution — we never hold or move your money.</span>
+      <span>Made in Lagos</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+  const menuBtn = document.getElementById('menuBtn');
+  const navLinks = document.getElementById('navLinks');
+  menuBtn.addEventListener('click', () => {
+    navLinks.classList.toggle('open');
+  });
+  navLinks.querySelectorAll('a').forEach(a => a.addEventListener('click', () => navLinks.classList.remove('open')));
+
+  // Respect reduced-motion preference throughout
+  const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  // Reveal-on-scroll for all .reveal elements (section heads, cards, FAQ items, stats)
+  const revealEls = document.querySelectorAll('.reveal');
+  if (prefersReduced) {
+    revealEls.forEach(el => el.classList.add('visible'));
+  } else {
+    const revealObserver = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('visible');
+          revealObserver.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.15, rootMargin: '0px 0px -40px 0px' });
+    revealEls.forEach(el => revealObserver.observe(el));
+  }
+
+  // Count-up animation for stat numbers
+  const counters = document.querySelectorAll('.count');
+  const animateCount = (el) => {
+    const target = parseInt(el.dataset.target, 10);
+    if (prefersReduced || target === 0) {
+      el.textContent = target;
+      return;
+    }
+    const duration = 900;
+    const start = performance.now();
+    const step = (now) => {
+      const progress = Math.min((now - start) / duration, 1);
+      const eased = 1 - Math.pow(1 - progress, 3);
+      el.textContent = Math.round(eased * target);
+      if (progress < 1) requestAnimationFrame(step);
+    };
+    requestAnimationFrame(step);
+  };
+  const countObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        animateCount(entry.target);
+        countObserver.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.5 });
+  counters.forEach(el => countObserver.observe(el));
+
+  // Stamp "press" animation on the hero stamp when it first comes into view
+  const heroStamp = document.querySelector('.hero-doc .stamp');
+  if (heroStamp && !prefersReduced) {
+    heroStamp.style.transform = 'rotate(9deg) scale(0)';
+    heroStamp.style.transition = 'transform .45s cubic-bezier(.34,1.56,.64,1) .3s';
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        heroStamp.style.transform = 'rotate(9deg) scale(1)';
+      });
+    });
+  }
+</script>
+
+</body>
+</html>
