@@ -68,7 +68,37 @@ function renderPreview() {
   if (note) { noteEl.textContent = note; noteEl.style.display = 'block'; }
   else { noteEl.style.display = 'none'; }
 
+  if (window.KoboStorage) KoboStorage.save('invoice', { bizName, bizPhone, bizBank, invNumber, invDate: invDateRaw, clientName, vatOn, note, items });
+
   return { bizName, bizPhone, bizBank, invNumber, clientName, items, subtotal, vat, total, vatOn, note };
+}
+
+function collectFormState() {
+  return {
+    bizName: document.getElementById('bizName').value,
+    bizPhone: document.getElementById('bizPhone').value,
+    bizBank: document.getElementById('bizBank').value,
+    invNumber: document.getElementById('invNumber').value,
+    invDate: document.getElementById('invDate').value,
+    clientName: document.getElementById('clientName').value,
+    vatOn: document.getElementById('vatToggle').checked,
+    note: document.getElementById('invNote').value,
+    items: getItems()
+  };
+}
+
+function applyFormState(state) {
+  document.getElementById('bizName').value = state.bizName || '';
+  document.getElementById('bizPhone').value = state.bizPhone || '';
+  document.getElementById('bizBank').value = state.bizBank || '';
+  document.getElementById('invNumber').value = state.invNumber || 'INV-0001';
+  document.getElementById('invDate').value = state.invDate || new Date().toISOString().split('T')[0];
+  document.getElementById('clientName').value = state.clientName || '';
+  document.getElementById('vatToggle').checked = state.vatOn !== false;
+  document.getElementById('invNote').value = state.note || '';
+  document.getElementById('itemRows').innerHTML = '';
+  (state.items && state.items.length ? state.items : [{ desc: '', qty: 1, price: '' }])
+    .forEach(it => addItemRow(it.desc, it.qty, it.price));
 }
 
 // ---------- wire up inputs ----------
@@ -76,12 +106,25 @@ function renderPreview() {
   document.getElementById(id).addEventListener('input', renderPreview);
 });
 document.getElementById('vatToggle').addEventListener('change', renderPreview);
-document.getElementById('addItemBtn').addEventListener('click', () => addItemRow());
+document.getElementById('addItemBtn').addEventListener('click', () => { addItemRow(); renderPreview(); });
 
-// seed defaults
-document.getElementById('invDate').value = new Date().toISOString().split('T')[0];
-addItemRow('Ankara print, 6 yards', 1, 42000);
-addItemRow('Delivery — Lekki', 1, 3500);
+document.getElementById('clearFormBtn').addEventListener('click', () => {
+  if (!confirm('Clear this form? This only affects this device — nothing else is stored anywhere.')) return;
+  KoboStorage.clear('invoice');
+  document.getElementById('itemRows').innerHTML = '';
+  applyFormState({});
+  renderPreview();
+});
+
+// ---------- restore saved state, or seed defaults ----------
+const saved = window.KoboStorage ? KoboStorage.load('invoice') : null;
+if (saved) {
+  applyFormState(saved);
+} else {
+  document.getElementById('invDate').value = new Date().toISOString().split('T')[0];
+  addItemRow('Ankara print, 6 yards', 1, 42000);
+  addItemRow('Delivery — Lekki', 1, 3500);
+}
 renderPreview();
 
 // ---------- PDF export ----------

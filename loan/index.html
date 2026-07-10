@@ -10,12 +10,15 @@
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Work+Sans:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/assets/style.css">
 <style>
-  .schedule-table{ width:100%; border-collapse:collapse; margin-top:10px; font-size:0.82rem; }
+  .schedule-table{ width:100%; min-width:460px; border-collapse:collapse; margin-top:10px; font-size:0.82rem; }
   .schedule-table th{ text-align:right; font-size:0.68rem; text-transform:uppercase; opacity:0.55; padding-bottom:8px; border-bottom:1.5px solid var(--charcoal); }
   .schedule-table th:first-child{ text-align:left; }
   .schedule-table td{ padding:7px 4px; text-align:right; font-family:'Space Mono', monospace; font-size:0.78rem; border-bottom:1px dashed var(--line); }
   .schedule-table td:first-child{ text-align:left; font-family:'Work Sans', sans-serif; }
-  .schedule-scroll{ max-height:340px; overflow-y:auto; margin-top:8px; }
+  .schedule-scroll{ max-height:340px; overflow-y:auto; overflow-x:auto; margin-top:8px; -webkit-overflow-scrolling:touch; }
+  @media (max-width:480px){
+    .schedule-scroll::after{ content:'← scroll for full schedule →'; display:block; text-align:center; font-size:0.7rem; opacity:0.45; padding-top:6px; }
+  }
 </style>
 </head>
 <body>
@@ -58,6 +61,11 @@
   <div class="wrap">
 
     <div class="form-panel">
+      <div class="autosave-bar">
+        <span class="status"><span class="dot"></span> Saved on this device — not in the cloud, not shared</span>
+        <button type="button" id="clearFormBtn">Clear form</button>
+      </div>
+
       <div class="field-group">
         <label for="lenderName">Lender / cooperative name</label>
         <input type="text" id="lenderName" placeholder="Lekki Traders' Cooperative">

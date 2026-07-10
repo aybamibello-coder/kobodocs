@@ -64,6 +64,8 @@ function renderPreview() {
 
   const d = calc();
 
+  if (window.KoboStorage) KoboStorage.save('payslip', collectFormState());
+
   document.getElementById('pEarnings').innerHTML = `
     <tr><td>Basic salary</td><td class="num">${naira(d.basic)}</td></tr>
     <tr><td>Housing allowance</td><td class="num">${naira(d.housing)}</td></tr>
@@ -85,16 +87,50 @@ function renderPreview() {
   return { empName, staffName, period: document.getElementById('pPeriod').textContent, ...d };
 }
 
+function collectFormState() {
+  return {
+    empName: document.getElementById('empName').value,
+    staffName: document.getElementById('staffName').value,
+    payPeriod: document.getElementById('payPeriod').value,
+    basic: document.getElementById('basic').value,
+    housing: document.getElementById('housing').value,
+    transport: document.getElementById('transport').value,
+    other: document.getElementById('other').value,
+    pensionOn: document.getElementById('pensionToggle').checked,
+    nhfOn: document.getElementById('nhfToggle').checked,
+    annualRent: document.getElementById('annualRent').value
+  };
+}
+
+function applyFormState(state) {
+  document.getElementById('empName').value = state.empName || '';
+  document.getElementById('staffName').value = state.staffName || '';
+  document.getElementById('payPeriod').value = state.payPeriod || new Date().toISOString().slice(0, 7);
+  document.getElementById('basic').value = state.basic ?? 200000;
+  document.getElementById('housing').value = state.housing ?? 60000;
+  document.getElementById('transport').value = state.transport ?? 30000;
+  document.getElementById('other').value = state.other ?? 0;
+  document.getElementById('pensionToggle').checked = state.pensionOn !== false;
+  document.getElementById('nhfToggle').checked = state.nhfOn !== false;
+  document.getElementById('annualRent').value = state.annualRent ?? 0;
+}
+
 ['empName','staffName','payPeriod','basic','housing','transport','other','pensionToggle','nhfToggle','annualRent'].forEach(id => {
   const el = document.getElementById(id);
   el.addEventListener('input', renderPreview);
   el.addEventListener('change', renderPreview);
 });
 
-document.getElementById('payPeriod').value = new Date().toISOString().slice(0, 7);
-document.getElementById('basic').value = 200000;
-document.getElementById('housing').value = 60000;
-document.getElementById('transport').value = 30000;
+document.getElementById('clearFormBtn').addEventListener('click', () => {
+  if (!confirm('Clear this form? This only affects this device.')) return;
+  KoboStorage.clear('payslip');
+  applyFormState({});
+  renderPreview();
+});
+
+const saved = window.KoboStorage ? KoboStorage.load('payslip') : null;
+if (saved) applyFormState(saved);
+else applyFormState({});
 renderPreview();
 
 document.getElementById('downloadBtn').addEventListener('click', () => {

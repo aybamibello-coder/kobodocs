@@ -60,6 +60,8 @@ function renderPreview() {
 
   const nextCollector = members.find(m => !m.paid);
 
+  if (window.KoboStorage) KoboStorage.save('ajo', collectFormState());
+
   document.getElementById('pMemberList').innerHTML = members.map((m, i) => `
     <li>
       <div class="member-info">
@@ -75,19 +77,53 @@ function renderPreview() {
   return { circleName, contribution, frequency, members: [...members], pot, nextCollector };
 }
 
+function collectFormState() {
+  return {
+    circleName: document.getElementById('circleName').value,
+    contribution: document.getElementById('contribution').value,
+    frequency: document.getElementById('frequency').value,
+    members: members.map(m => ({ name: m.name, paid: m.paid }))
+  };
+}
+
 document.getElementById('circleName').addEventListener('input', renderPreview);
 document.getElementById('contribution').addEventListener('input', renderPreview);
 document.getElementById('frequency').addEventListener('change', renderPreview);
 document.getElementById('addMemberBtn').addEventListener('click', () => addMember());
 
-addMember('Adaeze O.');
-addMember('Chinedu K.');
-addMember('Funmi A.');
-addMember('Segun T.');
-members[0].paid = true;
-members[1].paid = true;
-renderForm();
-renderPreview();
+document.getElementById('clearFormBtn').addEventListener('click', () => {
+  if (!confirm('Clear this circle? This only affects this device.')) return;
+  KoboStorage.clear('ajo');
+  document.getElementById('circleName').value = '';
+  document.getElementById('contribution').value = 20000;
+  document.getElementById('frequency').value = 'Monthly';
+  members = [];
+  nextId = 0;
+  renderForm();
+  renderPreview();
+});
+
+const saved = window.KoboStorage ? KoboStorage.load('ajo') : null;
+if (saved) {
+  document.getElementById('circleName').value = saved.circleName || '';
+  document.getElementById('contribution').value = saved.contribution ?? 20000;
+  document.getElementById('frequency').value = saved.frequency || 'Monthly';
+  members = [];
+  nextId = 0;
+  (saved.members || []).forEach(m => { members.push({ id: nextId++, name: m.name, paid: !!m.paid }); });
+  if (!members.length) { addMember(); }
+  renderForm();
+  renderPreview();
+} else {
+  addMember('Adaeze O.');
+  addMember('Chinedu K.');
+  addMember('Funmi A.');
+  addMember('Segun T.');
+  members[0].paid = true;
+  members[1].paid = true;
+  renderForm();
+  renderPreview();
+}
 
 document.getElementById('downloadBtn').addEventListener('click', () => {
   const d = renderPreview();

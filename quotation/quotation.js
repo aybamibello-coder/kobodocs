@@ -63,17 +63,59 @@ function renderPreview() {
   if (note) { noteEl.textContent = note; noteEl.style.display = 'block'; }
   else { noteEl.style.display = 'none'; }
 
+  if (window.KoboStorage) KoboStorage.save('quotation', { bizName, bizPhone, quoNumber, quoDate: quoDateRaw, clientName, vatOn, validDays, note, items });
+
   return { bizName, bizPhone, quoNumber, clientName, items, subtotal, vat, total, vatOn, validStr, note };
+}
+
+function collectFormState() {
+  return {
+    bizName: document.getElementById('bizName').value,
+    bizPhone: document.getElementById('bizPhone').value,
+    quoNumber: document.getElementById('quoNumber').value,
+    quoDate: document.getElementById('quoDate').value,
+    clientName: document.getElementById('clientName').value,
+    vatOn: document.getElementById('vatToggle').checked,
+    validDays: document.getElementById('validDays').value,
+    note: document.getElementById('quoNote').value,
+    items: getItems()
+  };
+}
+
+function applyFormState(state) {
+  document.getElementById('bizName').value = state.bizName || '';
+  document.getElementById('bizPhone').value = state.bizPhone || '';
+  document.getElementById('quoNumber').value = state.quoNumber || 'QUO-0001';
+  document.getElementById('quoDate').value = state.quoDate || new Date().toISOString().split('T')[0];
+  document.getElementById('clientName').value = state.clientName || '';
+  document.getElementById('vatToggle').checked = state.vatOn !== false;
+  document.getElementById('validDays').value = state.validDays || 7;
+  document.getElementById('quoNote').value = state.note || '';
+  document.getElementById('itemRows').innerHTML = '';
+  (state.items && state.items.length ? state.items : [{ desc: '', qty: 1, price: '' }])
+    .forEach(it => addItemRow(it.desc, it.qty, it.price));
 }
 
 ['bizName','bizPhone','quoNumber','quoDate','clientName','vatToggle','validDays','quoNote'].forEach(id => {
   document.getElementById(id).addEventListener('input', renderPreview);
   document.getElementById(id).addEventListener('change', renderPreview);
 });
-document.getElementById('addItemBtn').addEventListener('click', () => addItemRow());
+document.getElementById('addItemBtn').addEventListener('click', () => { addItemRow(); renderPreview(); });
 
-document.getElementById('quoDate').value = new Date().toISOString().split('T')[0];
-addItemRow('Custom cabinet installation', 1, 150000);
+document.getElementById('clearFormBtn').addEventListener('click', () => {
+  if (!confirm('Clear this form? This only affects this device.')) return;
+  KoboStorage.clear('quotation');
+  applyFormState({});
+  renderPreview();
+});
+
+const saved = window.KoboStorage ? KoboStorage.load('quotation') : null;
+if (saved) {
+  applyFormState(saved);
+} else {
+  document.getElementById('quoDate').value = new Date().toISOString().split('T')[0];
+  addItemRow('Custom cabinet installation', 1, 150000);
+}
 renderPreview();
 
 document.getElementById('downloadBtn').addEventListener('click', () => {

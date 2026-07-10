@@ -2,8 +2,7 @@ const naira = (n) => '₦' + (Number(n) || 0).toLocaleString('en-NG', { minimumF
 
 function addRow(containerId, label = '', amount = '') {
   const row = document.createElement('div');
-  row.className = 'item-row';
-  row.style.gridTemplateColumns = '1fr 140px 32px';
+  row.className = 'item-row budget-row';
   row.innerHTML = `
     <input type="text" class="row-label" placeholder="e.g. Salary, Rent, Feeding" value="${label}">
     <input type="number" class="row-amount" min="0" placeholder="₦" value="${amount}">
@@ -46,18 +45,45 @@ function renderPreview() {
     <div class="row grand"><span>${balanceLabel}</span><span style="color:${balance >= 0 ? 'var(--stamp-gold)' : 'var(--stamp-red)'};">${naira(Math.abs(balance))}</span></div>
   `;
 
+  if (window.KoboStorage) KoboStorage.save('budget', { budgetMonth: monthRaw, income, expenses });
+
   return { month: document.getElementById('pMonth').textContent, income, expenses, totalIncome, totalExpenses, balance };
 }
 
-document.getElementById('budgetMonth').addEventListener('input', renderPreview);
-document.getElementById('addIncomeBtn').addEventListener('click', () => addRow('incomeRows'));
-document.getElementById('addExpenseBtn').addEventListener('click', () => addRow('expenseRows'));
+function collectFormState() {
+  return {
+    budgetMonth: document.getElementById('budgetMonth').value,
+    income: getRows('incomeRows'),
+    expenses: getRows('expenseRows')
+  };
+}
 
-document.getElementById('budgetMonth').value = new Date().toISOString().slice(0, 7);
-addRow('incomeRows', 'Salary', 250000);
-addRow('expenseRows', 'Rent', 80000);
-addRow('expenseRows', 'Feeding', 60000);
-addRow('expenseRows', 'Transport', 25000);
+function applyFormState(state) {
+  document.getElementById('budgetMonth').value = state.budgetMonth || new Date().toISOString().slice(0, 7);
+  document.getElementById('incomeRows').innerHTML = '';
+  document.getElementById('expenseRows').innerHTML = '';
+  (state.income && state.income.length ? state.income : [{ label: 'Salary', amount: 250000 }])
+    .forEach(r => addRow('incomeRows', r.label, r.amount));
+  (state.expenses && state.expenses.length ? state.expenses : [
+    { label: 'Rent', amount: 80000 }, { label: 'Feeding', amount: 60000 }, { label: 'Transport', amount: 25000 }
+  ]).forEach(r => addRow('expenseRows', r.label, r.amount));
+}
+
+document.getElementById('budgetMonth').addEventListener('input', renderPreview);
+document.getElementById('addIncomeBtn').addEventListener('click', () => { addRow('incomeRows'); renderPreview(); });
+document.getElementById('addExpenseBtn').addEventListener('click', () => { addRow('expenseRows'); renderPreview(); });
+
+document.getElementById('clearFormBtn').addEventListener('click', () => {
+  if (!confirm('Clear this form? This only affects this device.')) return;
+  KoboStorage.clear('budget');
+  document.getElementById('budgetMonth').value = new Date().toISOString().slice(0, 7);
+  document.getElementById('incomeRows').innerHTML = '';
+  document.getElementById('expenseRows').innerHTML = '';
+  renderPreview();
+});
+
+const saved = window.KoboStorage ? KoboStorage.load('budget') : null;
+applyFormState(saved || {});
 renderPreview();
 
 document.getElementById('downloadBtn').addEventListener('click', () => {

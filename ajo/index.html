@@ -13,6 +13,14 @@
   .member-row{ display:grid; grid-template-columns:32px 1fr 130px 90px 90px 32px; gap:10px; align-items:center; margin-bottom:10px; }
   .member-row .order-num{ font-family:'Space Mono', monospace; font-size:0.85rem; opacity:0.5; text-align:center; }
   .member-row input{ padding:9px 11px; font-size:0.9rem; }
+  @media (max-width:640px){
+    .member-row{ display:flex; flex-wrap:wrap; align-items:center; gap:8px 10px; padding-bottom:12px; border-bottom:1px solid var(--line); }
+    .member-row .order-num{ flex:0 0 auto; width:20px; }
+    .member-row .member-name{ flex:1 1 100%; order:1; }
+    .member-row .paid-toggle{ order:2; }
+    .member-row .reorder-btn{ order:3; }
+    .member-row .item-remove{ order:4; margin-left:auto; }
+  }
   .reorder-btn{ background:none; border:1px solid var(--line); border-radius:4px; width:28px; height:28px; cursor:pointer; font-size:0.85rem; color:var(--ink-green-deep); }
   .reorder-btn:hover{ border-color:var(--stamp-gold); }
   .ajo-member-list{ list-style:none; padding:0; margin:0; }
@@ -56,7 +64,7 @@
   <div class="wrap">
     <a href="/">&larr; Back to KoboDocs</a>
     <h1>Ajo &amp; Esusu Contribution Tracker</h1>
-    <p>Set your rotation order, log who's paid this cycle, and share a clear record with the group. KoboDocs only keeps the record — we never hold or move anyone's money. This session is temporary; nothing is saved once you close the tab unless you download it.</p>
+    <p>Set your rotation order, log who's paid this cycle, and share a clear record with the group. KoboDocs only keeps the record — we never hold or move anyone's money. Your circle is saved on this device automatically; it isn't yet shareable across devices or synced to other members' phones.</p>
   </div>
 </section>
 
@@ -64,6 +72,11 @@
   <div class="wrap">
 
     <div class="form-panel">
+      <div class="autosave-bar">
+        <span class="status"><span class="dot"></span> Saved on this device — not in the cloud, not shared</span>
+        <button type="button" id="clearFormBtn">Clear form</button>
+      </div>
+
       <div class="field-group">
         <label for="circleName">Circle name</label>
         <input type="text" id="circleName" placeholder="Lekki Traders' Circle">
@@ -124,7 +137,7 @@
       </details>
       <details class="faq-item reveal">
         <summary>Is this saved anywhere?<span class="faq-plus"></span></summary>
-        <p>Not yet on the free tier — this session is temporary and clears when you close the tab. Download the PDF or share on WhatsApp to keep a copy. Persistent, shareable circles are coming to Pro.</p>
+        <p>Saved automatically on this device — closing the tab or refreshing won't lose it. It's not yet shareable across devices, so other members can't see live updates unless you send them a PDF or WhatsApp update. Persistent, shareable circles are coming to Pro.</p>
       </details>
       <details class="faq-item reveal">
         <summary>Who collects next?<span class="faq-plus"></span></summary>

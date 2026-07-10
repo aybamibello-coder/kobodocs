@@ -53,17 +53,57 @@ function renderPreview() {
   if (note) { noteEl.textContent = note; noteEl.style.display = 'block'; }
   else { noteEl.style.display = 'none'; }
 
+  if (window.KoboStorage) KoboStorage.save('receipt', { bizName, bizPhone, recNumber, recDate: recDateRaw, payerName, method, note, items });
+
   return { bizName, bizPhone, recNumber, payerName, method, items, total, note };
+}
+
+function collectFormState() {
+  return {
+    bizName: document.getElementById('bizName').value,
+    bizPhone: document.getElementById('bizPhone').value,
+    recNumber: document.getElementById('recNumber').value,
+    recDate: document.getElementById('recDate').value,
+    payerName: document.getElementById('payerName').value,
+    method: document.getElementById('payMethod').value,
+    note: document.getElementById('recNote').value,
+    items: getItems()
+  };
+}
+
+function applyFormState(state) {
+  document.getElementById('bizName').value = state.bizName || '';
+  document.getElementById('bizPhone').value = state.bizPhone || '';
+  document.getElementById('recNumber').value = state.recNumber || 'RCT-0001';
+  document.getElementById('recDate').value = state.recDate || new Date().toISOString().split('T')[0];
+  document.getElementById('payerName').value = state.payerName || '';
+  document.getElementById('payMethod').value = state.method || 'Cash';
+  document.getElementById('recNote').value = state.note || '';
+  document.getElementById('itemRows').innerHTML = '';
+  (state.items && state.items.length ? state.items : [{ desc: '', qty: 1, price: '' }])
+    .forEach(it => addItemRow(it.desc, it.qty, it.price));
 }
 
 ['bizName','bizPhone','recNumber','recDate','payerName','payMethod','recNote'].forEach(id => {
   document.getElementById(id).addEventListener('input', renderPreview);
   document.getElementById(id).addEventListener('change', renderPreview);
 });
-document.getElementById('addItemBtn').addEventListener('click', () => addItemRow());
+document.getElementById('addItemBtn').addEventListener('click', () => { addItemRow(); renderPreview(); });
 
-document.getElementById('recDate').value = new Date().toISOString().split('T')[0];
-addItemRow('Ankara print, 6 yards', 1, 42000);
+document.getElementById('clearFormBtn').addEventListener('click', () => {
+  if (!confirm('Clear this form? This only affects this device.')) return;
+  KoboStorage.clear('receipt');
+  applyFormState({});
+  renderPreview();
+});
+
+const saved = window.KoboStorage ? KoboStorage.load('receipt') : null;
+if (saved) {
+  applyFormState(saved);
+} else {
+  document.getElementById('recDate').value = new Date().toISOString().split('T')[0];
+  addItemRow('Ankara print, 6 yards', 1, 42000);
+}
 renderPreview();
 
 document.getElementById('downloadBtn').addEventListener('click', () => {

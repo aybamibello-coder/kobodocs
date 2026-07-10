@@ -1,4 +1,20 @@
-const menuBtn = document.getElementById('menuBtn');
+// ---------- Device-local autosave (no account, no cloud — this device only) ----------
+window.KoboStorage = {
+  save(key, data) {
+    try { localStorage.setItem('kobodocs:' + key, JSON.stringify(data)); return true; }
+    catch (e) { return false; }
+  },
+  load(key) {
+    try {
+      const raw = localStorage.getItem('kobodocs:' + key);
+      return raw ? JSON.parse(raw) : null;
+    } catch (e) { return null; }
+  },
+  clear(key) {
+    try { localStorage.removeItem('kobodocs:' + key); return true; }
+    catch (e) { return false; }
+  }
+};
 const navLinks = document.getElementById('navLinks');
 if (menuBtn && navLinks) {
   menuBtn.addEventListener('click', () => navLinks.classList.toggle('open'));

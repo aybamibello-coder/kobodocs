@@ -371,6 +371,19 @@
     .logo{ font-size:1.15rem; }
     .faq-item summary{ font-size:0.98rem; gap:14px; }
   }
+  /* ---------- AUTOSAVE INDICATOR ---------- */
+  .autosave-bar{
+    display:flex; align-items:center; justify-content:space-between; gap:12px;
+    background:var(--bone); border:1px solid var(--line); border-radius:var(--radius);
+    padding:10px 14px; margin-bottom:24px; font-size:0.82rem;
+  }
+  .autosave-bar .status{ display:flex; align-items:center; gap:7px; opacity:0.75; }
+  .autosave-bar .dot{ width:7px; height:7px; border-radius:50%; background:var(--stamp-gold); flex-shrink:0; }
+  .autosave-bar button{
+    background:none; border:none; color:var(--stamp-red); font-weight:600; font-size:0.8rem;
+    cursor:pointer; text-decoration:underline; padding:2px;
+  }
+
   /* ---------- SUB-PAGE HEADER (tool pages, pricing) ---------- */
   .page-header{
     background:var(--ink-green-deep); color:var(--bone);
@@ -442,6 +455,12 @@
   .doc-totals .row.grand span:last-child{ font-family:'Space Mono', monospace; color:var(--stamp-red); }
   .doc-totals .row span:last-child{ font-family:'Space Mono', monospace; }
   .doc-note{ margin-top:24px; font-size:0.8rem; opacity:0.6; border-top:1px solid var(--line); padding-top:14px; }
+
+  .budget-row{ grid-template-columns:1fr 140px 32px; }
+  @media (max-width:480px){
+    .budget-row{ grid-template-columns:1fr 100px 28px; gap:8px; }
+    .budget-row input{ padding:8px 9px; font-size:0.85rem; }
+  }
 
   @media (max-width:480px){
     .doc-preview{ padding:24px 20px; }

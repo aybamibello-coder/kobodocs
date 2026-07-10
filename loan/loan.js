@@ -47,6 +47,8 @@ function renderPreview() {
 
   const d = buildSchedule();
 
+  if (window.KoboStorage) KoboStorage.save('loan', collectFormState());
+
   document.getElementById('pSummary').innerHTML = `
     <div class="row"><span>Loan amount</span><span>${naira(d.principal)}</span></div>
     <div class="row"><span>Monthly payment</span><span>${naira(d.payment)}</span></div>
@@ -66,11 +68,39 @@ function renderPreview() {
   return { lenderName, borrowerName, ...d };
 }
 
+function collectFormState() {
+  return {
+    lenderName: document.getElementById('lenderName').value,
+    borrowerName: document.getElementById('borrowerName').value,
+    loanAmount: document.getElementById('loanAmount').value,
+    loanRate: document.getElementById('loanRate').value,
+    loanMonths: document.getElementById('loanMonths').value,
+    loanStart: document.getElementById('loanStart').value
+  };
+}
+
+function applyFormState(state) {
+  document.getElementById('lenderName').value = state.lenderName || '';
+  document.getElementById('borrowerName').value = state.borrowerName || '';
+  document.getElementById('loanAmount').value = state.loanAmount ?? 500000;
+  document.getElementById('loanRate').value = state.loanRate ?? 18;
+  document.getElementById('loanMonths').value = state.loanMonths ?? 6;
+  document.getElementById('loanStart').value = state.loanStart || new Date().toISOString().split('T')[0];
+}
+
 ['lenderName','borrowerName','loanAmount','loanRate','loanMonths','loanStart'].forEach(id => {
   document.getElementById(id).addEventListener('input', renderPreview);
 });
 
-document.getElementById('loanStart').value = new Date().toISOString().split('T')[0];
+document.getElementById('clearFormBtn').addEventListener('click', () => {
+  if (!confirm('Clear this form? This only affects this device.')) return;
+  KoboStorage.clear('loan');
+  applyFormState({});
+  renderPreview();
+});
+
+const saved = window.KoboStorage ? KoboStorage.load('loan') : null;
+applyFormState(saved || {});
 renderPreview();
 
 document.getElementById('downloadBtn').addEventListener('click', () => {
