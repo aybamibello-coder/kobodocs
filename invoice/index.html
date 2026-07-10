@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Free Invoice Generator Online Nigeria | KoboDocs</title>
+<meta name="description" content="Create a professional invoice in Naira, free — VAT built in, no login. Download as PDF or share straight to WhatsApp.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Work+Sans:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute">
+  <filter id="roughen" x="-20%" y="-20%" width="140%" height="140%">
+    <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed="7" result="noise"/>
+    <feDisplacementMap in="SourceGraphic" in2="noise" scale="4"/>
+  </filter>
+</svg>
+
+<header>
+  <nav class="nav">
+    <a href="/" class="logo">
+      <svg class="mark" viewBox="0 0 32 32" fill="none">
+        <circle cx="16" cy="16" r="14" stroke="#C79A3C" stroke-width="2.5"/>
+        <circle cx="16" cy="16" r="8" stroke="#C79A3C" stroke-width="1.5"/>
+      </svg>
+      KoboDocs
+    </a>
+    <button class="menu-btn" aria-label="Toggle menu" id="menuBtn"><span></span><span></span><span></span></button>
+    <div class="nav-links" id="navLinks">
+      <a href="/#tools">Tools</a>
+      <a href="/#ajo">Ajo &amp; Esusu</a>
+      <a href="/pricing/">Pricing</a>
+      <a href="/invoice/" class="nav-cta">Start free</a>
+    </div>
+  </nav>
+</header>
+
+<section class="page-header">
+  <div class="wrap">
+    <a href="/">&larr; Back to KoboDocs</a>
+    <h1>Free Invoice Generator Online Nigeria</h1>
+    <p>Fill in your details on the left, watch the invoice build itself on the right. Download it as a PDF or send it straight to WhatsApp — no account needed.</p>
+  </div>
+</section>
+
+<section class="generator">
+  <div class="wrap">
+
+    <div class="form-panel">
+      <div class="field-group">
+        <label for="bizName">Your business name</label>
+        <input type="text" id="bizName" placeholder="Adaeze Fabrics Co.">
+      </div>
+      <div class="field-row">
+        <div class="field-group">
+          <label for="bizPhone">Phone / WhatsApp</label>
+          <input type="text" id="bizPhone" placeholder="0803 000 0000">
+        </div>
+        <div class="field-group">
+          <label for="bizBank">Bank / Account details</label>
+          <input type="text" id="bizBank" placeholder="GTBank — 0123456789">
+        </div>
+      </div>
+
+      <div class="field-row">
+        <div class="field-group">
+          <label for="invNumber">Invoice number</label>
+          <input type="text" id="invNumber" value="INV-0001">
+        </div>
+        <div class="field-group">
+          <label for="invDate">Date</label>
+          <input type="date" id="invDate">
+        </div>
+      </div>
+
+      <div class="field-group">
+        <label for="clientName">Bill to (client name)</label>
+        <input type="text" id="clientName" placeholder="Chinedu Okafor">
+      </div>
+
+      <div class="field-group">
+        <label>Items</label>
+        <div id="itemRows"></div>
+        <button type="button" class="add-item-btn" id="addItemBtn">+ Add item</button>
+      </div>
+
+      <div class="field-group toggle-row">
+        <input type="checkbox" id="vatToggle" checked>
+        <label for="vatToggle" style="margin:0;">Add VAT (7.5%)</label>
+      </div>
+
+      <div class="field-group">
+        <label for="invNote">Note (optional)</label>
+        <textarea id="invNote" rows="2" placeholder="e.g. Payment due within 7 days"></textarea>
+      </div>
+
+      <div class="action-row">
+        <button type="button" class="btn btn-primary" id="downloadBtn">Download PDF</button>
+        <button type="button" class="btn btn-ghost" id="waBtn" style="border-color:var(--line); color:var(--ink-green-deep);">Share on WhatsApp</button>
+      </div>
+    </div>
+
+    <div class="preview-panel">
+      <div class="doc-preview" id="docPreview">
+        <div class="stamp"><span class="stamp-label">Invoice</span></div>
+        <div class="doc-head">
+          <div>
+            <div class="biz" id="pBizName">Your business name</div>
+            <div class="biz-sub" id="pBizContact">Phone · Bank details</div>
+          </div>
+          <div class="meta">
+            <span id="pInvNumber">INV-0001</span><br>
+            <span id="pInvDate">—</span>
+          </div>
+        </div>
+        <div class="doc-to">
+          <span style="opacity:0.6;">Bill to</span>
+          <strong id="pClientName">Client name</strong>
+        </div>
+        <table class="doc-items">
+          <thead>
+            <tr><th>Description</th><th class="num">Qty</th><th class="num">Amount</th></tr>
+          </thead>
+          <tbody id="pItemsBody"></tbody>
+        </table>
+        <div class="doc-totals" id="pTotals"></div>
+        <div class="doc-note" id="pNote" style="display:none;"></div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div class="footer-top">
+      <div>
+        <div class="footer-logo">KoboDocs</div>
+        <p class="footer-note">Every business document, stamped and sent — built for Nigeria, one Naira at a time.</p>
+      </div>
+      <div class="footer-links">
+        <div>
+          <strong>Tools</strong>
+          <a href="/invoice/">Invoice</a>
+          <a href="/receipt/">Receipt</a>
+          <a href="/payslip/">Payslip</a>
+          <a href="/ajo/">Ajo &amp; Esusu</a>
+        </div>
+        <div>
+          <strong>Company</strong>
+          <a href="/pricing/">Pricing</a>
+          <a href="/">Home</a>
+        </div>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2026 KoboDocs. Not a financial institution — we never hold or move your money.</span>
+      <span>Made in Lagos</span>
+    </div>
+  </div>
+</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
+<script src="/assets/app.js" defer></script>
+<script src="/invoice/invoice.js" defer></script>
+</body>
+</html>

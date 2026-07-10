@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pricing | KoboDocs</title>
+<meta name="description" content="KoboDocs pricing — free document generators for Nigerian businesses, plus Pro and Business tiers for saved clients, branding, and batch tools.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Work+Sans:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute">
+  <filter id="roughen" x="-20%" y="-20%" width="140%" height="140%">
+    <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed="7" result="noise"/>
+    <feDisplacementMap in="SourceGraphic" in2="noise" scale="4"/>
+  </filter>
+</svg>
+
+<header>
+  <nav class="nav">
+    <a href="/" class="logo">
+      <svg class="mark" viewBox="0 0 32 32" fill="none">
+        <circle cx="16" cy="16" r="14" stroke="#C79A3C" stroke-width="2.5"/>
+        <circle cx="16" cy="16" r="8" stroke="#C79A3C" stroke-width="1.5"/>
+      </svg>
+      KoboDocs
+    </a>
+    <button class="menu-btn" aria-label="Toggle menu" id="menuBtn"><span></span><span></span><span></span></button>
+    <div class="nav-links" id="navLinks">
+      <a href="/#tools">Tools</a>
+      <a href="/#ajo">Ajo &amp; Esusu</a>
+      <a href="/pricing/">Pricing</a>
+      <a href="/invoice/" class="nav-cta">Start free</a>
+    </div>
+  </nav>
+</header>
+
+<section class="page-header">
+  <div class="wrap">
+    <a href="/">&larr; Back to KoboDocs</a>
+    <h1>Free covers the paperwork. Pro saves the time.</h1>
+    <p>Every document generator is free, forever, with no account required. Pro adds the parts that save real time once you're doing this every week.</p>
+  </div>
+</section>
+
+<section style="padding-top:64px;">
+  <div class="wrap">
+    <div class="pricing-grid">
+      <div class="plan">
+        <span class="plan-tag">Free</span>
+        <h3>Get started</h3>
+        <div class="plan-price">₦0</div>
+        <p class="plan-note">No login, no watermark</p>
+        <ul class="plan-features">
+          <li>Unlimited invoices, receipts, quotes &amp; payslips</li>
+          <li>VAT, PAYE, pension &amp; NHF presets</li>
+          <li>PDF export, WhatsApp share</li>
+          <li>One Ajo/Esusu circle</li>
+          <li>Basic budget planner</li>
+        </ul>
+        <a href="/invoice/" class="btn btn-primary">Start free</a>
+      </div>
+      <div class="plan featured">
+        <span class="plan-tag">Most popular</span>
+        <h3>Pro</h3>
+        <div class="plan-price">₦1,500<span>/month</span></div>
+        <p class="plan-note">or ₦12,000/year — save 33%</p>
+        <ul class="plan-features">
+          <li>Everything in Free</li>
+          <li>Saved clients &amp; employee lists</li>
+          <li>Document history &amp; search</li>
+          <li>Custom branding &amp; logo</li>
+          <li>Batch payslip generation</li>
+          <li>Recurring invoices &amp; payment links</li>
+          <li>Unlimited Ajo/Esusu circles + reminders</li>
+        </ul>
+        <a href="#" class="btn btn-primary" id="proBtn">Upgrade to Pro</a>
+      </div>
+      <div class="plan">
+        <span class="plan-tag">Business</span>
+        <h3>Teams</h3>
+        <div class="plan-price">₦5,000<span>/month</span></div>
+        <p class="plan-note">or ₦45,000/year</p>
+        <ul class="plan-features">
+          <li>Everything in Pro</li>
+          <li>Multiple business profiles</li>
+          <li>Multi-user access</li>
+          <li>Priority WhatsApp support</li>
+          <li>Early access to new tools</li>
+        </ul>
+        <a href="#" class="btn btn-primary" id="bizBtn">Talk to us</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="faq">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <span class="eyebrow mono">Questions</span>
+      <h2>Before you upgrade</h2>
+    </div>
+    <div class="faq-list">
+      <details class="faq-item reveal" open>
+        <summary>Can I cancel anytime?<span class="faq-plus"></span></summary>
+        <p>Yes. Pro and Business are month-to-month or annual with no lock-in — cancel whenever you like.</p>
+      </details>
+      <details class="faq-item reveal">
+        <summary>Do I need Pro to use the generators?<span class="faq-plus"></span></summary>
+        <p>No. Every core generator is free forever with no account required. Pro just adds saved data, branding, and batch tools.</p>
+      </details>
+      <details class="faq-item reveal">
+        <summary>How do I pay?<span class="faq-plus"></span></summary>
+        <p>Card or bank transfer via Paystack, in Naira.</p>
+      </details>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div class="footer-top">
+      <div>
+        <div class="footer-logo">KoboDocs</div>
+        <p class="footer-note">Every business document, stamped and sent — built for Nigeria, one Naira at a time.</p>
+      </div>
+      <div class="footer-links">
+        <div>
+          <strong>Tools</strong>
+          <a href="/invoice/">Invoice</a>
+          <a href="/receipt/">Receipt</a>
+          <a href="/payslip/">Payslip</a>
+          <a href="/ajo/">Ajo &amp; Esusu</a>
+        </div>
+        <div>
+          <strong>Company</strong>
+          <a href="/pricing/">Pricing</a>
+          <a href="/">Home</a>
+        </div>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2026 KoboDocs. Not a financial institution — we never hold or move your money.</span>
+      <span>Made in Lagos</span>
+    </div>
+  </div>
+</footer>
+
+<script src="/assets/app.js" defer></script>
+<script>
+  // Pro/Business billing isn't wired up yet — Paystack integration is a later build step.
+  document.getElementById('proBtn').addEventListener('click', (e) => {
+    e.preventDefault();
+    alert('Pro billing is coming soon — Paystack checkout isn\'t connected yet.');
+  });
+  document.getElementById('bizBtn').addEventListener('click', (e) => {
+    e.preventDefault();
+    alert('Business plan sign-up is coming soon.');
+  });
+</script>
+</body>
+</html>
