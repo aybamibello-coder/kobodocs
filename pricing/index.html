@@ -67,8 +67,12 @@
       <div class="plan featured">
         <span class="plan-tag">Most popular</span>
         <h3>Pro</h3>
-        <div class="plan-price">₦1,500<span>/month</span></div>
-        <p class="plan-note">or ₦12,000/year — save 33%</p>
+        <div class="plan-price" id="proPrice">₦1,500<span>/month</span></div>
+        <p class="plan-note">
+          <label><input type="radio" name="billingCycle" value="monthly" checked> Monthly</label>
+          &nbsp;&nbsp;
+          <label><input type="radio" name="billingCycle" value="yearly"> Yearly — save 33%</label>
+        </p>
         <ul class="plan-features">
           <li>Everything in Free</li>
           <li>Saved clients &amp; employee lists</li>
@@ -153,9 +157,15 @@
 <script src="/assets/app.js" defer></script>
 <script type="module" src="/assets/auth.js"></script>
 <script type="module">
-  // Paystack checkout isn't wired up yet — that's the next build step.
-  // For now: signed-out users go to create an account; signed-in users get a
-  // "coming soon" note since billing itself isn't connected.
+  const proPriceEl = document.getElementById('proPrice');
+  document.querySelectorAll('input[name="billingCycle"]').forEach(radio => {
+    radio.addEventListener('change', (e) => {
+      proPriceEl.innerHTML = e.target.value === 'yearly'
+        ? '₦12,000<span>/year</span>'
+        : '₦1,500<span>/month</span>';
+    });
+  });
+
   document.getElementById('proBtn').addEventListener('click', async (e) => {
     e.preventDefault();
     await new Promise(r => {
@@ -167,7 +177,33 @@
       window.location.href = '/account/';
       return;
     }
-    alert('You\'re signed in — Paystack checkout for Pro is coming very soon.');
+
+    const btn = document.getElementById('proBtn');
+    const originalText = btn.textContent;
+    btn.textContent = 'Redirecting…';
+    btn.style.pointerEvents = 'none';
+
+    const billingCycle = document.querySelector('input[name="billingCycle"]:checked').value;
+
+    try {
+      const res = await fetch('https://vwmzulzluaxedkozxjfy.supabase.co/functions/v1/init-payment', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`
+        },
+        body: JSON.stringify({ billing_cycle: billingCycle })
+      });
+      const data = await res.json();
+      if (!res.ok || !data.authorization_url) {
+        throw new Error(data.error || 'Could not start checkout');
+      }
+      window.location.href = data.authorization_url;
+    } catch (err) {
+      alert('Checkout failed: ' + err.message);
+      btn.textContent = originalText;
+      btn.style.pointerEvents = 'auto';
+    }
   });
   document.getElementById('bizBtn').addEventListener('click', (e) => {
     e.preventDefault();
