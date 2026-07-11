@@ -120,6 +120,30 @@
   }
   .stamp.red{ --sc: var(--stamp-red); }
 
+  /* Boarding-pass perforation — Relocation's signature element, built from
+     the same stamp/paper materials as the rest of the site, not a new palette.
+     Dots are colored to match the dark hero section behind the paper card,
+     so they read as punched holes rather than printed circles. */
+  .ticket-perf{
+    position:relative; height:0;
+  }
+  .ticket-perf::before{
+    content:''; position:absolute; left:0; right:0; top:-1px;
+    height:2px;
+    background-image: radial-gradient(circle, var(--ink-green-deep) 3px, transparent 3.5px);
+    background-size: 16px 16px;
+    background-position: 0 -7px;
+    background-repeat: repeat-x;
+  }
+  .pass-route{ display:flex; align-items:baseline; gap:14px; }
+  .pass-code{ font-family:'Fraunces', serif; font-weight:700; font-size:2.1rem; letter-spacing:0.02em; }
+  .pass-arrow{ opacity:0.35; font-size:1.1rem; }
+  .pass-sub{ font-family:'Space Mono', monospace; font-size:0.7rem; opacity:0.55; text-transform:uppercase; letter-spacing:0.06em; margin-top:2px; }
+  .pass-stub{ padding-top:18px; display:flex; justify-content:space-between; font-size:0.8rem; }
+  .pass-stub div span{ display:block; }
+  .pass-stub .label{ font-family:'Space Mono', monospace; font-size:0.62rem; text-transform:uppercase; letter-spacing:0.06em; opacity:0.5; margin-bottom:4px; }
+  .pass-stub .val{ font-weight:600; }
+
   /* ---------- HERO ---------- */
   .hero{
     background:var(--ink-green-deep);
@@ -214,6 +238,9 @@
   .tool-card p{ font-size:0.92rem; opacity:0.72; flex-grow:1; }
   .tool-card .go{ font-weight:600; font-size:0.9rem; color:var(--stamp-red); }
   .tool-card .go::after{ content:' →'; }
+  .tool-tag{ font-family:'Space Mono', monospace; font-size:0.65rem; letter-spacing:0.06em; text-transform:uppercase; color:var(--stamp-gold); background:rgba(199,154,60,0.12); padding:3px 8px; border-radius:20px; display:inline-block; margin-bottom:12px; }
+  .tool-card .go.disabled{ color:var(--charcoal); opacity:0.4; cursor:default; }
+  .tool-card .go.disabled::after{ content:''; }
 
   @media (max-width:900px){ .tools-grid{ grid-template-columns:repeat(2, 1fr); } }
   @media (max-width:600px){ .tools-grid{ grid-template-columns:1fr; } }
@@ -458,6 +485,16 @@
   .doc-totals .row.grand span:last-child{ font-family:'Space Mono', monospace; color:var(--stamp-red); }
   .doc-totals .row span:last-child{ font-family:'Space Mono', monospace; }
   .doc-note{ margin-top:24px; font-size:0.8rem; opacity:0.6; border-top:1px solid var(--line); padding-top:14px; }
+
+  /* ---------- Paywall (Japa Pass gated content) ---------- */
+  .report-gate{ position:relative; }
+  .report-gate.locked .report-body{ filter:blur(5px); pointer-events:none; user-select:none; }
+  .unlock-overlay{
+    position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center;
+    text-align:center; padding:24px; gap:10px; z-index:2;
+  }
+  .unlock-overlay p{ max-width:32ch; font-size:0.85rem; opacity:0.75; margin:0; }
+  .unlock-overlay .btn{ margin-top:4px; }
 
   .budget-row{ grid-template-columns:1fr 140px 32px; }
   @media (max-width:480px){
