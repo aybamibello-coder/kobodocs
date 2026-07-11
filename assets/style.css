@@ -244,6 +244,7 @@
   .ajo-row:last-child{ border-bottom:none; }
   .ajo-tag{ font-family:'Space Mono', monospace; font-size:0.72rem; padding:3px 8px; border-radius:20px; background:var(--bone); color:var(--ink-green-deep); }
   .ajo-tag.next{ background:var(--stamp-gold); color:var(--ink-green-deep); }
+  .ajo-card-cta{ width:100%; margin-top:16px; text-align:center; display:block; }
 
   @media (max-width:900px){ .ajo .wrap{ grid-template-columns:1fr; } }
 

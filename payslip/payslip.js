@@ -133,52 +133,47 @@ if (saved) applyFormState(saved);
 else applyFormState({});
 renderPreview();
 
-document.getElementById('downloadBtn').addEventListener('click', () => {
+document.getElementById('downloadBtn').addEventListener('click', async () => {
   const d = renderPreview();
-  const { jsPDF } = window.jspdf;
-  const doc = new jsPDF({ unit: 'pt', format: 'a4' });
-  const left = 48; let y = 60;
-
-  doc.setFont('helvetica', 'bold'); doc.setFontSize(18); doc.text(d.empName, left, y); y += 22;
-  doc.setFont('helvetica', 'normal'); doc.setFontSize(11); doc.text(`Payslip for ${d.staffName}`, left, y); y += 14;
-  doc.setFontSize(10); doc.setTextColor(90); doc.text(`Pay period: ${d.period}`, left, y); y += 24;
-
-  doc.setTextColor(20); doc.setDrawColor(20); doc.line(left, y, 547, y); y += 20;
-  doc.setFont('helvetica', 'bold'); doc.text('Earnings', left, y); doc.text('Amount', 547, y, { align: 'right' }); y += 6;
-  doc.line(left, y, 547, y); y += 16;
-  doc.setFont('helvetica', 'normal');
-  const earnings = [['Basic salary', d.basic], ['Housing allowance', d.housing], ['Transport allowance', d.transport]];
-  if (d.other) earnings.push(['Other allowances', d.other]);
-  earnings.forEach(([label, val]) => { doc.text(label, left, y); doc.text(naira(val), 547, y, { align: 'right' }); y += 18; });
-
-  y += 10; doc.setFont('helvetica', 'bold'); doc.text('Deductions', left, y); doc.text('Amount', 547, y, { align: 'right' }); y += 6;
-  doc.line(left, y, 547, y); y += 16; doc.setFont('helvetica', 'normal');
-  const deductions = [];
-  if (d.pensionOn) deductions.push(['Pension (8%)', d.pensionMonthly]);
-  if (d.nhfOn) deductions.push(['NHF (2.5% of basic)', d.nhfMonthly]);
-  deductions.push(['PAYE tax', d.payeMonthly]);
-  deductions.forEach(([label, val]) => { doc.text(label, left, y); doc.text(naira(val), 547, y, { align: 'right' }); y += 18; });
-
-  y += 14; doc.line(350, y, 547, y); y += 18;
-  doc.text('Gross pay', 460, y, { align: 'right' }); doc.text(naira(d.grossMonthly), 547, y, { align: 'right' }); y += 18;
-  doc.setFont('helvetica', 'bold'); doc.setFontSize(13);
-  doc.text('Net pay', 460, y, { align: 'right' }); doc.text(naira(d.netMonthly), 547, y, { align: 'right' });
-
-  y += 30; doc.setFont('helvetica', 'italic'); doc.setFontSize(8); doc.setTextColor(120);
-  doc.text('Estimated figures based on the Nigeria Tax Act 2025 (effective Jan 2026). Confirm with an accountant or the Nigeria Revenue Service before relying on for compliance.', left, y, { maxWidth: 499 });
-
-  doc.save(`payslip-${d.staffName.replace(/\s+/g, '-') || 'employee'}.pdf`);
+  const btn = document.getElementById('downloadBtn');
+  const originalText = btn.textContent;
+  btn.textContent = 'Preparing PDF…';
+  btn.disabled = true;
+  try {
+    await KoboExport.downloadPdf(`payslip-${(d.staffName || 'employee').replace(/\s+/g, '-')}.pdf`);
+  } catch (err) {
+    alert('Could not generate PDF: ' + err.message);
+  } finally {
+    btn.textContent = originalText;
+    btn.disabled = false;
+  }
 });
 
-document.getElementById('waBtn').addEventListener('click', () => {
+document.getElementById('waBtn').addEventListener('click', async () => {
   const d = renderPreview();
-  const lines = [
+  const btn = document.getElementById('waBtn');
+  const originalText = btn.textContent;
+  btn.textContent = 'Preparing image…';
+  btn.disabled = true;
+
+  const caption = [
     `*Payslip — ${d.period}*`,
     `${d.empName}`,
     `Employee: ${d.staffName}`,
     '',
     `Gross pay: ${naira(d.grossMonthly)}`,
     `Net pay: *${naira(d.netMonthly)}*`
-  ];
-  window.open(`https://wa.me/?text=${encodeURIComponent(lines.join('\n'))}`, '_blank');
+  ].join('\n');
+
+  try {
+    const result = await KoboExport.shareWhatsApp(`payslip-${(d.staffName || 'employee').replace(/\s+/g, '-')}.png`, caption);
+    if (result === 'downloaded') {
+      alert('Image downloaded — attach it in WhatsApp. Opening WhatsApp with the caption now.');
+    }
+  } catch (err) {
+    if (err.name !== 'AbortError') alert('Could not prepare the image: ' + err.message);
+  } finally {
+    btn.textContent = originalText;
+    btn.disabled = false;
+  }
 });

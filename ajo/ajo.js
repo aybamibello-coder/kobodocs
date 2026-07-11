@@ -125,47 +125,47 @@ if (saved) {
   renderPreview();
 }
 
-document.getElementById('downloadBtn').addEventListener('click', () => {
+document.getElementById('downloadBtn').addEventListener('click', async () => {
   const d = renderPreview();
-  const { jsPDF } = window.jspdf;
-  const doc = new jsPDF({ unit: 'pt', format: 'a4' });
-  const left = 48; let y = 60;
-
-  doc.setFont('helvetica', 'bold'); doc.setFontSize(18); doc.text(d.circleName, left, y); y += 20;
-  doc.setFont('helvetica', 'normal'); doc.setFontSize(10); doc.setTextColor(90);
-  doc.text(`${d.frequency} contributions of ${naira(d.contribution)} · Pot per cycle: ${naira(d.pot)}`, left, y); y += 24;
-
-  doc.setTextColor(20); doc.setDrawColor(20); doc.line(left, y, 547, y); y += 20;
-  doc.setFont('helvetica', 'bold'); doc.setFontSize(10);
-  doc.text('#', left, y); doc.text('Member', left + 24, y); doc.text('Status', 500, y, { align: 'right' });
-  y += 6; doc.line(left, y, 547, y); y += 16;
-
-  doc.setFont('helvetica', 'normal');
-  d.members.forEach((m, i) => {
-    const status = m.paid ? 'Paid' : (d.nextCollector && m.id === d.nextCollector.id ? 'Collects next' : 'Pending');
-    doc.text(String(i + 1), left, y);
-    doc.text(m.name || `Member ${i + 1}`, left + 24, y);
-    doc.text(status, 500, y, { align: 'right' });
-    y += 20;
-  });
-
-  y += 20; doc.setFont('helvetica', 'italic'); doc.setFontSize(8.5); doc.setTextColor(120);
-  doc.text('This is a contribution record only. KoboDocs does not hold or move money on behalf of this circle.', left, y, { maxWidth: 499 });
-
-  doc.save(`ajo-${d.circleName.replace(/\s+/g, '-') || 'circle'}.pdf`);
+  const btn = document.getElementById('downloadBtn');
+  const originalText = btn.textContent;
+  btn.textContent = 'Preparing PDF…';
+  btn.disabled = true;
+  try {
+    await KoboExport.downloadPdf(`ajo-${(d.circleName || 'circle').replace(/\s+/g, '-')}.pdf`);
+  } catch (err) {
+    alert('Could not generate PDF: ' + err.message);
+  } finally {
+    btn.textContent = originalText;
+    btn.disabled = false;
+  }
 });
 
-document.getElementById('waBtn').addEventListener('click', () => {
+document.getElementById('waBtn').addEventListener('click', async () => {
   const d = renderPreview();
-  const lines = [
+  const btn = document.getElementById('waBtn');
+  const originalText = btn.textContent;
+  btn.textContent = 'Preparing image…';
+  btn.disabled = true;
+
+  const caption = [
     `*${d.circleName} — ${d.frequency} update*`,
     `Contribution: ${naira(d.contribution)} per member`,
-    `Pot this cycle: ${naira(d.pot)}`,
-    '',
-    ...d.members.map((m, i) => {
-      const status = m.paid ? 'Paid ✓' : (d.nextCollector && m.id === d.nextCollector.id ? 'Collects next' : 'Pending');
-      return `${i + 1}. ${m.name || `Member ${i + 1}`} — ${status}`;
-    })
-  ];
-  window.open(`https://wa.me/?text=${encodeURIComponent(lines.join('\n'))}`, '_blank');
+    `Pot this cycle: ${naira(d.pot)}`
+  ].join('\n');
+
+  try {
+    const result = await KoboExport.shareWhatsApp(
+      `ajo-${(d.circleName || 'circle').replace(/\s+/g, '-')}.png`,
+      caption
+    );
+    if (result === 'downloaded') {
+      alert('Image downloaded — attach it in WhatsApp. Opening WhatsApp with the caption now.');
+    }
+  } catch (err) {
+    if (err.name !== 'AbortError') alert('Could not prepare the image: ' + err.message);
+  } finally {
+    btn.textContent = originalText;
+    btn.disabled = false;
+  }
 });

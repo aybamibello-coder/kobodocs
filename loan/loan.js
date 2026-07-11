@@ -103,47 +103,65 @@ const saved = window.KoboStorage ? KoboStorage.load('loan') : null;
 applyFormState(saved || {});
 renderPreview();
 
-document.getElementById('downloadBtn').addEventListener('click', () => {
-  const d = renderPreview();
-  const { jsPDF } = window.jspdf;
-  const doc = new jsPDF({ unit: 'pt', format: 'a4' });
-  const left = 40; const right = 555;
-  let y = 50;
-
-  doc.setFont('helvetica', 'bold'); doc.setFontSize(16); doc.text(d.lenderName, left, y); y += 18;
-  doc.setFont('helvetica', 'normal'); doc.setFontSize(10); doc.setTextColor(90);
-  doc.text(`Loan to ${d.borrowerName}`, left, y); y += 14;
-  doc.text(`Principal: ${naira(d.principal)}  ·  Rate: ${d.annualRate}% p.a.  ·  Tenure: ${d.months} months`, left, y); y += 14;
-  doc.text(`Monthly payment: ${naira(d.payment)}  ·  Total interest: ${naira(d.totalInterest)}`, left, y); y += 24;
-
-  doc.setTextColor(20); doc.setDrawColor(20); doc.line(left, y, right, y); y += 16;
-  doc.setFont('helvetica', 'bold'); doc.setFontSize(9);
-  const cols = [left, 270, 350, 430, 510];
-  ['Month', 'Payment', 'Interest', 'Principal', 'Balance'].forEach((h, i) => doc.text(h, cols[i], y));
-  y += 6; doc.line(left, y, right, y); y += 14;
-
-  doc.setFont('helvetica', 'normal'); doc.setFontSize(8.5);
-  d.rows.forEach(r => {
-    if (y > 780) { doc.addPage(); y = 50; }
-    doc.text(`${r.month}. ${r.dateLabel}`, cols[0], y);
-    doc.text(naira(r.payment), cols[1], y);
-    doc.text(naira(r.interest), cols[2], y);
-    doc.text(naira(r.principal), cols[3], y);
-    doc.text(naira(r.balance), cols[4], y);
-    y += 15;
+// The schedule table is scrollable on screen (max-height + overflow) so long
+// loans don't take over the page — but for export we need the FULL table
+// visible, or html2canvas only captures whatever's in the scrolled window.
+function withFullScheduleVisible(fn) {
+  const scrollEl = document.querySelector('.schedule-scroll');
+  const prevMaxHeight = scrollEl.style.maxHeight;
+  const prevOverflowY = scrollEl.style.overflowY;
+  scrollEl.style.maxHeight = 'none';
+  scrollEl.style.overflowY = 'visible';
+  return Promise.resolve().then(fn).finally(() => {
+    scrollEl.style.maxHeight = prevMaxHeight;
+    scrollEl.style.overflowY = prevOverflowY;
   });
+}
 
-  doc.save(`loan-schedule-${d.borrowerName.replace(/\s+/g, '-') || 'borrower'}.pdf`);
+document.getElementById('downloadBtn').addEventListener('click', async () => {
+  const d = renderPreview();
+  const btn = document.getElementById('downloadBtn');
+  const originalText = btn.textContent;
+  btn.textContent = 'Preparing PDF…';
+  btn.disabled = true;
+  try {
+    await withFullScheduleVisible(() =>
+      KoboExport.downloadPdf(`loan-schedule-${(d.borrowerName || 'borrower').replace(/\s+/g, '-')}.pdf`)
+    );
+  } catch (err) {
+    alert('Could not generate PDF: ' + err.message);
+  } finally {
+    btn.textContent = originalText;
+    btn.disabled = false;
+  }
 });
 
-document.getElementById('waBtn').addEventListener('click', () => {
+document.getElementById('waBtn').addEventListener('click', async () => {
   const d = renderPreview();
-  const lines = [
+  const btn = document.getElementById('waBtn');
+  const originalText = btn.textContent;
+  btn.textContent = 'Preparing image…';
+  btn.disabled = true;
+
+  const caption = [
     `*Loan schedule — ${d.lenderName}*`,
     `Borrower: ${d.borrowerName}`,
     `Principal: ${naira(d.principal)} at ${d.annualRate}% p.a. over ${d.months} months`,
     `Monthly payment: *${naira(d.payment)}*`,
     `Total interest: ${naira(d.totalInterest)}`
-  ];
-  window.open(`https://wa.me/?text=${encodeURIComponent(lines.join('\n'))}`, '_blank');
+  ].join('\n');
+
+  try {
+    const result = await withFullScheduleVisible(() =>
+      KoboExport.shareWhatsApp(`loan-schedule-${(d.borrowerName || 'borrower').replace(/\s+/g, '-')}.png`, caption)
+    );
+    if (result === 'downloaded') {
+      alert('Image downloaded — attach it in WhatsApp. Opening WhatsApp with the caption now.');
+    }
+  } catch (err) {
+    if (err.name !== 'AbortError') alert('Could not prepare the image: ' + err.message);
+  } finally {
+    btn.textContent = originalText;
+    btn.disabled = false;
+  }
 });

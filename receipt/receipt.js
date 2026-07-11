@@ -106,60 +106,47 @@ if (saved) {
 }
 renderPreview();
 
-document.getElementById('downloadBtn').addEventListener('click', () => {
+document.getElementById('downloadBtn').addEventListener('click', async () => {
   const data = renderPreview();
-  const { jsPDF } = window.jspdf;
-  const doc = new jsPDF({ unit: 'pt', format: 'a4' });
-  const left = 48; let y = 60;
-
-  doc.setFont('helvetica', 'bold'); doc.setFontSize(18); doc.text(data.bizName, left, y);
-  doc.setFont('helvetica', 'normal'); doc.setFontSize(10); doc.setTextColor(90); y += 18;
-  if (data.bizPhone) { doc.text(data.bizPhone, left, y); y += 14; }
-
-  doc.setTextColor(20); doc.setFont('helvetica', 'bold'); doc.setFontSize(20);
-  doc.text('RECEIPT', 400, 60);
-  doc.setFont('helvetica', 'normal'); doc.setFontSize(10);
-  doc.text(`No: ${data.recNumber}`, 400, 80);
-  doc.text(`Date: ${document.getElementById('pRecDate').textContent}`, 400, 94);
-
-  y += 20; doc.setDrawColor(20); doc.line(left, y, 547, y); y += 20;
-  doc.setFont('helvetica', 'bold'); doc.text('Received from:', left, y); y += 14;
-  doc.setFont('helvetica', 'normal'); doc.text(data.payerName, left, y); y += 26;
-
-  doc.setFont('helvetica', 'bold'); doc.setFontSize(10);
-  doc.text('Description', left, y); doc.text('Qty', 380, y, { align: 'right' }); doc.text('Amount', 547, y, { align: 'right' });
-  y += 6; doc.line(left, y, 547, y); y += 16;
-
-  doc.setFont('helvetica', 'normal');
-  data.items.forEach(it => {
-    doc.text(it.desc, left, y);
-    doc.text(String(it.qty), 380, y, { align: 'right' });
-    doc.text(naira(it.qty * it.price), 547, y, { align: 'right' });
-    y += 20;
-  });
-
-  y += 6; doc.line(350, y, 547, y); y += 18;
-  doc.setFont('helvetica', 'bold'); doc.setFontSize(12);
-  doc.text('Total received', 460, y, { align: 'right' }); doc.text(naira(data.total), 547, y, { align: 'right' });
-  y += 22; doc.setFont('helvetica', 'normal'); doc.setFontSize(10);
-  doc.text(`Paid via ${data.method}`, left, y);
-
-  if (data.note) { y += 20; doc.setFont('helvetica', 'italic'); doc.setFontSize(9); doc.setTextColor(100); doc.text(data.note, left, y, { maxWidth: 499 }); }
-
-  doc.save(`${data.recNumber || 'receipt'}.pdf`);
+  const btn = document.getElementById('downloadBtn');
+  const originalText = btn.textContent;
+  btn.textContent = 'Preparing PDF…';
+  btn.disabled = true;
+  try {
+    await KoboExport.downloadPdf(`${data.recNumber || 'receipt'}.pdf`);
+  } catch (err) {
+    alert('Could not generate PDF: ' + err.message);
+  } finally {
+    btn.textContent = originalText;
+    btn.disabled = false;
+  }
 });
 
-document.getElementById('waBtn').addEventListener('click', () => {
+document.getElementById('waBtn').addEventListener('click', async () => {
   const data = renderPreview();
-  const lines = [
+  const btn = document.getElementById('waBtn');
+  const originalText = btn.textContent;
+  btn.textContent = 'Preparing image…';
+  btn.disabled = true;
+
+  const caption = [
     `*Receipt ${data.recNumber}*`,
     `From: ${data.bizName}`,
     `Received from: ${data.payerName}`,
     '',
-    ...data.items.map(it => `${it.desc} x${it.qty} — ${naira(it.qty * it.price)}`),
-    '',
     `Total received: *${naira(data.total)}*`,
     `Paid via ${data.method}`
-  ].filter(Boolean);
-  window.open(`https://wa.me/?text=${encodeURIComponent(lines.join('\n'))}`, '_blank');
+  ].filter(Boolean).join('\n');
+
+  try {
+    const result = await KoboExport.shareWhatsApp(`${data.recNumber || 'receipt'}.png`, caption);
+    if (result === 'downloaded') {
+      alert('Image downloaded — attach it in WhatsApp. Opening WhatsApp with the caption now.');
+    }
+  } catch (err) {
+    if (err.name !== 'AbortError') alert('Could not prepare the image: ' + err.message);
+  } finally {
+    btn.textContent = originalText;
+    btn.disabled = false;
+  }
 });

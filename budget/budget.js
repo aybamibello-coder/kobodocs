@@ -86,43 +86,46 @@ const saved = window.KoboStorage ? KoboStorage.load('budget') : null;
 applyFormState(saved || {});
 renderPreview();
 
-document.getElementById('downloadBtn').addEventListener('click', () => {
+document.getElementById('downloadBtn').addEventListener('click', async () => {
   const d = renderPreview();
-  const { jsPDF } = window.jspdf;
-  const doc = new jsPDF({ unit: 'pt', format: 'a4' });
-  const left = 48; let y = 60;
-
-  doc.setFont('helvetica', 'bold'); doc.setFontSize(18); doc.text(`Budget — ${d.month}`, left, y); y += 30;
-  doc.setDrawColor(20); doc.line(left, y, 547, y); y += 20;
-
-  doc.setFont('helvetica', 'bold'); doc.setFontSize(11); doc.text('Income', left, y); y += 6;
-  doc.line(left, y, 547, y); y += 16;
-  doc.setFont('helvetica', 'normal'); doc.setFontSize(10);
-  d.income.forEach(r => { doc.text(r.label, left, y); doc.text(naira(r.amount), 547, y, { align: 'right' }); y += 18; });
-
-  y += 10; doc.setFont('helvetica', 'bold'); doc.setFontSize(11); doc.text('Expenses', left, y); y += 6;
-  doc.line(left, y, 547, y); y += 16;
-  doc.setFont('helvetica', 'normal'); doc.setFontSize(10);
-  d.expenses.forEach(r => { doc.text(r.label, left, y); doc.text(naira(r.amount), 547, y, { align: 'right' }); y += 18; });
-
-  y += 16; doc.line(350, y, 547, y); y += 18;
-  doc.text('Total income', 460, y, { align: 'right' }); doc.text(naira(d.totalIncome), 547, y, { align: 'right' }); y += 16;
-  doc.text('Total expenses', 460, y, { align: 'right' }); doc.text(naira(d.totalExpenses), 547, y, { align: 'right' }); y += 18;
-  doc.setFont('helvetica', 'bold'); doc.setFontSize(12);
-  const label = d.balance >= 0 ? 'Balance left over' : 'Shortfall';
-  doc.text(label, 460, y, { align: 'right' }); doc.text(naira(Math.abs(d.balance)), 547, y, { align: 'right' });
-
-  doc.save(`budget-${d.month.replace(/\s+/g, '-')}.pdf`);
+  const btn = document.getElementById('downloadBtn');
+  const originalText = btn.textContent;
+  btn.textContent = 'Preparing PDF…';
+  btn.disabled = true;
+  try {
+    await KoboExport.downloadPdf(`budget-${(d.month || 'plan').replace(/\s+/g, '-')}.pdf`);
+  } catch (err) {
+    alert('Could not generate PDF: ' + err.message);
+  } finally {
+    btn.textContent = originalText;
+    btn.disabled = false;
+  }
 });
 
-document.getElementById('waBtn').addEventListener('click', () => {
+document.getElementById('waBtn').addEventListener('click', async () => {
   const d = renderPreview();
+  const btn = document.getElementById('waBtn');
+  const originalText = btn.textContent;
+  btn.textContent = 'Preparing image…';
+  btn.disabled = true;
+
   const label = d.balance >= 0 ? 'Balance left over' : 'Shortfall';
-  const lines = [
+  const caption = [
     `*Budget — ${d.month}*`,
     `Total income: ${naira(d.totalIncome)}`,
     `Total expenses: ${naira(d.totalExpenses)}`,
     `${label}: *${naira(Math.abs(d.balance))}*`
-  ];
-  window.open(`https://wa.me/?text=${encodeURIComponent(lines.join('\n'))}`, '_blank');
+  ].join('\n');
+
+  try {
+    const result = await KoboExport.shareWhatsApp(`budget-${(d.month || 'plan').replace(/\s+/g, '-')}.png`, caption);
+    if (result === 'downloaded') {
+      alert('Image downloaded — attach it in WhatsApp. Opening WhatsApp with the caption now.');
+    }
+  } catch (err) {
+    if (err.name !== 'AbortError') alert('Could not prepare the image: ' + err.message);
+  } finally {
+    btn.textContent = originalText;
+    btn.disabled = false;
+  }
 });
