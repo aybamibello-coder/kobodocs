@@ -33,6 +33,7 @@
       <a href="/#tools">Tools</a>
       <a href="/#ajo">Ajo &amp; Esusu</a>
       <a href="/pricing/">Pricing</a>
+      <a href="/account/">Sign in</a>
       <a href="/invoice/" class="nav-cta">Start free</a>
     </div>
   </nav>
@@ -150,11 +151,23 @@
 </footer>
 
 <script src="/assets/app.js" defer></script>
-<script>
-  // Pro/Business billing isn't wired up yet — Paystack integration is a later build step.
-  document.getElementById('proBtn').addEventListener('click', (e) => {
+<script type="module" src="/assets/auth.js"></script>
+<script type="module">
+  // Paystack checkout isn't wired up yet — that's the next build step.
+  // For now: signed-out users go to create an account; signed-in users get a
+  // "coming soon" note since billing itself isn't connected.
+  document.getElementById('proBtn').addEventListener('click', async (e) => {
     e.preventDefault();
-    alert('Pro billing is coming soon — Paystack checkout isn\'t connected yet.');
+    await new Promise(r => {
+      if (window.KoboAuth) return r();
+      window.addEventListener('kobo-auth-ready', r, { once: true });
+    });
+    const session = await window.KoboAuth.getSession();
+    if (!session) {
+      window.location.href = '/account/';
+      return;
+    }
+    alert('You\'re signed in — Paystack checkout for Pro is coming very soon.');
   });
   document.getElementById('bizBtn').addEventListener('click', (e) => {
     e.preventDefault();
