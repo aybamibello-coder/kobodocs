@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Pricing | KoboDocs</title>
-<meta name="description" content="KoboDocs pricing — free document generators for Nigerian businesses, plus Pro and Business tiers for saved clients, branding, and batch tools.">
+<meta name="description" content="KoboDocs pricing — free document generators for Nigerian businesses, plus Pro and Business tiers, and the Japa Pass for relocation planning tools.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Work+Sans:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
@@ -49,6 +49,10 @@
 
 <section style="padding-top:64px;">
   <div class="wrap">
+    <div class="section-head">
+      <span class="eyebrow mono">Business tools</span>
+      <h2>Invoices, receipts, payslips &amp; more</h2>
+    </div>
     <div class="pricing-grid">
       <div class="plan">
         <span class="plan-tag">Free</span>
@@ -97,6 +101,46 @@
           <li>Early access to new tools</li>
         </ul>
         <a href="#" class="btn btn-primary" id="bizBtn">Talk to us</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="relocation-pricing" class="relocation-pricing-section">
+  <div class="wrap">
+    <div class="section-head">
+      <span class="eyebrow mono">Relocating abroad?</span>
+      <h2>The Japa Pass — everything for your move, one payment</h2>
+      <p>Three calculators built for the actual Japa journey: what relocating really costs, whether your proof of funds meets the threshold, and what life costs once you land. One pass unlocks full reports across all three for 6 months — no subscription, no auto-renewal.</p>
+    </div>
+    <div class="pricing-grid pricing-grid-relocation">
+      <div class="plan">
+        <span class="plan-tag">Free</span>
+        <h3>Try it first</h3>
+        <div class="plan-price">₦0</div>
+        <p class="plan-note">One ballpark number per tool</p>
+        <ul class="plan-features">
+          <li>Japa Relocation Cost Calculator — headline estimate</li>
+          <li>Proof of Funds Calculator — current official threshold</li>
+          <li>Cost of Living Calculator — headline monthly estimate</li>
+          <li>No PDF, no save, no WhatsApp share</li>
+        </ul>
+        <a href="/relocation/" class="btn btn-primary">Try the calculators</a>
+      </div>
+      <div class="plan featured">
+        <span class="plan-tag">One-time</span>
+        <h3>Japa Pass</h3>
+        <div class="plan-price">₦6,000<span>/ 6 months</span></div>
+        <p class="plan-note">Pay once — no recurring charge</p>
+        <ul class="plan-features">
+          <li>Full itemized reports, all 3 calculators</li>
+          <li>Downloadable PDF for each report</li>
+          <li>Share reports on WhatsApp</li>
+          <li>One relocation profile — reused across all 3 tools</li>
+          <li>Savings-gap &amp; month-by-month plan (Proof of Funds)</li>
+          <li>Report history for 6 months from purchase</li>
+        </ul>
+        <a href="#" class="btn btn-primary" id="japaPassBtn">Get the Japa Pass</a>
       </div>
     </div>
   </div>
@@ -208,6 +252,43 @@
   document.getElementById('bizBtn').addEventListener('click', (e) => {
     e.preventDefault();
     alert('Business plan sign-up is coming soon.');
+  });
+
+  document.getElementById('japaPassBtn').addEventListener('click', async (e) => {
+    e.preventDefault();
+    await new Promise(r => {
+      if (window.KoboAuth) return r();
+      window.addEventListener('kobo-auth-ready', r, { once: true });
+    });
+    const session = await window.KoboAuth.getSession();
+    if (!session) {
+      window.location.href = '/account/';
+      return;
+    }
+
+    const btn = document.getElementById('japaPassBtn');
+    const originalText = btn.textContent;
+    btn.textContent = 'Redirecting…';
+    btn.style.pointerEvents = 'none';
+
+    try {
+      const res = await fetch('https://vwmzulzluaxedkozxjfy.supabase.co/functions/v1/init-relocation-payment', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`
+        }
+      });
+      const data = await res.json();
+      if (!res.ok || !data.authorization_url) {
+        throw new Error(data.error || 'Could not start checkout');
+      }
+      window.location.href = data.authorization_url;
+    } catch (err) {
+      alert('Checkout failed: ' + err.message);
+      btn.textContent = originalText;
+      btn.style.pointerEvents = 'auto';
+    }
   });
 </script>
 </body>

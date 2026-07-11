@@ -250,6 +250,8 @@
 
   /* ---------- PRICING ---------- */
   .pricing-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:24px; }
+  .pricing-grid-relocation{ grid-template-columns:repeat(2,1fr); max-width:760px; margin:0 auto; }
+  .relocation-pricing-section{ padding-top:24px; }
   .plan{
     border:1px solid var(--line); border-radius:6px; padding:34px 28px;
     background:var(--paper); display:flex; flex-direction:column;
