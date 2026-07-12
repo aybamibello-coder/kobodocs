@@ -29,6 +29,17 @@
   .auth-hidden{ display:none; }
   .auth-email{ font-size:0.8rem; opacity:0.6; }
   .auth-upgrade-link{ display:inline-block; margin-top:10px; }
+  .branding-card{ margin-top:20px; }
+  .branding-card h4{ font-family:'Fraunces', serif; margin-bottom:8px; }
+  .brand-logo-row{ display:flex; flex-direction:column; gap:12px; margin:18px 0; }
+  .brand-logo-preview{
+    width:100%; max-width:200px; height:80px; border:1.5px dashed var(--line);
+    border-radius:6px; display:flex; align-items:center; justify-content:center;
+    font-size:0.78rem; opacity:0.5; overflow:hidden; background:var(--bone);
+  }
+  .brand-logo-preview img{ max-width:100%; max-height:100%; object-fit:contain; }
+  .brand-hint{ margin-top:6px; }
+  #brandColorInput{ width:60px; height:40px; padding:2px; border:1px solid var(--line); border-radius:4px; cursor:pointer; }
 </style>
 </head>
 <body>
@@ -108,6 +119,27 @@
       <a href="/pricing/" class="btn btn-primary auth-upgrade-link" id="upgradeLink">Upgrade to Pro</a>
       <p class="auth-alt-link"><a href="#" id="signOutBtn">Sign out</a></p>
     </div>
+
+    <div class="auth-card branding-card auth-hidden" id="brandingCard">
+      <h4>Your document branding</h4>
+      <p class="auth-note">Upload your logo and pick a brand color — every invoice, receipt and other document you generate will use it instead of the default KoboDocs look.</p>
+
+      <div class="brand-logo-row">
+        <div class="brand-logo-preview" id="brandLogoPreview">No logo yet</div>
+        <div>
+          <input type="file" id="brandLogoInput" accept="image/png,image/jpeg,image/svg+xml">
+          <p class="auth-note brand-hint">PNG, JPEG or SVG. Square or wide logos work best.</p>
+        </div>
+      </div>
+
+      <div class="field-group">
+        <label for="brandColorInput">Brand color</label>
+        <input type="color" id="brandColorInput" value="#C79A3C">
+      </div>
+
+      <button type="button" class="btn btn-primary" id="saveBrandingBtn">Save branding</button>
+      <p class="auth-msg" id="brandingMsg"></p>
+    </div>
   </div>
 
 </div>
@@ -154,6 +186,19 @@
       document.getElementById('planBadge').textContent = isPro ? 'Pro plan' : 'Free plan';
       document.getElementById('welcomeName').textContent = 'Welcome back' + (profile && profile.business_name ? ', ' + profile.business_name : '');
       if (isPro) document.getElementById('upgradeLink').style.display = 'none';
+
+      const brandingCard = document.getElementById('brandingCard');
+      if (isPro) {
+        brandingCard.classList.remove('auth-hidden');
+        if (profile.brand_logo_url) {
+          document.getElementById('brandLogoPreview').innerHTML = `<img src="${profile.brand_logo_url}" alt="Your logo">`;
+        }
+        if (profile.brand_color) {
+          document.getElementById('brandColorInput').value = profile.brand_color;
+        }
+      } else {
+        brandingCard.classList.add('auth-hidden');
+      }
     } else {
       document.getElementById('loggedOutView').style.display = 'block';
       document.getElementById('loggedInView').style.display = 'none';
@@ -203,6 +248,59 @@
       e.preventDefault();
       await window.KoboAuth.signOut();
       refreshView();
+    });
+
+    document.getElementById('brandLogoInput').addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        document.getElementById('brandLogoPreview').innerHTML = `<img src="${reader.result}" alt="Logo preview">`;
+      };
+      reader.readAsDataURL(file);
+    });
+
+    document.getElementById('saveBrandingBtn').addEventListener('click', async () => {
+      const btn = document.getElementById('saveBrandingBtn');
+      const msg = document.getElementById('brandingMsg');
+      const originalText = btn.textContent;
+      btn.textContent = 'Saving…';
+      btn.disabled = true;
+
+      try {
+        const session = await window.KoboAuth.getSession();
+        if (!session) throw new Error('Not signed in');
+
+        const updates = { brand_color: document.getElementById('brandColorInput').value };
+        const file = document.getElementById('brandLogoInput').files[0];
+
+        if (file) {
+          const ext = file.name.split('.').pop();
+          const path = `${session.user.id}/logo.${ext}`;
+          const { error: uploadError } = await window.KoboAuth.supabase.storage
+            .from('brand-logos')
+            .upload(path, file, { upsert: true });
+          if (uploadError) throw uploadError;
+
+          const { data: urlData } = window.KoboAuth.supabase.storage
+            .from('brand-logos')
+            .getPublicUrl(path);
+          updates.brand_logo_url = urlData.publicUrl;
+        }
+
+        const { error: updateError } = await window.KoboAuth.supabase
+          .from('profiles')
+          .update(updates)
+          .eq('id', session.user.id);
+        if (updateError) throw updateError;
+
+        showMsg(msg, 'Branding saved — it\'ll appear on your next generated document.', 'success');
+      } catch (err) {
+        showMsg(msg, 'Could not save branding: ' + err.message, 'error');
+      } finally {
+        btn.textContent = originalText;
+        btn.disabled = false;
+      }
     });
   });
 </script>

@@ -28,11 +28,12 @@ const RelocationData = (function () {
   const LAST_VERIFIED = 'July 2026';
   const NEXT_REVIEW_DUE = 'October 2026';
 
-  const FX = { CAD: 1000, GBP: 1860, USD: 1380, EUR: 1610 }; // NGN per 1 unit foreign currency
+  const FX = { CAD: 1000, GBP: 1860, USD: 1380, EUR: 1610, AUD: 900 }; // NGN per 1 unit foreign currency
   const cad = (n) => n * FX.CAD;
   const gbp = (n) => n * FX.GBP;
   const usd = (n) => n * FX.USD;
   const eur = (n) => n * FX.EUR;
+  const aud = (n) => n * FX.AUD;
 
   const SOURCES = [
     { label: 'IRCC — Pay your application fees', url: 'https://www.canada.ca/en/immigration-refugees-citizenship/services/application/fees.html' },
@@ -46,7 +47,9 @@ const RelocationData = (function () {
     { label: 'German Federal Foreign Office — Sperrkonto/BAföG rate', url: 'https://www.auswaertiges-amt.de/en' },
     { label: 'Ireland ISD — Student finance requirements', url: 'https://www.irishimmigration.ie/coming-to-study-in-ireland/what-are-my-study-options/a-fee-paying-private-primary-or-secondary-school/information-on-student-finances/' },
     { label: 'Ireland DETE — Critical Skills Employment Permit', url: 'https://enterprise.gov.ie/en/what-we-do/workplace-and-skills/employment-permits/permit-types/critical-skills-employment-permit/' },
-    { label: 'ONS — Price Index of Private Rents', url: 'https://www.ons.gov.uk/economy/inflationandpriceindices/bulletins/priceindexofprivaterents/latest' }
+    { label: 'ONS — Price Index of Private Rents', url: 'https://www.ons.gov.uk/economy/inflationandpriceindices/bulletins/priceindexofprivaterents/latest' },
+    { label: 'Australia Dept of Home Affairs — Visa Pricing Estimator', url: 'https://immi.homeaffairs.gov.au/visas/visa-pricing-estimator' },
+    { label: 'Australia Dept of Home Affairs — Student visa financial requirement', url: 'https://immi.homeaffairs.gov.au/visas/getting-a-visa/visa-listing/student-500' }
   ];
 
   const japaCostDestinations = {
@@ -186,6 +189,41 @@ const RelocationData = (function () {
           perChild: { 'Visa fee (dependent)': eur(60) },
           settlingBuffer: eur(1200),
           defaultFlight: 900000
+        }
+      }
+    },
+    australia: {
+      label: 'Australia',
+      asOf: 'Australia Dept of Home Affairs visa pricing table (post 1 July 2026 increase), verified July 2026. ~₦900 per AUD. Skilled visa fees shown use the primary applicant rate for all travelers as a simplification — secondary adults typically pay somewhat less; check the Visa Pricing Estimator for your exact family breakdown.',
+      routes: {
+        skilled_migration: {
+          label: 'Skilled Migration (189/190/491/186/494)',
+          perAdult: {
+            'Visa application charge (primary applicant rate)': aud(6135),
+            'Skills assessment (typical)': aud(900),
+            'English test (IELTS)': aud(350),
+            'Medical exam': aud(300)
+          },
+          perChild: { 'Visa application charge (child)': aud(1540) },
+          settlingBuffer: aud(3000),
+          defaultFlight: 1050000
+        },
+        skills_in_demand: {
+          label: 'Skills in Demand visa 482 (employer-sponsored, temporary)',
+          perAdult: { 'Visa application charge': aud(4015) },
+          perChild: { 'Visa application charge (child)': aud(1005) },
+          settlingBuffer: aud(2500),
+          defaultFlight: 1050000
+        },
+        student: {
+          label: 'Student visa (subclass 500)',
+          perAdult: {
+            'Visa application charge': aud(2500),
+            'OSHC health cover (approx., 1 yr)': aud(700)
+          },
+          perChild: { 'Visa application charge (dependent, est.)': aud(1850) },
+          settlingBuffer: aud(3200),
+          defaultFlight: 1050000
         }
       }
     },
@@ -365,6 +403,29 @@ const RelocationData = (function () {
           }
         }
       }
+    },
+    australia: {
+      label: 'Australia',
+      routes: {
+        student: {
+          label: 'Student visa (subclass 500)',
+          asOf: 'Australia Dept of Home Affairs financial capacity requirement, verified July 2026. ~₦900 per AUD.',
+          compute(adults, children) {
+            const baseAUD = 29710;
+            const spouseAUD = adults > 0 ? 10394 : 0;
+            const childAUD = 4449 * children;
+            const totalAUD = baseAUD + spouseAUD + childAUD;
+            const lines = [{ label: 'Living costs, first year (single applicant)', amount: aud(baseAUD) }];
+            if (spouseAUD) lines.push({ label: 'Spouse / de facto partner', amount: aud(spouseAUD) });
+            if (childAUD) lines.push({ label: `Dependent child(ren) (×${children})`, amount: aud(childAUD) });
+            return {
+              total: aud(totalAUD),
+              lines,
+              docWindow: 'This is living costs only — first-year tuition (shown on your CoE) and return airfare must also be demonstrated separately. Funds need a genuine 3-6 month savings history, not a sudden deposit.'
+            };
+          }
+        }
+      }
     }
   };
 
@@ -435,6 +496,17 @@ const RelocationData = (function () {
           rentBySize: { 1: eur(1450), 2: eur(1850), 3: eur(2300) },
           groceries: eur(320), transport: eur(115), utilitiesPhone: eur(200), misc: eur(250),
           setupAllowance: eur(1100)
+        }
+      }
+    },
+    australia: {
+      label: 'Australia',
+      cities: {
+        national: {
+          label: 'National average (blended estimate)',
+          rentBySize: { 1: aud(2300), 2: aud(2900), 3: aud(3600) },
+          groceries: aud(500), transport: aud(150), utilitiesPhone: aud(250), misc: aud(350),
+          setupAllowance: aud(2000)
         }
       }
     }

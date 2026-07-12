@@ -80,3 +80,20 @@ if (menuBtn && navLinks) {
       });
     });
   }
+
+// ---------- Shared document branding helpers ----------
+// A short, stable-looking reference ID for each generated document — part of
+// the "premium and legitimate" document treatment. Not a cryptographic
+// signature, just a recognizable verification-style code.
+window.KoboBrand = {
+  docId(prefix) {
+    const chars = '0123456789ABCDEFGHJKLMNPQRSTUVWXYZ'; // no O/I to avoid confusion
+    let code = '';
+    for (let i = 0; i < 8; i++) code += chars[Math.floor(Math.random() * chars.length)];
+    const today = new Date();
+    const y = today.getFullYear();
+    const m = String(today.getMonth() + 1).padStart(2, '0');
+    const d = String(today.getDate()).padStart(2, '0');
+    return `${prefix}-${y}${m}${d}-${code}`;
+  }
+};

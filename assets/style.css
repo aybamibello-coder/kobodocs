@@ -488,6 +488,58 @@
   .doc-totals .row span:last-child{ font-family:'Space Mono', monospace; }
   .doc-note{ margin-top:24px; font-size:0.8rem; opacity:0.6; border-top:1px solid var(--line); padding-top:14px; }
 
+  /* ---------- Premium document treatment ---------- */
+  /* A fine double-line frame + subtle security-paper texture + corner
+     registration marks — the print/currency cues that read as "official and
+     considered" rather than a plain white card. Applied via .doc-preview so
+     every tool (business + relocation) inherits it automatically. Texture is
+     deliberately faint so it survives PNG compression on WhatsApp. */
+  .doc-preview{
+    background-image:
+      radial-gradient(circle, rgba(35,39,34,0.035) 0.5px, transparent 0.6px);
+    background-size: 6px 6px;
+    outline: 1px solid var(--stamp-gold);
+    outline-offset: -6px;
+  }
+  .doc-preview::before{
+    content:''; position:absolute; inset:10px;
+    border: 1px solid rgba(199,154,60,0.35);
+    pointer-events:none;
+  }
+  .doc-preview::after{
+    content:''; position:absolute; inset:0; pointer-events:none;
+    /* four small corner registration marks */
+    background-image:
+      linear-gradient(var(--stamp-gold), var(--stamp-gold)), linear-gradient(var(--stamp-gold), var(--stamp-gold)),
+      linear-gradient(var(--stamp-gold), var(--stamp-gold)), linear-gradient(var(--stamp-gold), var(--stamp-gold)),
+      linear-gradient(var(--stamp-gold), var(--stamp-gold)), linear-gradient(var(--stamp-gold), var(--stamp-gold)),
+      linear-gradient(var(--stamp-gold), var(--stamp-gold)), linear-gradient(var(--stamp-gold), var(--stamp-gold));
+    background-repeat: no-repeat;
+    background-size: 10px 1.5px, 1.5px 10px;
+    background-position:
+      14px 14px, 14px 14px,
+      calc(100% - 24px) 14px, calc(100% - 14.5px) 14px,
+      14px calc(100% - 15.5px), 14px calc(100% - 24px),
+      calc(100% - 24px) calc(100% - 15.5px), calc(100% - 14.5px) calc(100% - 24px);
+  }
+  .doc-head .biz{ position:relative; display:inline-block; padding-bottom:6px; }
+  .doc-head .biz::after{
+    content:''; position:absolute; left:0; bottom:0; height:2px; width:36px;
+    background:var(--stamp-gold);
+  }
+  .doc-totals .row.grand{
+    background:rgba(199,154,60,0.08); margin-left:-12px; margin-right:-12px;
+    padding-left:12px; padding-right:12px; border-radius:4px;
+    border-top:2px solid var(--ink-green-deep);
+  }
+  .doc-id{
+    margin-top:10px; font-family:'Space Mono', monospace; font-size:0.65rem;
+    opacity:0.45; letter-spacing:0.03em;
+  }
+  .hidden{ display:none; }
+  .brand-logo-slot{ position:absolute; top:-18px; right:20px; max-width:120px; max-height:80px; object-fit:contain; }
+  .doc-watermark{ margin-top:10px; font-size:0.68rem; opacity:0.35; text-align:right; }
+
   /* ---------- Paywall (Japa Pass gated content) ---------- */
   .report-gate{ position:relative; }
   .report-gate.locked .report-body{ filter:blur(5px); pointer-events:none; user-select:none; }
