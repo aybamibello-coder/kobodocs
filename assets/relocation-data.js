@@ -3,12 +3,24 @@
 // Funds, Cost of Living). Update figures HERE ONLY — every tool reads from
 // window.RelocationData, so a fee change only needs to happen in one place.
 //
-// Sources: IRCC fee schedule & settlement funds table, UK Home Office visa
-// fees & maintenance requirements, ONS Price Index of Private Rents, Zumper
-// rental data. All NGN figures are pre-converted at the FX rates below.
+// Sources: IRCC, UK Home Office, USCIS/travel.state.gov, German Federal Foreign
+// Office (Sperrkonto/BAföG rate), Irish Immigration Service Delivery (ISD) &
+// Dept. of Enterprise, Trade & Employment (DETE), ONS Price Index of Private
+// Rents, Zumper rental data. All NGN figures are pre-converted at the FX rates
+// below.
 //
-// REVIEW CADENCE: check the official sources below every ~6 months — IRCC and
-// UK Home Office fees have both changed in April in past cycles, so late
+// A NOTE ON THE USA: unlike Canada/UK, the US has no single official "proof of
+// funds" table (F-1 students prove funds via their own school's stated cost of
+// attendance, which varies by institution) and H-1B has no individual savings
+// requirement at all — it's employer-sponsored, and most H-1B fees are legally
+// the EMPLOYER's responsibility, not the applicant's. The H-1B $100,000
+// proclamation fee is, as of this writing, under active litigation (struck
+// down by a federal judge, currently stayed pending appeal) — it is NOT baked
+// into these figures since its status is unsettled. Always confirm current
+// status before relying on any US work-visa figure here.
+//
+// REVIEW CADENCE: check the official sources below every ~6 months — several
+// of these bodies have changed fees in April in past cycles, so late
 // April/early May and again in October are sensible checkpoints. Update
 // LAST_VERIFIED and NEXT_REVIEW_DUE below every time this file is edited.
 
@@ -16,10 +28,11 @@ const RelocationData = (function () {
   const LAST_VERIFIED = 'July 2026';
   const NEXT_REVIEW_DUE = 'October 2026';
 
-  const FX = { CAD: 1000, GBP: 1860, USD: 1380 }; // NGN per 1 unit foreign currency
+  const FX = { CAD: 1000, GBP: 1860, USD: 1380, EUR: 1610 }; // NGN per 1 unit foreign currency
   const cad = (n) => n * FX.CAD;
   const gbp = (n) => n * FX.GBP;
   const usd = (n) => n * FX.USD;
+  const eur = (n) => n * FX.EUR;
 
   const SOURCES = [
     { label: 'IRCC — Pay your application fees', url: 'https://www.canada.ca/en/immigration-refugees-citizenship/services/application/fees.html' },
@@ -28,10 +41,14 @@ const RelocationData = (function () {
     { label: 'UK Home Office — Visa fees', url: 'https://www.gov.uk/visa-fees' },
     { label: 'UK Home Office — Skilled Worker: maintenance', url: 'https://www.gov.uk/skilled-worker-visa/money' },
     { label: 'UK Home Office — Student visa: money', url: 'https://www.gov.uk/student-visa/money' },
+    { label: 'US Dept of State — Visa fees (travel.state.gov)', url: 'https://travel.state.gov/content/travel/en/us-visas/visa-information-resources/fees/fees-visa-services.html' },
+    { label: 'US SEVP — I-901 SEVIS fee (FMJfee.com)', url: 'https://www.fmjfee.com/' },
+    { label: 'German Federal Foreign Office — Sperrkonto/BAföG rate', url: 'https://www.auswaertiges-amt.de/en' },
+    { label: 'Ireland ISD — Student finance requirements', url: 'https://www.irishimmigration.ie/coming-to-study-in-ireland/what-are-my-study-options/a-fee-paying-private-primary-or-secondary-school/information-on-student-finances/' },
+    { label: 'Ireland DETE — Critical Skills Employment Permit', url: 'https://enterprise.gov.ie/en/what-we-do/workplace-and-skills/employment-permits/permit-types/critical-skills-employment-permit/' },
     { label: 'ONS — Price Index of Private Rents', url: 'https://www.ons.gov.uk/economy/inflationandpriceindices/bulletins/priceindexofprivaterents/latest' }
   ];
 
-  // ---------- Japa Relocation Cost Calculator ----------
   const japaCostDestinations = {
     canada: {
       label: 'Canada',
@@ -95,9 +112,86 @@ const RelocationData = (function () {
         }
       }
     },
+    usa: {
+      label: 'United States',
+      asOf: 'US Dept of State & SEVP fees, verified July 2026. ~₦1,380 per USD. H-1B core petition fees are legally the employer\'s responsibility, not shown here — the contested $100,000 H-1B fee is excluded as its legal status is unsettled (under appeal as of writing).',
+      routes: {
+        student: {
+          label: 'F-1 Student visa',
+          perAdult: {
+            'MRV visa application fee': usd(185),
+            'SEVIS I-901 fee': usd(350)
+          },
+          perChild: { 'MRV visa application fee (dependent F-2)': usd(185) },
+          settlingBuffer: usd(2200),
+          defaultFlight: 1000000
+        },
+        skilled_worker: {
+          label: 'H-1B Skilled Worker (employer-sponsored)',
+          perAdult: {
+            'MRV visa application fee (your only direct cost — employer pays petition/registration fees)': usd(205)
+          },
+          perChild: { 'MRV visa application fee (dependent H-4)': usd(205) },
+          settlingBuffer: usd(2500),
+          defaultFlight: 1000000
+        }
+      }
+    },
+    germany: {
+      label: 'Germany',
+      asOf: 'German Federal Foreign Office Sperrkonto/BAföG rate, verified July 2026. ~₦1,610 per EUR.',
+      routes: {
+        job_seeker: {
+          label: 'Job Seeker visa / Opportunity Card (Chancenkarte)',
+          perAdult: {
+            'National visa fee': eur(75),
+            'Blocked account (Sperrkonto) deposit — refundable, released monthly on arrival': eur(13092)
+          },
+          perChild: { 'National visa fee (dependent)': eur(75) },
+          settlingBuffer: eur(1500),
+          defaultFlight: 950000
+        },
+        student: {
+          label: 'Student visa',
+          perAdult: {
+            'National visa fee': eur(75),
+            'Blocked account (Sperrkonto) deposit — refundable, released monthly on arrival': eur(11904)
+          },
+          perChild: { 'National visa fee (dependent)': eur(75) },
+          settlingBuffer: eur(1300),
+          defaultFlight: 950000
+        }
+      }
+    },
+    ireland: {
+      label: 'Ireland',
+      asOf: 'Ireland ISD & DETE fees, verified July 2026. ~₦1,610 per EUR.',
+      routes: {
+        critical_skills: {
+          label: 'Critical Skills Employment Permit',
+          perAdult: {
+            'Employment permit fee (typically employer-paid, shown for full-cost visibility)': eur(1000),
+            'D-visa fee (if required for your nationality)': eur(60)
+          },
+          perChild: { 'Visa fee (dependent, if required)': eur(60) },
+          settlingBuffer: eur(1400),
+          defaultFlight: 900000
+        },
+        student: {
+          label: 'Student visa (D Study Visa)',
+          perAdult: {
+            'Visa fee (multi-entry)': eur(100),
+            'Minimum tuition prepayment required before visa grant': eur(6000)
+          },
+          perChild: { 'Visa fee (dependent)': eur(60) },
+          settlingBuffer: eur(1200),
+          defaultFlight: 900000
+        }
+      }
+    },
     other: {
       label: 'Other / not sure yet',
-      asOf: 'Generic global average, not destination-specific — more countries coming soon. ~₦1,380 per USD.',
+      asOf: 'Generic global average, not destination-specific. ~₦1,380 per USD.',
       routes: {
         general: {
           label: 'General relocation (visa + settling)',
@@ -114,9 +208,6 @@ const RelocationData = (function () {
     }
   };
 
-  // ---------- Proof of Funds Calculator ----------
-  // Canada Express Entry settlement funds by family size. Anchors at 1, 4 and 7
-  // are IRCC's published figures; sizes 2, 3, 5, 6 are linearly interpolated.
   const EXPRESS_ENTRY_CAD = { 1: 15263, 2: 19613, 3: 23963, 4: 28362, 5: 31838, 6: 35313, 7: 38771 };
   function expressEntryFundsCAD(familySize) {
     if (familySize <= 7) return EXPRESS_ENTRY_CAD[familySize];
@@ -204,10 +295,79 @@ const RelocationData = (function () {
           }
         }
       }
+    },
+    usa: {
+      label: 'United States',
+      routes: {
+        student: {
+          label: 'F-1 Student (cost of attendance)',
+          asOf: 'The US has no single government threshold — this is your school\'s stated cost of attendance on Form I-20, which varies by institution. Figure below is a typical estimate only. ~₦1,380 per USD.',
+          compute(adults, children) {
+            const baseUSD = 28000;
+            const dependentAddUSD = 6000 * (adults + children);
+            const totalUSD = baseUSD + dependentAddUSD;
+            const lines = [{ label: 'Typical cost of attendance (varies by school — check your I-20)', amount: usd(baseUSD) }];
+            if (adults + children > 0) lines.push({ label: `Dependent(s) (×${adults + children}, estimate)`, amount: usd(dependentAddUSD) });
+            return {
+              total: usd(totalUSD),
+              lines,
+              docWindow: 'Your actual required amount is whatever your school certifies on your I-20 — always use that figure, not this estimate, for your visa application.'
+            };
+          }
+        }
+      }
+    },
+    germany: {
+      label: 'Germany',
+      routes: {
+        student: {
+          label: 'Student visa (blocked account)',
+          asOf: 'German Federal Foreign Office Sperrkonto rate (BAföG-linked), verified July 2026. ~₦1,610 per EUR. This is a refundable deposit released to you monthly, not a fee.',
+          compute(adults, children) {
+            const baseEUR = 11904;
+            const lines = [{ label: 'Blocked account deposit (single applicant, 1 year)', amount: eur(baseEUR) }];
+            return {
+              total: eur(baseEUR),
+              lines,
+              docWindow: 'Funds are "blocked" and released to you in fixed monthly instalments after arrival — not spent or paid to anyone. Refunded in full if your visa is refused.'
+            };
+          }
+        },
+        job_seeker: {
+          label: 'Job Seeker visa / Opportunity Card (blocked account)',
+          asOf: 'German Federal Foreign Office Sperrkonto rate for job seekers, verified July 2026. ~₦1,610 per EUR.',
+          compute(adults, children) {
+            const baseEUR = 13092;
+            const lines = [{ label: 'Blocked account deposit (single applicant, 1 year)', amount: eur(baseEUR) }];
+            return {
+              total: eur(baseEUR),
+              lines,
+              docWindow: 'Funds are "blocked" and released to you in fixed monthly instalments after arrival — not spent or paid to anyone. Refunded in full if your visa is refused.'
+            };
+          }
+        }
+      }
+    },
+    ireland: {
+      label: 'Ireland',
+      routes: {
+        student: {
+          label: 'Student visa (D Study Visa)',
+          asOf: 'Ireland Immigration Service Delivery financial requirement, verified July 2026. ~₦1,610 per EUR. Excludes tuition (separate €6,000 minimum prepayment also required).',
+          compute(adults, children) {
+            const baseEUR = 10000;
+            const lines = [{ label: 'Living costs, first academic year (single applicant)', amount: eur(baseEUR) }];
+            return {
+              total: eur(baseEUR),
+              lines,
+              docWindow: 'Funds must be held for at least 6 months and shown as immediately accessible — non-liquid assets like property are not accepted.'
+            };
+          }
+        }
+      }
     }
   };
 
-  // ---------- Cost of Living Calculator ----------
   const LIFESTYLE_MULT = { lean: 0.82, comfortable: 1.0, upscale: 1.35 };
 
   const costOfLivingDestinations = {
@@ -242,6 +402,39 @@ const RelocationData = (function () {
           rentBySize: { 1: gbp(987), 2: gbp(1213), 3: gbp(1406) },
           groceries: gbp(210), transport: gbp(85), utilitiesPhone: gbp(130), misc: gbp(180),
           setupAllowance: gbp(900)
+        }
+      }
+    },
+    usa: {
+      label: 'United States',
+      cities: {
+        national: {
+          label: 'National average (blended estimate)',
+          rentBySize: { 1: usd(1700), 2: usd(2150), 3: usd(2700) },
+          groceries: usd(400), transport: usd(100), utilitiesPhone: usd(220), misc: usd(350),
+          setupAllowance: usd(1800)
+        }
+      }
+    },
+    germany: {
+      label: 'Germany',
+      cities: {
+        national: {
+          label: 'National average (blended estimate)',
+          rentBySize: { 1: eur(950), 2: eur(1250), 3: eur(1600) },
+          groceries: eur(280), transport: eur(58), utilitiesPhone: eur(220), misc: eur(220),
+          setupAllowance: eur(1000)
+        }
+      }
+    },
+    ireland: {
+      label: 'Ireland',
+      cities: {
+        national: {
+          label: 'National average (blended estimate)',
+          rentBySize: { 1: eur(1450), 2: eur(1850), 3: eur(2300) },
+          groceries: eur(320), transport: eur(115), utilitiesPhone: eur(200), misc: eur(250),
+          setupAllowance: eur(1100)
         }
       }
     }

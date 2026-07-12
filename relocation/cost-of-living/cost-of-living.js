@@ -8,16 +8,11 @@ const rentTierFor = RelocationData.costOfLiving.rentTierFor;
 
 let japaPassActive = false;
 
-async function checkJapaPassActive() {
-  await new Promise(r => {
-    if (window.KoboAuth) return r();
-    window.addEventListener('kobo-auth-ready', r, { once: true });
-  });
-  const session = await window.KoboAuth.getSession();
-  if (!session) return false;
-  const profile = await window.KoboAuth.getProfile();
-  if (!profile || !profile.relocation_pass_expires_at) return false;
-  return new Date(profile.relocation_pass_expires_at) > new Date();
+function describeAccessDenial(status) {
+  if (status.reason === 'limit_reached') {
+    return `You've used all ${status.reportLimit} report exports on your ${status.tier === 'agency' ? 'Agency' : ''} Japa Pass. Get another pass to keep exporting.`;
+  }
+  return 'Get the Japa Pass to unlock full reports, PDF and WhatsApp export.';
 }
 
 function populateCityOptions() {
@@ -135,17 +130,28 @@ document.getElementById('clearFormBtn').addEventListener('click', () => {
   applyFormState(saved || {});
   renderPreview();
 
-  japaPassActive = await checkJapaPassActive();
+  const status = await RelocationAccess.getStatus();
+  japaPassActive = !!status.active && status.remaining > 0;
   renderPreview();
 })();
 
 document.getElementById('downloadBtn').addEventListener('click', async () => {
-  if (!japaPassActive) { window.location.href = '/pricing/#relocation-pricing'; return; }
-  const { city } = renderPreview();
   const btn = document.getElementById('downloadBtn');
   const originalText = btn.textContent;
-  btn.textContent = 'Preparing PDF…';
+  btn.textContent = 'Checking access…';
   btn.disabled = true;
+
+  const status = await RelocationAccess.checkAndConsume();
+  if (!status.allowed) {
+    alert(describeAccessDenial(status));
+    window.location.href = '/pricing/#relocation-pricing';
+    btn.textContent = originalText;
+    btn.disabled = false;
+    return;
+  }
+
+  const { city } = renderPreview();
+  btn.textContent = 'Preparing PDF…';
   try {
     await KoboExport.downloadPdf(`cost-of-living-${city.label.replace(/\s+/g, '-')}.pdf`);
   } catch (err) {
@@ -157,12 +163,22 @@ document.getElementById('downloadBtn').addEventListener('click', async () => {
 });
 
 document.getElementById('waBtn').addEventListener('click', async () => {
-  if (!japaPassActive) { window.location.href = '/pricing/#relocation-pricing'; return; }
-  const { dest, city, monthlyTotal, totalPeople } = renderPreview();
   const btn = document.getElementById('waBtn');
   const originalText = btn.textContent;
-  btn.textContent = 'Preparing image…';
+  btn.textContent = 'Checking access…';
   btn.disabled = true;
+
+  const status = await RelocationAccess.checkAndConsume();
+  if (!status.allowed) {
+    alert(describeAccessDenial(status));
+    window.location.href = '/pricing/#relocation-pricing';
+    btn.textContent = originalText;
+    btn.disabled = false;
+    return;
+  }
+
+  const { dest, city, monthlyTotal, totalPeople } = renderPreview();
+  btn.textContent = 'Preparing image…';
 
   const caption = [
     `*Cost of Living — ${city.label}, ${dest.label}*`,

@@ -7,16 +7,11 @@ const DESTINATIONS = RelocationData.japaCost.destinations;
 // ---------- Japa Pass entitlement check ----------
 let japaPassActive = false;
 
-async function checkJapaPassActive() {
-  await new Promise(r => {
-    if (window.KoboAuth) return r();
-    window.addEventListener('kobo-auth-ready', r, { once: true });
-  });
-  const session = await window.KoboAuth.getSession();
-  if (!session) return false;
-  const profile = await window.KoboAuth.getProfile();
-  if (!profile || !profile.relocation_pass_expires_at) return false;
-  return new Date(profile.relocation_pass_expires_at) > new Date();
+function describeAccessDenial(status) {
+  if (status.reason === 'limit_reached') {
+    return `You've used all ${status.reportLimit} report exports on your ${status.tier === 'agency' ? 'Agency' : ''} Japa Pass. Get another pass to keep exporting.`;
+  }
+  return 'Get the Japa Pass to unlock full reports, PDF and WhatsApp export.';
 }
 
 // ---------- Form <-> data ----------
@@ -153,21 +148,29 @@ document.getElementById('clearFormBtn').addEventListener('click', () => {
   applyFormState(saved || {});
   renderPreview(); // show a value immediately, then upgrade once entitlement resolves
 
-  japaPassActive = await checkJapaPassActive();
+  const status = await RelocationAccess.getStatus();
+  japaPassActive = !!status.active && status.remaining > 0;
   renderPreview();
 })();
 
 // ---------- Export ----------
 document.getElementById('downloadBtn').addEventListener('click', async () => {
-  if (!japaPassActive) {
-    window.location.href = '/pricing/#relocation-pricing';
-    return;
-  }
-  const { dest } = renderPreview();
   const btn = document.getElementById('downloadBtn');
   const originalText = btn.textContent;
-  btn.textContent = 'Preparing PDF…';
+  btn.textContent = 'Checking access…';
   btn.disabled = true;
+
+  const status = await RelocationAccess.checkAndConsume();
+  if (!status.allowed) {
+    alert(describeAccessDenial(status));
+    window.location.href = '/pricing/#relocation-pricing';
+    btn.textContent = originalText;
+    btn.disabled = false;
+    return;
+  }
+
+  const { dest } = renderPreview();
+  btn.textContent = 'Preparing PDF…';
   try {
     await KoboExport.downloadPdf(`japa-cost-${dest.label.replace(/\s+/g, '-')}.pdf`);
   } catch (err) {
@@ -179,15 +182,22 @@ document.getElementById('downloadBtn').addEventListener('click', async () => {
 });
 
 document.getElementById('waBtn').addEventListener('click', async () => {
-  if (!japaPassActive) {
-    window.location.href = '/pricing/#relocation-pricing';
-    return;
-  }
-  const { dest, route, grandTotal, totalTravelers } = renderPreview();
   const btn = document.getElementById('waBtn');
   const originalText = btn.textContent;
-  btn.textContent = 'Preparing image…';
+  btn.textContent = 'Checking access…';
   btn.disabled = true;
+
+  const status = await RelocationAccess.checkAndConsume();
+  if (!status.allowed) {
+    alert(describeAccessDenial(status));
+    window.location.href = '/pricing/#relocation-pricing';
+    btn.textContent = originalText;
+    btn.disabled = false;
+    return;
+  }
+
+  const { dest, route, grandTotal, totalTravelers } = renderPreview();
+  btn.textContent = 'Preparing image…';
 
   const caption = [
     `*Japa Cost Estimate — ${dest.label}*`,

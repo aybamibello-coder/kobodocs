@@ -112,9 +112,9 @@
     <div class="section-head">
       <span class="eyebrow mono">Relocating abroad?</span>
       <h2>The Japa Pass — everything for your move, one payment</h2>
-      <p>Three calculators built for the actual Japa journey: what relocating really costs, whether your proof of funds meets the threshold, and what life costs once you land. One pass unlocks full reports across all three for 6 months — no subscription, no auto-renewal.</p>
+      <p>Five destinations, three calculators, one relocation profile. Free ballpark on every tool; the Japa Pass unlocks full itemized reports for 6 months — no subscription, no auto-renewal. Running clients through it professionally? The Agency Pass is priced for that.</p>
     </div>
-    <div class="pricing-grid pricing-grid-relocation">
+    <div class="pricing-grid">
       <div class="plan">
         <span class="plan-tag">Free</span>
         <h3>Try it first</h3>
@@ -135,13 +135,25 @@
         <p class="plan-note">Pay once — no recurring charge</p>
         <ul class="plan-features">
           <li>Full itemized reports, all 3 calculators</li>
-          <li>Downloadable PDF for each report</li>
-          <li>Share reports on WhatsApp</li>
+          <li>Up to 10 report exports (PDF/WhatsApp)</li>
           <li>One relocation profile — reused across all 3 tools</li>
           <li>Savings-gap &amp; month-by-month plan (Proof of Funds)</li>
-          <li>Report history for 6 months from purchase</li>
+          <li>6 months from purchase</li>
         </ul>
         <a href="#" class="btn btn-primary" id="japaPassBtn">Get the Japa Pass</a>
+      </div>
+      <div class="plan">
+        <span class="plan-tag">For consultants</span>
+        <h3>Agency Pass</h3>
+        <div class="plan-price">₦35,000<span>/ 6 months</span></div>
+        <p class="plan-note">For agents &amp; consultants serving multiple clients</p>
+        <ul class="plan-features">
+          <li>Everything in Japa Pass</li>
+          <li>Up to 100 report exports (PDF/WhatsApp)</li>
+          <li>Built for running many clients through the suite</li>
+          <li>6 months from purchase</li>
+        </ul>
+        <a href="#" class="btn btn-primary" id="agencyPassBtn">Get the Agency Pass</a>
       </div>
     </div>
   </div>
@@ -255,8 +267,7 @@
     alert('Business plan sign-up is coming soon.');
   });
 
-  document.getElementById('japaPassBtn').addEventListener('click', async (e) => {
-    e.preventDefault();
+  async function startRelocationCheckout(tier, btnId) {
     await new Promise(r => {
       if (window.KoboAuth) return r();
       window.addEventListener('kobo-auth-ready', r, { once: true });
@@ -267,7 +278,7 @@
       return;
     }
 
-    const btn = document.getElementById('japaPassBtn');
+    const btn = document.getElementById(btnId);
     const originalText = btn.textContent;
     btn.textContent = 'Redirecting…';
     btn.style.pointerEvents = 'none';
@@ -278,7 +289,8 @@
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${session.access_token}`
-        }
+        },
+        body: JSON.stringify({ tier })
       });
       const data = await res.json();
       if (!res.ok || !data.authorization_url) {
@@ -290,6 +302,16 @@
       btn.textContent = originalText;
       btn.style.pointerEvents = 'auto';
     }
+  }
+
+  document.getElementById('japaPassBtn').addEventListener('click', (e) => {
+    e.preventDefault();
+    startRelocationCheckout('individual', 'japaPassBtn');
+  });
+
+  document.getElementById('agencyPassBtn').addEventListener('click', (e) => {
+    e.preventDefault();
+    startRelocationCheckout('agency', 'agencyPassBtn');
   });
 </script>
 </body>
