@@ -473,6 +473,7 @@
   .doc-head .biz{ font-family:'Fraunces', serif; font-weight:600; font-size:1.15rem; }
   .doc-head .biz-sub{ font-size:0.82rem; opacity:0.65; margin-top:4px; }
   .doc-head .meta{ text-align:right; font-family:'Space Mono', monospace; font-size:0.78rem; opacity:0.7; white-space:nowrap; }
+  .verified-badge{ text-align:right; font-family:'Space Mono', monospace; font-size:0.65rem; opacity:0.5; margin-top:4px; white-space:nowrap; }
   .doc-to{ font-size:0.9rem; margin-bottom:22px; }
   .doc-to strong{ display:block; font-family:'Fraunces', serif; font-size:1rem; margin-bottom:2px; }
   table.doc-items{ width:100%; border-collapse:collapse; margin-bottom:6px; }

@@ -1,55 +1,10 @@
 const naira = (n) => '₦' + (Math.round(Number(n) || 0)).toLocaleString('en-NG');
 
-// ---------- City cost data (NGN, pre-converted at an approximate FX rate) ----------
-// Sources: ONS Price Index of Private Rents (Apr/May 2026), Zumper rental data,
-// city rental-market reports. Verified July 2026. ~₦1,000 per CAD, ~₦1,860 per GBP.
-const CAD = (n) => n * 1000;
-const GBP = (n) => n * 1860;
-
-const LIFESTYLE_MULT = { lean: 0.82, comfortable: 1.0, upscale: 1.35 };
-
-const CITIES = {
-  canada: {
-    label: 'Canada',
-    cities: {
-      toronto: {
-        label: 'Toronto',
-        rentBySize: { 1: CAD(2200), 2: CAD(2750), 3: CAD(3600) },
-        groceries: CAD(480), transport: CAD(156), utilitiesPhone: CAD(210), misc: CAD(300),
-        setupAllowance: CAD(1500)
-      },
-      calgary: {
-        label: 'Calgary',
-        rentBySize: { 1: CAD(1700), 2: CAD(2000), 3: CAD(2400) },
-        groceries: CAD(420), transport: CAD(112), utilitiesPhone: CAD(190), misc: CAD(260),
-        setupAllowance: CAD(1500)
-      }
-    }
-  },
-  uk: {
-    label: 'United Kingdom',
-    cities: {
-      london: {
-        label: 'London',
-        rentBySize: { 1: GBP(1900), 2: GBP(3200), 3: GBP(4400) },
-        groceries: GBP(280), transport: GBP(152), utilitiesPhone: GBP(145), misc: GBP(260),
-        setupAllowance: GBP(900)
-      },
-      manchester: {
-        label: 'Manchester',
-        rentBySize: { 1: GBP(987), 2: GBP(1213), 3: GBP(1406) },
-        groceries: GBP(210), transport: GBP(85), utilitiesPhone: GBP(130), misc: GBP(180),
-        setupAllowance: GBP(900)
-      }
-    }
-  }
-};
-
-function rentTierFor(totalPeople) {
-  if (totalPeople <= 1) return 1;
-  if (totalPeople <= 3) return 2;
-  return 3;
-}
+// City cost data now lives in /assets/relocation-data.js — the single source
+// of truth shared by all 3 relocation calculators. Edit figures there only.
+const CITIES = RelocationData.costOfLiving.destinations;
+const LIFESTYLE_MULT = RelocationData.costOfLiving.LIFESTYLE_MULT;
+const rentTierFor = RelocationData.costOfLiving.rentTierFor;
 
 let japaPassActive = false;
 
@@ -92,6 +47,7 @@ function renderPreview() {
   document.getElementById('pCity').textContent = city.label;
   document.getElementById('pDestination').textContent = dest.label;
   document.getElementById('pFamily').textContent = `${totalPeople} person${totalPeople > 1 ? 's' : ''}`;
+  document.getElementById('pVerified').textContent = `Verified ${RelocationData.LAST_VERIFIED}`;
 
   const rent = city.rentBySize[rentTierFor(totalPeople)];
   const groceries = (city.groceries + city.groceries * 0.7 * extraAdults + city.groceries * 0.4 * children) * mult;
@@ -127,7 +83,7 @@ function renderPreview() {
     document.getElementById('pLandingBreakdown').innerHTML = landingRows
       .map(([label, amount]) => `<tr><td>${label}</td><td class="num">${naira(amount)}</td></tr>`).join('');
     document.getElementById('pLandingTotals').innerHTML = `<div class="row grand"><span>Landing budget total</span><span>${naira(landingTotal)}</span></div>`;
-    document.getElementById('pFxNote').textContent = 'Figures verified July 2026 — rents especially can shift year to year, so re-check closer to your move date.';
+    document.getElementById('pFxNote').textContent = `Figures verified ${RelocationData.LAST_VERIFIED} — rents especially can shift year to year, so re-check closer to your move date.`;
   } else {
     gate.classList.add('locked');
     document.getElementById('pBreakdown').innerHTML = ['Rent', 'Groceries', 'Transport', 'Utilities & phone', 'Eating out & misc']

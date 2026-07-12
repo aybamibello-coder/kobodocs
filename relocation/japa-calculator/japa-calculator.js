@@ -1,90 +1,8 @@
 const naira = (n) => '₦' + (Math.round(Number(n) || 0)).toLocaleString('en-NG');
 
-// ---------- Cost data (NGN, pre-converted at an approximate FX rate) ----------
-// Figures sourced from IRCC and UK Home Office official fee schedules, verified
-// July 2026. Immigration fees change without much notice — always confirm the
-// current figure on the official site before paying anything.
-const DESTINATIONS = {
-  canada: {
-    label: 'Canada',
-    asOf: 'IRCC fees as of the April 2026 increase, verified July 2026. ~₦1,000 per CAD.',
-    routes: {
-      express_entry: {
-        label: 'Express Entry (Permanent Residence)',
-        perAdult: {
-          'IRCC processing fee': 990000,
-          'Right of Permanent Residence Fee': 600000,
-          'Biometrics': 85000,
-          'Language test (IELTS/CELPIP)': 320000,
-          'Educational Credential Assessment': 340000,
-          'Medical exam': 200000
-        },
-        perChild: { 'IRCC processing fee': 270000, 'Biometrics': 85000 },
-        settlingBuffer: 2500000,
-        defaultFlight: 1100000
-      },
-      work_permit: {
-        label: 'Work Permit (temporary)',
-        perAdult: { 'Work permit application': 155000, 'Biometrics': 85000 },
-        perChild: { 'Work permit application (accompanying)': 155000, 'Biometrics': 85000 },
-        settlingBuffer: 2000000,
-        defaultFlight: 1100000
-      },
-      study_permit: {
-        label: 'Study Permit',
-        perAdult: { 'Study permit application': 150000, 'Biometrics': 85000 },
-        perChild: { 'Study permit application (accompanying)': 150000, 'Biometrics': 85000 },
-        settlingBuffer: 2200000,
-        defaultFlight: 1100000
-      }
-    }
-  },
-  uk: {
-    label: 'United Kingdom',
-    asOf: 'UK Home Office fees as of the April 2026 increase, verified July 2026. ~₦1,860 per GBP.',
-    routes: {
-      skilled_worker: {
-        label: 'Skilled Worker visa (3-year, outside UK)',
-        perAdult: {
-          'Visa application fee': 1523000,
-          'Immigration Health Surcharge (3 yrs)': 5775000,
-          'English test (IELTS)': 335000
-        },
-        perChild: { 'Visa application fee': 1523000, 'Immigration Health Surcharge (3 yrs)': 5775000 },
-        settlingBuffer: 2790000,
-        defaultFlight: 850000
-      },
-      student: {
-        label: 'Student visa (1-year course)',
-        perAdult: {
-          'Visa application fee': 911000,
-          'Immigration Health Surcharge (1 yr)': 1443000,
-          'English test (IELTS)': 335000
-        },
-        perChild: { 'Visa application fee (dependent)': 911000, 'Immigration Health Surcharge (1 yr)': 1443000 },
-        settlingBuffer: 2418000,
-        defaultFlight: 850000
-      }
-    }
-  },
-  other: {
-    label: 'Other / not sure yet',
-    asOf: 'Generic global average, not destination-specific — more countries coming soon. ~₦1,380 per USD.',
-    routes: {
-      general: {
-        label: 'General relocation (visa + settling)',
-        perAdult: {
-          'Visa/application fees (est.)': 552000,
-          'Biometrics/medical (est.)': 207000,
-          'English test (est.)': 304000
-        },
-        perChild: { 'Visa/application fees (est.)': 276000 },
-        settlingBuffer: 2480000,
-        defaultFlight: 950000
-      }
-    }
-  }
-};
+// Cost data now lives in /assets/relocation-data.js — the single source of
+// truth shared by all 3 relocation calculators. Edit figures there only.
+const DESTINATIONS = RelocationData.japaCost.destinations;
 
 // ---------- Japa Pass entitlement check ----------
 let japaPassActive = false;
@@ -134,6 +52,7 @@ function renderPreview() {
   document.getElementById('pDestination').textContent = dest.label;
   document.getElementById('pRoute').textContent = route.label;
   document.getElementById('pFamily').textContent = `${totalTravelers} traveler${totalTravelers > 1 ? 's' : ''}`;
+  document.getElementById('pVerified').textContent = `Verified ${RelocationData.LAST_VERIFIED}`;
 
   // Line items: principal applicant + each accompanying adult use perAdult rates,
   // each accompanying child uses perChild rates.

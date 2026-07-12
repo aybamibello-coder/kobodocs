@@ -1,103 +1,8 @@
 const naira = (n) => '₦' + (Math.round(Number(n) || 0)).toLocaleString('en-NG');
 
-// ---------- Threshold data (NGN, pre-converted at an approximate FX rate) ----------
-// Sources: IRCC settlement funds table and study permit financial requirements;
-// UK Home Office maintenance requirements (Skilled Worker & Student routes).
-// Verified July 2026 — these figures are reviewed and change periodically.
-const FX = { CAD: 1000, GBP: 1860 };
-
-// Canada Express Entry settlement funds by family size (CAD). Anchors at 1, 4
-// and 7 are IRCC's published figures; sizes 2, 3, 5, 6 are linearly interpolated
-// between those anchors and should be treated as estimates.
-const EXPRESS_ENTRY_CAD = { 1: 15263, 2: 19613, 3: 23963, 4: 28362, 5: 31838, 6: 35313, 7: 38771 };
-function expressEntryFundsCAD(familySize) {
-  if (familySize <= 7) return EXPRESS_ENTRY_CAD[familySize];
-  return EXPRESS_ENTRY_CAD[7] + 4112 * (familySize - 7);
-}
-
-const DESTINATIONS = {
-  canada: {
-    label: 'Canada',
-    routes: {
-      express_entry: {
-        label: 'Express Entry (Permanent Residence)',
-        asOf: 'IRCC settlement funds table, verified July 2026. ~₦1,000 per CAD.',
-        compute(adults, children) {
-          const familySize = 1 + adults + children;
-          const totalCAD = expressEntryFundsCAD(familySize);
-          return {
-            total: totalCAD * FX.CAD,
-            lines: [{ label: `Settlement funds for a family of ${familySize}`, amount: totalCAD * FX.CAD }],
-            docWindow: 'Funds must be shown at application and again when your visa is issued — keep records for at least 6 months.'
-          };
-        }
-      },
-      study_permit: {
-        label: 'Study Permit',
-        asOf: 'IRCC study permit financial requirements, verified July 2026. ~₦1,000 per CAD. Excludes tuition.',
-        compute(adults, children) {
-          const baseCAD = 22895;
-          const adultAddCAD = 8000 * adults;
-          const childAddCAD = 3500 * children;
-          const totalCAD = baseCAD + adultAddCAD + childAddCAD;
-          const lines = [{ label: 'Living costs, first year (single applicant)', amount: baseCAD * FX.CAD }];
-          if (adults > 0) lines.push({ label: `Additional adult(s) (×${adults})`, amount: adultAddCAD * FX.CAD });
-          if (children > 0) lines.push({ label: `Additional child(ren) (×${children})`, amount: childAddCAD * FX.CAD });
-          return {
-            total: totalCAD * FX.CAD,
-            lines,
-            docWindow: 'This is living costs only — you also need proof of first-year tuition and travel, shown separately in your Letter of Acceptance.'
-          };
-        }
-      }
-    }
-  },
-  uk: {
-    label: 'United Kingdom',
-    routes: {
-      skilled_worker: {
-        label: 'Skilled Worker visa',
-        asOf: 'UK Home Office maintenance requirement, verified July 2026. ~₦1,860 per GBP.',
-        compute(adults, children) {
-          const baseGBP = 1270;
-          const partnerGBP = adults > 0 ? 285 : 0;
-          const extraAdultsGBP = adults > 1 ? 285 * (adults - 1) : 0; // approximation beyond first partner
-          const firstChildGBP = children > 0 ? 315 : 0;
-          const extraChildrenGBP = children > 1 ? 200 * (children - 1) : 0;
-          const totalGBP = baseGBP + partnerGBP + extraAdultsGBP + firstChildGBP + extraChildrenGBP;
-          const lines = [{ label: 'Main applicant (28-day balance)', amount: baseGBP * FX.GBP }];
-          if (partnerGBP) lines.push({ label: 'Partner/spouse', amount: (partnerGBP + extraAdultsGBP) * FX.GBP });
-          if (firstChildGBP) lines.push({ label: `Child(ren) (×${children})`, amount: (firstChildGBP + extraChildrenGBP) * FX.GBP });
-          return {
-            total: totalGBP * FX.GBP,
-            lines,
-            docWindow: 'Must be held for 28 consecutive days, with the closing balance dated within 31 days of your application — a single day below the threshold can mean refusal.'
-          };
-        }
-      },
-      student: {
-        label: 'Student visa',
-        asOf: 'UK Home Office student maintenance rates, verified July 2026. ~₦1,860 per GBP.',
-        compute(adults, children, london) {
-          const months = 9;
-          const monthlyRate = london ? 1529 : 1171;
-          const depMonthlyRate = london ? 845 : 680;
-          const studentGBP = monthlyRate * months;
-          const dependents = adults + children;
-          const dependentsGBP = depMonthlyRate * months * dependents;
-          const totalGBP = studentGBP + dependentsGBP;
-          const lines = [{ label: `Student maintenance (${months} months, ${london ? 'London' : 'outside London'})`, amount: studentGBP * FX.GBP }];
-          if (dependents > 0) lines.push({ label: `Dependent(s) (×${dependents}, ${months} months)`, amount: dependentsGBP * FX.GBP });
-          return {
-            total: totalGBP * FX.GBP,
-            lines,
-            docWindow: 'Held for 28 consecutive days. This covers living costs only — tuition shown on your CAS is separate and must also be covered.'
-          };
-        }
-      }
-    }
-  }
-};
+// Threshold data now lives in /assets/relocation-data.js — the single source
+// of truth shared by all 3 relocation calculators. Edit figures there only.
+const DESTINATIONS = RelocationData.proofOfFunds.destinations;
 
 let japaPassActive = false;
 
@@ -150,6 +55,7 @@ function renderPreview() {
   document.getElementById('pDestination').textContent = dest.label;
   document.getElementById('pRoute').textContent = route.label;
   document.getElementById('pFamily').textContent = `${totalTravelers} traveler${totalTravelers > 1 ? 's' : ''}`;
+  document.getElementById('pVerified').textContent = `Verified ${RelocationData.LAST_VERIFIED}`;
 
   document.getElementById('pHeadline').innerHTML = `
     <div class="row grand"><span>Required threshold</span><span>${naira(result.total)}</span></div>
