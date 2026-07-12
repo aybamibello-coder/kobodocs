@@ -476,6 +476,7 @@
   .doc-to{ font-size:0.9rem; margin-bottom:22px; }
   .doc-to strong{ display:block; font-family:'Fraunces', serif; font-size:1rem; margin-bottom:2px; }
   table.doc-items{ width:100%; border-collapse:collapse; margin-bottom:6px; }
+  table.doc-items.doc-items-spaced{ margin-top:20px; }
   table.doc-items th{ text-align:left; font-size:0.72rem; text-transform:uppercase; letter-spacing:0.04em; opacity:0.55; padding-bottom:8px; border-bottom:1.5px solid var(--charcoal); }
   table.doc-items td{ padding:9px 0; font-size:0.88rem; border-bottom:1px dashed var(--line); }
   table.doc-items td.num, table.doc-items th.num{ text-align:right; font-family:'Space Mono', monospace; }

@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Japa Relocation Cost Calculator | KoboDocs</title>
-<meta name="description" content="Calculate the real cost of relocating from Nigeria to Canada, the UK or elsewhere — visa fees, biometrics, flights and a settling-in buffer, free.">
+<title>Cost of Living Calculator for Nigerians Abroad | KoboDocs</title>
+<meta name="description" content="Estimate the real monthly cost of living in Toronto, Calgary, London or Manchester as a Nigerian relocating abroad — rent, groceries, transport and a landing budget.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Work+Sans:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
@@ -43,8 +43,8 @@
 <section class="page-header">
   <div class="wrap">
     <a href="/relocation/">&larr; Back to Relocation</a>
-    <h1>Japa Relocation Cost Calculator</h1>
-    <p>Pick your destination and visa route, add your family size, and see what relocating actually costs — visa fees, biometrics, tests, flights and a settling-in buffer. Free ballpark instantly; the full itemized report unlocks with the Japa Pass.</p>
+    <h1>Cost of Living Calculator</h1>
+    <p>What life actually costs once you land — rent, groceries, transport and bills for your destination city, plus a first-3-months landing budget. Free monthly ballpark instantly; the full breakdown unlocks with the Japa Pass.</p>
   </div>
 </section>
 
@@ -62,39 +62,32 @@
         <select id="destination">
           <option value="canada">Canada</option>
           <option value="uk">United Kingdom</option>
-          <option value="other">Other / not sure yet</option>
         </select>
       </div>
 
       <div class="field-group">
-        <label for="visaRoute">Visa route</label>
-        <select id="visaRoute"></select>
+        <label for="city">City</label>
+        <select id="city"></select>
       </div>
 
       <div class="field-row">
         <div class="field-group">
-          <label for="adultsCount">Adults traveling with you</label>
+          <label for="adultsCount">Adults in your household</label>
           <input type="number" id="adultsCount" min="0" max="4" value="0">
         </div>
         <div class="field-group">
-          <label for="childrenCount">Children traveling with you</label>
+          <label for="childrenCount">Children in your household</label>
           <input type="number" id="childrenCount" min="0" max="6" value="0">
         </div>
       </div>
 
       <div class="field-group">
-        <label for="flightCost">Estimated flight cost per traveler (₦)</label>
-        <input type="number" id="flightCost" min="0" step="10000">
-      </div>
-
-      <div class="field-group">
-        <label for="agencyFee">Agency / consultant fee, if any (₦)</label>
-        <input type="number" id="agencyFee" min="0" step="10000" value="0">
-      </div>
-
-      <div class="field-group">
-        <label for="monthlySavings">What can you save toward this per month? (₦, optional)</label>
-        <input type="number" id="monthlySavings" min="0" step="5000" placeholder="e.g. 150000">
+        <label for="lifestyleTier">Lifestyle</label>
+        <select id="lifestyleTier">
+          <option value="lean">Lean — careful budgeting</option>
+          <option value="comfortable" selected>Comfortable — typical newcomer</option>
+          <option value="upscale">Upscale — more eating out, no compromises</option>
+        </select>
       </div>
 
       <div class="action-row">
@@ -105,13 +98,13 @@
 
     <div class="preview-panel">
       <div class="doc-preview" id="docPreview">
-        <div class="stamp" style="--tilt:6deg"><span class="stamp-label">Japa<br>Cost</span></div>
+        <div class="stamp" style="--tilt:-6deg"><span class="stamp-label">Living<br>Cost</span></div>
         <div class="doc-head">
           <div>
-            <div class="biz" id="pDestination">Canada</div>
-            <div class="biz-sub" id="pRoute">Express Entry</div>
+            <div class="biz" id="pCity">Toronto</div>
+            <div class="biz-sub" id="pDestination">Canada</div>
           </div>
-          <div class="meta" id="pFamily">1 traveler</div>
+          <div class="meta" id="pFamily">1 person</div>
         </div>
 
         <div class="doc-totals" id="pHeadline"></div>
@@ -119,19 +112,24 @@
         <div class="report-gate locked" id="reportGate">
           <div class="report-body">
             <table class="doc-items doc-items-spaced">
-              <thead><tr><th>Item</th><th class="num">Amount</th></tr></thead>
+              <thead><tr><th>Monthly category</th><th class="num">Amount</th></tr></thead>
               <tbody id="pBreakdown"></tbody>
             </table>
             <div class="doc-totals" id="pTotals"></div>
-            <div class="doc-note" id="pSavingsNote"></div>
+            <table class="doc-items doc-items-spaced">
+              <thead><tr><th>First 3 months (landing budget)</th><th class="num">Amount</th></tr></thead>
+              <tbody id="pLandingBreakdown"></tbody>
+            </table>
+            <div class="doc-totals" id="pLandingTotals"></div>
+            <div class="doc-note" id="pFxNote"></div>
           </div>
           <div class="unlock-overlay" id="unlockOverlay">
-            <p>The full itemized breakdown, savings plan and PDF/WhatsApp export unlock with the Japa Pass.</p>
+            <p>The full category breakdown and first-3-months landing budget unlock with the Japa Pass.</p>
             <a href="/pricing/#relocation-pricing" class="btn btn-primary">Get the Japa Pass — ₦6,000</a>
           </div>
         </div>
 
-        <div class="doc-note">Figures are estimates from official 2026 sources (IRCC, UK Home Office), converted at an approximate exchange rate. Always confirm current fees on the official government site before paying anything — this is a planning tool, not immigration advice.</div>
+        <div class="doc-note">Figures are city-wide averages from ONS, Zumper and rental-market reports, verified July 2026 — actual costs vary a lot by neighbourhood and building. This is a planning estimate, not a guarantee of what you'll pay.</div>
       </div>
     </div>
 
@@ -156,9 +154,8 @@
         <div>
           <strong>Relocation</strong>
           <a href="/relocation/">Relocation home</a>
+          <a href="/relocation/japa-calculator/">Japa Cost Calculator</a>
           <a href="/relocation/proof-of-funds/">Proof of Funds</a>
-          <a href="/relocation/cost-of-living/">Cost of Living</a>
-          <a href="/pricing/#relocation-pricing">Japa Pass pricing</a>
         </div>
         <div>
           <strong>Company</strong>
@@ -179,6 +176,6 @@
 <script src="/assets/export.js" defer></script>
 <script src="/assets/app.js" defer></script>
 <script type="module" src="/assets/auth.js"></script>
-<script src="/relocation/japa-calculator/japa-calculator.js" defer></script>
+<script src="/relocation/cost-of-living/cost-of-living.js" defer></script>
 </body>
 </html>
