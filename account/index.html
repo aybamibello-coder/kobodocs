@@ -40,6 +40,12 @@
   .brand-logo-preview img{ max-width:100%; max-height:100%; object-fit:contain; }
   .brand-hint{ margin-top:6px; }
   #brandColorInput{ width:60px; height:40px; padding:2px; border:1px solid var(--line); border-radius:4px; cursor:pointer; }
+  .business-list-row{
+    display:flex; justify-content:space-between; align-items:center; gap:12px;
+    padding:10px 0; border-bottom:1px dashed var(--line); font-size:0.9rem; flex-wrap:wrap;
+  }
+  .business-list-row:last-child{ border-bottom:none; }
+  .small-btn{ padding:8px 16px; font-size:0.85rem; }
 </style>
 </head>
 <body>
@@ -140,6 +146,18 @@
       <button type="button" class="btn btn-primary" id="saveBrandingBtn">Save branding</button>
       <p class="auth-msg" id="brandingMsg"></p>
     </div>
+
+    <div class="auth-card branding-card auth-hidden" id="businessesCard">
+      <h4>Your businesses</h4>
+      <p class="auth-note">Manage multiple ventures under one account, and invite staff to work in any of them.</p>
+      <div id="businessList"></div>
+      <div class="field-group">
+        <label for="newBusinessName">New business name</label>
+        <input type="text" id="newBusinessName" placeholder="e.g. Adaeze Fabrics Co.">
+      </div>
+      <button type="button" class="btn btn-primary" id="createBusinessBtn">+ Create business</button>
+      <p class="auth-msg" id="businessMsg"></p>
+    </div>
   </div>
 
 </div>
@@ -182,8 +200,11 @@
       document.getElementById('loggedInView').style.display = 'block';
       document.getElementById('signedInEmail').textContent = session.user.email;
       const profile = await window.KoboAuth.getProfile();
-      const isPro = profile && profile.plan === 'pro';
-      document.getElementById('planBadge').textContent = isPro ? 'Pro plan' : 'Free plan';
+      const isPro = profile && (profile.plan === 'pro' || profile.plan === 'business')
+        && profile.plan_expires_at && new Date(profile.plan_expires_at) > new Date();
+      const isBusiness = profile && profile.plan === 'business'
+        && profile.plan_expires_at && new Date(profile.plan_expires_at) > new Date();
+      document.getElementById('planBadge').textContent = isBusiness ? 'Business plan' : (isPro ? 'Pro plan' : 'Free plan');
       document.getElementById('welcomeName').textContent = 'Welcome back' + (profile && profile.business_name ? ', ' + profile.business_name : '');
       if (isPro) document.getElementById('upgradeLink').style.display = 'none';
 
@@ -199,10 +220,41 @@
       } else {
         brandingCard.classList.add('auth-hidden');
       }
+
+      const businessesCard = document.getElementById('businessesCard');
+      if (isBusiness) {
+        businessesCard.classList.remove('auth-hidden');
+        await loadBusinesses();
+      } else {
+        businessesCard.classList.add('auth-hidden');
+      }
     } else {
       document.getElementById('loggedOutView').style.display = 'block';
       document.getElementById('loggedInView').style.display = 'none';
     }
+  }
+
+  async function loadBusinesses() {
+    const { data, error } = await window.KoboAuth.supabase
+      .from('businesses')
+      .select('id, name, brand_logo_url')
+      .order('created_at', { ascending: true });
+
+    const listEl = document.getElementById('businessList');
+    if (error) {
+      listEl.innerHTML = `<p class="auth-msg error">Could not load businesses: ${error.message}</p>`;
+      return;
+    }
+    if (!data || data.length === 0) {
+      listEl.innerHTML = '<p class="auth-note">No businesses yet — create your first one below.</p>';
+      return;
+    }
+    listEl.innerHTML = data.map(b => `
+      <div class="business-list-row">
+        <span>${b.name}</span>
+        <a href="/business/?id=${b.id}" class="btn btn-primary small-btn">Manage</a>
+      </div>
+    `).join('');
   }
 
   window.addEventListener('kobo-auth-ready', () => {
@@ -298,6 +350,37 @@
       } catch (err) {
         showMsg(msg, 'Could not save branding: ' + err.message, 'error');
       } finally {
+        btn.textContent = originalText;
+        btn.disabled = false;
+      }
+    });
+
+    document.getElementById('createBusinessBtn').addEventListener('click', async () => {
+      const btn = document.getElementById('createBusinessBtn');
+      const msg = document.getElementById('businessMsg');
+      const name = document.getElementById('newBusinessName').value.trim();
+      if (!name) {
+        showMsg(msg, 'Enter a business name.', 'error');
+        return;
+      }
+
+      const originalText = btn.textContent;
+      btn.textContent = 'Creating…';
+      btn.disabled = true;
+
+      try {
+        const session = await window.KoboAuth.getSession();
+        const { data, error } = await window.KoboAuth.supabase
+          .from('businesses')
+          .insert({ owner_user_id: session.user.id, name })
+          .select()
+          .single();
+
+        if (error) throw error;
+
+        window.location.href = `/business/?id=${data.id}`;
+      } catch (err) {
+        showMsg(msg, 'Could not create business: ' + err.message, 'error');
         btn.textContent = originalText;
         btn.disabled = false;
       }

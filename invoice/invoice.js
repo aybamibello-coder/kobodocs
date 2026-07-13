@@ -141,7 +141,8 @@ renderPreview();
   if (!session) return; // stays on default template
 
   const profile = await window.KoboAuth.getProfile();
-  if (!profile || profile.plan !== 'pro') return;
+  const planActive = profile && profile.plan_expires_at && new Date(profile.plan_expires_at) > new Date();
+  if (!profile || !planActive || (profile.plan !== 'pro' && profile.plan !== 'business')) return;
 
   const hasBranding = profile.brand_logo_url || profile.brand_color;
   if (hasBranding) document.getElementById('pWatermark').classList.add('hidden');
