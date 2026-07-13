@@ -326,7 +326,7 @@ async function renderAuditLog() {
 
 // ---------- Disputes (Cooperative only) ----------
 async function renderDisputes() {
-  const body = document.getElementById('disputesPanel').querySelector('#disputesBody') || document.getElementById('disputesBody');
+  const body = document.getElementById('disputesBody');
   if (!isCooperativeActive) {
     body.innerHTML = `<div class="locked-feature">The dispute log requires the Cooperative Plan. <a href="#upgradeCard">Upgrade this circle</a> to unlock.</div>`;
     return;
