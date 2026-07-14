@@ -129,3 +129,35 @@ document.getElementById('waBtn').addEventListener('click', async () => {
     btn.disabled = false;
   }
 });
+
+// ---------- White-label branding (Pro feature) ----------
+// Free users always see the default KoboDocs premium template with the
+// "Made with KoboDocs" mark. Pro users who've uploaded a logo/color in
+// /account/ see their own branding instead — no watermark, their logo in
+// place of the stamp, their brand color driving every accent in the document.
+(async function applyBranding() {
+  await new Promise(r => {
+    if (window.KoboAuth) return r();
+    window.addEventListener("kobo-auth-ready", r, { once: true });
+  });
+  const session = await window.KoboAuth.getSession();
+  if (!session) return;
+
+  const profile = await window.KoboAuth.getProfile();
+  const planActive = profile && profile.plan_expires_at && new Date(profile.plan_expires_at) > new Date();
+  if (!profile || !planActive || (profile.plan !== "pro" && profile.plan !== "business")) return;
+
+  const hasBranding = profile.brand_logo_url || profile.brand_color;
+  if (hasBranding) document.getElementById("pWatermark").classList.add("hidden");
+
+  if (profile.brand_logo_url) {
+    const logo = document.getElementById("pBrandLogo");
+    logo.src = profile.brand_logo_url;
+    logo.classList.remove("hidden");
+    document.getElementById("pStamp").classList.add("hidden");
+  }
+  if (profile.brand_color) {
+    document.getElementById("docPreview").style.setProperty("--stamp-gold", profile.brand_color);
+  }
+})();
+

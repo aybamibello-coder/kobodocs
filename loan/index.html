@@ -107,7 +107,8 @@
 
     <div class="preview-panel">
       <div class="doc-preview" id="docPreview">
-        <div class="stamp red"><span class="stamp-label">Loan</span></div>
+        <div class="stamp red" id="pStamp"><span class="stamp-label">Loan</span></div>
+        <img class="brand-logo-slot hidden" id="pBrandLogo" alt="Business logo" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBTAA7">
         <div class="doc-head">
           <div>
             <div class="biz" id="pLender">Lender name</div>
@@ -121,6 +122,7 @@
             <tbody id="pSchedule"></tbody>
           </table>
         </div>
+        <div class="doc-watermark hidden" id="pWatermark">Made with KoboDocs — kobodocs.com.ng</div>
       </div>
     </div>
 
@@ -160,6 +162,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
 <script src="/assets/export.js" defer></script>
 <script src="/assets/app.js" defer></script>
+<script type="module" src="/assets/auth.js"></script>
 <script src="/loan/loan.js" defer></script>
 </body>
 </html>

@@ -81,7 +81,8 @@
 
     <div class="preview-panel">
       <div class="doc-preview" id="docPreview">
-        <div class="stamp"><span class="stamp-label">Budget</span></div>
+        <div class="stamp" id="pStamp"><span class="stamp-label">Budget</span></div>
+        <img class="brand-logo-slot hidden" id="pBrandLogo" alt="Business logo" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBTAA7">
         <div class="doc-head">
           <div><div class="biz" id="pMonth">This month</div></div>
         </div>
@@ -94,6 +95,7 @@
           <tbody id="pExpenses"></tbody>
         </table>
         <div class="doc-totals" id="pTotals"></div>
+        <div class="doc-watermark hidden" id="pWatermark">Made with KoboDocs — kobodocs.com.ng</div>
       </div>
     </div>
 
@@ -133,6 +135,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
 <script src="/assets/export.js" defer></script>
 <script src="/assets/app.js" defer></script>
+<script type="module" src="/assets/auth.js"></script>
 <script src="/budget/budget.js" defer></script>
 </body>
 </html>
