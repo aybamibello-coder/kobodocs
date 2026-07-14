@@ -8,8 +8,15 @@ const SUPABASE_ANON_KEY = 'sb_publishable_4HDVb8ZzRh1W-Z97m2uT1Q_4FwH6bTt';
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-async function signUp(email, password) {
-  return supabase.auth.signUp({ email, password });
+async function signUp(email, password, metadata = {}) {
+  return supabase.auth.signUp({
+    email,
+    password,
+    options: {
+      data: metadata,
+      emailRedirectTo: window.location.origin + '/account/'
+    }
+  });
 }
 
 async function signIn(email, password) {
@@ -21,6 +28,20 @@ async function signInWithMagicLink(email) {
     email,
     options: { emailRedirectTo: window.location.origin + '/account/' }
   });
+}
+
+// Real password reset — distinct from the magic link above. Sends an email
+// with a recovery link; when clicked, Supabase redirects back here and fires
+// a PASSWORD_RECOVERY auth event (listened for on the account page), at which
+// point updatePassword() can actually set a new password.
+async function resetPassword(email) {
+  return supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: window.location.origin + '/account/'
+  });
+}
+
+async function updatePassword(newPassword) {
+  return supabase.auth.updateUser({ password: newPassword });
 }
 
 async function signOut() {
@@ -60,7 +81,8 @@ async function requireAuth(redirectTo = '/account/') {
 
 async function requirePro(redirectTo = '/pricing/') {
   const profile = await getProfile();
-  if (!profile || profile.plan !== 'pro') {
+  const active = profile && profile.plan_expires_at && new Date(profile.plan_expires_at) > new Date();
+  if (!profile || !active || (profile.plan !== 'pro' && profile.plan !== 'business')) {
     window.location.href = redirectTo;
     return null;
   }
@@ -72,6 +94,8 @@ window.KoboAuth = {
   signUp,
   signIn,
   signInWithMagicLink,
+  resetPassword,
+  updatePassword,
   signOut,
   getSession,
   getProfile,

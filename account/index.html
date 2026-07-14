@@ -72,6 +72,19 @@
 
 <div class="auth-wrap">
 
+  <div id="recoveryView" class="auth-hidden">
+    <div class="auth-card">
+      <h3>Set a new password</h3>
+      <p class="auth-note">You've followed a password reset link — choose a new password below.</p>
+      <div class="field-group">
+        <label for="newPasswordInput">New password</label>
+        <input type="password" id="newPasswordInput" placeholder="At least 6 characters" autocomplete="new-password" minlength="6">
+      </div>
+      <button type="button" class="btn btn-primary auth-submit" id="setNewPasswordBtn">Set new password</button>
+      <p class="auth-msg" id="recoveryMsg"></p>
+    </div>
+  </div>
+
   <div id="loggedOutView">
     <div class="auth-card">
       <div class="auth-tabs">
@@ -92,7 +105,7 @@
           <button type="submit" class="btn btn-primary auth-submit">Sign in</button>
         </form>
         <div class="auth-msg" id="signinMsg"></div>
-        <p class="auth-alt-link"><a href="#" id="forgotLink">Forgot password? Send magic link</a></p>
+        <p class="auth-alt-link"><a href="#" id="forgotLink">Forgot password? Reset it</a></p>
       </div>
 
       <div class="auth-panel" id="panel-signup">
@@ -260,6 +273,40 @@
   window.addEventListener('kobo-auth-ready', () => {
     refreshView();
 
+    // Supabase fires PASSWORD_RECOVERY when someone lands here via a reset email link.
+    window.KoboAuth.supabase.auth.onAuthStateChange((event) => {
+      if (event === 'PASSWORD_RECOVERY') {
+        document.getElementById('loggedOutView').style.display = 'none';
+        document.getElementById('loggedInView').style.display = 'none';
+        document.getElementById('recoveryView').classList.remove('auth-hidden');
+      }
+    });
+
+    document.getElementById('setNewPasswordBtn').addEventListener('click', async () => {
+      const btn = document.getElementById('setNewPasswordBtn');
+      const msg = document.getElementById('recoveryMsg');
+      const newPassword = document.getElementById('newPasswordInput').value;
+      if (!newPassword || newPassword.length < 6) {
+        showMsg(msg, 'Password must be at least 6 characters.', 'error');
+        return;
+      }
+      const originalText = btn.textContent;
+      btn.textContent = 'Saving…';
+      btn.disabled = true;
+
+      const { error } = await window.KoboAuth.updatePassword(newPassword);
+      if (error) {
+        showMsg(msg, error.message, 'error');
+        btn.textContent = originalText;
+        btn.disabled = false;
+        return;
+      }
+
+      showMsg(msg, 'Password updated — redirecting…', 'success');
+      document.getElementById('recoveryView').classList.add('auth-hidden');
+      refreshView();
+    });
+
     document.getElementById('signinForm').addEventListener('submit', async (e) => {
       e.preventDefault();
       const email = document.getElementById('signinEmail').value.trim();
@@ -277,11 +324,8 @@
       const email = document.getElementById('signupEmail').value.trim();
       const password = document.getElementById('signupPassword').value;
       const msg = document.getElementById('signupMsg');
-      const { data, error } = await window.KoboAuth.signUp(email, password);
+      const { error } = await window.KoboAuth.signUp(email, password, { business_name: bizName || null });
       if (error) { showMsg(msg, error.message, 'error'); return; }
-      if (bizName && data && data.user) {
-        await window.KoboAuth.supabase.from('profiles').update({ business_name: bizName }).eq('id', data.user.id);
-      }
       showMsg(msg, 'Account created. Check your email to confirm, then sign in.', 'success');
       e.target.reset();
     });
@@ -291,9 +335,9 @@
       const email = document.getElementById('signinEmail').value.trim();
       const msg = document.getElementById('signinMsg');
       if (!email) { showMsg(msg, 'Enter your email above first, then click this link.', 'error'); return; }
-      const { error } = await window.KoboAuth.signInWithMagicLink(email);
+      const { error } = await window.KoboAuth.resetPassword(email);
       if (error) { showMsg(msg, error.message, 'error'); return; }
-      showMsg(msg, 'Magic link sent to ' + email, 'success');
+      showMsg(msg, 'Password reset link sent to ' + email + ' — check your email.', 'success');
     });
 
     document.getElementById('signOutBtn').addEventListener('click', async (e) => {
