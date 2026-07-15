@@ -270,7 +270,7 @@
     `).join('');
   }
 
-  window.addEventListener('kobo-auth-ready', () => {
+  function initPage() {
     refreshView();
 
     // Supabase fires PASSWORD_RECOVERY when someone lands here via a reset email link.
@@ -429,7 +429,13 @@
         btn.disabled = false;
       }
     });
-  });
+  }
+
+  if (window.KoboAuth) {
+    initPage();
+  } else {
+    window.addEventListener('kobo-auth-ready', initPage, { once: true });
+  }
 </script>
 </body>
 </html>
