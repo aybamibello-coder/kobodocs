@@ -324,10 +324,30 @@
       const email = document.getElementById('signupEmail').value.trim();
       const password = document.getElementById('signupPassword').value;
       const msg = document.getElementById('signupMsg');
-      const { error } = await window.KoboAuth.signUp(email, password, { business_name: bizName || null });
+
+      const { data, error } = await window.KoboAuth.signUp(email, password, { business_name: bizName || null });
       if (error) { showMsg(msg, error.message, 'error'); return; }
-      showMsg(msg, 'Account created. Check your email to confirm, then sign in.', 'success');
-      e.target.reset();
+
+      // Fire-and-forget welcome email — never blocks or breaks signup if it fails.
+      fetch('https://vwmzulzluaxedkozxjfy.supabase.co/functions/v1/send-welcome-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, business_name: bizName || null })
+      }).catch(() => {});
+
+      if (data && data.session) {
+        // Email confirmation is disabled on the Supabase side — signUp already
+        // returned an active session, so log straight in.
+        showMsg(msg, 'Account created — you\'re signed in.', 'success');
+        e.target.reset();
+        refreshView();
+      } else {
+        // Confirmation is still required (or Supabase is still provisioning the
+        // session) — fall back to the old messaging rather than pretending
+        // they're logged in when they're not.
+        showMsg(msg, 'Account created. Check your email to confirm, then sign in.', 'success');
+        e.target.reset();
+      }
     });
 
     document.getElementById('forgotLink').addEventListener('click', async (e) => {
