@@ -88,12 +88,17 @@ function renderPreview() {
     document.getElementById('pSavingsNote').textContent = savingsNote;
   } else {
     gate.classList.add('locked');
-    // Masked placeholder rows — no real figures reach the DOM while locked,
-    // so there's nothing sensitive to reveal even if the blur is bypassed.
+    // Real line items, visually blurred via CSS — lets people see the actual
+    // shape and scale of the report they'd unlock, not just a generic "upgrade"
+    // message. (Trade-off: unlike a masked placeholder, this can technically be
+    // read by disabling the CSS blur in devtools — a deliberate choice for
+    // conversion, not an oversight.)
     document.getElementById('pBreakdown').innerHTML = lineItems
-      .map(r => `<tr><td>••••••••••••</td><td class="num">••••••</td></tr>`).join('');
-    document.getElementById('pTotals').innerHTML = `<div class="row grand"><span>Total</span><span>••••••</span></div>`;
-    document.getElementById('pSavingsNote').textContent = '';
+      .map(r => `<tr><td>${r.label}</td><td class="num">${naira(r.amount)}</td></tr>`).join('');
+    document.getElementById('pTotals').innerHTML = `
+      <div class="row grand"><span>Total</span><span>${naira(grandTotal)}</span></div>
+    `;
+    document.getElementById('pSavingsNote').textContent = dest.asOf;
   }
 
   if (window.KoboStorage) {

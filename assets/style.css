@@ -272,6 +272,12 @@
   .ajo-tag{ font-family:'Space Mono', monospace; font-size:0.72rem; padding:3px 8px; border-radius:20px; background:var(--bone); color:var(--ink-green-deep); }
   .ajo-tag.next{ background:var(--stamp-gold); color:var(--ink-green-deep); }
   .ajo-card-cta{ width:100%; margin-top:16px; text-align:center; display:block; }
+  .circle-plan-tag{
+    font-family:'Space Mono', monospace; font-size:0.68rem; text-transform:uppercase;
+    padding:3px 10px; border-radius:20px; letter-spacing:0.04em; display:inline-block; margin-left:8px; vertical-align:middle;
+  }
+  .circle-plan-tag.free{ background:var(--bone); color:var(--charcoal); }
+  .circle-plan-tag.cooperative{ background:var(--stamp-gold); color:var(--ink-green-deep); }
 
   @media (max-width:900px){ .ajo .wrap{ grid-template-columns:1fr; } }
 

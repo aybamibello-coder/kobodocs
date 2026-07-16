@@ -81,13 +81,23 @@ function renderPreview() {
     document.getElementById('pFxNote').textContent = `Figures verified ${RelocationData.LAST_VERIFIED} — rents especially can shift year to year, so re-check closer to your move date.`;
   } else {
     gate.classList.add('locked');
-    document.getElementById('pBreakdown').innerHTML = ['Rent', 'Groceries', 'Transport', 'Utilities & phone', 'Eating out & misc']
-      .map(() => `<tr><td>••••••••••••</td><td class="num">••••••</td></tr>`).join('');
-    document.getElementById('pTotals').innerHTML = `<div class="row grand"><span>Monthly total</span><span>••••••</span></div>`;
-    document.getElementById('pLandingBreakdown').innerHTML = ['', '', '']
-      .map(() => `<tr><td>••••••••••••</td><td class="num">••••••</td></tr>`).join('');
-    document.getElementById('pLandingTotals').innerHTML = `<div class="row grand"><span>Landing budget total</span><span>••••••</span></div>`;
-    document.getElementById('pFxNote').textContent = '';
+    const rows = [
+      ['Rent', rent], ['Groceries', groceries], ['Transport', transport],
+      ['Utilities &amp; phone', utilitiesPhone], ['Eating out &amp; misc', misc]
+    ];
+    document.getElementById('pBreakdown').innerHTML = rows
+      .map(([label, amount]) => `<tr><td>${label}</td><td class="num">${naira(amount)}</td></tr>`).join('');
+    document.getElementById('pTotals').innerHTML = `<div class="row grand"><span>Monthly total</span><span>${naira(monthlyTotal)}</span></div>`;
+
+    const landingRows = [
+      ['3 months of living costs', monthlyTotal * 3],
+      ['Security deposit (≈1 month rent)', securityDeposit],
+      ['Setup &amp; furnishing allowance', landingSetup]
+    ];
+    document.getElementById('pLandingBreakdown').innerHTML = landingRows
+      .map(([label, amount]) => `<tr><td>${label}</td><td class="num">${naira(amount)}</td></tr>`).join('');
+    document.getElementById('pLandingTotals').innerHTML = `<div class="row grand"><span>Landing budget total</span><span>${naira(landingTotal)}</span></div>`;
+    document.getElementById('pFxNote').textContent = `Figures verified ${RelocationData.LAST_VERIFIED} — rents especially can shift year to year, so re-check closer to your move date.`;
   }
 
   if (window.KoboStorage) {

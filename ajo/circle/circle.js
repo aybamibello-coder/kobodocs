@@ -238,7 +238,19 @@ document.getElementById('nextCycleBtn').addEventListener('click', async () => {
 async function renderAdmins() {
   const body = document.getElementById('adminsBody');
   if (!isCooperativeActive) {
-    body.innerHTML = `<div class="locked-feature">Multiple admins require the Cooperative Plan. <a href="#upgradeCard">Upgrade this circle</a> to unlock.</div>`;
+    body.innerHTML = `
+      <div class="report-gate locked">
+        <div class="report-body">
+          <div class="admin-row"><span>Chairman</span><span style="opacity:0.6; font-size:0.85rem;">adaeze@example.com</span></div>
+          <div class="admin-row"><span>Treasurer</span><span style="opacity:0.6; font-size:0.85rem;">chinedu@example.com</span></div>
+          <div class="admin-row"><span>Secretary</span><span style="opacity:0.6; font-size:0.85rem;">funmi@example.com</span></div>
+        </div>
+        <div class="unlock-overlay">
+          <p>Add a chairman, secretary, treasurer or auditor to this circle with the Cooperative Plan.</p>
+          <a href="#upgradeCard" class="btn btn-primary">Upgrade this circle</a>
+        </div>
+      </div>
+    `;
     return;
   }
 
@@ -305,7 +317,19 @@ async function renderAdmins() {
 async function renderAuditLog() {
   const body = document.getElementById('auditBody');
   if (!isCooperativeActive) {
-    body.innerHTML = `<div class="locked-feature">The audit log requires the Cooperative Plan. <a href="#upgradeCard">Upgrade this circle</a> to unlock.</div>`;
+    body.innerHTML = `
+      <div class="report-gate locked">
+        <div class="report-body">
+          <div class="audit-row"><span>contribution marked paid</span><span style="opacity:0.6; font-size:0.8rem; font-family:'Space Mono', monospace;">14 Jul 2026, 9:02 AM</span></div>
+          <div class="audit-row"><span>member added</span><span style="opacity:0.6; font-size:0.8rem; font-family:'Space Mono', monospace;">12 Jul 2026, 4:41 PM</span></div>
+          <div class="audit-row"><span>admin added</span><span style="opacity:0.6; font-size:0.8rem; font-family:'Space Mono', monospace;">10 Jul 2026, 11:15 AM</span></div>
+        </div>
+        <div class="unlock-overlay">
+          <p>Every change to this circle, recorded permanently — who did what, and when.</p>
+          <a href="#upgradeCard" class="btn btn-primary">Upgrade this circle</a>
+        </div>
+      </div>
+    `;
     return;
   }
 
@@ -328,7 +352,18 @@ async function renderAuditLog() {
 async function renderDisputes() {
   const body = document.getElementById('disputesBody');
   if (!isCooperativeActive) {
-    body.innerHTML = `<div class="locked-feature">The dispute log requires the Cooperative Plan. <a href="#upgradeCard">Upgrade this circle</a> to unlock.</div>`;
+    body.innerHTML = `
+      <div class="report-gate locked">
+        <div class="report-body">
+          <div class="dispute-row"><span>Segun T.: "Says he paid cycle 4 in cash"</span><span class="status-tag paid">resolved</span></div>
+          <div class="dispute-row"><span>Funmi A.: "Missing receipt for cycle 2"</span><span class="status-tag">open</span></div>
+        </div>
+        <div class="unlock-overlay">
+          <p>Record "I already paid" claims and their resolution — a paper trail everyone can see.</p>
+          <a href="#upgradeCard" class="btn btn-primary">Upgrade this circle</a>
+        </div>
+      </div>
+    `;
     return;
   }
 

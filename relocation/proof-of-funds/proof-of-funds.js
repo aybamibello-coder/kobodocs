@@ -84,9 +84,9 @@ function renderPreview() {
   } else {
     gate.classList.add('locked');
     document.getElementById('pBreakdown').innerHTML = result.lines
-      .map(() => `<tr><td>••••••••••••</td><td class="num">••••••</td></tr>`).join('');
-    document.getElementById('pTotals').innerHTML = `<div class="row grand"><span>Total</span><span>••••••</span></div>`;
-    document.getElementById('pSavingsNote').textContent = '';
+      .map(r => `<tr><td>${r.label}</td><td class="num">${naira(r.amount)}</td></tr>`).join('');
+    document.getElementById('pTotals').innerHTML = `<div class="row grand"><span>Total required</span><span>${naira(result.total)}</span></div>`;
+    document.getElementById('pSavingsNote').textContent = route.asOf;
   }
 
   if (window.KoboStorage) {
