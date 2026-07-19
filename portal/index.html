@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Your Invoices | KoboDocs</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Work+Sans:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/style.css">
+<style>
+  .portal-wrap{ max-width:760px; margin:0 auto; padding:56px 20px 100px; }
+  .portal-head{ margin-bottom:28px; }
+  .portal-head .biz-name{ font-family:'Space Mono', monospace; font-size:0.78rem; text-transform:uppercase; letter-spacing:0.06em; opacity:0.6; }
+  .portal-head h1{ font-size:1.5rem; margin-top:6px; }
+  .bs-panel{ background:var(--paper); border:1px solid var(--line); border-radius:8px; padding:22px 20px; margin-bottom:20px; }
+  .summary-row{ display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; }
+  .summary-row .value{ font-family:'Fraunces', serif; font-size:1.8rem; }
+  .inv-row{ display:flex; justify-content:space-between; align-items:center; gap:14px; padding:14px 0; border-bottom:1px dashed var(--line); flex-wrap:wrap; }
+  .inv-row:last-child{ border-bottom:none; }
+  .status-pill{ font-family:'Space Mono', monospace; font-size:0.7rem; text-transform:uppercase; padding:3px 10px; border-radius:20px; }
+  .status-pill.unpaid{ background:rgba(168,52,42,0.1); color:var(--stamp-red); }
+  .status-pill.partial{ background:rgba(199,154,60,0.15); color:#8a6a1f; }
+  .status-pill.paid{ background:rgba(20,52,43,0.1); color:var(--ink-green-deep); }
+  .pay-btn{ font-size:0.8rem; border:1px solid var(--line); background:var(--bone); border-radius:20px; padding:6px 14px; cursor:not-allowed; opacity:0.6; }
+  .empty-note, .error-note{ font-size:0.9rem; opacity:0.7; padding:24px 0; text-align:center; }
+</style>
+</head>
+<body>
+
+<header>
+  <nav class="nav">
+    <a href="/" class="logo">
+      <svg class="mark" viewBox="0 0 32 32" fill="none">
+        <circle cx="16" cy="16" r="14" stroke="#C79A3C" stroke-width="2.5"/>
+        <circle cx="16" cy="16" r="8" stroke="#C79A3C" stroke-width="1.5"/>
+      </svg>
+      KoboDocs
+    </a>
+  </nav>
+</header>
+
+<div class="portal-wrap" id="portalWrap">
+  <div class="empty-note">Loading your invoices…</div>
+</div>
+
+<script type="module" src="/assets/auth.js"></script>
+<script>
+(async function () {
+  await new Promise(r => {
+    if (window.KoboAuth) return r();
+    window.addEventListener('kobo-auth-ready', r, { once: true });
+  });
+
+  const naira = (n) => '₦' + (Number(n) || 0).toLocaleString('en-NG', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const fmtDate = (isoDate) => isoDate
+    ? new Date(isoDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
+    : '—';
+
+  const wrap = document.getElementById('portalWrap');
+  const params = new URLSearchParams(window.location.search);
+  const token = params.get('t');
+
+  if (!token) {
+    wrap.innerHTML = '<div class="error-note">This link is missing its access code. Please ask your business for the correct link.</div>';
+    return;
+  }
+
+  const supabase = window.KoboAuth.supabase;
+  const { data, error } = await supabase.rpc('get_client_portal_data', { p_token: token });
+
+  if (error || !data || data.error) {
+    wrap.innerHTML = '<div class="error-note">This link is invalid or has expired. Please ask your business for a new one.</div>';
+    return;
+  }
+
+  const invoices = data.invoices || [];
+  const outstanding = invoices
+    .filter(i => i.payment_status !== 'paid')
+    .reduce((s, i) => s + (Number(i.amount) - Number(i.amount_paid || 0)), 0);
+
+  const invoicesHtml = invoices.length
+    ? invoices.map(i => `
+        <div class="inv-row">
+          <div>
+            <strong>${i.invNumber || 'Invoice'}</strong>
+            <div style="font-size:0.82rem; opacity:0.6;">${i.due_date ? 'Due ' + fmtDate(i.due_date) : fmtDate(i.created_at)}</div>
+          </div>
+          <div style="display:flex; align-items:center; gap:14px;">
+            <div style="font-family:'Fraunces', serif;">${naira(i.amount)}</div>
+            <span class="status-pill ${i.payment_status}">${i.payment_status}</span>
+            ${i.payment_status !== 'paid' ? '<button class="pay-btn" disabled title="Online payment coming soon">Pay now</button>' : ''}
+          </div>
+        </div>
+      `).join('')
+    : '<div class="empty-note">No invoices yet.</div>';
+
+  wrap.innerHTML = `
+    <div class="portal-head">
+      <div class="biz-name">${data.business_name || 'Your supplier'}</div>
+      <h1>Hi ${data.client_name}, here's your invoice history</h1>
+    </div>
+    <div class="bs-panel">
+      <div class="summary-row">
+        <span>Outstanding balance</span>
+        <span class="value" style="${outstanding > 0 ? 'color:var(--stamp-red);' : ''}">${naira(outstanding)}</span>
+      </div>
+    </div>
+    <div class="bs-panel">
+      ${invoicesHtml}
+    </div>
+  `;
+})();
+</script>
+</body>
+</html>
