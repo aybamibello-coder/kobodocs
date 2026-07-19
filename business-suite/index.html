@@ -21,6 +21,25 @@
     padding:3px 10px; border-radius:20px; font-size:0.72rem;
   }
 
+  .bs-split{ display:grid; grid-template-columns:1fr 1fr; gap:40px; align-items:center; }
+  @media (max-width:820px){ .bs-split{ grid-template-columns:1fr; } }
+  .bs-split h2{ text-align:left; margin-bottom:10px; }
+  .bs-split .section-sub{ text-align:left; margin-bottom:18px; }
+  .bs-split ul{ list-style:none; padding:0; font-size:0.9rem; }
+  .bs-split ul li{ padding:7px 0; border-bottom:1px dashed var(--line); }
+  .bs-split ul li:last-child{ border-bottom:none; }
+  .bs-split ul li::before{ content:"✓ "; color:var(--stamp-gold); font-weight:700; }
+
+  .bp-card{ background:var(--paper); border:1px solid var(--line); border-radius:10px; padding:24px 22px; }
+  .bp-label{ font-family:'Space Mono', monospace; font-size:0.72rem; text-transform:uppercase; letter-spacing:0.06em; opacity:0.55; margin-bottom:14px; }
+  .bp-row{ display:flex; justify-content:space-between; font-size:0.92rem; padding:8px 0; border-bottom:1px dashed var(--line); }
+  .bp-row .pos{ font-family:'Space Mono', monospace; color:var(--ink-green-deep); }
+  .bp-row .neg{ font-family:'Space Mono', monospace; color:var(--stamp-red); }
+  .bp-total{ display:flex; justify-content:space-between; margin-top:12px; padding-top:12px; border-top:2px solid var(--charcoal); font-weight:700; font-family:'Fraunces', serif; font-size:1.15rem; }
+  .bp-total span:last-child{ color:var(--ink-green-deep); }
+  .bp-cats{ margin-top:16px; padding-top:14px; border-top:1px solid var(--line); }
+  .bp-cat{ display:flex; justify-content:space-between; font-size:0.8rem; opacity:0.7; padding:4px 0; }
+
   .bs-section{ max-width:980px; margin:0 auto; padding:56px 20px; }
   .bs-section h2{ font-size:1.5rem; text-align:center; margin-bottom:8px; }
   .bs-section .section-sub{ text-align:center; opacity:0.68; font-size:0.92rem; margin-bottom:36px; }
@@ -139,6 +158,32 @@
     <div class="bs-feature"><h3>Multi-user &amp; multi-business</h3><p>Bring in staff or a bookkeeper with role-based access, across more than one business if you run several.</p></div>
     <div class="bs-feature"><h3>VAT &amp; WHT built in</h3><p>7.5% VAT and withholding tax fields on every invoice, kept updateable as rates change.</p></div>
     <div class="bs-feature"><h3>Exportable reports</h3><p>PDF/Excel summaries for loan applications or handing off to your accountant.</p></div>
+  </div>
+</section>
+
+<section class="bs-section">
+  <div class="bs-split">
+    <div>
+      <h2>Bookkeeping without the spreadsheet</h2>
+      <p class="section-sub">Every paid invoice logs itself as income. Add expenses as they happen, and see where the money actually went.</p>
+      <ul>
+        <li>Income auto-logged from paid invoices — nothing to enter twice</li>
+        <li>Expense entry with categories (rent, supplies, transport, staff, and more)</li>
+        <li>Profit snapshot by week, month, or quarter</li>
+        <li>Exportable summaries for loan applications or your accountant</li>
+      </ul>
+    </div>
+    <div class="bp-card">
+      <div class="bp-label">This month</div>
+      <div class="bp-row"><span>Income</span><span class="pos">₦482,000</span></div>
+      <div class="bp-row"><span>Expenses</span><span class="neg">₦196,400</span></div>
+      <div class="bp-total"><span>Profit</span><span>₦285,600</span></div>
+      <div class="bp-cats">
+        <div class="bp-cat"><span>Supplies</span><span>₦86,000</span></div>
+        <div class="bp-cat"><span>Transport</span><span>₦54,000</span></div>
+        <div class="bp-cat"><span>Rent</span><span>₦56,400</span></div>
+      </div>
+    </div>
   </div>
 </section>
 
