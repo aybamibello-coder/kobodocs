@@ -3,23 +3,41 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Business Suite | KoboDocs</title>
+<title>Dashboard | KoboDocs Business Suite</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Work+Sans:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/assets/style.css">
 <style>
-  .bs-app-wrap{ max-width:560px; margin:0 auto; padding:80px 20px; text-align:center; }
-  .bs-app-wrap h1{ font-size:1.6rem; margin-bottom:14px; }
-  .bs-app-wrap p{ opacity:0.72; line-height:1.55; margin-bottom:22px; }
+  .bs-dash-wrap{ max-width:1000px; margin:0 auto; padding:36px 20px 100px; }
+  .bs-dash-top{ display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:16px; margin-bottom:26px; }
   .trial-badge{
-    display:inline-block; font-family:'Space Mono', monospace; font-size:0.78rem;
-    background:var(--bone); border:1px solid var(--line); border-radius:20px;
-    padding:8px 18px; margin-bottom:24px;
+    font-family:'Space Mono', monospace; font-size:0.72rem; background:var(--bone);
+    border:1px solid var(--line); border-radius:20px; padding:6px 14px;
   }
+  .bs-actions{ display:flex; gap:10px; flex-wrap:wrap; }
+  .stat-grid{ display:grid; grid-template-columns:repeat(3, 1fr); gap:16px; margin-bottom:32px; }
+  @media (max-width:700px){ .stat-grid{ grid-template-columns:1fr; } }
+  .stat-card{ background:var(--paper); border:1px solid var(--line); border-radius:8px; padding:20px 18px; }
+  .stat-card .label{ font-size:0.78rem; opacity:0.6; margin-bottom:8px; }
+  .stat-card .value{ font-family:'Fraunces', serif; font-size:1.6rem; }
+  .stat-card.warn .value{ color:var(--stamp-red); }
+
+  .bs-panel{ background:var(--paper); border:1px solid var(--line); border-radius:8px; padding:22px 20px; }
+  .bs-panel h2{ font-size:1.05rem; margin-bottom:16px; }
+  table.doc-table{ width:100%; border-collapse:collapse; font-size:0.88rem; }
+  table.doc-table th{ text-align:left; opacity:0.55; font-weight:500; font-size:0.76rem; text-transform:uppercase; letter-spacing:0.03em; padding:6px 8px; border-bottom:1px solid var(--line); }
+  table.doc-table td{ padding:10px 8px; border-bottom:1px dashed var(--line); }
+  table.doc-table tr:last-child td{ border-bottom:none; }
+  .status-pill{ font-family:'Space Mono', monospace; font-size:0.7rem; text-transform:uppercase; padding:3px 10px; border-radius:20px; }
+  .status-pill.unpaid{ background:rgba(168,52,42,0.1); color:var(--stamp-red); }
+  .status-pill.partial{ background:rgba(199,154,60,0.15); color:#8a6a1f; }
+  .status-pill.paid{ background:rgba(20,52,43,0.1); color:var(--ink-green-deep); }
+  .empty-note{ font-size:0.88rem; opacity:0.6; padding:20px 0; text-align:center; }
 </style>
 </head>
 <body>
+
 <header>
   <nav class="nav">
     <a href="/" class="logo">
@@ -31,63 +49,112 @@
     </a>
     <button class="menu-btn" aria-label="Toggle menu" id="menuBtn"><span></span><span></span><span></span></button>
     <div class="nav-links" id="navLinks">
-      <a href="/#tools">Tools</a>
-      <a href="/pricing/">Pricing</a>
+      <a href="/business-suite/app/clients/">Clients</a>
       <a href="/account/" id="navAccountLink">Sign in</a>
     </div>
   </nav>
 </header>
 
-<div class="bs-app-wrap">
-  <div class="trial-badge" id="trialBadge">Checking your access…</div>
-  <h1 id="appHeading">Welcome to Business Suite</h1>
-  <p id="appBody">The invoicing, recurring billing, debt tracking, and bookkeeping workspace is being built out next — this page confirms your trial/subscription is active and wired to your account.</p>
-  <a href="/business-suite/" class="btn btn-ghost">Back to Business Suite plan</a>
+<div class="bs-dash-wrap">
+  <div class="bs-dash-top">
+    <div>
+      <h1 style="font-size:1.5rem; margin-bottom:6px;" id="bizNameHeading">Business Suite</h1>
+      <span class="trial-badge" id="trialBadge">Checking access…</span>
+    </div>
+    <div class="bs-actions">
+      <a href="/business-suite/app/clients/" class="btn btn-ghost">Manage clients</a>
+      <a href="/business-suite/app/invoice/" class="btn btn-primary">+ New invoice</a>
+    </div>
+  </div>
+
+  <div class="stat-grid">
+    <div class="stat-card warn">
+      <div class="label">Outstanding (who owes you)</div>
+      <div class="value" id="statOutstanding">—</div>
+    </div>
+    <div class="stat-card">
+      <div class="label">Collected this month</div>
+      <div class="value" id="statMonthIncome">—</div>
+    </div>
+    <div class="stat-card">
+      <div class="label">Invoices this month</div>
+      <div class="value" id="statInvoiceCount">—</div>
+    </div>
+  </div>
+
+  <div class="bs-panel">
+    <h2>Recent invoices</h2>
+    <div id="invoiceTableWrap">
+      <div class="empty-note">Loading…</div>
+    </div>
+  </div>
 </div>
 
 <script type="module" src="/assets/auth.js"></script>
 <script src="/assets/nav-auth.js" defer></script>
+<script src="/business-suite/app/guard.js"></script>
 <script>
 (async function () {
-  await new Promise(r => {
-    if (window.KoboAuth) return r();
-    window.addEventListener('kobo-auth-ready', r, { once: true });
-  });
+  const naira = (n) => '₦' + (Number(n) || 0).toLocaleString('en-NG', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
-  const badge = document.getElementById('trialBadge');
-  const heading = document.getElementById('appHeading');
-  const body = document.getElementById('appBody');
+  const ctx = await window.BizSuiteGuard.requireAccess();
+  if (!ctx) return;
+  const { business, supabase, trialActive, daysLeft } = ctx;
 
-  const session = await window.KoboAuth.getSession();
-  if (!session) {
-    window.location.href = '/business-suite/';
+  document.getElementById('bizNameHeading').textContent = business.name || 'Business Suite';
+  document.getElementById('trialBadge').textContent = trialActive
+    ? `Free trial — ${daysLeft} day(s) left`
+    : 'Subscription active';
+
+  const { data: documents } = await supabase
+    .from('documents')
+    .select('id, doc_type, amount, amount_paid, payment_status, due_date, created_at, data, client_id, clients(name)')
+    .eq('business_id', business.id)
+    .eq('doc_type', 'invoice')
+    .order('created_at', { ascending: false })
+    .limit(25);
+
+  const docs = documents || [];
+
+  const outstanding = docs
+    .filter(d => d.payment_status !== 'paid')
+    .reduce((s, d) => s + (Number(d.amount) - Number(d.amount_paid || 0)), 0);
+
+  const startOfMonth = new Date();
+  startOfMonth.setDate(1);
+  startOfMonth.setHours(0, 0, 0, 0);
+
+  const thisMonthDocs = docs.filter(d => new Date(d.created_at) >= startOfMonth);
+  const monthIncome = thisMonthDocs
+    .filter(d => d.payment_status === 'paid')
+    .reduce((s, d) => s + Number(d.amount || 0), 0);
+
+  document.getElementById('statOutstanding').textContent = naira(outstanding);
+  document.getElementById('statMonthIncome').textContent = naira(monthIncome);
+  document.getElementById('statInvoiceCount').textContent = thisMonthDocs.length;
+
+  const wrap = document.getElementById('invoiceTableWrap');
+  if (!docs.length) {
+    wrap.innerHTML = '<div class="empty-note">No invoices yet — create your first one to see it here.</div>';
     return;
   }
 
-  const supabase = window.KoboAuth.supabase;
-  const { data: business } = await supabase
-    .from('businesses')
-    .select('suite_status, suite_trial_ends_at, suite_expires_at')
-    .eq('owner_user_id', session.user.id)
-    .maybeSingle();
-
-  const now = new Date();
-  const trialActive = business && business.suite_status === 'trial' && new Date(business.suite_trial_ends_at) > now;
-  const subActive = business && business.suite_status === 'active' && new Date(business.suite_expires_at) > now;
-
-  if (!business || (!trialActive && !subActive)) {
-    heading.textContent = 'Your access has ended';
-    body.textContent = 'Your Business Suite trial or subscription is not active. Head back to the plan page to subscribe.';
-    badge.textContent = 'No active access';
-    return;
-  }
-
-  if (trialActive) {
-    const daysLeft = Math.max(0, Math.ceil((new Date(business.suite_trial_ends_at) - now) / (1000 * 60 * 60 * 24)));
-    badge.textContent = `Free trial — ${daysLeft} day(s) left`;
-  } else {
-    badge.textContent = 'Subscription active';
-  }
+  wrap.innerHTML = `
+    <table class="doc-table">
+      <thead><tr><th>Invoice</th><th>Client</th><th>Due</th><th>Amount</th><th>Status</th></tr></thead>
+      <tbody>
+        ${docs.map(d => `
+          <tr>
+            <td>${(d.data && d.data.invNumber) || '—'}</td>
+            <td>${(d.clients && d.clients.name) || '—'}</td>
+            <td>${d.due_date ? new Date(d.due_date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : '—'}</td>
+            <td>${naira(d.amount)}</td>
+            <td><span class="status-pill ${d.payment_status}">${d.payment_status}</span></td>
+          </tr>
+        `).join('')}
+      </tbody>
+    </table>
+  `;
 })();
 </script>
 </body>
