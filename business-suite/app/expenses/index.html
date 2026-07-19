@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Expenses &amp; Profit Snapshot | KoboDocs Business Suite</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Work+Sans:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/style.css">
+<style>
+  .ex-wrap{ max-width:980px; margin:0 auto; padding:36px 20px 100px; }
+  .ex-top{ display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:14px; margin-bottom:24px; }
+  .bs-panel{ background:var(--paper); border:1px solid var(--line); border-radius:8px; padding:22px 20px; margin-bottom:20px; }
+  .period-toggle{ display:flex; gap:8px; margin-bottom:20px; }
+  .period-toggle button{ border:1px solid var(--line); background:none; padding:6px 16px; border-radius:20px; cursor:pointer; font-size:0.85rem; }
+  .period-toggle button.active{ background:var(--ink-green-deep); color:var(--paper); border-color:var(--ink-green-deep); }
+  .snapshot-grid{ display:grid; grid-template-columns:repeat(3, 1fr); gap:16px; }
+  @media (max-width:700px){ .snapshot-grid{ grid-template-columns:1fr; } }
+  .stat-card{ background:var(--bone); border:1px solid var(--line); border-radius:8px; padding:18px; }
+  .stat-card .label{ font-size:0.76rem; opacity:0.6; margin-bottom:6px; }
+  .stat-card .value{ font-family:'Fraunces', serif; font-size:1.4rem; }
+  .stat-card.profit .value{ color:var(--ink-green-deep); }
+  .stat-card.loss .value{ color:var(--stamp-red); }
+  .cat-breakdown{ margin-top:16px; font-size:0.85rem; }
+  .cat-row{ display:flex; justify-content:space-between; padding:6px 0; border-bottom:1px dashed var(--line); }
+  .cat-row:last-child{ border-bottom:none; }
+
+  .field-row-3{ display:grid; grid-template-columns:1.3fr 1fr 1fr; gap:12px; }
+  @media (max-width:640px){ .field-row-3{ grid-template-columns:1fr; } }
+  .exp-row{ display:flex; justify-content:space-between; align-items:center; gap:12px; padding:12px 0; border-bottom:1px dashed var(--line); flex-wrap:wrap; }
+  .exp-row:last-child{ border-bottom:none; }
+  .exp-cat-tag{ font-family:'Space Mono', monospace; font-size:0.68rem; text-transform:uppercase; background:var(--bone); border-radius:20px; padding:2px 10px; margin-left:8px; }
+  .empty-note{ font-size:0.88rem; opacity:0.6; padding:20px 0; text-align:center; }
+  #formMsg{ font-size:0.85rem; margin-top:12px; padding:10px 12px; border-radius:4px; display:none; }
+  #formMsg.error{ display:block; background:rgba(168,52,42,0.08); color:var(--stamp-red); }
+  #formMsg.success{ display:block; background:rgba(199,154,60,0.12); color:var(--ink-green-deep); }
+</style>
+</head>
+<body>
+
+<header>
+  <nav class="nav">
+    <a href="/" class="logo">
+      <svg class="mark" viewBox="0 0 32 32" fill="none">
+        <circle cx="16" cy="16" r="14" stroke="#C79A3C" stroke-width="2.5"/>
+        <circle cx="16" cy="16" r="8" stroke="#C79A3C" stroke-width="1.5"/>
+      </svg>
+      KoboDocs
+    </a>
+    <button class="menu-btn" aria-label="Toggle menu" id="menuBtn"><span></span><span></span><span></span></button>
+    <div class="nav-links" id="navLinks">
+      <a href="/business-suite/app/">Dashboard</a>
+      <a href="/account/" id="navAccountLink">Sign in</a>
+    </div>
+  </nav>
+</header>
+
+<div class="ex-wrap">
+  <div class="ex-top">
+    <div>
+      <a href="/business-suite/app/">&larr; Dashboard</a>
+      <h1 style="font-size:1.4rem; margin-top:6px;">Expenses &amp; Profit Snapshot</h1>
+    </div>
+  </div>
+
+  <div class="bs-panel">
+    <div class="period-toggle" id="periodToggle">
+      <button type="button" class="active" data-period="week">This week</button>
+      <button type="button" data-period="month">This month</button>
+      <button type="button" data-period="quarter">This quarter</button>
+    </div>
+    <div class="snapshot-grid">
+      <div class="stat-card">
+        <div class="label">Income (paid invoices)</div>
+        <div class="value" id="statIncome">—</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">Expenses</div>
+        <div class="value" id="statExpenses">—</div>
+      </div>
+      <div class="stat-card" id="profitCard">
+        <div class="label">Profit</div>
+        <div class="value" id="statProfit">—</div>
+      </div>
+    </div>
+    <div class="cat-breakdown" id="catBreakdown"></div>
+    <p style="font-size:0.78rem; opacity:0.55; margin-top:14px;">Income reflects invoices marked "paid" that were created in this period — a close approximation, not a payment-date ledger.</p>
+  </div>
+
+  <div class="bs-panel">
+    <h2 style="font-size:1rem; margin-bottom:14px;">Log an expense</h2>
+    <div class="field-row-3">
+      <div class="field-group">
+        <label for="expVendor">Vendor / description</label>
+        <input type="text" id="expVendor" placeholder="e.g. NEPA bill, fuel, printer paper">
+      </div>
+      <div class="field-group">
+        <label for="expAmount">Amount (₦)</label>
+        <input type="number" id="expAmount" min="0">
+      </div>
+      <div class="field-group">
+        <label for="expCategory">Category</label>
+        <select id="expCategory">
+          <option value="rent">Rent</option>
+          <option value="supplies">Supplies</option>
+          <option value="transport">Transport</option>
+          <option value="staff">Staff</option>
+          <option value="utilities">Utilities</option>
+          <option value="marketing">Marketing</option>
+          <option value="other" selected>Other</option>
+        </select>
+      </div>
+    </div>
+    <div class="field-row">
+      <div class="field-group">
+        <label for="expDate">Date</label>
+        <input type="date" id="expDate">
+      </div>
+      <div class="field-group">
+        <label for="expNotes">Notes (optional)</label>
+        <input type="text" id="expNotes" placeholder="Optional">
+      </div>
+    </div>
+    <div class="action-row">
+      <button type="button" class="btn btn-primary" id="saveExpenseBtn">Log expense</button>
+    </div>
+    <div id="formMsg"></div>
+  </div>
+
+  <div class="bs-panel">
+    <h2 style="font-size:1rem; margin-bottom:14px;">Recent expenses</h2>
+    <div id="expenseListWrap"><div class="empty-note">Loading…</div></div>
+  </div>
+</div>
+
+<script type="module" src="/assets/auth.js"></script>
+<script src="/assets/nav-auth.js" defer></script>
+<script src="/business-suite/app/guard.js"></script>
+<script src="/business-suite/app/expenses/expenses.js" defer></script>
+</body>
+</html>
