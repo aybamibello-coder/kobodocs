@@ -146,7 +146,10 @@
           <div class="name">${c.name}</div>
           <div class="sub">${[c.phone, c.email].filter(Boolean).join(' · ') || 'No contact info'}${c.notes ? ' — ' + c.notes : ''}</div>
         </div>
-        <button type="button" class="edit-btn" data-edit="${c.id}">Edit</button>
+        <div style="display:flex; gap:8px;">
+          <button type="button" class="edit-btn" data-edit="${c.id}">Edit</button>
+          <button type="button" class="edit-btn" data-portal="${c.id}">Copy portal link</button>
+        </div>
       </div>
     `).join('');
 
@@ -164,6 +167,46 @@
         formHeading.textContent = 'Edit client';
         cancelBtn.style.display = 'inline-block';
         window.scrollTo({ top: 0, behavior: 'smooth' });
+      });
+    });
+
+    listWrap.querySelectorAll('[data-portal]').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const clientId = btn.dataset.portal;
+        const originalText = btn.textContent;
+        btn.textContent = 'Preparing…';
+        btn.disabled = true;
+
+        let { data: link } = await supabase
+          .from('client_portal_links')
+          .select('token')
+          .eq('client_id', clientId)
+          .maybeSingle();
+
+        if (!link) {
+          const { data: created, error } = await supabase
+            .from('client_portal_links')
+            .insert({ client_id: clientId })
+            .select('token')
+            .single();
+          if (error) {
+            showMsg('Could not create portal link: ' + error.message, 'error');
+            btn.textContent = originalText;
+            btn.disabled = false;
+            return;
+          }
+          link = created;
+        }
+
+        const url = `${window.location.origin}/portal/?t=${link.token}`;
+        try {
+          await navigator.clipboard.writeText(url);
+          showMsg('Portal link copied to clipboard.', 'success');
+        } catch {
+          showMsg('Portal link: ' + url, 'success');
+        }
+        btn.textContent = originalText;
+        btn.disabled = false;
       });
     });
   }
