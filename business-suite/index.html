@@ -3,22 +3,23 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Advanced Invoice Generator + Bookkeeping for Nigerian Businesses | KoboDocs Business Suite</title>
-<meta name="description" content="Recurring invoices, multi-rail payment links, debt tracking, and lightweight bookkeeping — built for Nigerian SMEs. Try Business Suite free for 21 days.">
+<title>Invoice & Bookkeeping Software for Nigerian Businesses | KoboDocs Business Suite</title>
+<meta name="description" content="Create professional invoices, collect payments, track debts, automate reminders, and manage bookkeeping from one platform. Try Business Suite free for 21 days.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Work+Sans:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/assets/style.css">
 <style>
-  .bs-hero{ background:var(--ink-green-deep); color:var(--bone); padding:64px 20px 56px; text-align:center; }
-  .bs-hero .wrap{ max-width:760px; margin:0 auto; }
-  .bs-hero .eyebrow{
-    font-family:'Space Mono', monospace; font-size:0.72rem; text-transform:uppercase;
-    letter-spacing:0.1em; color:var(--stamp-gold); display:block; margin-bottom:16px;
+  .bs-trial-note{ font-size:0.85rem; opacity:0.65; margin-top:14px; }
+  .hero-doc-status{
+    display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;
+    margin-top:14px; padding-top:14px; border-top:1px dashed var(--line);
+    font-size:0.78rem;
   }
-  .bs-hero h1{ color:var(--paper); font-size:2.1rem; line-height:1.2; margin-bottom:16px; }
-  .bs-hero p{ font-size:1.02rem; opacity:0.82; line-height:1.55; margin-bottom:28px; }
-  .bs-trial-note{ font-size:0.85rem; opacity:0.7; margin-top:14px; }
+  .hero-doc-status .status-chip{
+    font-family:'Space Mono', monospace; background:rgba(199,154,60,0.15); color:#8a6a1f;
+    padding:3px 10px; border-radius:20px; font-size:0.72rem;
+  }
 
   .bs-section{ max-width:980px; margin:0 auto; padding:56px 20px; }
   .bs-section h2{ font-size:1.5rem; text-align:center; margin-bottom:8px; }
@@ -96,13 +97,32 @@
   </nav>
 </header>
 
-<section class="bs-hero">
+<section class="hero">
   <div class="wrap">
-    <span class="eyebrow">KoboDocs Business Suite</span>
-    <h1>Advanced Invoice Generator + Bookkeeping for Nigerian Businesses</h1>
-    <p>Recurring invoices, multi-rail payment collection, a debt dashboard that chases clients for you, and lightweight bookkeeping — one plan, everything included.</p>
-    <a href="#pricing" class="btn btn-primary">Start your 21-day free trial</a>
-    <div class="bs-trial-note">No card required to start. One plan, one price — no tier confusion.</div>
+    <div>
+      <span class="eyebrow">KoboDocs Business Suite · 21-day free trial</span>
+      <h1>Invoice &amp; Bookkeeping Software for Nigerian Businesses</h1>
+      <p class="lede">Create professional invoices, collect payments, track debts, automate reminders, and manage bookkeeping from one platform.</p>
+      <div class="hero-ctas">
+        <a href="#pricing" class="btn btn-primary">Start your 21-day free trial</a>
+      </div>
+      <div class="bs-trial-note">No card required to start. One plan, one price — no tier confusion.</div>
+    </div>
+    <div class="hero-doc">
+      <div class="stamp"><span class="stamp-label">Pro</span></div>
+      <div class="hero-doc-head">
+        <div class="co">Adaeze Fabrics Co.</div>
+        <div class="no">INV-0042<br>Due 25 Jul 2026</div>
+      </div>
+      <div class="hero-doc-row"><span>Ankara print, 12 yards</span><span>₦84,000</span></div>
+      <div class="hero-doc-row"><span>Delivery — Lekki</span><span>₦3,500</span></div>
+      <div class="hero-doc-row"><span>VAT (7.5%)</span><span>₦6,562</span></div>
+      <div class="hero-doc-total"><span>Total due</span><span>₦94,062</span></div>
+      <div class="hero-doc-status">
+        <span>Partial · ₦40,000 outstanding</span>
+        <span class="status-chip">Reminder sent 2d ago</span>
+      </div>
+    </div>
   </div>
 </section>
 
