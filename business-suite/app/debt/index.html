@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Who Owes You | KoboDocs Business Suite</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Work+Sans:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/style.css">
+<style>
+  .debt-wrap{ max-width:980px; margin:0 auto; padding:36px 20px 100px; }
+  .debt-top{ display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:14px; margin-bottom:24px; }
+  .bs-panel{ background:var(--paper); border:1px solid var(--line); border-radius:8px; padding:22px 20px; margin-bottom:20px; }
+  .debt-row{
+    display:flex; justify-content:space-between; align-items:center; gap:14px;
+    padding:14px 0; border-bottom:1px dashed var(--line); flex-wrap:wrap;
+  }
+  .debt-row:last-child{ border-bottom:none; }
+  .debt-client{ font-weight:600; }
+  .debt-meta{ font-size:0.82rem; opacity:0.65; }
+  .debt-amount{ font-family:'Fraunces', serif; font-size:1.15rem; }
+  .overdue-tag{
+    font-family:'Space Mono', monospace; font-size:0.68rem; text-transform:uppercase;
+    padding:3px 10px; border-radius:20px; margin-left:8px;
+  }
+  .overdue-tag.soon{ background:rgba(199,154,60,0.15); color:#8a6a1f; }
+  .overdue-tag.late{ background:rgba(168,52,42,0.12); color:var(--stamp-red); }
+  .credit-flag{
+    font-family:'Space Mono', monospace; font-size:0.68rem; text-transform:uppercase;
+    color:var(--stamp-red); background:rgba(168,52,42,0.08); padding:3px 10px; border-radius:20px; margin-left:8px;
+  }
+  .debt-actions{ display:flex; gap:8px; flex-wrap:wrap; }
+  .reminder-btn{
+    font-size:0.8rem; border:1px solid var(--line); background:none; border-radius:20px;
+    padding:6px 14px; cursor:pointer;
+  }
+  .reminder-btn.firm{ border-color:var(--stamp-red); color:var(--stamp-red); }
+  .empty-note{ font-size:0.88rem; opacity:0.6; padding:20px 0; text-align:center; }
+  .group-heading{ font-size:0.78rem; text-transform:uppercase; letter-spacing:0.04em; opacity:0.55; margin:20px 0 8px; }
+  .group-heading:first-child{ margin-top:0; }
+  #toast{
+    position:fixed; bottom:20px; left:50%; transform:translateX(-50%);
+    background:var(--ink-green-deep); color:var(--paper); padding:10px 20px; border-radius:6px;
+    font-size:0.85rem; display:none; z-index:50;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <nav class="nav">
+    <a href="/" class="logo">
+      <svg class="mark" viewBox="0 0 32 32" fill="none">
+        <circle cx="16" cy="16" r="14" stroke="#C79A3C" stroke-width="2.5"/>
+        <circle cx="16" cy="16" r="8" stroke="#C79A3C" stroke-width="1.5"/>
+      </svg>
+      KoboDocs
+    </a>
+    <button class="menu-btn" aria-label="Toggle menu" id="menuBtn"><span></span><span></span><span></span></button>
+    <div class="nav-links" id="navLinks">
+      <a href="/business-suite/app/">Dashboard</a>
+      <a href="/business-suite/app/clients/">Clients</a>
+      <a href="/account/" id="navAccountLink">Sign in</a>
+    </div>
+  </nav>
+</header>
+
+<div class="debt-wrap">
+  <div class="debt-top">
+    <div>
+      <a href="/business-suite/app/">&larr; Dashboard</a>
+      <h1 style="font-size:1.4rem; margin-top:6px;">Who owes you</h1>
+      <p style="font-size:0.88rem; opacity:0.7; margin-top:4px;">Oldest overdue first. Reminders open WhatsApp/email with a message ready to send.</p>
+    </div>
+  </div>
+
+  <div class="bs-panel">
+    <div id="debtListWrap"><div class="empty-note">Loading…</div></div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script type="module" src="/assets/auth.js"></script>
+<script src="/assets/nav-auth.js" defer></script>
+<script src="/business-suite/app/guard.js"></script>
+<script src="/business-suite/app/debt/debt.js" defer></script>
+</body>
+</html>
