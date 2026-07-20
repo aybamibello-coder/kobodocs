@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Free HR Letter Generator for Nigerian Businesses | KoboDocs</title>
+<meta name="description" content="Generate offer, appointment, confirmation, promotion, query, and termination letters — free, no signup. Pro adds saved employees, batch letters, and letterhead.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Work+Sans:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/style.css">
+<style>
+  .type-tabs{ display:flex; flex-wrap:wrap; gap:8px; margin-bottom:20px; }
+  .type-tabs button{ font-size:0.82rem; border:1px solid var(--line); background:none; border-radius:20px; padding:6px 14px; cursor:pointer; }
+  .type-tabs button.active{ background:var(--ink-green-deep); color:var(--paper); border-color:var(--ink-green-deep); }
+  .letter-fields{ display:none; }
+  .letter-fields.active{ display:block; }
+  .letter-doc{
+    background:var(--paper); border:1px solid var(--line); border-radius:4px;
+    padding:40px 36px; min-height:400px; font-size:0.92rem; line-height:1.75;
+  }
+  .letter-doc .letterhead{ font-family:'Fraunces', serif; font-weight:700; font-size:1.15rem; margin-bottom:4px; }
+  .letter-doc .letter-date{ font-size:0.82rem; opacity:0.6; margin-bottom:24px; }
+  .letter-doc p{ margin-bottom:14px; white-space:pre-line; }
+  .pro-lock{
+    display:flex; align-items:center; justify-content:space-between; gap:10px;
+    background:rgba(199,154,60,0.1); border:1px solid var(--stamp-gold);
+    border-radius:8px; padding:12px 14px; font-size:0.84rem; margin-bottom:18px;
+  }
+  .pro-lock a{ font-weight:600; white-space:nowrap; }
+  #savedEmployeeRow{ display:none; }
+</style>
+</head>
+<body>
+
+<header>
+  <nav class="nav">
+    <a href="/" class="logo">
+      <svg class="mark" viewBox="0 0 32 32" fill="none">
+        <circle cx="16" cy="16" r="14" stroke="#C79A3C" stroke-width="2.5"/>
+        <circle cx="16" cy="16" r="8" stroke="#C79A3C" stroke-width="1.5"/>
+      </svg>
+      KoboDocs
+    </a>
+    <button class="menu-btn" aria-label="Toggle menu" id="menuBtn"><span></span><span></span><span></span></button>
+    <div class="nav-links" id="navLinks">
+      <div class="nav-item">
+        <span class="nav-category">Business Tools ▾</span>
+        <div class="dropdown">
+          <a href="/invoice/">Invoice Generator</a>
+          <a href="/receipt/">Receipt Generator</a>
+          <a href="/quotation/">Quotation Generator</a>
+          <a href="/payslip/">Payslip / Salary Slip</a>
+          <a href="/budget/">Budget Planner</a>
+          <a href="/loan/">Loan Schedule</a>
+          <a href="/qr-code/">QR Code Generator</a>
+          <a href="/salary-calculator/">Take-Home Pay Calculator</a>
+          <a href="/hr-letters/">HR Letter Generator</a>
+          <a href="/waybill/">Waybill / Delivery Note</a>
+          <div class="dropdown-divider"></div>
+          <a href="/business-suite/">Business Suite (Pro)</a>
+        </div>
+      </div>
+      <a href="/ajo/">Ajo &amp; Esusu</a>
+      <div class="nav-item">
+        <span class="nav-category">Relocation ▾</span>
+        <div class="dropdown">
+          <a href="/relocation/">Relocation Overview</a>
+          <a href="/relocation/japa-calculator/">Japa Cost Calculator</a>
+          <a href="/relocation/proof-of-funds/">Proof of Funds Calculator</a>
+          <a href="/relocation/cost-of-living/">Cost of Living Calculator</a>
+          <a href="/cac-calculator/">CAC Registration Cost</a>
+          <a href="/import-duty-calculator/">Import Duty Calculator</a>
+        </div>
+      </div>
+      <a href="/pricing/">Pricing</a>
+      <a href="/account/" id="navAccountLink">Sign in</a>
+      <a href="/invoice/" class="nav-cta">Start free</a>
+    </div>
+  </nav>
+</header>
+
+<section class="page-header">
+  <div class="wrap">
+    <h1>Free HR Letter Generator for Nigerian Businesses</h1>
+    <p>Offer, appointment, confirmation, promotion, query, and termination letters — filled in and ready to download in under a minute.</p>
+  </div>
+</section>
+
+<section class="generator">
+  <div class="wrap">
+
+    <div class="form-panel">
+      <div class="field-group">
+        <label>Letter type</label>
+        <div class="type-tabs" id="typeTabs">
+          <button type="button" class="active" data-type="offer">Offer</button>
+          <button type="button" data-type="appointment">Appointment</button>
+          <button type="button" data-type="confirmation">Confirmation</button>
+          <button type="button" data-type="promotion">Promotion</button>
+          <button type="button" data-type="query">Query</button>
+          <button type="button" data-type="termination">Termination</button>
+        </div>
+      </div>
+
+      <div class="pro-lock" id="proLockBanner">
+        <span>Pro adds saved employees, batch letters, and your letterhead.</span>
+        <a href="/pricing/">Upgrade →</a>
+      </div>
+
+      <div class="field-group" id="savedEmployeeRow">
+        <label for="savedEmployeeSelect">Load a saved employee (Pro)</label>
+        <select id="savedEmployeeSelect"><option value="">Loading…</option></select>
+      </div>
+
+      <div class="field-row">
+        <div class="field-group"><label for="bizName">Your business name</label><input type="text" id="bizName" placeholder="Adaeze Fabrics Co."></div>
+        <div class="field-group"><label for="signatory">Signed by (name &amp; title)</label><input type="text" id="signatory" placeholder="Adaeze Okafor, Director"></div>
+      </div>
+      <div class="field-row">
+        <div class="field-group"><label for="empName">Employee name</label><input type="text" id="empName" placeholder="Chinedu Okonkwo"></div>
+        <div class="field-group"><label for="position">Position</label><input type="text" id="position" placeholder="Sales Executive"></div>
+      </div>
+      <div class="field-row">
+        <div class="field-group"><label for="letterDate">Date</label><input type="date" id="letterDate"></div>
+        <div class="field-group"><label for="effectiveDate">Effective date</label><input type="date" id="effectiveDate"></div>
+      </div>
+
+      <div class="letter-fields active" data-fields="offer">
+        <div class="field-group"><label for="offerSalary">Monthly salary offered (₦)</label><input type="text" id="offerSalary" placeholder="250,000"></div>
+      </div>
+      <div class="letter-fields" data-fields="appointment">
+        <div class="field-group"><label for="apptSalary">Monthly salary (₦)</label><input type="text" id="apptSalary" placeholder="250,000"></div>
+        <div class="field-group"><label for="apptProbation">Probation period</label><input type="text" id="apptProbation" placeholder="e.g. 3 months"></div>
+      </div>
+      <div class="letter-fields" data-fields="promotion">
+        <div class="field-group"><label for="newPosition">New position</label><input type="text" id="newPosition" placeholder="Senior Sales Executive"></div>
+        <div class="field-group"><label for="newSalary">New monthly salary (₦, optional)</label><input type="text" id="newSalary" placeholder="300,000"></div>
+      </div>
+      <div class="letter-fields" data-fields="query">
+        <div class="field-group"><label for="queryReason">What happened</label><textarea id="queryReason" rows="3" placeholder="e.g. Unexplained absence from work on 14th and 15th July 2026"></textarea></div>
+        <div class="field-group"><label for="responseDeadline">Respond by</label><input type="date" id="responseDeadline"></div>
+      </div>
+      <div class="letter-fields" data-fields="termination">
+        <div class="field-group"><label for="termReason">Reason for termination</label><textarea id="termReason" rows="3" placeholder="e.g. Restructuring of the sales department"></textarea></div>
+      </div>
+
+      <div class="action-row">
+        <button type="button" class="btn btn-primary" id="downloadPdfBtn">Download PDF</button>
+        <button type="button" class="btn btn-ghost" id="waBtn" style="border-color:var(--line); color:var(--ink-green-deep);">Share on WhatsApp</button>
+      </div>
+    </div>
+
+    <div class="preview-panel">
+      <div class="letter-doc" id="letterDoc"></div>
+    </div>
+
+  </div>
+</section>
+
+<section class="bs-section" style="max-width:900px; margin:0 auto; padding:20px 20px 80px;">
+  <h2 style="font-size:1.3rem; margin-bottom:14px;">Free vs Pro</h2>
+  <div style="display:grid; grid-template-columns:1fr 1fr; gap:20px;">
+    <div style="background:var(--paper); border:1px solid var(--line); border-radius:8px; padding:20px;">
+      <strong style="display:block; margin-bottom:10px;">Free</strong>
+      <p style="font-size:0.88rem; opacity:0.75; line-height:1.7; margin:0;">All 6 letter types, one at a time. PDF download and WhatsApp share.</p>
+    </div>
+    <div style="background:var(--paper); border:2px solid var(--stamp-gold); border-radius:8px; padding:20px;">
+      <strong style="display:block; margin-bottom:10px;">Pro — ₦1,500/month or ₦12,000/year</strong>
+      <p style="font-size:0.88rem; opacity:0.75; line-height:1.7; margin:0;">Load employee details straight from your saved list, generate letters for your whole team in one batch, and add your business letterhead automatically.</p>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div class="footer-top">
+      <div>
+        <div class="footer-logo">KoboDocs</div>
+        <p class="footer-note">Every business document, stamped and sent — built for Nigeria, one Naira at a time.</p>
+      </div>
+      <div class="footer-links">
+        <div>
+          <strong>Business tools</strong>
+          <a href="/invoice/">Invoice</a>
+          <a href="/receipt/">Receipt</a>
+          <a href="/payslip/">Payslip</a>
+          <a href="/qr-code/">QR Code</a>
+        </div>
+        <div>
+          <strong>Calculators</strong>
+          <a href="/salary-calculator/">Take-Home Pay</a>
+          <a href="/cac-calculator/">CAC Registration Cost</a>
+          <a href="/import-duty-calculator/">Import Duty</a>
+          <a href="/relocation/japa-calculator/">Japa Cost</a>
+        </div>
+        <div>
+          <strong>Company</strong>
+          <a href="/pricing/">Pricing</a>
+          <a href="/about/">About</a>
+          <a href="/contact/">Contact</a>
+          <a href="/blog/">Blog</a>
+        </div>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2026 KoboDocs. Not a financial institution — we never hold or move your money.</span>
+      <span><a href="/privacy/">Privacy</a> · <a href="/terms/">Terms</a> · Made in Lagos</span>
+    </div>
+  </div>
+</footer>
+
+<script src="/assets/app.js" defer></script>
+<script type="module" src="/assets/auth.js"></script>
+<script src="/assets/nav-auth.js" defer></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" defer></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
+<script src="/assets/export.js" defer></script>
+<script src="/hr-letters/hr-letters.js" defer></script>
+</body>
+</html>
