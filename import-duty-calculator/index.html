@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nigeria Import Duty Calculator 2026 | KoboDocs</title>
+<meta name="description" content="Estimate Nigerian customs duty, surcharge, ETLS, FCS levy and VAT on your shipment — free, based on current Nigeria Customs Service formula.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Work+Sans:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/style.css">
+<style>
+  .result-card{ background:var(--paper); border:1px solid var(--line); border-radius:10px; padding:28px 24px; }
+  .result-headline{ text-align:center; margin-bottom:20px; padding-bottom:20px; border-bottom:1px solid var(--line); }
+  .result-headline .label{ font-size:0.8rem; opacity:0.6; }
+  .result-headline .value{ font-family:'Fraunces', serif; font-size:2rem; color:var(--ink-green-deep); }
+  .result-row{ display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px dashed var(--line); font-size:0.9rem; }
+  .result-row:last-child{ border-bottom:none; }
+  .result-row .sub{ font-size:0.74rem; opacity:0.55; display:block; }
+</style>
+</head>
+<body>
+
+<header>
+  <nav class="nav">
+    <a href="/" class="logo">
+      <svg class="mark" viewBox="0 0 32 32" fill="none">
+        <circle cx="16" cy="16" r="14" stroke="#C79A3C" stroke-width="2.5"/>
+        <circle cx="16" cy="16" r="8" stroke="#C79A3C" stroke-width="1.5"/>
+      </svg>
+      KoboDocs
+    </a>
+    <button class="menu-btn" aria-label="Toggle menu" id="menuBtn"><span></span><span></span><span></span></button>
+    <div class="nav-links" id="navLinks">
+      <div class="nav-item">
+        <span class="nav-category">Business Tools ▾</span>
+        <div class="dropdown">
+          <a href="/invoice/">Invoice Generator</a>
+          <a href="/receipt/">Receipt Generator</a>
+          <a href="/quotation/">Quotation Generator</a>
+          <a href="/payslip/">Payslip / Salary Slip</a>
+          <a href="/budget/">Budget Planner</a>
+          <a href="/loan/">Loan Schedule</a>
+          <a href="/qr-code/">QR Code Generator</a>
+          <a href="/salary-calculator/">Take-Home Pay Calculator</a>
+          <a href="/hr-letters/">HR Letter Generator</a>
+          <a href="/waybill/">Waybill / Delivery Note</a>
+          <div class="dropdown-divider"></div>
+          <a href="/business-suite/">Business Suite (Pro)</a>
+        </div>
+      </div>
+      <a href="/ajo/">Ajo &amp; Esusu</a>
+      <div class="nav-item">
+        <span class="nav-category">Relocation ▾</span>
+        <div class="dropdown">
+          <a href="/relocation/">Relocation Overview</a>
+          <a href="/relocation/japa-calculator/">Japa Cost Calculator</a>
+          <a href="/relocation/proof-of-funds/">Proof of Funds Calculator</a>
+          <a href="/relocation/cost-of-living/">Cost of Living Calculator</a>
+          <a href="/cac-calculator/">CAC Registration Cost</a>
+          <a href="/import-duty-calculator/">Import Duty Calculator</a>
+        </div>
+      </div>
+      <a href="/pricing/">Pricing</a>
+      <a href="/account/" id="navAccountLink">Sign in</a>
+      <a href="/invoice/" class="nav-cta">Start free</a>
+    </div>
+  </nav>
+</header>
+
+<section class="page-header">
+  <div class="wrap">
+    <h1>Nigeria Import Duty Calculator</h1>
+    <p>Estimate customs duty, surcharge, ETLS, FCS levy, and VAT on goods entering Nigeria — based on the current CIF assessment method. Free, no signup.</p>
+  </div>
+</section>
+
+<section class="generator">
+  <div class="wrap">
+
+    <div class="form-panel">
+      <div class="field-row">
+        <div class="field-group"><label for="fobUsd">FOB value (goods cost, $)</label><input type="number" id="fobUsd" min="0" placeholder="e.g. 5000"></div>
+        <div class="field-group"><label for="freightUsd">Freight cost ($)</label><input type="number" id="freightUsd" min="0" placeholder="e.g. 800"></div>
+      </div>
+      <div class="field-row">
+        <div class="field-group"><label for="insuranceUsd">Insurance ($, optional)</label><input type="number" id="insuranceUsd" min="0" placeholder="Leave blank for 1.5% default"></div>
+        <div class="field-group"><label for="exRate">Exchange rate (₦ per $1)</label><input type="number" id="exRate" min="0" placeholder="e.g. 1550"></div>
+      </div>
+      <div class="field-group">
+        <label for="dutyRate">Duty rate for your HS code category</label>
+        <select id="dutyRate">
+          <option value="0">0% — Essential/raw materials, some agric inputs</option>
+          <option value="5" selected>5% — Machinery, industrial inputs</option>
+          <option value="10">10% — Intermediate goods</option>
+          <option value="20">20% — Finished consumer goods (general)</option>
+          <option value="35">35% — Vehicles &amp; protected/luxury goods</option>
+          <option value="custom">Custom rate</option>
+        </select>
+      </div>
+      <div class="field-group" id="customRateGroup" style="display:none;">
+        <label for="customDutyRate">Custom duty rate (%)</label>
+        <input type="number" id="customDutyRate" min="0" max="100">
+      </div>
+
+      <p style="font-size:0.78rem; opacity:0.55; margin-top:8px;">Confirm your exact HS code and duty rate on the Nigeria Customs Service tariff lookup before relying on this for a real shipment.</p>
+    </div>
+
+    <div class="preview-panel">
+      <div class="result-card">
+        <div class="result-headline">
+          <div class="label">Estimated total landed cost</div>
+          <div class="value" id="rTotal">₦0.00</div>
+        </div>
+        <div class="result-row"><span>CIF value <span class="sub">FOB + Freight + Insurance</span></span><span id="rCif">₦0.00</span></div>
+        <div class="result-row"><span>Import duty <span class="sub">Duty rate × CIF</span></span><span id="rDuty">₦0.00</span></div>
+        <div class="result-row"><span>Surcharge <span class="sub">7% of import duty</span></span><span id="rSurcharge">₦0.00</span></div>
+        <div class="result-row"><span>ETLS <span class="sub">0.5% of CIF</span></span><span id="rEtls">₦0.00</span></div>
+        <div class="result-row"><span>FCS / Import Levy <span class="sub">4% of FOB</span></span><span id="rFcs">₦0.00</span></div>
+        <div class="result-row"><span>VAT <span class="sub">7.5% of CIF + duty + surcharge + ETLS + FCS</span></span><span id="rVat">₦0.00</span></div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<section class="bs-section" style="max-width:720px; margin:0 auto; padding:20px 20px 80px;">
+  <h2 style="font-size:1.2rem; margin-bottom:10px;">How this is calculated</h2>
+  <p style="font-size:0.9rem; opacity:0.75; line-height:1.7;">Nigeria Customs Service assesses duty using the CIF method: Cost (FOB) + Insurance + Freight, converted to Naira at the prevailing CBN exchange rate. Import duty is your HS code's rate applied to CIF. A 7% surcharge applies to the duty amount, ETLS (ECOWAS Trade Liberalisation Scheme) is 0.5% of CIF, and a 4% FCS/Import Levy applies to FOB. VAT (7.5%) is then applied to the sum of CIF, duty, surcharge, ETLS, and the levy.</p>
+  <p style="font-size:0.78rem; opacity:0.5; margin-top:14px;">This is a general estimate, not a customs assessment. Actual duty depends on your exact HS code classification, the CBN rate on your clearance date, and Customs' own valuation — confirm with a licensed clearing agent before shipping.</p>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div class="footer-top">
+      <div>
+        <div class="footer-logo">KoboDocs</div>
+        <p class="footer-note">Every business document, stamped and sent — built for Nigeria, one Naira at a time.</p>
+      </div>
+      <div class="footer-links">
+        <div>
+          <strong>Business tools</strong>
+          <a href="/invoice/">Invoice</a>
+          <a href="/receipt/">Receipt</a>
+          <a href="/payslip/">Payslip</a>
+          <a href="/qr-code/">QR Code</a>
+        </div>
+        <div>
+          <strong>Calculators</strong>
+          <a href="/salary-calculator/">Take-Home Pay</a>
+          <a href="/cac-calculator/">CAC Registration Cost</a>
+          <a href="/import-duty-calculator/">Import Duty</a>
+          <a href="/relocation/japa-calculator/">Japa Cost</a>
+        </div>
+        <div>
+          <strong>Company</strong>
+          <a href="/pricing/">Pricing</a>
+          <a href="/about/">About</a>
+          <a href="/contact/">Contact</a>
+          <a href="/blog/">Blog</a>
+        </div>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2026 KoboDocs. Not a financial institution — we never hold or move your money.</span>
+      <span><a href="/privacy/">Privacy</a> · <a href="/terms/">Terms</a> · Made in Lagos</span>
+    </div>
+  </div>
+</footer>
+
+<script src="/assets/app.js" defer></script>
+<script type="module" src="/assets/auth.js"></script>
+<script src="/assets/nav-auth.js" defer></script>
+<script src="/import-duty-calculator/import-duty.js" defer></script>
+</body>
+</html>
