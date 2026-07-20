@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Contact KoboDocs</title>
+<meta name="description" content="Get in touch with KoboDocs — support, feedback, or partnership questions.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Work+Sans:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/style.css">
+<style>
+  .contact-wrap{ max-width:640px; margin:0 auto; padding:20px 20px 80px; }
+  .contact-panel{ background:var(--paper); border:1px solid var(--line); border-radius:10px; padding:28px 24px; margin-bottom:20px; }
+  .contact-panel h2{ font-size:1.05rem; margin-bottom:6px; }
+  .contact-panel p{ font-size:0.9rem; opacity:0.7; margin-bottom:14px; }
+  .contact-row{ display:flex; justify-content:space-between; align-items:center; padding:12px 0; border-bottom:1px dashed var(--line); font-size:0.94rem; }
+  .contact-row:last-child{ border-bottom:none; }
+  #formMsg{ font-size:0.85rem; margin-top:12px; padding:10px 12px; border-radius:4px; display:none; }
+  #formMsg.error{ display:block; background:rgba(168,52,42,0.08); color:var(--stamp-red); }
+  #formMsg.success{ display:block; background:rgba(199,154,60,0.12); color:var(--ink-green-deep); }
+</style>
+</head>
+<body>
+
+<header>
+  <nav class="nav">
+    <a href="/" class="logo">
+      <svg class="mark" viewBox="0 0 32 32" fill="none">
+        <circle cx="16" cy="16" r="14" stroke="#C79A3C" stroke-width="2.5"/>
+        <circle cx="16" cy="16" r="8" stroke="#C79A3C" stroke-width="1.5"/>
+      </svg>
+      KoboDocs
+    </a>
+    <button class="menu-btn" aria-label="Toggle menu" id="menuBtn"><span></span><span></span><span></span></button>
+    <div class="nav-links" id="navLinks">
+      <div class="nav-item">
+        <span class="nav-category">Business Tools ▾</span>
+        <div class="dropdown">
+          <a href="/invoice/">Invoice Generator</a>
+          <a href="/receipt/">Receipt Generator</a>
+          <a href="/quotation/">Quotation Generator</a>
+          <a href="/payslip/">Payslip / Salary Slip</a>
+          <a href="/budget/">Budget Planner</a>
+          <a href="/loan/">Loan Schedule</a>
+          <a href="/qr-code/">QR Code Generator</a>
+          <div class="dropdown-divider"></div>
+          <a href="/business-suite/">Business Suite (Pro)</a>
+        </div>
+      </div>
+      <a href="/ajo/">Ajo &amp; Esusu</a>
+      <div class="nav-item">
+        <span class="nav-category">Relocation ▾</span>
+        <div class="dropdown">
+          <a href="/relocation/">Relocation Overview</a>
+          <a href="/relocation/japa-calculator/">Japa Cost Calculator</a>
+          <a href="/relocation/proof-of-funds/">Proof of Funds Calculator</a>
+          <a href="/relocation/cost-of-living/">Cost of Living Calculator</a>
+        </div>
+      </div>
+      <a href="/pricing/">Pricing</a>
+      <a href="/account/" id="navAccountLink">Sign in</a>
+      <a href="/invoice/" class="nav-cta">Start free</a>
+    </div>
+  </nav>
+</header>
+
+
+<section class="page-header">
+  <div class="wrap">
+    <h1>Get in touch</h1>
+    <p>Support questions, feedback, bug reports, or partnership ideas — this reaches the team directly.</p>
+  </div>
+</section>
+
+<div class="contact-wrap">
+  <div class="contact-panel">
+    <h2>Send a message</h2>
+    <p>Fill this in and it opens a pre-filled email in your mail app — nothing is sent through this page directly.</p>
+    <div class="field-group">
+      <label for="cName">Your name</label>
+      <input type="text" id="cName" placeholder="Your name">
+    </div>
+    <div class="field-group">
+      <label for="cEmail">Your email</label>
+      <input type="email" id="cEmail" placeholder="you@email.com">
+    </div>
+    <div class="field-group">
+      <label for="cSubject">What's this about?</label>
+      <select id="cSubject">
+        <option value="Support">Support / bug report</option>
+        <option value="Feedback">Feedback / feature request</option>
+        <option value="Business Suite">Business Suite question</option>
+        <option value="Partnership">Partnership / press</option>
+        <option value="Other">Something else</option>
+      </select>
+    </div>
+    <div class="field-group">
+      <label for="cMessage">Message</label>
+      <textarea id="cMessage" rows="5" placeholder="How can we help?"></textarea>
+    </div>
+    <div class="action-row">
+      <button type="button" class="btn btn-primary" id="sendBtn">Open email to send</button>
+    </div>
+    <div id="formMsg"></div>
+  </div>
+
+  <div class="contact-panel">
+    <h2>Other ways to reach us</h2>
+    <div class="contact-row"><span>Email</span><span><a href="mailto:hello@kobodocs.com.ng">hello@kobodocs.com.ng</a></span></div>
+    <div class="contact-row"><span>Based in</span><span>Lagos, Nigeria</span></div>
+    <div class="contact-row"><span>Response time</span><span>Usually within 1–2 business days</span></div>
+  </div>
+</div>
+
+<footer>
+  <div class="wrap">
+    <div class="footer-top">
+      <div>
+        <div class="footer-logo">KoboDocs</div>
+        <p class="footer-note">Every business document, stamped and sent — built for Nigeria, one Naira at a time.</p>
+      </div>
+      <div class="footer-links">
+        <div>
+          <strong>Business tools</strong>
+          <a href="/invoice/">Invoice</a>
+          <a href="/receipt/">Receipt</a>
+          <a href="/payslip/">Payslip</a>
+          <a href="/ajo/">Ajo &amp; Esusu</a>
+          <a href="/qr-code/">QR Code</a>
+        </div>
+        <div>
+          <strong>Relocation</strong>
+          <a href="/relocation/">Relocation home</a>
+          <a href="/relocation/japa-calculator/">Japa Cost Calculator</a>
+          <a href="/relocation/proof-of-funds/">Proof of Funds</a>
+          <a href="/relocation/cost-of-living/">Cost of Living</a>
+        </div>
+        <div>
+          <strong>Company</strong>
+          <a href="/pricing/">Pricing</a>
+          <a href="/about/">About</a>
+          <a href="/contact/">Contact</a>
+          <a href="/blog/">Blog</a>
+        </div>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2026 KoboDocs. Not a financial institution — we never hold or move your money.</span>
+      <span><a href="/privacy/">Privacy</a> · <a href="/terms/">Terms</a> · Made in Lagos</span>
+    </div>
+  </div>
+</footer>
+
+<script src="/assets/app.js" defer></script>
+<script type="module" src="/assets/auth.js"></script>
+<script src="/assets/nav-auth.js" defer></script>
+
+<script>
+document.getElementById('sendBtn').addEventListener('click', () => {
+  const name = document.getElementById('cName').value.trim();
+  const email = document.getElementById('cEmail').value.trim();
+  const subject = document.getElementById('cSubject').value;
+  const message = document.getElementById('cMessage').value.trim();
+  const msgEl = document.getElementById('formMsg');
+
+  if (!email || !message) {
+    msgEl.textContent = 'Please add your email and a message before sending.';
+    msgEl.className = 'error';
+    return;
+  }
+
+  const body = `From: ${name || 'Not given'} (${email})\n\n${message}`;
+  window.location.href = `mailto:hello@kobodocs.com.ng?subject=${encodeURIComponent('[KoboDocs] ' + subject)}&body=${encodeURIComponent(body)}`;
+  msgEl.textContent = 'Opening your email app…';
+  msgEl.className = 'success';
+});
+</script>
+</body>
+</html>
