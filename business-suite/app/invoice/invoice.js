@@ -5,12 +5,21 @@ const fmtDate = (isoDate) => isoDate
   : '—';
 
 let itemId = 0;
+let inventoryItems = [];
+
+function inventoryOptionsHtml(selectedId) {
+  if (!inventoryItems.length) return '<option value="">Custom item</option>';
+  return '<option value="">Custom item</option>' +
+    inventoryItems.map(it => `<option value="${it.id}" ${it.id === selectedId ? 'selected' : ''}>${it.name} (${it.quantity_on_hand} ${it.unit} in stock)</option>`).join('');
+}
+
 function addItemRow(desc = '', qty = 1, price = '') {
   itemId++;
   const row = document.createElement('div');
   row.className = 'item-row';
   row.dataset.id = itemId;
   row.innerHTML = `
+    <select class="item-inventory-select" style="max-width:170px;">${inventoryOptionsHtml(null)}</select>
     <input type="text" class="item-desc" placeholder="Item or service" value="${desc}">
     <input type="number" class="item-qty" min="1" value="${qty}">
     <input type="number" class="item-price" min="0" placeholder="Unit price (₦)" value="${price}">
@@ -19,13 +28,34 @@ function addItemRow(desc = '', qty = 1, price = '') {
   document.getElementById('itemRows').appendChild(row);
   row.querySelectorAll('input').forEach(inp => inp.addEventListener('input', renderPreview));
   row.querySelector('.item-remove').addEventListener('click', () => { row.remove(); renderPreview(); });
+
+  row.querySelector('.item-inventory-select').addEventListener('change', (e) => {
+    const item = inventoryItems.find(it => it.id === e.target.value);
+    if (item) {
+      row.dataset.inventoryItemId = item.id;
+      row.querySelector('.item-desc').value = item.name;
+      row.querySelector('.item-price').value = item.sell_price || 0;
+    } else {
+      delete row.dataset.inventoryItemId;
+    }
+    renderPreview();
+  });
+}
+
+function refreshInventorySelects() {
+  document.querySelectorAll('.item-inventory-select').forEach(sel => {
+    const row = sel.closest('.item-row');
+    const currentId = row.dataset.inventoryItemId || null;
+    sel.innerHTML = inventoryOptionsHtml(currentId);
+  });
 }
 
 function getItems() {
   return [...document.querySelectorAll('.item-row')].map(row => ({
     desc: row.querySelector('.item-desc').value || 'Item',
     qty: parseFloat(row.querySelector('.item-qty').value) || 0,
-    price: parseFloat(row.querySelector('.item-price').value) || 0
+    price: parseFloat(row.querySelector('.item-price').value) || 0,
+    inventoryItemId: row.dataset.inventoryItemId || null
   }));
 }
 
@@ -132,6 +162,15 @@ function showMsg(text, type) {
     });
   }
 
+  // Load inventory items for the item-row picker
+  const { data: items } = await supabase
+    .from('inventory_items')
+    .select('id, name, sell_price, quantity_on_hand, unit')
+    .eq('business_id', business.id)
+    .order('name');
+  inventoryItems = items || [];
+  refreshInventorySelects();
+
   // Suggest the next invoice number for this business
   const { count } = await supabase
     .from('documents')
@@ -153,7 +192,9 @@ function showMsg(text, type) {
     btn.disabled = true;
     btn.textContent = 'Saving…';
 
-    const { error } = await supabase.from('documents').insert({
+    const linkedItems = data.items.filter(it => it.inventoryItemId);
+
+    const { data: newDoc, error } = await supabase.from('documents').insert({
       business_id: business.id,
       user_id: session.user.id,
       doc_type: 'invoice',
@@ -164,6 +205,7 @@ function showMsg(text, type) {
       wht_amount: data.wht,
       payment_status: 'unpaid',
       amount_paid: 0,
+      inventory_linked: linkedItems.length > 0,
       data: {
         invNumber: data.invNumber,
         invDate: data.invDateRaw,
@@ -175,7 +217,7 @@ function showMsg(text, type) {
         whtPercent: data.whtPercent,
         note: data.note
       }
-    });
+    }).select().single();
 
     btn.disabled = false;
     btn.textContent = 'Save invoice';
@@ -184,7 +226,32 @@ function showMsg(text, type) {
       showMsg('Could not save invoice: ' + error.message, 'error');
       return;
     }
-    showMsg('Invoice saved to your Business Suite records.', 'success');
+
+    // Deduct stock for any inventory-linked items and log the movement
+    let wentNegative = false;
+    for (const item of linkedItems) {
+      const invItem = inventoryItems.find(it => it.id === item.inventoryItemId);
+      if (!invItem) continue;
+      const newQty = Number(invItem.quantity_on_hand) - item.qty;
+      if (newQty < 0) wentNegative = true;
+      await supabase.from('inventory_items').update({ quantity_on_hand: newQty }).eq('id', invItem.id);
+      await supabase.from('stock_movements').insert({
+        item_id: invItem.id,
+        business_id: business.id,
+        movement_type: 'sale',
+        quantity: -item.qty,
+        document_id: newDoc.id,
+        created_by: session.user.id
+      });
+      invItem.quantity_on_hand = newQty; // keep local copy in sync for repeat saves in this session
+    }
+
+    showMsg(
+      wentNegative
+        ? 'Invoice saved — note: one or more linked items are now below zero stock.'
+        : 'Invoice saved to your Business Suite records.',
+      wentNegative ? 'error' : 'success'
+    );
   });
 
   document.getElementById('downloadBtn').addEventListener('click', async () => {
