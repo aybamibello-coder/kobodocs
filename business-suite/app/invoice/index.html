@@ -9,6 +9,11 @@
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Work+Sans:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/assets/style.css">
 <style>
+  .item-row{ grid-template-columns:150px 1fr 90px 130px 32px; }
+  @media (max-width:600px){
+    .item-row{ grid-template-columns:1fr 1fr 70px 32px; }
+    .item-row .item-inventory-select{ grid-column:1 / -1; }
+  }
   #formMsg{ font-size:0.85rem; margin-top:12px; padding:10px 12px; border-radius:4px; display:none; }
   #formMsg.error{ display:block; background:rgba(168,52,42,0.08); color:var(--stamp-red); }
   #formMsg.success{ display:block; background:rgba(199,154,60,0.12); color:var(--ink-green-deep); }
@@ -28,6 +33,10 @@
     <button class="menu-btn" aria-label="Toggle menu" id="menuBtn"><span></span><span></span><span></span></button>
     <div class="nav-links" id="navLinks">
       <a href="/business-suite/app/">Dashboard</a>
+      <a href="/business-suite/app/debt/">Who owes you</a>
+      <a href="/business-suite/app/quotes/">Quotes</a>
+      <a href="/business-suite/app/expenses/">Expenses</a>
+      <a href="/business-suite/app/inventory/">Inventory</a>
       <a href="/business-suite/app/clients/">Clients</a>
       <a href="/account/" id="navAccountLink">Sign in</a>
     </div>
