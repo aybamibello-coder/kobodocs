@@ -16,8 +16,9 @@
     border:1px solid var(--line); border-radius:20px; padding:6px 14px;
   }
   .bs-actions{ display:flex; gap:10px; flex-wrap:wrap; }
-  .stat-grid{ display:grid; grid-template-columns:repeat(3, 1fr); gap:16px; margin-bottom:32px; }
-  @media (max-width:700px){ .stat-grid{ grid-template-columns:1fr; } }
+  .stat-grid{ display:grid; grid-template-columns:repeat(4, 1fr); gap:16px; margin-bottom:32px; }
+  @media (max-width:900px){ .stat-grid{ grid-template-columns:1fr 1fr; } }
+  @media (max-width:500px){ .stat-grid{ grid-template-columns:1fr; } }
   .stat-card{ background:var(--paper); border:1px solid var(--line); border-radius:8px; padding:20px 18px; }
   .stat-card .label{ font-size:0.78rem; opacity:0.6; margin-bottom:8px; }
   .stat-card .value{ font-family:'Fraunces', serif; font-size:1.6rem; }
@@ -52,6 +53,7 @@
       <a href="/business-suite/app/debt/">Who owes you</a>
       <a href="/business-suite/app/quotes/">Quotes</a>
       <a href="/business-suite/app/expenses/">Expenses</a>
+      <a href="/business-suite/app/inventory/">Inventory</a>
       <a href="/business-suite/app/clients/">Clients</a>
       <a href="/account/" id="navAccountLink">Sign in</a>
     </div>
@@ -83,6 +85,10 @@
       <div class="label">Invoices this month</div>
       <div class="value" id="statInvoiceCount">—</div>
     </div>
+    <a href="/business-suite/app/inventory/" class="stat-card" id="lowStockCard" style="display:block; text-decoration:none; color:inherit;">
+      <div class="label">Low stock items</div>
+      <div class="value" id="statLowStock">—</div>
+    </a>
   </div>
 
   <div class="bs-panel">
@@ -135,6 +141,14 @@
   document.getElementById('statOutstanding').textContent = naira(outstanding);
   document.getElementById('statMonthIncome').textContent = naira(monthIncome);
   document.getElementById('statInvoiceCount').textContent = thisMonthDocs.length;
+
+  const { data: lowStockItems } = await supabase
+    .from('inventory_items')
+    .select('id, quantity_on_hand, reorder_level')
+    .eq('business_id', business.id);
+  const lowCount = (lowStockItems || []).filter(i => Number(i.quantity_on_hand) <= Number(i.reorder_level || 0)).length;
+  document.getElementById('statLowStock').textContent = lowCount;
+  if (lowCount > 0) document.getElementById('lowStockCard').classList.add('warn');
 
   const wrap = document.getElementById('invoiceTableWrap');
   if (!docs.length) {
