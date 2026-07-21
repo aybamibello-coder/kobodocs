@@ -63,31 +63,39 @@ document.querySelectorAll('.form-panel input, .form-panel textarea').forEach(el 
 document.getElementById('letterDate').value = new Date().toISOString().split('T')[0];
 renderLetter();
 
-document.getElementById('downloadPdfBtn').addEventListener('click', async () => {
-  const btn = document.getElementById('downloadPdfBtn');
-  const original = btn.textContent;
-  btn.textContent = 'Preparing PDF…';
-  btn.disabled = true;
+function buildHrLetterPdf() {
+  const bizName = val('bizName') || 'Your Business Name';
+  const dateLine = fmtDate(val('letterDate')) || new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' });
+  return KoboExport.buildLetterPdf({
+    letterhead: bizName,
+    dateLine,
+    bodyText: buildBody(currentType)
+  });
+}
+
+document.getElementById('downloadPdfBtn').addEventListener('click', () => {
   try {
-    await KoboExport.downloadPdf(`${currentType}-letter.pdf`, 'letterDoc');
-  } finally {
-    btn.textContent = original;
-    btn.disabled = false;
+    const doc = buildHrLetterPdf();
+    KoboExport.download(`${currentType}-letter.pdf`, doc);
+  } catch (err) {
+    showMsg('Could not generate PDF: ' + err.message, 'error');
   }
 });
 
 document.getElementById('waBtn').addEventListener('click', async () => {
   const btn = document.getElementById('waBtn');
   const original = btn.textContent;
-  btn.textContent = 'Preparing image…';
-  btn.disabled = true;
   try {
-    await KoboExport.shareWhatsApp(`${currentType}-letter.png`, `${currentType.charAt(0).toUpperCase() + currentType.slice(1)} letter for ${val('empName') || 'employee'}, made with KoboDocs.`, 'letterDoc');
+    const doc = buildHrLetterPdf();
+    const caption = `${currentType.charAt(0).toUpperCase() + currentType.slice(1)} letter for ${val('empName') || 'employee'}, made with KoboDocs.`;
+    const result = await KoboExport.shareWhatsApp(`${currentType}-letter.pdf`, caption, doc);
+    if (result === 'downloaded') {
+      showMsg('PDF downloaded — attach it in WhatsApp. Opening WhatsApp with the caption now.', 'success');
+    }
   } catch (err) {
-    if (err.name !== 'AbortError') console.error(err);
+    if (err.name !== 'AbortError') showMsg('Could not prepare the PDF: ' + err.message, 'error');
   } finally {
     btn.textContent = original;
-    btn.disabled = false;
   }
 });
 
