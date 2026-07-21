@@ -170,19 +170,34 @@ function showMsg(text, type) {
     setTimeout(() => { window.location.href = '/business-suite/app/quotes/'; }, 1200);
   });
 
-  document.getElementById('downloadBtn').addEventListener('click', async () => {
+  function buildQuotePdf(data) {
+    const rows = data.items.map(it => [it.desc, it.qty, naira(it.qty * it.price)]);
+    const totals = [{ label: 'Subtotal', value: naira(data.subtotal) }];
+    if (data.vatOn) totals.push({ label: 'VAT (7.5%)', value: naira(data.vat) });
+    totals.push({ label: 'Estimated total', value: naira(data.total), emphasis: true });
+
+    return KoboExport.buildTablePdf({
+      docLabel: 'Quotation',
+      businessName: business.name,
+      metaLines: [data.quoteNumber, data.validUntilRaw ? `Valid until ${fmtDate(data.validUntilRaw)}` : ''].filter(Boolean),
+      toLabel: 'For',
+      toName: currentClient ? currentClient.name : '',
+      columns: ['Description', 'Qty', 'Amount'],
+      rightAlignCols: [1, 2],
+      rows,
+      totals,
+      note: data.note,
+      watermark: false
+    });
+  }
+
+  document.getElementById('downloadBtn').addEventListener('click', () => {
     const data = renderPreview();
-    const btn = document.getElementById('downloadBtn');
-    const originalText = btn.textContent;
-    btn.textContent = 'Preparing PDF…';
-    btn.disabled = true;
     try {
-      await KoboExport.downloadPdf(`${data.quoteNumber || 'quote'}.pdf`);
+      const doc = buildQuotePdf(data);
+      KoboExport.download(`${data.quoteNumber || 'quote'}.pdf`, doc);
     } catch (err) {
       showMsg('Could not generate PDF: ' + err.message, 'error');
-    } finally {
-      btn.textContent = originalText;
-      btn.disabled = false;
     }
   });
 
@@ -191,8 +206,6 @@ function showMsg(text, type) {
     if (!currentClient) { showMsg('Select a client first.', 'error'); return; }
     const btn = document.getElementById('waBtn');
     const originalText = btn.textContent;
-    btn.textContent = 'Preparing image…';
-    btn.disabled = true;
 
     const caption = [
       `*Quote ${data.quoteNumber}*`,
@@ -204,12 +217,15 @@ function showMsg(text, type) {
     ].filter(Boolean).join('\n');
 
     try {
-      await KoboExport.shareWhatsApp(`${data.quoteNumber || 'quote'}.png`, caption);
+      const doc = buildQuotePdf(data);
+      const result = await KoboExport.shareWhatsApp(`${data.quoteNumber || 'quote'}.pdf`, caption, doc);
+      if (result === 'downloaded') {
+        showMsg('PDF downloaded — attach it in WhatsApp. Opening WhatsApp with the caption now.', 'success');
+      }
     } catch (err) {
-      if (err.name !== 'AbortError') showMsg('Could not prepare the image: ' + err.message, 'error');
+      if (err.name !== 'AbortError') showMsg('Could not prepare the PDF: ' + err.message, 'error');
     } finally {
       btn.textContent = originalText;
-      btn.disabled = false;
     }
   });
 })();
