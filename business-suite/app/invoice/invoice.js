@@ -254,19 +254,35 @@ function showMsg(text, type) {
     );
   });
 
-  document.getElementById('downloadBtn').addEventListener('click', async () => {
+  function buildInvoicePdf(data) {
+    const rows = data.items.map(it => [it.desc, it.qty, naira(it.qty * it.price)]);
+    const totals = [{ label: 'Subtotal', value: naira(data.subtotal) }];
+    if (data.vatOn) totals.push({ label: 'VAT (7.5%)', value: naira(data.vat) });
+    if (data.whtOn) totals.push({ label: `WHT (${data.whtPercent}%)`, value: '-' + naira(data.wht) });
+    totals.push({ label: 'Total due', value: naira(data.total), emphasis: true });
+
+    return KoboExport.buildTablePdf({
+      docLabel: 'Invoice',
+      businessName: business.name,
+      metaLines: [data.invNumber, data.dueDateRaw ? `Due ${fmtDate(data.dueDateRaw)}` : ''].filter(Boolean),
+      toLabel: 'Bill to',
+      toName: currentClient ? currentClient.name : '',
+      columns: ['Description', 'Qty', 'Amount'],
+      rightAlignCols: [1, 2],
+      rows,
+      totals,
+      note: data.note,
+      watermark: false
+    });
+  }
+
+  document.getElementById('downloadBtn').addEventListener('click', () => {
     const data = renderPreview();
-    const btn = document.getElementById('downloadBtn');
-    const originalText = btn.textContent;
-    btn.textContent = 'Preparing PDF…';
-    btn.disabled = true;
     try {
-      await KoboExport.downloadPdf(`${data.invNumber || 'invoice'}.pdf`);
+      const doc = buildInvoicePdf(data);
+      KoboExport.download(`${data.invNumber || 'invoice'}.pdf`, doc);
     } catch (err) {
       showMsg('Could not generate PDF: ' + err.message, 'error');
-    } finally {
-      btn.textContent = originalText;
-      btn.disabled = false;
     }
   });
 
@@ -275,8 +291,6 @@ function showMsg(text, type) {
     if (!currentClient) { showMsg('Select a client first.', 'error'); return; }
     const btn = document.getElementById('waBtn');
     const originalText = btn.textContent;
-    btn.textContent = 'Preparing image…';
-    btn.disabled = true;
 
     const caption = [
       `*Invoice ${data.invNumber}*`,
@@ -288,12 +302,15 @@ function showMsg(text, type) {
     ].filter(Boolean).join('\n');
 
     try {
-      await KoboExport.shareWhatsApp(`${data.invNumber || 'invoice'}.png`, caption);
+      const doc = buildInvoicePdf(data);
+      const result = await KoboExport.shareWhatsApp(`${data.invNumber || 'invoice'}.pdf`, caption, doc);
+      if (result === 'downloaded') {
+        showMsg('PDF downloaded — attach it in WhatsApp. Opening WhatsApp with the caption now.', 'success');
+      }
     } catch (err) {
-      if (err.name !== 'AbortError') showMsg('Could not prepare the image: ' + err.message, 'error');
+      if (err.name !== 'AbortError') showMsg('Could not prepare the PDF: ' + err.message, 'error');
     } finally {
       btn.textContent = originalText;
-      btn.disabled = false;
     }
   });
 })();
