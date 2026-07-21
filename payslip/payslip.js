@@ -133,19 +133,44 @@ if (saved) applyFormState(saved);
 else applyFormState({});
 renderPreview();
 
-document.getElementById('downloadBtn').addEventListener('click', async () => {
+let watermarkHidden = false;
+
+function buildPayslipPdf(d) {
+  const rows = [
+    ['Basic salary', naira(d.basic)],
+    ['Housing allowance', naira(d.housing)],
+    ['Transport allowance', naira(d.transport)]
+  ];
+  if (d.other) rows.push(['Other allowances', naira(d.other)]);
+  rows.push(['Deductions', '']);
+  if (d.pensionOn) rows.push(['Pension (8%)', naira(d.pensionMonthly)]);
+  if (d.nhfOn) rows.push(['NHF (2.5% of basic)', naira(d.nhfMonthly)]);
+  rows.push(['PAYE tax', naira(d.payeMonthly)]);
+
+  return KoboExport.buildTablePdf({
+    docLabel: 'Payslip',
+    businessName: d.empName,
+    metaLines: [d.period],
+    toLabel: 'Employee',
+    toName: d.staffName,
+    columns: ['Item', 'Amount'],
+    rightAlignCols: [1],
+    rows,
+    totals: [
+      { label: 'Gross pay', value: naira(d.grossMonthly) },
+      { label: 'Net pay', value: naira(d.netMonthly), emphasis: true }
+    ],
+    watermark: !watermarkHidden
+  });
+}
+
+document.getElementById('downloadBtn').addEventListener('click', () => {
   const d = renderPreview();
-  const btn = document.getElementById('downloadBtn');
-  const originalText = btn.textContent;
-  btn.textContent = 'Preparing PDF…';
-  btn.disabled = true;
   try {
-    await KoboExport.downloadPdf(`payslip-${(d.staffName || 'employee').replace(/\s+/g, '-')}.pdf`);
+    const doc = buildPayslipPdf(d);
+    KoboExport.download(`payslip-${(d.staffName || 'employee').replace(/\s+/g, '-')}.pdf`, doc);
   } catch (err) {
     alert('Could not generate PDF: ' + err.message);
-  } finally {
-    btn.textContent = originalText;
-    btn.disabled = false;
   }
 });
 
@@ -153,8 +178,6 @@ document.getElementById('waBtn').addEventListener('click', async () => {
   const d = renderPreview();
   const btn = document.getElementById('waBtn');
   const originalText = btn.textContent;
-  btn.textContent = 'Preparing image…';
-  btn.disabled = true;
 
   const caption = [
     `*Payslip — ${d.period}*`,
@@ -166,15 +189,15 @@ document.getElementById('waBtn').addEventListener('click', async () => {
   ].join('\n');
 
   try {
-    const result = await KoboExport.shareWhatsApp(`payslip-${(d.staffName || 'employee').replace(/\s+/g, '-')}.png`, caption);
+    const doc = buildPayslipPdf(d);
+    const result = await KoboExport.shareWhatsApp(`payslip-${(d.staffName || 'employee').replace(/\s+/g, '-')}.pdf`, caption, doc);
     if (result === 'downloaded') {
-      alert('Image downloaded — attach it in WhatsApp. Opening WhatsApp with the caption now.');
+      alert('PDF downloaded — attach it in WhatsApp. Opening WhatsApp with the caption now.');
     }
   } catch (err) {
-    if (err.name !== 'AbortError') alert('Could not prepare the image: ' + err.message);
+    if (err.name !== 'AbortError') alert('Could not prepare the PDF: ' + err.message);
   } finally {
     btn.textContent = originalText;
-    btn.disabled = false;
   }
 });
 
@@ -196,7 +219,10 @@ document.getElementById('waBtn').addEventListener('click', async () => {
   if (!profile || !planActive || (profile.plan !== "pro" && profile.plan !== "business")) return;
 
   const hasBranding = profile.brand_logo_url || profile.brand_color;
-  if (hasBranding) document.getElementById("pWatermark").classList.add("hidden");
+  if (hasBranding) {
+    document.getElementById("pWatermark").classList.add("hidden");
+    watermarkHidden = true;
+  }
 
   if (profile.brand_logo_url) {
     const logo = document.getElementById("pBrandLogo");
