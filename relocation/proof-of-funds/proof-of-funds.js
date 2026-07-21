@@ -101,7 +101,7 @@ function renderPreview() {
     });
   }
 
-  return { dest, route, total: result.total, totalTravelers };
+  return { dest, route, total: result.total, totalTravelers, lines: result.lines, currentSavings };
 }
 
 function applyFormState(state) {
@@ -138,6 +138,29 @@ document.getElementById('clearFormBtn').addEventListener('click', () => {
   renderPreview();
 })();
 
+function buildProofOfFundsPdf({ dest, route, total, totalTravelers, lines, currentSavings }) {
+  const rows = lines.map(r => [r.label, naira(r.amount)]);
+  const totals = [{ label: 'Required threshold', value: naira(total) }];
+  if (currentSavings > 0) {
+    const gap = total - currentSavings;
+    totals.push({ label: 'You already have', value: naira(currentSavings) });
+    totals.push({ label: gap > 0 ? 'Gap remaining' : 'Surplus', value: naira(Math.abs(gap)), emphasis: true });
+  } else {
+    totals.push({ label: 'Total required', value: naira(total), emphasis: true });
+  }
+
+  return KoboExport.buildTablePdf({
+    docLabel: 'Proof of Funds',
+    businessName: dest.label,
+    businessSub: `${route.label} · ${totalTravelers} traveler${totalTravelers > 1 ? 's' : ''}`,
+    columns: ['Item', 'Amount'],
+    rightAlignCols: [1],
+    rows,
+    totals,
+    watermark: true
+  });
+}
+
 document.getElementById('downloadBtn').addEventListener('click', async () => {
   const btn = document.getElementById('downloadBtn');
   const originalText = btn.textContent;
@@ -153,10 +176,10 @@ document.getElementById('downloadBtn').addEventListener('click', async () => {
     return;
   }
 
-  const { dest } = renderPreview();
-  btn.textContent = 'Preparing PDF…';
+  const data = renderPreview();
   try {
-    await KoboExport.downloadPdf(`proof-of-funds-${dest.label.replace(/\s+/g, '-')}.pdf`);
+    const doc = buildProofOfFundsPdf(data);
+    KoboExport.download(`proof-of-funds-${data.dest.label.replace(/\s+/g, '-')}.pdf`, doc);
   } catch (err) {
     alert('Could not generate PDF: ' + err.message);
   } finally {
@@ -180,8 +203,8 @@ document.getElementById('waBtn').addEventListener('click', async () => {
     return;
   }
 
-  const { dest, route, total, totalTravelers } = renderPreview();
-  btn.textContent = 'Preparing image…';
+  const data = renderPreview();
+  const { dest, route, total, totalTravelers } = data;
 
   const caption = [
     `*Proof of Funds — ${dest.label}*`,
@@ -191,12 +214,13 @@ document.getElementById('waBtn').addEventListener('click', async () => {
   ].join('\n');
 
   try {
-    const result = await KoboExport.shareWhatsApp(`proof-of-funds-${dest.label.replace(/\s+/g, '-')}.png`, caption);
+    const doc = buildProofOfFundsPdf(data);
+    const result = await KoboExport.shareWhatsApp(`proof-of-funds-${dest.label.replace(/\s+/g, '-')}.pdf`, caption, doc);
     if (result === 'downloaded') {
-      alert('Image downloaded — attach it in WhatsApp. Opening WhatsApp with the caption now.');
+      alert('PDF downloaded — attach it in WhatsApp. Opening WhatsApp with the caption now.');
     }
   } catch (err) {
-    if (err.name !== 'AbortError') alert('Could not prepare the image: ' + err.message);
+    if (err.name !== 'AbortError') alert('Could not prepare the PDF: ' + err.message);
   } finally {
     btn.textContent = originalText;
     btn.disabled = false;
