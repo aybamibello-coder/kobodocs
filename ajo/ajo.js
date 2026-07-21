@@ -125,19 +125,34 @@ if (saved) {
   renderPreview();
 }
 
-document.getElementById('downloadBtn').addEventListener('click', async () => {
+let watermarkHidden = false;
+
+function buildAjoPdf(d) {
+  const rows = d.members.map((m, i) => [
+    m.name || `Member ${i + 1}`,
+    naira(d.contribution),
+    m.paid ? 'Paid' : (d.nextCollector && m.id === d.nextCollector.id ? 'Collects next' : 'Pending')
+  ]);
+
+  return KoboExport.buildTablePdf({
+    docLabel: 'Ajo Circle',
+    businessName: d.circleName,
+    businessSub: `${d.frequency} · ${d.members.length} member${d.members.length === 1 ? '' : 's'}`,
+    columns: ['Member', 'Contribution', 'Status'],
+    rightAlignCols: [1],
+    rows,
+    totals: [{ label: 'Pot per cycle', value: naira(d.pot), emphasis: true }],
+    watermark: !watermarkHidden
+  });
+}
+
+document.getElementById('downloadBtn').addEventListener('click', () => {
   const d = renderPreview();
-  const btn = document.getElementById('downloadBtn');
-  const originalText = btn.textContent;
-  btn.textContent = 'Preparing PDF…';
-  btn.disabled = true;
   try {
-    await KoboExport.downloadPdf(`ajo-${(d.circleName || 'circle').replace(/\s+/g, '-')}.pdf`);
+    const doc = buildAjoPdf(d);
+    KoboExport.download(`ajo-${(d.circleName || 'circle').replace(/\s+/g, '-')}.pdf`, doc);
   } catch (err) {
     alert('Could not generate PDF: ' + err.message);
-  } finally {
-    btn.textContent = originalText;
-    btn.disabled = false;
   }
 });
 
@@ -145,8 +160,6 @@ document.getElementById('waBtn').addEventListener('click', async () => {
   const d = renderPreview();
   const btn = document.getElementById('waBtn');
   const originalText = btn.textContent;
-  btn.textContent = 'Preparing image…';
-  btn.disabled = true;
 
   const caption = [
     `*${d.circleName} — ${d.frequency} update*`,
@@ -155,15 +168,17 @@ document.getElementById('waBtn').addEventListener('click', async () => {
   ].join('\n');
 
   try {
+    const doc = buildAjoPdf(d);
     const result = await KoboExport.shareWhatsApp(
-      `ajo-${(d.circleName || 'circle').replace(/\s+/g, '-')}.png`,
-      caption
+      `ajo-${(d.circleName || 'circle').replace(/\s+/g, '-')}.pdf`,
+      caption,
+      doc
     );
     if (result === 'downloaded') {
-      alert('Image downloaded — attach it in WhatsApp. Opening WhatsApp with the caption now.');
+      alert('PDF downloaded — attach it in WhatsApp. Opening WhatsApp with the caption now.');
     }
   } catch (err) {
-    if (err.name !== 'AbortError') alert('Could not prepare the image: ' + err.message);
+    if (err.name !== 'AbortError') alert('Could not prepare the PDF: ' + err.message);
   } finally {
     btn.textContent = originalText;
     btn.disabled = false;
@@ -188,7 +203,10 @@ document.getElementById('waBtn').addEventListener('click', async () => {
   if (!profile || !planActive || (profile.plan !== "pro" && profile.plan !== "business")) return;
 
   const hasBranding = profile.brand_logo_url || profile.brand_color;
-  if (hasBranding) document.getElementById("pWatermark").classList.add("hidden");
+  if (hasBranding) {
+    document.getElementById("pWatermark").classList.add("hidden");
+    watermarkHidden = true;
+  }
 
   if (profile.brand_logo_url) {
     const logo = document.getElementById("pBrandLogo");
