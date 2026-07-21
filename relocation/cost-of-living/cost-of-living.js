@@ -110,7 +110,17 @@ function renderPreview() {
     });
   }
 
-  return { dest, city, monthlyTotal, landingTotal, totalPeople };
+  const monthlyRows = [
+    ['Rent', rent], ['Groceries', groceries], ['Transport', transport],
+    ['Utilities & phone', utilitiesPhone], ['Eating out & misc', misc]
+  ];
+  const landingRows = [
+    ['3 months of living costs', monthlyTotal * 3],
+    ['Security deposit (≈1 month rent)', securityDeposit],
+    ['Setup & furnishing allowance', landingSetup]
+  ];
+
+  return { dest, city, monthlyTotal, landingTotal, totalPeople, monthlyRows, landingRows };
 }
 
 function applyFormState(state) {
@@ -145,6 +155,27 @@ document.getElementById('clearFormBtn').addEventListener('click', () => {
   renderPreview();
 })();
 
+function buildCostOfLivingPdf({ dest, city, monthlyTotal, landingTotal, totalPeople, monthlyRows, landingRows }) {
+  const rows = [['Monthly costs', '']];
+  monthlyRows.forEach(([label, amount]) => rows.push([label, naira(amount)]));
+  rows.push(['Landing budget', '']);
+  landingRows.forEach(([label, amount]) => rows.push([label, naira(amount)]));
+
+  return KoboExport.buildTablePdf({
+    docLabel: 'Cost of Living',
+    businessName: `${city.label}, ${dest.label}`,
+    businessSub: `${totalPeople} person${totalPeople > 1 ? 's' : ''}`,
+    columns: ['Item', 'Amount'],
+    rightAlignCols: [1],
+    rows,
+    totals: [
+      { label: 'Monthly total', value: naira(monthlyTotal) },
+      { label: 'Landing budget total', value: naira(landingTotal), emphasis: true }
+    ],
+    watermark: true
+  });
+}
+
 document.getElementById('downloadBtn').addEventListener('click', async () => {
   const btn = document.getElementById('downloadBtn');
   const originalText = btn.textContent;
@@ -160,10 +191,10 @@ document.getElementById('downloadBtn').addEventListener('click', async () => {
     return;
   }
 
-  const { city } = renderPreview();
-  btn.textContent = 'Preparing PDF…';
+  const data = renderPreview();
   try {
-    await KoboExport.downloadPdf(`cost-of-living-${city.label.replace(/\s+/g, '-')}.pdf`);
+    const doc = buildCostOfLivingPdf(data);
+    KoboExport.download(`cost-of-living-${data.city.label.replace(/\s+/g, '-')}.pdf`, doc);
   } catch (err) {
     alert('Could not generate PDF: ' + err.message);
   } finally {
@@ -187,8 +218,8 @@ document.getElementById('waBtn').addEventListener('click', async () => {
     return;
   }
 
-  const { dest, city, monthlyTotal, totalPeople } = renderPreview();
-  btn.textContent = 'Preparing image…';
+  const data = renderPreview();
+  const { dest, city, monthlyTotal, totalPeople } = data;
 
   const caption = [
     `*Cost of Living — ${city.label}, ${dest.label}*`,
@@ -197,12 +228,13 @@ document.getElementById('waBtn').addEventListener('click', async () => {
   ].join('\n');
 
   try {
-    const result = await KoboExport.shareWhatsApp(`cost-of-living-${city.label.replace(/\s+/g, '-')}.png`, caption);
+    const doc = buildCostOfLivingPdf(data);
+    const result = await KoboExport.shareWhatsApp(`cost-of-living-${city.label.replace(/\s+/g, '-')}.pdf`, caption, doc);
     if (result === 'downloaded') {
-      alert('Image downloaded — attach it in WhatsApp. Opening WhatsApp with the caption now.');
+      alert('PDF downloaded — attach it in WhatsApp. Opening WhatsApp with the caption now.');
     }
   } catch (err) {
-    if (err.name !== 'AbortError') alert('Could not prepare the image: ' + err.message);
+    if (err.name !== 'AbortError') alert('Could not prepare the PDF: ' + err.message);
   } finally {
     btn.textContent = originalText;
     btn.disabled = false;
