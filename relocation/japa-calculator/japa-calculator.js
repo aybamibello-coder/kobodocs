@@ -113,7 +113,7 @@ function renderPreview() {
     });
   }
 
-  return { dest, route, grandTotal, totalTravelers };
+  return { dest, route, grandTotal, totalTravelers, lineItems };
 }
 
 function applyFormState(state) {
@@ -158,6 +158,21 @@ document.getElementById('clearFormBtn').addEventListener('click', () => {
   renderPreview();
 })();
 
+function buildJapaPdf({ dest, route, grandTotal, totalTravelers, lineItems }) {
+  const rows = lineItems.map(r => [r.label, naira(r.amount)]);
+  return KoboExport.buildTablePdf({
+    docLabel: 'Japa Cost Estimate',
+    businessName: dest.label,
+    businessSub: `${route.label} · ${totalTravelers} traveler${totalTravelers > 1 ? 's' : ''}`,
+    columns: ['Item', 'Amount'],
+    rightAlignCols: [1],
+    rows,
+    totals: [{ label: 'Estimated total', value: naira(grandTotal), emphasis: true }],
+    note: dest.asOf,
+    watermark: true
+  });
+}
+
 // ---------- Export ----------
 document.getElementById('downloadBtn').addEventListener('click', async () => {
   const btn = document.getElementById('downloadBtn');
@@ -174,10 +189,10 @@ document.getElementById('downloadBtn').addEventListener('click', async () => {
     return;
   }
 
-  const { dest } = renderPreview();
-  btn.textContent = 'Preparing PDF…';
+  const data = renderPreview();
   try {
-    await KoboExport.downloadPdf(`japa-cost-${dest.label.replace(/\s+/g, '-')}.pdf`);
+    const doc = buildJapaPdf(data);
+    KoboExport.download(`japa-cost-${data.dest.label.replace(/\s+/g, '-')}.pdf`, doc);
   } catch (err) {
     alert('Could not generate PDF: ' + err.message);
   } finally {
@@ -201,8 +216,8 @@ document.getElementById('waBtn').addEventListener('click', async () => {
     return;
   }
 
-  const { dest, route, grandTotal, totalTravelers } = renderPreview();
-  btn.textContent = 'Preparing image…';
+  const data = renderPreview();
+  const { dest, route, grandTotal, totalTravelers } = data;
 
   const caption = [
     `*Japa Cost Estimate — ${dest.label}*`,
@@ -212,12 +227,13 @@ document.getElementById('waBtn').addEventListener('click', async () => {
   ].join('\n');
 
   try {
-    const result = await KoboExport.shareWhatsApp(`japa-cost-${dest.label.replace(/\s+/g, '-')}.png`, caption);
+    const doc = buildJapaPdf(data);
+    const result = await KoboExport.shareWhatsApp(`japa-cost-${dest.label.replace(/\s+/g, '-')}.pdf`, caption, doc);
     if (result === 'downloaded') {
-      alert('Image downloaded — attach it in WhatsApp. Opening WhatsApp with the caption now.');
+      alert('PDF downloaded — attach it in WhatsApp. Opening WhatsApp with the caption now.');
     }
   } catch (err) {
-    if (err.name !== 'AbortError') alert('Could not prepare the image: ' + err.message);
+    if (err.name !== 'AbortError') alert('Could not prepare the PDF: ' + err.message);
   } finally {
     btn.textContent = originalText;
     btn.disabled = false;
