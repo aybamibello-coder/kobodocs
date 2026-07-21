@@ -106,19 +106,34 @@ if (saved) {
 }
 renderPreview();
 
-document.getElementById('downloadBtn').addEventListener('click', async () => {
+function buildReceiptPdf(data) {
+  const rows = data.items.map(it => [it.desc, it.qty, naira(it.qty * it.price)]);
+  return KoboExport.buildTablePdf({
+    docLabel: 'Receipt',
+    businessName: data.bizName,
+    businessSub: data.bizPhone,
+    metaLines: [data.recNumber, document.getElementById('pRecDate').textContent],
+    toLabel: 'Received from',
+    toName: data.payerName,
+    columns: ['Description', 'Qty', 'Amount'],
+    rightAlignCols: [1, 2],
+    rows,
+    totals: [
+      { label: 'Total received', value: naira(data.total), emphasis: true },
+      { label: `Paid via ${data.method}`, value: '' }
+    ],
+    note: data.note,
+    watermark: !watermarkHidden
+  });
+}
+
+document.getElementById('downloadBtn').addEventListener('click', () => {
   const data = renderPreview();
-  const btn = document.getElementById('downloadBtn');
-  const originalText = btn.textContent;
-  btn.textContent = 'Preparing PDF…';
-  btn.disabled = true;
   try {
-    await KoboExport.downloadPdf(`${data.recNumber || 'receipt'}.pdf`);
+    const doc = buildReceiptPdf(data);
+    KoboExport.download(`${data.recNumber || 'receipt'}.pdf`, doc);
   } catch (err) {
     alert('Could not generate PDF: ' + err.message);
-  } finally {
-    btn.textContent = originalText;
-    btn.disabled = false;
   }
 });
 
@@ -126,8 +141,6 @@ document.getElementById('waBtn').addEventListener('click', async () => {
   const data = renderPreview();
   const btn = document.getElementById('waBtn');
   const originalText = btn.textContent;
-  btn.textContent = 'Preparing image…';
-  btn.disabled = true;
 
   const caption = [
     `*Receipt ${data.recNumber}*`,
@@ -139,15 +152,15 @@ document.getElementById('waBtn').addEventListener('click', async () => {
   ].filter(Boolean).join('\n');
 
   try {
-    const result = await KoboExport.shareWhatsApp(`${data.recNumber || 'receipt'}.png`, caption);
+    const doc = buildReceiptPdf(data);
+    const result = await KoboExport.shareWhatsApp(`${data.recNumber || 'receipt'}.pdf`, caption, doc);
     if (result === 'downloaded') {
-      alert('Image downloaded — attach it in WhatsApp. Opening WhatsApp with the caption now.');
+      alert('PDF downloaded — attach it in WhatsApp. Opening WhatsApp with the caption now.');
     }
   } catch (err) {
-    if (err.name !== 'AbortError') alert('Could not prepare the image: ' + err.message);
+    if (err.name !== 'AbortError') alert('Could not prepare the PDF: ' + err.message);
   } finally {
     btn.textContent = originalText;
-    btn.disabled = false;
   }
 });
 
@@ -156,6 +169,7 @@ document.getElementById('waBtn').addEventListener('click', async () => {
 // "Made with KoboDocs" mark. Pro users who've uploaded a logo/color in
 // /account/ see their own branding instead — no watermark, their logo in
 // place of the stamp, their brand color driving every accent in the document.
+let watermarkHidden = false;
 (async function applyBranding() {
   await new Promise(r => {
     if (window.KoboAuth) return r();
@@ -169,7 +183,10 @@ document.getElementById('waBtn').addEventListener('click', async () => {
   if (!profile || !planActive || (profile.plan !== "pro" && profile.plan !== "business")) return;
 
   const hasBranding = profile.brand_logo_url || profile.brand_color;
-  if (hasBranding) document.getElementById("pWatermark").classList.add("hidden");
+  if (hasBranding) {
+    document.getElementById("pWatermark").classList.add("hidden");
+    watermarkHidden = true;
+  }
 
   if (profile.brand_logo_url) {
     const logo = document.getElementById("pBrandLogo");
