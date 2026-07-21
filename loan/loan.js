@@ -103,36 +103,41 @@ const saved = window.KoboStorage ? KoboStorage.load('loan') : null;
 applyFormState(saved || {});
 renderPreview();
 
-// The schedule table is scrollable on screen (max-height + overflow) so long
-// loans don't take over the page — but for export we need the FULL table
-// visible, or html2canvas only captures whatever's in the scrolled window.
-function withFullScheduleVisible(fn) {
-  const scrollEl = document.querySelector('.schedule-scroll');
-  const prevMaxHeight = scrollEl.style.maxHeight;
-  const prevOverflowY = scrollEl.style.overflowY;
-  scrollEl.style.maxHeight = 'none';
-  scrollEl.style.overflowY = 'visible';
-  return Promise.resolve().then(fn).finally(() => {
-    scrollEl.style.maxHeight = prevMaxHeight;
-    scrollEl.style.overflowY = prevOverflowY;
+let watermarkHidden = false;
+
+function buildLoanPdf(d) {
+  const rows = d.rows.map(r => [
+    `${r.month}. ${r.dateLabel}`,
+    naira(r.payment),
+    naira(r.interest),
+    naira(r.principal),
+    naira(r.balance)
+  ]);
+
+  return KoboExport.buildTablePdf({
+    docLabel: 'Loan Schedule',
+    businessName: d.lenderName,
+    businessSub: `Loan to ${d.borrowerName}`,
+    metaLines: [`${d.months} months`, `${d.annualRate}% p.a.`],
+    columns: ['Month', 'Payment', 'Interest', 'Principal', 'Balance'],
+    rightAlignCols: [1, 2, 3, 4],
+    rows,
+    totals: [
+      { label: 'Loan amount', value: naira(d.principal) },
+      { label: 'Monthly payment', value: naira(d.payment) },
+      { label: 'Total interest', value: naira(d.totalInterest), emphasis: true }
+    ],
+    watermark: !watermarkHidden
   });
 }
 
-document.getElementById('downloadBtn').addEventListener('click', async () => {
+document.getElementById('downloadBtn').addEventListener('click', () => {
   const d = renderPreview();
-  const btn = document.getElementById('downloadBtn');
-  const originalText = btn.textContent;
-  btn.textContent = 'Preparing PDF…';
-  btn.disabled = true;
   try {
-    await withFullScheduleVisible(() =>
-      KoboExport.downloadPdf(`loan-schedule-${(d.borrowerName || 'borrower').replace(/\s+/g, '-')}.pdf`)
-    );
+    const doc = buildLoanPdf(d);
+    KoboExport.download(`loan-schedule-${(d.borrowerName || 'borrower').replace(/\s+/g, '-')}.pdf`, doc);
   } catch (err) {
     alert('Could not generate PDF: ' + err.message);
-  } finally {
-    btn.textContent = originalText;
-    btn.disabled = false;
   }
 });
 
@@ -140,8 +145,6 @@ document.getElementById('waBtn').addEventListener('click', async () => {
   const d = renderPreview();
   const btn = document.getElementById('waBtn');
   const originalText = btn.textContent;
-  btn.textContent = 'Preparing image…';
-  btn.disabled = true;
 
   const caption = [
     `*Loan schedule — ${d.lenderName}*`,
@@ -152,17 +155,15 @@ document.getElementById('waBtn').addEventListener('click', async () => {
   ].join('\n');
 
   try {
-    const result = await withFullScheduleVisible(() =>
-      KoboExport.shareWhatsApp(`loan-schedule-${(d.borrowerName || 'borrower').replace(/\s+/g, '-')}.png`, caption)
-    );
+    const doc = buildLoanPdf(d);
+    const result = await KoboExport.shareWhatsApp(`loan-schedule-${(d.borrowerName || 'borrower').replace(/\s+/g, '-')}.pdf`, caption, doc);
     if (result === 'downloaded') {
-      alert('Image downloaded — attach it in WhatsApp. Opening WhatsApp with the caption now.');
+      alert('PDF downloaded — attach it in WhatsApp. Opening WhatsApp with the caption now.');
     }
   } catch (err) {
-    if (err.name !== 'AbortError') alert('Could not prepare the image: ' + err.message);
+    if (err.name !== 'AbortError') alert('Could not prepare the PDF: ' + err.message);
   } finally {
     btn.textContent = originalText;
-    btn.disabled = false;
   }
 });
 
@@ -184,7 +185,10 @@ document.getElementById('waBtn').addEventListener('click', async () => {
   if (!profile || !planActive || (profile.plan !== "pro" && profile.plan !== "business")) return;
 
   const hasBranding = profile.brand_logo_url || profile.brand_color;
-  if (hasBranding) document.getElementById("pWatermark").classList.add("hidden");
+  if (hasBranding) {
+    document.getElementById("pWatermark").classList.add("hidden");
+    watermarkHidden = true;
+  }
 
   if (profile.brand_logo_url) {
     const logo = document.getElementById("pBrandLogo");
