@@ -86,19 +86,38 @@ const saved = window.KoboStorage ? KoboStorage.load('budget') : null;
 applyFormState(saved || {});
 renderPreview();
 
-document.getElementById('downloadBtn').addEventListener('click', async () => {
+let watermarkHidden = false;
+
+function buildBudgetPdf(d) {
+  const rows = [['Income', '']];
+  d.income.forEach(r => rows.push([r.label, naira(r.amount)]));
+  rows.push(['Expenses', '']);
+  d.expenses.forEach(r => rows.push([r.label, naira(r.amount)]));
+
+  const label = d.balance >= 0 ? 'Balance left over' : 'Shortfall';
+
+  return KoboExport.buildTablePdf({
+    docLabel: 'Budget Plan',
+    businessName: d.month,
+    columns: ['Item', 'Amount'],
+    rightAlignCols: [1],
+    rows,
+    totals: [
+      { label: 'Total income', value: naira(d.totalIncome) },
+      { label: 'Total expenses', value: naira(d.totalExpenses) },
+      { label, value: naira(Math.abs(d.balance)), emphasis: true }
+    ],
+    watermark: !watermarkHidden
+  });
+}
+
+document.getElementById('downloadBtn').addEventListener('click', () => {
   const d = renderPreview();
-  const btn = document.getElementById('downloadBtn');
-  const originalText = btn.textContent;
-  btn.textContent = 'Preparing PDF…';
-  btn.disabled = true;
   try {
-    await KoboExport.downloadPdf(`budget-${(d.month || 'plan').replace(/\s+/g, '-')}.pdf`);
+    const doc = buildBudgetPdf(d);
+    KoboExport.download(`budget-${(d.month || 'plan').replace(/\s+/g, '-')}.pdf`, doc);
   } catch (err) {
     alert('Could not generate PDF: ' + err.message);
-  } finally {
-    btn.textContent = originalText;
-    btn.disabled = false;
   }
 });
 
@@ -106,8 +125,6 @@ document.getElementById('waBtn').addEventListener('click', async () => {
   const d = renderPreview();
   const btn = document.getElementById('waBtn');
   const originalText = btn.textContent;
-  btn.textContent = 'Preparing image…';
-  btn.disabled = true;
 
   const label = d.balance >= 0 ? 'Balance left over' : 'Shortfall';
   const caption = [
@@ -118,15 +135,15 @@ document.getElementById('waBtn').addEventListener('click', async () => {
   ].join('\n');
 
   try {
-    const result = await KoboExport.shareWhatsApp(`budget-${(d.month || 'plan').replace(/\s+/g, '-')}.png`, caption);
+    const doc = buildBudgetPdf(d);
+    const result = await KoboExport.shareWhatsApp(`budget-${(d.month || 'plan').replace(/\s+/g, '-')}.pdf`, caption, doc);
     if (result === 'downloaded') {
-      alert('Image downloaded — attach it in WhatsApp. Opening WhatsApp with the caption now.');
+      alert('PDF downloaded — attach it in WhatsApp. Opening WhatsApp with the caption now.');
     }
   } catch (err) {
-    if (err.name !== 'AbortError') alert('Could not prepare the image: ' + err.message);
+    if (err.name !== 'AbortError') alert('Could not prepare the PDF: ' + err.message);
   } finally {
     btn.textContent = originalText;
-    btn.disabled = false;
   }
 });
 
@@ -148,7 +165,10 @@ document.getElementById('waBtn').addEventListener('click', async () => {
   if (!profile || !planActive || (profile.plan !== "pro" && profile.plan !== "business")) return;
 
   const hasBranding = profile.brand_logo_url || profile.brand_color;
-  if (hasBranding) document.getElementById("pWatermark").classList.add("hidden");
+  if (hasBranding) {
+    document.getElementById("pWatermark").classList.add("hidden");
+    watermarkHidden = true;
+  }
 
   if (profile.brand_logo_url) {
     const logo = document.getElementById("pBrandLogo");
