@@ -132,6 +132,7 @@ renderPreview();
 // "Made with KoboDocs" mark. Pro users who've uploaded a logo/color in
 // /account/ see their own branding instead — no watermark, their logo in
 // place of the stamp, their brand color driving every accent in the document.
+let watermarkHidden = false;
 (async function applyBranding() {
   await new Promise(r => {
     if (window.KoboAuth) return r();
@@ -145,7 +146,10 @@ renderPreview();
   if (!profile || !planActive || (profile.plan !== 'pro' && profile.plan !== 'business')) return;
 
   const hasBranding = profile.brand_logo_url || profile.brand_color;
-  if (hasBranding) document.getElementById('pWatermark').classList.add('hidden');
+  if (hasBranding) {
+    document.getElementById('pWatermark').classList.add('hidden');
+    watermarkHidden = true;
+  }
 
   if (profile.brand_logo_url) {
     const logo = document.getElementById('pBrandLogo');
@@ -158,20 +162,37 @@ renderPreview();
   }
 })();
 
+// ---------- Build the real PDF from data (no screenshotting) ----------
+function buildInvoicePdf(data) {
+  const rows = data.items.map(it => [it.desc, it.qty, naira(it.qty * it.price)]);
+  const totals = [{ label: 'Subtotal', value: naira(data.subtotal) }];
+  if (data.vatOn) totals.push({ label: 'VAT (7.5%)', value: naira(data.vat) });
+  totals.push({ label: 'Total due', value: naira(data.total), emphasis: true });
+
+  return KoboExport.buildTablePdf({
+    docLabel: 'Invoice',
+    businessName: data.bizName,
+    businessSub: [data.bizPhone, data.bizBank].filter(Boolean).join(' · '),
+    metaLines: [data.invNumber, document.getElementById('pInvDate').textContent],
+    toLabel: 'Bill to',
+    toName: data.clientName,
+    columns: ['Description', 'Qty', 'Amount'],
+    rightAlignCols: [1, 2],
+    rows,
+    totals,
+    note: data.note,
+    watermark: !watermarkHidden
+  });
+}
+
 // ---------- PDF export ----------
-document.getElementById('downloadBtn').addEventListener('click', async () => {
+document.getElementById('downloadBtn').addEventListener('click', () => {
   const data = renderPreview();
-  const btn = document.getElementById('downloadBtn');
-  const originalText = btn.textContent;
-  btn.textContent = 'Preparing PDF…';
-  btn.disabled = true;
   try {
-    await KoboExport.downloadPdf(`${data.invNumber || 'invoice'}.pdf`);
+    const doc = buildInvoicePdf(data);
+    KoboExport.download(`${data.invNumber || 'invoice'}.pdf`, doc);
   } catch (err) {
     alert('Could not generate PDF: ' + err.message);
-  } finally {
-    btn.textContent = originalText;
-    btn.disabled = false;
   }
 });
 
@@ -180,8 +201,6 @@ document.getElementById('waBtn').addEventListener('click', async () => {
   const data = renderPreview();
   const btn = document.getElementById('waBtn');
   const originalText = btn.textContent;
-  btn.textContent = 'Preparing image…';
-  btn.disabled = true;
 
   const caption = [
     `*Invoice ${data.invNumber}*`,
@@ -193,14 +212,14 @@ document.getElementById('waBtn').addEventListener('click', async () => {
   ].filter(Boolean).join('\n');
 
   try {
-    const result = await KoboExport.shareWhatsApp(`${data.invNumber || 'invoice'}.png`, caption);
+    const doc = buildInvoicePdf(data);
+    const result = await KoboExport.shareWhatsApp(`${data.invNumber || 'invoice'}.pdf`, caption, doc);
     if (result === 'downloaded') {
-      alert('Image downloaded — attach it in WhatsApp. Opening WhatsApp with the caption now.');
+      alert('PDF downloaded — attach it in WhatsApp. Opening WhatsApp with the caption now.');
     }
   } catch (err) {
-    if (err.name !== 'AbortError') alert('Could not prepare the image: ' + err.message);
+    if (err.name !== 'AbortError') alert('Could not prepare the PDF: ' + err.message);
   } finally {
     btn.textContent = originalText;
-    btn.disabled = false;
   }
 });
