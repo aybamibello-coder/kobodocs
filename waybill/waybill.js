@@ -59,31 +59,58 @@ document.getElementById('addItemBtn').addEventListener('click', () => { addItemR
 document.querySelectorAll('.form-panel input, .form-panel textarea').forEach(el => el.addEventListener('input', renderPreview));
 renderPreview();
 
-document.getElementById('downloadPdfBtn').addEventListener('click', async () => {
-  const btn = document.getElementById('downloadPdfBtn');
-  const original = btn.textContent;
-  btn.textContent = 'Preparing PDF…';
-  btn.disabled = true;
+function buildWaybillPdf() {
+  const bizName = document.getElementById('bizName').value || 'Your business name';
+  const bizPhone = document.getElementById('bizPhone').value;
+  const receiverName = document.getElementById('receiverName').value || 'Receiver name';
+  const receiverPhone = document.getElementById('receiverPhone').value;
+  const wbNumber = document.getElementById('wbNumber').value || 'WB-0001';
+  const vehicleNo = document.getElementById('vehicleNo').value || '—';
+  const driverName = document.getElementById('driverName').value || '—';
+  const note = document.getElementById('wbNote').value;
+  const rows = getItems().map(it => [it.desc, it.qty]);
+
+  return KoboExport.buildTablePdf({
+    docLabel: 'Waybill',
+    businessName: bizName,
+    businessSub: bizPhone,
+    metaLines: [wbNumber, document.getElementById('pWbDate').textContent, `Vehicle: ${vehicleNo}`, `Driver: ${driverName}`],
+    toLabel: 'Deliver to',
+    toName: receiverName,
+    toSub: receiverPhone,
+    columns: ['Description', 'Qty'],
+    rightAlignCols: [1],
+    rows,
+    note,
+    signatureLines: ["Sender's signature", "Receiver's signature"],
+    watermark: !isPro
+  });
+}
+
+document.getElementById('downloadPdfBtn').addEventListener('click', () => {
+  renderPreview();
   try {
-    await KoboExport.downloadPdf(`${document.getElementById('wbNumber').value || 'waybill'}.pdf`);
-  } finally {
-    btn.textContent = original;
-    btn.disabled = false;
+    const doc = buildWaybillPdf();
+    KoboExport.download(`${document.getElementById('wbNumber').value || 'waybill'}.pdf`, doc);
+  } catch (err) {
+    alert('Could not generate PDF: ' + err.message);
   }
 });
 
 document.getElementById('waBtn').addEventListener('click', async () => {
+  renderPreview();
   const btn = document.getElementById('waBtn');
-  const original = btn.textContent;
-  btn.textContent = 'Preparing image…';
-  btn.disabled = true;
+  const originalText = btn.textContent;
   try {
-    await KoboExport.shareWhatsApp(`${document.getElementById('wbNumber').value || 'waybill'}.png`, 'Waybill made with KoboDocs.');
+    const doc = buildWaybillPdf();
+    const result = await KoboExport.shareWhatsApp(`${document.getElementById('wbNumber').value || 'waybill'}.pdf`, 'Waybill made with KoboDocs.', doc);
+    if (result === 'downloaded') {
+      alert('PDF downloaded — attach it in WhatsApp. Opening WhatsApp with the caption now.');
+    }
   } catch (err) {
-    if (err.name !== 'AbortError') console.error(err);
+    if (err.name !== 'AbortError') alert('Could not prepare the PDF: ' + err.message);
   } finally {
-    btn.textContent = original;
-    btn.disabled = false;
+    btn.textContent = originalText;
   }
 });
 
