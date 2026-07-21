@@ -115,12 +115,26 @@ document.getElementById('downloadPngBtn').addEventListener('click', () => {
 });
 
 document.getElementById('waShareBtn').addEventListener('click', async () => {
+  const canvas = document.querySelector('#qrCanvasWrap canvas');
+  if (!canvas) return;
   const btn = document.getElementById('waShareBtn');
   const original = btn.textContent;
   btn.textContent = 'Preparing…';
   btn.disabled = true;
   try {
-    await KoboExport.shareWhatsApp('qr-code.png', 'Here\'s the QR code, made with KoboDocs.', 'qrPreviewCard');
+    const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+    const file = new File([blob], 'qr-code.png', { type: 'image/png' });
+    const caption = 'Here\'s the QR code, made with KoboDocs.';
+
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      await navigator.share({ files: [file], text: caption, title: 'qr-code.png' });
+    } else {
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = 'qr-code.png'; a.click();
+      URL.revokeObjectURL(url);
+      window.open(`https://wa.me/?text=${encodeURIComponent(caption)}`, '_blank');
+    }
   } catch (err) {
     if (err.name !== 'AbortError') console.error(err);
   } finally {
@@ -129,16 +143,32 @@ document.getElementById('waShareBtn').addEventListener('click', async () => {
   }
 });
 
-document.getElementById('downloadPdfBtn').addEventListener('click', async () => {
-  const btn = document.getElementById('downloadPdfBtn');
-  const original = btn.textContent;
-  btn.textContent = 'Preparing PDF…';
-  btn.disabled = true;
+document.getElementById('downloadPdfBtn').addEventListener('click', () => {
+  const canvas = document.querySelector('#qrCanvasWrap canvas');
+  if (!canvas) return;
   try {
-    await KoboExport.downloadPdf('qr-code.pdf', 'qrPreviewCard');
-  } finally {
-    btn.textContent = original;
-    btn.disabled = false;
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ unit: 'pt', format: 'a4' });
+    const pageWidth = 595.28;
+    const imgSize = 280;
+    const x = (pageWidth - imgSize) / 2;
+    const y = 160;
+
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(14);
+    doc.text('QR Code', pageWidth / 2, 100, { align: 'center' });
+    doc.addImage(canvas.toDataURL('image/png'), 'PNG', x, y, imgSize, imgSize);
+
+    if (!isPro) {
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(9);
+      doc.setTextColor(150);
+      doc.text('Made with KoboDocs — kobodocs.com.ng', pageWidth / 2, y + imgSize + 30, { align: 'center' });
+    }
+
+    doc.save('qr-code.pdf');
+  } catch (err) {
+    alert('Could not generate PDF: ' + err.message);
   }
 });
 
