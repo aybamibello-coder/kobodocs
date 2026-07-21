@@ -118,19 +118,37 @@ if (saved) {
 }
 renderPreview();
 
-document.getElementById('downloadBtn').addEventListener('click', async () => {
+let watermarkHidden = false;
+
+function buildQuotationPdf(data) {
+  const rows = data.items.map(it => [it.desc, it.qty, naira(it.qty * it.price)]);
+  const totals = [{ label: 'Subtotal', value: naira(data.subtotal) }];
+  if (data.vatOn) totals.push({ label: 'VAT (7.5%)', value: naira(data.vat) });
+  totals.push({ label: 'Estimated total', value: naira(data.total), emphasis: true });
+
+  return KoboExport.buildTablePdf({
+    docLabel: 'Quotation',
+    businessName: data.bizName,
+    businessSub: data.bizPhone,
+    metaLines: [data.quoNumber, `Valid until ${data.validStr}`],
+    toLabel: 'For',
+    toName: data.clientName,
+    columns: ['Description', 'Qty', 'Amount'],
+    rightAlignCols: [1, 2],
+    rows,
+    totals,
+    note: data.note,
+    watermark: !watermarkHidden
+  });
+}
+
+document.getElementById('downloadBtn').addEventListener('click', () => {
   const data = renderPreview();
-  const btn = document.getElementById('downloadBtn');
-  const originalText = btn.textContent;
-  btn.textContent = 'Preparing PDF…';
-  btn.disabled = true;
   try {
-    await KoboExport.downloadPdf(`${data.quoNumber || 'quotation'}.pdf`);
+    const doc = buildQuotationPdf(data);
+    KoboExport.download(`${data.quoNumber || 'quotation'}.pdf`, doc);
   } catch (err) {
     alert('Could not generate PDF: ' + err.message);
-  } finally {
-    btn.textContent = originalText;
-    btn.disabled = false;
   }
 });
 
@@ -138,8 +156,6 @@ document.getElementById('waBtn').addEventListener('click', async () => {
   const data = renderPreview();
   const btn = document.getElementById('waBtn');
   const originalText = btn.textContent;
-  btn.textContent = 'Preparing image…';
-  btn.disabled = true;
 
   const caption = [
     `*Quotation ${data.quoNumber}*`,
@@ -151,15 +167,15 @@ document.getElementById('waBtn').addEventListener('click', async () => {
   ].filter(Boolean).join('\n');
 
   try {
-    const result = await KoboExport.shareWhatsApp(`${data.quoNumber || 'quotation'}.png`, caption);
+    const doc = buildQuotationPdf(data);
+    const result = await KoboExport.shareWhatsApp(`${data.quoNumber || 'quotation'}.pdf`, caption, doc);
     if (result === 'downloaded') {
-      alert('Image downloaded — attach it in WhatsApp. Opening WhatsApp with the caption now.');
+      alert('PDF downloaded — attach it in WhatsApp. Opening WhatsApp with the caption now.');
     }
   } catch (err) {
-    if (err.name !== 'AbortError') alert('Could not prepare the image: ' + err.message);
+    if (err.name !== 'AbortError') alert('Could not prepare the PDF: ' + err.message);
   } finally {
     btn.textContent = originalText;
-    btn.disabled = false;
   }
 });
 
@@ -181,7 +197,10 @@ document.getElementById('waBtn').addEventListener('click', async () => {
   if (!profile || !planActive || (profile.plan !== "pro" && profile.plan !== "business")) return;
 
   const hasBranding = profile.brand_logo_url || profile.brand_color;
-  if (hasBranding) document.getElementById("pWatermark").classList.add("hidden");
+  if (hasBranding) {
+    document.getElementById("pWatermark").classList.add("hidden");
+    watermarkHidden = true;
+  }
 
   if (profile.brand_logo_url) {
     const logo = document.getElementById("pBrandLogo");
