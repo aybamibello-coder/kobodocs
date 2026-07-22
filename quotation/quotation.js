@@ -169,9 +169,6 @@ document.getElementById('waBtn').addEventListener('click', async () => {
   try {
     const doc = buildQuotationPdf(data);
     const result = await KoboExport.shareWhatsApp(`${data.quoNumber || 'quotation'}.pdf`, caption, doc);
-    if (result === 'downloaded') {
-      alert('PDF downloaded — attach it in WhatsApp. Opening WhatsApp with the caption now.');
-    }
   } catch (err) {
     if (err.name !== 'AbortError') alert('Could not prepare the PDF: ' + err.message);
   } finally {
