@@ -1,3 +1,16 @@
+KoboSubscribe.resumePendingIfAny();
+
+document.getElementById('upgradeProBtn').addEventListener('click', async () => {
+  const btn = document.getElementById('upgradeProBtn');
+  const original = btn.textContent;
+  btn.textContent = 'Redirecting…';
+  try {
+    await KoboSubscribe.start('init-payment', { billing_cycle: 'monthly' });
+  } catch {
+    btn.textContent = original;
+  }
+});
+
 let currentType = 'offer';
 let isPro = false;
 
