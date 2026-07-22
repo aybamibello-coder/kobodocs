@@ -1,4 +1,17 @@
+KoboSubscribe.resumePendingIfAny();
+
 // ---------- QR Code Generator: free + Pro-gated features ----------
+document.getElementById('upgradeProBtn').addEventListener('click', async () => {
+  const btn = document.getElementById('upgradeProBtn');
+  const original = btn.textContent;
+  btn.textContent = 'Redirecting…';
+  try {
+    await KoboSubscribe.start('init-payment', { billing_cycle: 'monthly' });
+  } catch {
+    btn.textContent = original;
+  }
+});
+
 let qr = null;
 let currentType = 'url';
 let logoDataUrl = null;
