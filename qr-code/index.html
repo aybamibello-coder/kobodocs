@@ -23,6 +23,7 @@
     border-radius:8px; padding:12px 14px; font-size:0.84rem; margin-bottom:18px;
   }
   .pro-lock a{ font-weight:600; white-space:nowrap; }
+  .upgrade-pro-btn{ font-weight:600; white-space:nowrap; background:none; border:none; color:var(--ink-green-deep); cursor:pointer; font-size:inherit; font-family:inherit; text-decoration:underline; padding:0; }
   fieldset.pro-only{ border:none; padding:0; margin:0; opacity:0.45; pointer-events:none; }
   fieldset.pro-only.unlocked{ opacity:1; pointer-events:auto; }
   .color-row{ display:flex; gap:16px; }
@@ -170,7 +171,7 @@
 
       <div class="pro-lock" id="proLockBanner">
         <span>Pro unlocks custom colors, your logo, and 3 more code types.</span>
-        <a href="/pricing/">Upgrade →</a>
+        <button type="button" class="upgrade-pro-btn" id="upgradeProBtn">Upgrade →</button>
       </div>
 
       <fieldset class="pro-only" id="proFieldset">
@@ -266,6 +267,7 @@
 <script src="/assets/app.js" defer></script>
 <script type="module" src="/assets/auth.js"></script>
 <script src="/assets/nav-auth.js" defer></script>
+<script src="/assets/subscribe.js" defer></script>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
