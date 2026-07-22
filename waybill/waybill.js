@@ -1,3 +1,16 @@
+KoboSubscribe.resumePendingIfAny();
+
+document.getElementById('upgradeProBtn').addEventListener('click', async () => {
+  const btn = document.getElementById('upgradeProBtn');
+  const original = btn.textContent;
+  btn.textContent = 'Redirecting…';
+  try {
+    await KoboSubscribe.start('init-payment', { billing_cycle: 'monthly' });
+  } catch {
+    btn.textContent = original;
+  }
+});
+
 const todayStr = () => new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
 let isPro = false;
 
@@ -104,9 +117,6 @@ document.getElementById('waBtn').addEventListener('click', async () => {
   try {
     const doc = buildWaybillPdf();
     const result = await KoboExport.shareWhatsApp(`${document.getElementById('wbNumber').value || 'waybill'}.pdf`, 'Waybill made with KoboDocs.', doc);
-    if (result === 'downloaded') {
-      alert('PDF downloaded — attach it in WhatsApp. Opening WhatsApp with the caption now.');
-    }
   } catch (err) {
     if (err.name !== 'AbortError') alert('Could not prepare the PDF: ' + err.message);
   } finally {
