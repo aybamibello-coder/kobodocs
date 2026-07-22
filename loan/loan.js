@@ -157,9 +157,6 @@ document.getElementById('waBtn').addEventListener('click', async () => {
   try {
     const doc = buildLoanPdf(d);
     const result = await KoboExport.shareWhatsApp(`loan-schedule-${(d.borrowerName || 'borrower').replace(/\s+/g, '-')}.pdf`, caption, doc);
-    if (result === 'downloaded') {
-      alert('PDF downloaded — attach it in WhatsApp. Opening WhatsApp with the caption now.');
-    }
   } catch (err) {
     if (err.name !== 'AbortError') alert('Could not prepare the PDF: ' + err.message);
   } finally {
