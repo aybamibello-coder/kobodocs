@@ -311,8 +311,11 @@
 
 <script src="/assets/app.js" defer></script>
 <script type="module" src="/assets/auth.js"></script>
+<script src="/assets/subscribe.js" defer></script>
 <script src="/assets/nav-auth.js" defer></script>
 <script type="module">
+  KoboSubscribe.resumePendingIfAny();
+
   const proPriceEl = document.getElementById('proPrice');
   document.querySelectorAll('input[name="billingCycle"]').forEach(radio => {
     radio.addEventListener('change', (e) => {
@@ -324,39 +327,14 @@
 
   document.getElementById('proBtn').addEventListener('click', async (e) => {
     e.preventDefault();
-    await new Promise(r => {
-      if (window.KoboAuth) return r();
-      window.addEventListener('kobo-auth-ready', r, { once: true });
-    });
-    const session = await window.KoboAuth.getSession();
-    if (!session) {
-      window.location.href = '/account/';
-      return;
-    }
-
     const btn = document.getElementById('proBtn');
     const originalText = btn.textContent;
     btn.textContent = 'Redirecting…';
     btn.style.pointerEvents = 'none';
-
     const billingCycle = document.querySelector('input[name="billingCycle"]:checked').value;
-
     try {
-      const res = await fetch('https://vwmzulzluaxedkozxjfy.supabase.co/functions/v1/init-payment', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session.access_token}`
-        },
-        body: JSON.stringify({ billing_cycle: billingCycle })
-      });
-      const data = await res.json();
-      if (!res.ok || !data.authorization_url) {
-        throw new Error(data.error || 'Could not start checkout');
-      }
-      window.location.href = data.authorization_url;
-    } catch (err) {
-      alert('Checkout failed: ' + err.message);
+      await KoboSubscribe.start('init-payment', { billing_cycle: billingCycle });
+    } catch {
       btn.textContent = originalText;
       btn.style.pointerEvents = 'auto';
     }
@@ -372,76 +350,27 @@
 
   document.getElementById('bizBtn').addEventListener('click', async (e) => {
     e.preventDefault();
-    await new Promise(r => {
-      if (window.KoboAuth) return r();
-      window.addEventListener('kobo-auth-ready', r, { once: true });
-    });
-    const session = await window.KoboAuth.getSession();
-    if (!session) {
-      window.location.href = '/account/';
-      return;
-    }
-
     const btn = document.getElementById('bizBtn');
     const originalText = btn.textContent;
     btn.textContent = 'Redirecting…';
     btn.style.pointerEvents = 'none';
-
     const billingCycle = document.querySelector('input[name="bizBillingCycle"]:checked').value;
-
     try {
-      const res = await fetch('https://vwmzulzluaxedkozxjfy.supabase.co/functions/v1/init-business-payment', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session.access_token}`
-        },
-        body: JSON.stringify({ billing_cycle: billingCycle })
-      });
-      const data = await res.json();
-      if (!res.ok || !data.authorization_url) {
-        throw new Error(data.error || 'Could not start checkout');
-      }
-      window.location.href = data.authorization_url;
-    } catch (err) {
-      alert('Checkout failed: ' + err.message);
+      await KoboSubscribe.start('init-business-payment', { billing_cycle: billingCycle });
+    } catch {
       btn.textContent = originalText;
       btn.style.pointerEvents = 'auto';
     }
   });
 
   async function startRelocationCheckout(tier, btnId) {
-    await new Promise(r => {
-      if (window.KoboAuth) return r();
-      window.addEventListener('kobo-auth-ready', r, { once: true });
-    });
-    const session = await window.KoboAuth.getSession();
-    if (!session) {
-      window.location.href = '/account/';
-      return;
-    }
-
     const btn = document.getElementById(btnId);
     const originalText = btn.textContent;
     btn.textContent = 'Redirecting…';
     btn.style.pointerEvents = 'none';
-
     try {
-      const res = await fetch('https://vwmzulzluaxedkozxjfy.supabase.co/functions/v1/init-relocation-payment', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session.access_token}`
-        },
-        body: JSON.stringify({ tier })
-      });
-      const data = await res.json();
-      if (!res.ok || !data.authorization_url) {
-        throw new Error(data.error || 'Could not start checkout');
-      }
-      window.location.href = data.authorization_url;
-    } catch (err) {
-      alert('Checkout failed: ' + err.message);
+      await KoboSubscribe.start('init-relocation-payment', { tier });
+    } catch {
       btn.textContent = originalText;
       btn.style.pointerEvents = 'auto';
     }
