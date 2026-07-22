@@ -223,9 +223,34 @@ window.KoboExport = {
     return doc;
   },
 
+  // ---------- Lightweight toast so downloads give visible confirmation ----------
+  // doc.save() and navigator.share() both happen silently in the background
+  // (a download notification on Android, a share sheet on iOS) — without
+  // this, people can't tell anything happened at all.
+  _showToast(message) {
+    let toast = document.getElementById('koboExportToast');
+    if (!toast) {
+      toast = document.createElement('div');
+      toast.id = 'koboExportToast';
+      toast.style.cssText = `
+        position:fixed; bottom:24px; left:50%; transform:translateX(-50%);
+        background:#14342b; color:#fdfaf3; padding:11px 20px; border-radius:8px;
+        font-family:'Work Sans', system-ui, sans-serif; font-size:0.88rem;
+        z-index:9999; box-shadow:0 6px 20px rgba(0,0,0,0.2); opacity:0;
+        transition:opacity 0.2s ease; pointer-events:none;
+      `;
+      document.body.appendChild(toast);
+    }
+    toast.textContent = message;
+    requestAnimationFrame(() => { toast.style.opacity = '1'; });
+    clearTimeout(this._toastTimer);
+    this._toastTimer = setTimeout(() => { toast.style.opacity = '0'; }, 2800);
+  },
+
   // ---------- Save / share ----------
   download(filename, doc) {
     doc.save(filename);
+    this._showToast(`Downloaded ${filename} — check your Downloads folder or notifications.`);
   },
 
   async shareWhatsApp(filename, caption, doc) {
@@ -242,6 +267,7 @@ window.KoboExport = {
     a.href = url; a.download = filename; a.click();
     URL.revokeObjectURL(url);
     window.open(`https://wa.me/?text=${encodeURIComponent(caption)}`, '_blank');
+    this._showToast(`Downloaded ${filename} — attach it in the WhatsApp chat that just opened.`);
     return 'downloaded';
   }
 };
