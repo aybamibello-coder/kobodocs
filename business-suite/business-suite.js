@@ -65,11 +65,22 @@ function daysLeft(endDate) {
     showMsg('You already have an active Business Suite subscription.', 'success');
     startBtn.onclick = () => { window.location.href = '/business-suite/app/'; };
   } else if (business.suite_status === 'trial' || business.suite_status === 'expired') {
-    startBtn.textContent = 'Subscribe to continue';
-    showMsg('Your free trial has ended. Payment integration is coming soon — check back shortly to subscribe.', 'error');
-    startBtn.disabled = true;
+    startBtn.textContent = 'Subscribe now';
+    showMsg('Your free trial has ended. Subscribe to keep using Business Suite.', 'error');
+    startBtn.onclick = async () => {
+      startBtn.disabled = true;
+      startBtn.textContent = 'Redirecting…';
+      try {
+        await KoboSubscribe.start('init-suite-payment', { billing_cycle: billingCycle });
+      } catch {
+        startBtn.disabled = false;
+        startBtn.textContent = 'Subscribe now';
+      }
+    };
   }
 })();
+
+KoboSubscribe.resumePendingIfAny();
 
 // ---------- Start trial button (default flow, before any state override above) ----------
 startBtn.addEventListener('click', async () => {
