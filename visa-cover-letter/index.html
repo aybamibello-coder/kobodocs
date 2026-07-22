@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Visa Cover Letter Generator (Schengen, UK, US) | KoboDocs</title>
+<meta name="description" content="Generate a professional visa cover letter for Schengen, UK, or US applications — fill in the blanks, download as PDF.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Work+Sans:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/style.css">
+<style>
+  .type-tabs{ display:flex; flex-wrap:wrap; gap:8px; margin-bottom:20px; }
+  .type-tabs button{ font-size:0.82rem; border:1px solid var(--line); background:none; border-radius:20px; padding:6px 14px; cursor:pointer; }
+  .type-tabs button.active{ background:var(--ink-green-deep); color:var(--paper); border-color:var(--ink-green-deep); }
+  .letter-doc{
+    background:var(--paper); border:1px solid var(--line); border-radius:4px;
+    padding:40px 36px; min-height:400px; font-size:0.92rem; line-height:1.75; position:relative;
+  }
+  .letter-doc.locked .letter-content{ filter:blur(5px); user-select:none; pointer-events:none; }
+  .letter-doc .letterhead{ font-family:'Fraunces', serif; font-weight:700; font-size:1.1rem; margin-bottom:4px; }
+  .letter-doc .letter-date{ font-size:0.82rem; opacity:0.6; margin-bottom:24px; }
+  .letter-doc p{ margin-bottom:14px; white-space:pre-line; }
+  .lock-overlay{
+    position:absolute; inset:0; display:none; align-items:center; justify-content:center;
+    flex-direction:column; gap:14px; text-align:center; padding:20px;
+  }
+  .lock-overlay.show{ display:flex; }
+  .lock-card{
+    background:var(--paper); border:2px solid var(--stamp-gold); border-radius:10px;
+    padding:22px 20px; max-width:320px; box-shadow:0 10px 30px rgba(0,0,0,0.12);
+  }
+  .lock-card .price{ font-family:'Fraunces', serif; font-size:1.6rem; margin:8px 0; }
+  .lock-card p{ font-size:0.85rem; opacity:0.75; margin-bottom:14px; }
+  #formMsg{ font-size:0.85rem; margin-top:12px; padding:10px 12px; border-radius:4px; display:none; }
+  #formMsg.error{ display:block; background:rgba(168,52,42,0.08); color:var(--stamp-red); }
+  #formMsg.success{ display:block; background:rgba(199,154,60,0.12); color:var(--ink-green-deep); }
+</style>
+</head>
+<body>
+
+<header>
+  <nav class="nav">
+    <a href="/" class="logo">
+      <svg class="mark" viewBox="0 0 32 32" fill="none">
+        <circle cx="16" cy="16" r="14" stroke="#C79A3C" stroke-width="2.5"/>
+        <circle cx="16" cy="16" r="8" stroke="#C79A3C" stroke-width="1.5"/>
+      </svg>
+      KoboDocs
+    </a>
+    <button class="menu-btn" aria-label="Toggle menu" id="menuBtn"><span></span><span></span><span></span></button>
+    <div class="nav-links" id="navLinks">
+      <div class="nav-item">
+        <span class="nav-category">Business Tools ▾</span>
+        <div class="dropdown">
+          <a href="/invoice/">Invoice Generator</a>
+          <a href="/receipt/">Receipt Generator</a>
+          <a href="/quotation/">Quotation Generator</a>
+          <a href="/payslip/">Payslip / Salary Slip</a>
+          <a href="/budget/">Budget Planner</a>
+          <a href="/loan/">Loan Schedule</a>
+          <a href="/qr-code/">QR Code Generator</a>
+          <a href="/salary-calculator/">Take-Home Pay Calculator</a>
+          <a href="/hr-letters/">HR Letter Generator</a>
+          <a href="/waybill/">Waybill / Delivery Note</a>
+          <div class="dropdown-divider"></div>
+          <a href="/business-suite/">Business Suite (Pro)</a>
+        </div>
+      </div>
+      <a href="/ajo/">Ajo &amp; Esusu</a>
+      <div class="nav-item">
+        <span class="nav-category">Relocation ▾</span>
+        <div class="dropdown">
+          <a href="/relocation/">Relocation Overview</a>
+          <a href="/relocation/japa-calculator/">Japa Cost Calculator</a>
+          <a href="/relocation/proof-of-funds/">Proof of Funds Calculator</a>
+          <a href="/relocation/cost-of-living/">Cost of Living Calculator</a>
+          <a href="/visa-cover-letter/">Visa Cover Letter Generator</a>
+          <div class="dropdown-divider"></div>
+          <a href="/cac-calculator/">CAC Registration Cost</a>
+          <a href="/import-duty-calculator/">Import Duty Calculator</a>
+        </div>
+      </div>
+      <a href="/pricing/">Pricing</a>
+      <a href="/account/" id="navAccountLink">Sign in</a>
+      <a href="/invoice/" class="nav-cta">Start free</a>
+    </div>
+  </nav>
+</header>
+
+
+<section class="page-header">
+  <div class="wrap">
+    <h1>Visa Cover Letter Generator</h1>
+    <p>Schengen, UK, and US visa cover letters — fill in your details, get a properly structured letter emphasizing exactly what visa officers look for.</p>
+  </div>
+</section>
+
+<section class="generator">
+  <div class="wrap">
+
+    <div class="form-panel">
+      <div class="field-group">
+        <label>Visa type</label>
+        <div class="type-tabs" id="typeTabs">
+          <button type="button" class="active" data-type="schengen">Schengen</button>
+          <button type="button" data-type="uk">UK</button>
+          <button type="button" data-type="us">US</button>
+        </div>
+      </div>
+
+      <div class="field-row">
+        <div class="field-group"><label for="fullName">Full name</label><input type="text" id="fullName" placeholder="As shown on passport"></div>
+        <div class="field-group"><label for="passportNo">Passport number</label><input type="text" id="passportNo" placeholder="A01234567"></div>
+      </div>
+      <div class="field-row">
+        <div class="field-group"><label for="destination">Destination country/city</label><input type="text" id="destination" placeholder="e.g. France, Paris"></div>
+        <div class="field-group"><label for="purpose">Purpose of visit</label>
+          <select id="purpose">
+            <option>Tourism</option>
+            <option>Business</option>
+            <option>Family/friend visit</option>
+            <option>Study (short course)</option>
+            <option>Conference/event</option>
+          </select>
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field-group"><label for="travelFrom">Travel dates from</label><input type="date" id="travelFrom"></div>
+        <div class="field-group"><label for="travelTo">Travel dates to</label><input type="date" id="travelTo"></div>
+      </div>
+      <div class="field-group">
+        <label for="accommodation">Accommodation details</label>
+        <input type="text" id="accommodation" placeholder="e.g. Hotel Ibis, Paris, booking ref #12345">
+      </div>
+
+      <div class="field-row">
+        <div class="field-group"><label for="employer">Employer / business name</label><input type="text" id="employer" placeholder="Adaeze Fabrics Co."></div>
+        <div class="field-group"><label for="position">Position</label><input type="text" id="position" placeholder="Operations Manager"></div>
+      </div>
+      <div class="field-group">
+        <label for="sponsor">Funding</label>
+        <input type="text" id="sponsor" placeholder="Self-sponsored, or sponsor name + relationship">
+      </div>
+      <div class="field-group">
+        <label for="homeTies">Ties to home country</label>
+        <textarea id="homeTies" rows="3" placeholder="e.g. Permanent employment, property owned, family responsibilities — reasons you'll return"></textarea>
+      </div>
+      <div class="field-group">
+        <label for="invitation">Invitation reference (optional)</label>
+        <input type="text" id="invitation" placeholder="e.g. Invited by John Doe, resident of Berlin">
+      </div>
+
+      <div class="action-row">
+        <button type="button" class="btn btn-primary" id="downloadPdfBtn">Download PDF</button>
+        <button type="button" class="btn btn-ghost" id="waBtn" style="border-color:var(--line); color:var(--ink-green-deep);">Share on WhatsApp</button>
+      </div>
+      <div id="formMsg"></div>
+    </div>
+
+    <div class="preview-panel">
+      <div class="letter-doc" id="letterDoc">
+        <div class="letter-content" id="letterContent"></div>
+        <div class="lock-overlay" id="lockOverlay">
+          <div class="lock-card">
+            <span style="font-family:'Space Mono', monospace; font-size:0.7rem; text-transform:uppercase; color:var(--stamp-gold);">Premium tool</span>
+            <div class="price">₦2,000 <small style="font-size:0.9rem; opacity:0.6;">one-time</small></div>
+            <p>Unlocks unlimited visa cover letters, any type, forever. Already have a Japa Pass? It's included free.</p>
+            <button type="button" class="btn btn-primary" id="buyPassBtn" style="width:100%;">Unlock for ₦2,000</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<section class="bs-section" style="max-width:720px; margin:0 auto; padding:20px 20px 80px;">
+  <h2 style="font-size:1.2rem; margin-bottom:10px;">Why a cover letter matters</h2>
+  <p style="font-size:0.9rem; opacity:0.75; line-height:1.7;">Visa officers look for a clear purpose of travel, proof you can fund the trip, and — most importantly — strong evidence you'll return home. A well-structured cover letter ties your documents together into one coherent story, which is exactly what agents charge ₦10,000–₦30,000 to write for you.</p>
+  <p style="font-size:0.78rem; opacity:0.5; margin-top:14px;">This is a drafting aid based on common visa office expectations, not a guarantee of approval or legal/immigration advice — requirements vary by embassy and change over time.</p>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div class="footer-top">
+      <div>
+        <div class="footer-logo">KoboDocs</div>
+        <p class="footer-note">Every business document, stamped and sent — built for Nigeria, one Naira at a time.</p>
+      </div>
+      <div class="footer-links">
+        <div>
+          <strong>Business tools</strong>
+          <a href="/invoice/">Invoice</a>
+          <a href="/receipt/">Receipt</a>
+          <a href="/payslip/">Payslip</a>
+          <a href="/qr-code/">QR Code</a>
+        </div>
+        <div>
+          <strong>Relocation</strong>
+          <a href="/relocation/">Relocation home</a>
+          <a href="/relocation/japa-calculator/">Japa Cost Calculator</a>
+          <a href="/visa-cover-letter/">Visa Cover Letter</a>
+          <a href="/relocation/cost-of-living/">Cost of Living</a>
+        </div>
+        <div>
+          <strong>Company</strong>
+          <a href="/pricing/">Pricing</a>
+          <a href="/about/">About</a>
+          <a href="/contact/">Contact</a>
+          <a href="/blog/">Blog</a>
+        </div>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2026 KoboDocs. Not a financial institution — we never hold or move your money.</span>
+      <span><a href="/privacy/">Privacy</a> · <a href="/terms/">Terms</a> · Made in Lagos</span>
+    </div>
+  </div>
+</footer>
+
+<script src="/assets/app.js" defer></script>
+<script type="module" src="/assets/auth.js"></script>
+<script src="/assets/nav-auth.js" defer></script>
+<script src="/assets/subscribe.js" defer></script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
+<script src="/assets/export.js" defer></script>
+<script src="/visa-cover-letter/visa-cover-letter.js" defer></script>
+</body>
+</html>
