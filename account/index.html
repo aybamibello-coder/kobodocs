@@ -296,8 +296,19 @@
     `).join('');
   }
 
-  function initPage() {
+  async function resumeRedirectOrRefresh() {
+    const params = new URLSearchParams(window.location.search);
+    const redirect = params.get('redirect');
+    const session = await window.KoboAuth.getSession();
+    if (redirect && session) {
+      window.location.href = decodeURIComponent(redirect);
+      return;
+    }
     refreshView();
+  }
+
+  function initPage() {
+    resumeRedirectOrRefresh();
 
     // Supabase fires PASSWORD_RECOVERY when someone lands here via a reset email link.
     window.KoboAuth.supabase.auth.onAuthStateChange((event) => {
@@ -341,7 +352,7 @@
       const { error } = await window.KoboAuth.signIn(email, password);
       if (error) { showMsg(msg, error.message, 'error'); return; }
       showMsg(msg, 'Signed in — redirecting…', 'success');
-      refreshView();
+      resumeRedirectOrRefresh();
     });
 
     document.getElementById('signupForm').addEventListener('submit', async (e) => {
@@ -370,7 +381,7 @@
         // returned an active session, so log straight in.
         showMsg(msg, 'Account created — you\'re signed in.', 'success');
         e.target.reset();
-        refreshView();
+        resumeRedirectOrRefresh();
       } else {
         // Confirmation is still required (or Supabase is still provisioning the
         // session) — fall back to the old messaging rather than pretending
