@@ -230,9 +230,6 @@ document.getElementById('waBtn').addEventListener('click', async () => {
   try {
     const doc = buildCostOfLivingPdf(data);
     const result = await KoboExport.shareWhatsApp(`cost-of-living-${city.label.replace(/\s+/g, '-')}.pdf`, caption, doc);
-    if (result === 'downloaded') {
-      alert('PDF downloaded — attach it in WhatsApp. Opening WhatsApp with the caption now.');
-    }
   } catch (err) {
     if (err.name !== 'AbortError') alert('Could not prepare the PDF: ' + err.message);
   } finally {
