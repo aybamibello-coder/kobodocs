@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Affidavit Generator Nigeria — Name Change, Age Declaration, Loss of Document | KoboDocs</title>
+<meta name="description" content="Generate a properly formatted Nigerian affidavit — name change, age declaration, loss of document, plus newspaper publication text. One pass, all four documents.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Work+Sans:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/style.css">
+<style>
+  .type-tabs{ display:flex; flex-wrap:wrap; gap:8px; margin-bottom:20px; }
+  .type-tabs button{ font-size:0.82rem; border:1px solid var(--line); background:none; border-radius:20px; padding:6px 14px; cursor:pointer; }
+  .type-tabs button.active{ background:var(--ink-green-deep); color:var(--paper); border-color:var(--ink-green-deep); }
+  .aff-fields{ display:none; }
+  .aff-fields.active{ display:block; }
+  .aff-doc{
+    background:var(--paper); border:1px solid var(--line); border-radius:4px;
+    padding:36px 32px; min-height:420px; font-size:0.9rem; line-height:1.7; position:relative;
+  }
+  .aff-content.locked{ filter:blur(5px); user-select:none; pointer-events:none; }
+  .aff-title{ text-align:center; font-weight:700; text-transform:uppercase; letter-spacing:0.04em; margin-bottom:6px; }
+  .aff-court{ text-align:center; font-size:0.8rem; opacity:0.65; margin-bottom:24px; }
+  .aff-clause{ margin-bottom:12px; }
+  .aff-clause .num{ font-weight:600; margin-right:6px; }
+  .aff-sworn{ margin-top:26px; font-size:0.88rem; }
+  .aff-sign-row{ display:flex; justify-content:space-between; margin-top:36px; gap:30px; }
+  .aff-sign-block{ flex:1; border-top:1px solid var(--charcoal); padding-top:6px; font-size:0.78rem; opacity:0.7; text-align:center; }
+  .lock-overlay{
+    position:absolute; inset:0; display:none; align-items:center; justify-content:center;
+    flex-direction:column; gap:14px; text-align:center; padding:20px; background:rgba(253,250,243,0.4);
+  }
+  .lock-overlay.show{ display:flex; }
+  .lock-card{ background:var(--paper); border:2px solid var(--stamp-gold); border-radius:10px; padding:22px 20px; max-width:320px; box-shadow:0 10px 30px rgba(0,0,0,0.12); }
+  .lock-card .price{ font-family:'Fraunces', serif; font-size:1.6rem; margin:8px 0; }
+  #formMsg{ font-size:0.85rem; margin-top:12px; padding:10px 12px; border-radius:4px; display:none; }
+  #formMsg.error{ display:block; background:rgba(168,52,42,0.08); color:var(--stamp-red); }
+  #formMsg.success{ display:block; background:rgba(199,154,60,0.12); color:var(--ink-green-deep); }
+</style>
+</head>
+<body>
+
+<header>
+  <nav class="nav">
+    <a href="/" class="logo">
+      <svg class="mark" viewBox="0 0 32 32" fill="none">
+        <circle cx="16" cy="16" r="14" stroke="#C79A3C" stroke-width="2.5"/>
+        <circle cx="16" cy="16" r="8" stroke="#C79A3C" stroke-width="1.5"/>
+      </svg>
+      KoboDocs
+    </a>
+    <button class="menu-btn" aria-label="Toggle menu" id="menuBtn"><span></span><span></span><span></span></button>
+    <div class="nav-links" id="navLinks">
+      <div class="nav-item">
+        <span class="nav-category">Business Tools ▾</span>
+        <div class="dropdown">
+          <a href="/invoice/">Invoice Generator</a>
+          <a href="/receipt/">Receipt Generator</a>
+          <a href="/quotation/">Quotation Generator</a>
+          <a href="/payslip/">Payslip / Salary Slip</a>
+          <a href="/budget/">Budget Planner</a>
+          <a href="/loan/">Loan Schedule</a>
+          <a href="/qr-code/">QR Code Generator</a>
+          <a href="/salary-calculator/">Take-Home Pay Calculator</a>
+          <a href="/hr-letters/">HR Letter Generator</a>
+          <a href="/waybill/">Waybill / Delivery Note</a>
+          <div class="dropdown-divider"></div>
+          <a href="/business-suite/">Business Suite (Pro)</a>
+          <a href="/school-report-card/">School Report Card (Pro)</a>
+        </div>
+      </div>
+      <a href="/ajo/">Ajo &amp; Esusu</a>
+      <div class="nav-item">
+        <span class="nav-category">Legal &amp; Personal ▾</span>
+        <div class="dropdown">
+          <a href="/affidavit-generator/">Affidavit Generator</a>
+          <a href="/visa-cover-letter/">Visa Cover Letter</a>
+        </div>
+      </div>
+      <div class="nav-item">
+        <span class="nav-category">Relocation ▾</span>
+        <div class="dropdown">
+          <a href="/relocation/">Relocation Overview</a>
+          <a href="/relocation/japa-calculator/">Japa Cost Calculator</a>
+          <a href="/relocation/proof-of-funds/">Proof of Funds Calculator</a>
+          <a href="/relocation/cost-of-living/">Cost of Living Calculator</a>
+          <div class="dropdown-divider"></div>
+          <a href="/cac-calculator/">CAC Registration Cost</a>
+          <a href="/import-duty-calculator/">Import Duty Calculator</a>
+        </div>
+      </div>
+      <a href="/pricing/">Pricing</a>
+      <a href="/account/" id="navAccountLink">Sign in</a>
+      <a href="/invoice/" class="nav-cta">Start free</a>
+    </div>
+  </nav>
+</header>
+
+
+<section class="page-header">
+  <div class="wrap">
+    <h1>Affidavit Generator</h1>
+    <p>Name change, age declaration, loss of document, and the newspaper publication text that goes with a name change — one pass covers all four.</p>
+  </div>
+</section>
+
+<section class="generator">
+  <div class="wrap">
+
+    <div class="form-panel">
+      <div class="field-group">
+        <label>Document type</label>
+        <div class="type-tabs" id="typeTabs">
+          <button type="button" class="active" data-type="name_change">Name Change</button>
+          <button type="button" data-type="age_declaration">Age Declaration</button>
+          <button type="button" data-type="loss_of_document">Loss of Document</button>
+          <button type="button" data-type="newspaper_text">Newspaper Text</button>
+        </div>
+      </div>
+
+      <div class="field-row">
+        <div class="field-group"><label for="deponentName">Your full name (as deponent)</label><input type="text" id="deponentName" placeholder="Adaeze Chioma Okafor"></div>
+        <div class="field-group"><label for="gender">Gender</label>
+          <select id="gender"><option>Female</option><option>Male</option></select>
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field-group"><label for="occupation">Occupation</label><input type="text" id="occupation" placeholder="Trader"></div>
+        <div class="field-group"><label for="state">Court / State</label><input type="text" id="state" placeholder="Lagos State"></div>
+      </div>
+      <div class="field-group">
+        <label for="address">Address</label>
+        <input type="text" id="address" placeholder="No. 12 Adeola Street, Ikeja, Lagos">
+      </div>
+      <div class="field-group">
+        <label for="affDate">Date</label>
+        <input type="date" id="affDate">
+      </div>
+
+      <div class="aff-fields active" data-fields="name_change">
+        <div class="field-row">
+          <div class="field-group"><label for="formerName">Former name</label><input type="text" id="formerName" placeholder="Adaeze Chioma Nwosu"></div>
+          <div class="field-group"><label for="newName">New name</label><input type="text" id="newName" placeholder="Adaeze Chioma Okafor"></div>
+        </div>
+        <div class="field-group">
+          <label for="nameChangeReason">Reason (optional)</label>
+          <input type="text" id="nameChangeReason" placeholder="e.g. Following marriage">
+        </div>
+      </div>
+
+      <div class="aff-fields" data-fields="age_declaration">
+        <div class="field-group"><label for="declaredDob">Declared date of birth</label><input type="date" id="declaredDob"></div>
+        <div class="field-group">
+          <label for="ageSource">Source of knowledge</label>
+          <textarea id="ageSource" rows="2" placeholder="e.g. In the absence of a birth certificate, based on information given to me by my parents"></textarea>
+        </div>
+      </div>
+
+      <div class="aff-fields" data-fields="loss_of_document">
+        <div class="field-row">
+          <div class="field-group"><label for="lostDocType">Document lost</label><input type="text" id="lostDocType" placeholder="WAEC Certificate"></div>
+          <div class="field-group"><label for="lostDate">Date lost</label><input type="date" id="lostDate"></div>
+        </div>
+        <div class="field-group"><label for="lostPlace">Place lost</label><input type="text" id="lostPlace" placeholder="Along Allen Avenue, Ikeja"></div>
+        <div class="field-group">
+          <label for="lostCircumstances">Circumstances</label>
+          <textarea id="lostCircumstances" rows="2" placeholder="e.g. My bag was stolen while boarding a bus"></textarea>
+        </div>
+        <div class="field-group"><label for="policeRef">Police report reference (optional)</label><input type="text" id="policeRef" placeholder="e.g. CR: 234/2026"></div>
+      </div>
+
+      <div class="aff-fields" data-fields="newspaper_text">
+        <p style="font-size:0.82rem; opacity:0.6; margin-bottom:10px;">Uses the same former/new name entered under Name Change above.</p>
+      </div>
+
+      <div class="action-row">
+        <button type="button" class="btn btn-primary" id="downloadPdfBtn">Download PDF</button>
+        <button type="button" class="btn btn-ghost" id="waBtn" style="border-color:var(--line); color:var(--ink-green-deep);">Share on WhatsApp</button>
+      </div>
+      <div id="formMsg"></div>
+    </div>
+
+    <div class="preview-panel">
+      <div class="aff-doc" id="affDoc">
+        <div class="aff-content" id="affContent"></div>
+        <div class="lock-overlay" id="lockOverlay">
+          <div class="lock-card">
+            <span style="font-family:'Space Mono', monospace; font-size:0.7rem; text-transform:uppercase; color:var(--stamp-gold);">Premium tool</span>
+            <div class="price">₦1,500 <small style="font-size:0.9rem; opacity:0.6;">one-time</small></div>
+            <p style="font-size:0.85rem; opacity:0.75; margin:10px 0 14px;">One pass unlocks all 4 document types — name change, age declaration, loss of document, and newspaper text — forever.</p>
+            <button type="button" class="btn btn-primary" id="buyPassBtn" style="width:100%;">Unlock for ₦1,500</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<section class="bs-section" style="max-width:720px; margin:0 auto; padding:20px 20px 80px;">
+  <h2 style="font-size:1.2rem; margin-bottom:10px;">What this is — and isn't</h2>
+  <p style="font-size:0.9rem; opacity:0.75; line-height:1.7;">This generates a properly formatted draft affidavit in the standard Nigerian format. You'll still need to swear it before a Commissioner for Oaths at a High Court registry or notary — this tool prepares the document, it doesn't replace that step.</p>
+  <p style="font-size:0.78rem; opacity:0.5; margin-top:14px;">This is a drafting aid, not legal advice. For anything with significant consequences, have a lawyer review the final document.</p>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div class="footer-top">
+      <div>
+        <div class="footer-logo">KoboDocs</div>
+        <p class="footer-note">Every business document, stamped and sent — built for Nigeria, one Naira at a time.</p>
+      </div>
+      <div class="footer-links">
+        <div>
+          <strong>Business tools</strong>
+          <a href="/invoice/">Invoice</a>
+          <a href="/receipt/">Receipt</a>
+          <a href="/payslip/">Payslip</a>
+          <a href="/qr-code/">QR Code</a>
+        </div>
+        <div>
+          <strong>Legal &amp; more</strong>
+          <a href="/affidavit-generator/">Affidavit Generator</a>
+          <a href="/visa-cover-letter/">Visa Cover Letter</a>
+          <a href="/school-report-card/">School Report Card</a>
+          <a href="/business-suite/">Business Suite</a>
+        </div>
+        <div>
+          <strong>Company</strong>
+          <a href="/pricing/">Pricing</a>
+          <a href="/about/">About</a>
+          <a href="/contact/">Contact</a>
+          <a href="/blog/">Blog</a>
+        </div>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2026 KoboDocs. Not a financial institution — we never hold or move your money.</span>
+      <span><a href="/privacy/">Privacy</a> · <a href="/terms/">Terms</a> · Made in Lagos</span>
+    </div>
+  </div>
+</footer>
+
+<script src="/assets/app.js" defer></script>
+<script type="module" src="/assets/auth.js"></script>
+<script src="/assets/nav-auth.js" defer></script>
+<script src="/assets/subscribe.js" defer></script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
+<script src="/assets/export.js" defer></script>
+<script src="/affidavit-generator/affidavit-generator.js" defer></script>
+</body>
+</html>
