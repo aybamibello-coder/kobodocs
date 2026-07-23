@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>School Report Card Generator for Nigerian Schools | KoboDocs</title>
+<meta name="description" content="Professional report cards for small private schools and tutorial centers — your logo, subjects, grades, attendance and comments. Subscription or per-term pass.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Work+Sans:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/style.css">
+<style>
+  .report-doc{
+    background:var(--paper); border:1px solid var(--line); border-radius:6px;
+    padding:32px 28px; position:relative;
+  }
+  .report-content.locked{ filter:blur(5px); user-select:none; pointer-events:none; }
+  .report-head{ display:flex; justify-content:space-between; align-items:flex-start; border-bottom:2px solid var(--charcoal); padding-bottom:14px; margin-bottom:18px; }
+  .report-head img{ max-width:60px; max-height:60px; object-fit:contain; }
+  .report-head .school-name{ font-family:'Fraunces', serif; font-weight:700; font-size:1.2rem; }
+  .report-head .school-sub{ font-size:0.78rem; opacity:0.6; }
+  .report-meta{ display:flex; flex-wrap:wrap; gap:16px; font-size:0.85rem; margin-bottom:18px; }
+  .report-meta span strong{ display:block; font-size:0.7rem; text-transform:uppercase; opacity:0.5; font-weight:500; }
+  table.subjects-table{ width:100%; border-collapse:collapse; font-size:0.86rem; margin-bottom:16px; }
+  table.subjects-table th{ text-align:left; font-size:0.72rem; text-transform:uppercase; opacity:0.55; padding:6px 8px; border-bottom:1px solid var(--line); }
+  table.subjects-table td{ padding:8px; border-bottom:1px dashed var(--line); }
+  .comment-block{ font-size:0.85rem; margin-bottom:10px; }
+  .comment-block strong{ display:block; font-size:0.72rem; text-transform:uppercase; opacity:0.55; margin-bottom:3px; }
+  .lock-overlay{
+    position:absolute; inset:0; display:none; align-items:center; justify-content:center;
+    flex-direction:column; gap:14px; text-align:center; padding:20px; background:rgba(253,250,243,0.4);
+  }
+  .lock-overlay.show{ display:flex; }
+  .lock-card{ background:var(--paper); border:2px solid var(--stamp-gold); border-radius:10px; padding:22px 20px; max-width:340px; box-shadow:0 10px 30px rgba(0,0,0,0.12); }
+  .billing-tabs{ display:flex; gap:8px; margin-bottom:14px; }
+  .billing-tabs button{ flex:1; border:1px solid var(--line); background:none; border-radius:8px; padding:8px; cursor:pointer; font-size:0.82rem; }
+  .billing-tabs button.active{ background:var(--ink-green-deep); color:var(--paper); border-color:var(--ink-green-deep); }
+  .lock-card .price{ font-family:'Fraunces', serif; font-size:1.6rem; margin:8px 0; }
+  .subject-row{ display:grid; grid-template-columns:1.6fr 80px 1fr 32px; gap:8px; margin-bottom:8px; }
+  #formMsg{ font-size:0.85rem; margin-top:12px; padding:10px 12px; border-radius:4px; display:none; }
+  #formMsg.error{ display:block; background:rgba(168,52,42,0.08); color:var(--stamp-red); }
+  #formMsg.success{ display:block; background:rgba(199,154,60,0.12); color:var(--ink-green-deep); }
+</style>
+</head>
+<body>
+
+<header>
+  <nav class="nav">
+    <a href="/" class="logo">
+      <svg class="mark" viewBox="0 0 32 32" fill="none">
+        <circle cx="16" cy="16" r="14" stroke="#C79A3C" stroke-width="2.5"/>
+        <circle cx="16" cy="16" r="8" stroke="#C79A3C" stroke-width="1.5"/>
+      </svg>
+      KoboDocs
+    </a>
+    <button class="menu-btn" aria-label="Toggle menu" id="menuBtn"><span></span><span></span><span></span></button>
+    <div class="nav-links" id="navLinks">
+      <div class="nav-item">
+        <span class="nav-category">Business Tools ▾</span>
+        <div class="dropdown">
+          <a href="/invoice/">Invoice Generator</a>
+          <a href="/receipt/">Receipt Generator</a>
+          <a href="/quotation/">Quotation Generator</a>
+          <a href="/payslip/">Payslip / Salary Slip</a>
+          <a href="/budget/">Budget Planner</a>
+          <a href="/loan/">Loan Schedule</a>
+          <a href="/qr-code/">QR Code Generator</a>
+          <a href="/salary-calculator/">Take-Home Pay Calculator</a>
+          <a href="/hr-letters/">HR Letter Generator</a>
+          <a href="/waybill/">Waybill / Delivery Note</a>
+          <div class="dropdown-divider"></div>
+          <a href="/business-suite/">Business Suite (Pro)</a>
+          <a href="/school-report-card/">School Report Card (Pro)</a>
+        </div>
+      </div>
+      <a href="/ajo/">Ajo &amp; Esusu</a>
+      <div class="nav-item">
+        <span class="nav-category">Legal &amp; Personal ▾</span>
+        <div class="dropdown">
+          <a href="/affidavit-generator/">Affidavit Generator</a>
+          <a href="/visa-cover-letter/">Visa Cover Letter</a>
+        </div>
+      </div>
+      <div class="nav-item">
+        <span class="nav-category">Relocation ▾</span>
+        <div class="dropdown">
+          <a href="/relocation/">Relocation Overview</a>
+          <a href="/relocation/japa-calculator/">Japa Cost Calculator</a>
+          <a href="/relocation/proof-of-funds/">Proof of Funds Calculator</a>
+          <a href="/relocation/cost-of-living/">Cost of Living Calculator</a>
+          <a href="/visa-cover-letter/">Visa Cover Letter Generator</a>
+          <div class="dropdown-divider"></div>
+          <a href="/cac-calculator/">CAC Registration Cost</a>
+          <a href="/import-duty-calculator/">Import Duty Calculator</a>
+        </div>
+      </div>
+      <a href="/pricing/">Pricing</a>
+      <a href="/account/" id="navAccountLink">Sign in</a>
+      <a href="/invoice/" class="nav-cta">Start free</a>
+    </div>
+  </nav>
+</header>
+
+
+<section class="page-header">
+  <div class="wrap">
+    <h1>School Report Card Generator</h1>
+    <p>Built for small private schools and tutorial centers that don't have proper school-management software — your logo, subjects, grades, attendance and comments, done properly every term.</p>
+  </div>
+</section>
+
+<section class="generator">
+  <div class="wrap">
+
+    <div class="form-panel">
+      <div class="field-group">
+        <label for="schoolLogo">School logo (optional)</label>
+        <input type="file" id="schoolLogo" accept="image/*">
+      </div>
+      <div class="field-row">
+        <div class="field-group"><label for="schoolName">School name</label><input type="text" id="schoolName" placeholder="Bright Stars Academy"></div>
+        <div class="field-group"><label for="schoolMotto">Motto / address (optional)</label><input type="text" id="schoolMotto" placeholder="Knowledge is Light"></div>
+      </div>
+
+      <div class="field-row">
+        <div class="field-group"><label for="term">Term</label>
+          <select id="term"><option>First Term</option><option>Second Term</option><option>Third Term</option></select>
+        </div>
+        <div class="field-group"><label for="session">Session</label><input type="text" id="session" placeholder="2025/2026"></div>
+      </div>
+      <div class="field-row">
+        <div class="field-group"><label for="studentName">Student name</label><input type="text" id="studentName" placeholder="Chidera Nwosu"></div>
+        <div class="field-group"><label for="studentClass">Class</label><input type="text" id="studentClass" placeholder="JSS 2"></div>
+      </div>
+      <div class="field-row">
+        <div class="field-group"><label for="admissionNo">Admission number</label><input type="text" id="admissionNo" placeholder="BSA/2024/041"></div>
+        <div class="field-group"><label for="classSize">Number in class</label><input type="number" id="classSize" min="1" placeholder="30"></div>
+      </div>
+
+      <div class="field-group">
+        <label>Subjects</label>
+        <div id="subjectRows"></div>
+        <button type="button" class="add-item-btn" id="addSubjectBtn">+ Add subject</button>
+      </div>
+
+      <div class="field-row">
+        <div class="field-group"><label for="daysPresent">Days present</label><input type="number" id="daysPresent" min="0" placeholder="58"></div>
+        <div class="field-group"><label for="daysTotal">Total school days</label><input type="number" id="daysTotal" min="0" placeholder="60"></div>
+      </div>
+      <div class="field-group">
+        <label for="classPosition">Position in class (optional)</label>
+        <input type="text" id="classPosition" placeholder="e.g. 3rd out of 30">
+      </div>
+      <div class="field-group">
+        <label for="teacherComment">Class teacher's comment</label>
+        <textarea id="teacherComment" rows="2" placeholder="e.g. A diligent student, keep up the good work."></textarea>
+      </div>
+      <div class="field-group">
+        <label for="principalComment">Head teacher / principal's comment</label>
+        <textarea id="principalComment" rows="2" placeholder="e.g. Good result, can do better."></textarea>
+      </div>
+      <div class="field-group">
+        <label for="nextTerm">Next term begins</label>
+        <input type="date" id="nextTerm">
+      </div>
+
+      <div class="action-row">
+        <button type="button" class="btn btn-primary" id="downloadPdfBtn">Download PDF</button>
+        <button type="button" class="btn btn-ghost" id="waBtn" style="border-color:var(--line); color:var(--ink-green-deep);">Share on WhatsApp</button>
+      </div>
+      <div id="formMsg"></div>
+    </div>
+
+    <div class="preview-panel">
+      <div class="report-doc" id="reportDoc">
+        <div class="report-content" id="reportContent"></div>
+        <div class="lock-overlay" id="lockOverlay">
+          <div class="lock-card">
+            <span style="font-family:'Space Mono', monospace; font-size:0.7rem; text-transform:uppercase; color:var(--stamp-gold);">Premium tool</span>
+            <div class="billing-tabs" id="billingTabs">
+              <button type="button" class="active" data-mode="subscription">Subscription</button>
+              <button type="button" data-mode="per_term">Per-term pass</button>
+            </div>
+            <div class="price" id="planPrice">₦2,500 <small style="font-size:0.9rem; opacity:0.6;">/month</small></div>
+            <div class="billing-tabs" id="cycleTabs">
+              <button type="button" class="active" data-cycle="monthly">Monthly</button>
+              <button type="button" data-cycle="yearly">Yearly — save ~17%</button>
+            </div>
+            <p style="font-size:0.85rem; opacity:0.75; margin:12px 0;">Unlimited report cards, your logo, every term.</p>
+            <button type="button" class="btn btn-primary" id="buyPassBtn" style="width:100%;">Unlock now</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<section class="bs-section" style="max-width:720px; margin:0 auto; padding:20px 20px 80px;">
+  <h2 style="font-size:1.2rem; margin-bottom:10px;">Built for schools that outgrew Word templates</h2>
+  <p style="font-size:0.9rem; opacity:0.75; line-height:1.7;">Most small private schools and tutorial centers still hand-write report cards or reuse a shaky Word template every term. This generates a clean, consistent, professional report card with your school's own logo — the same one, every term, for every student.</p>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div class="footer-top">
+      <div>
+        <div class="footer-logo">KoboDocs</div>
+        <p class="footer-note">Every business document, stamped and sent — built for Nigeria, one Naira at a time.</p>
+      </div>
+      <div class="footer-links">
+        <div>
+          <strong>Business tools</strong>
+          <a href="/invoice/">Invoice</a>
+          <a href="/receipt/">Receipt</a>
+          <a href="/payslip/">Payslip</a>
+          <a href="/qr-code/">QR Code</a>
+        </div>
+        <div>
+          <strong>More tools</strong>
+          <a href="/school-report-card/">School Report Card</a>
+          <a href="/visa-cover-letter/">Visa Cover Letter</a>
+          <a href="/business-suite/">Business Suite</a>
+          <a href="/ajo/">Ajo &amp; Esusu</a>
+        </div>
+        <div>
+          <strong>Company</strong>
+          <a href="/pricing/">Pricing</a>
+          <a href="/about/">About</a>
+          <a href="/contact/">Contact</a>
+          <a href="/blog/">Blog</a>
+        </div>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2026 KoboDocs. Not a financial institution — we never hold or move your money.</span>
+      <span><a href="/privacy/">Privacy</a> · <a href="/terms/">Terms</a> · Made in Lagos</span>
+    </div>
+  </div>
+</footer>
+
+<script src="/assets/app.js" defer></script>
+<script type="module" src="/assets/auth.js"></script>
+<script src="/assets/nav-auth.js" defer></script>
+<script src="/assets/subscribe.js" defer></script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
+<script src="/assets/export.js" defer></script>
+<script src="/school-report-card/school-report-card.js" defer></script>
+</body>
+</html>
