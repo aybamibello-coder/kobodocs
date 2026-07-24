@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Land Sale Agreement / Deed of Assignment Generator | KoboDocs</title>
+<meta name="description" content="Draft a Deed of Assignment for a land sale in the standard Nigerian format — a starting point for your lawyer to review, not a substitute for proper conveyancing.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Work+Sans:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/style.css">
+<style>
+  .warning-banner{
+    background:#3a1414; color:#fdeceb; border:2px solid var(--stamp-red);
+    border-radius:8px; padding:18px 20px; margin:0 0 32px; font-size:0.92rem; line-height:1.6;
+  }
+  .warning-banner strong{ display:block; font-size:0.78rem; text-transform:uppercase; letter-spacing:0.04em; color:#ff9d94; margin-bottom:8px; }
+  .deed-doc{
+    background:var(--paper); border:1px solid var(--line); border-radius:4px;
+    padding:36px 32px; min-height:420px; font-size:0.88rem; line-height:1.7; position:relative;
+  }
+  .deed-content.locked{ filter:blur(5px); user-select:none; pointer-events:none; }
+  .deed-title{ text-align:center; font-weight:700; text-transform:uppercase; letter-spacing:0.04em; margin-bottom:20px; }
+  .deed-clause{ margin-bottom:14px; }
+  .deed-clause .num{ font-weight:600; margin-right:6px; }
+  .deed-parties{ margin-bottom:16px; }
+  .deed-sign-row{ display:flex; justify-content:space-between; margin-top:36px; gap:30px; }
+  .deed-sign-block{ flex:1; border-top:1px solid var(--charcoal); padding-top:6px; font-size:0.76rem; opacity:0.7; }
+  .lock-overlay{
+    position:absolute; inset:0; display:none; align-items:center; justify-content:center;
+    flex-direction:column; gap:14px; text-align:center; padding:20px; background:rgba(253,250,243,0.4);
+  }
+  .lock-overlay.show{ display:flex; }
+  .lock-card{ background:var(--paper); border:2px solid var(--stamp-gold); border-radius:10px; padding:22px 20px; max-width:320px; box-shadow:0 10px 30px rgba(0,0,0,0.12); }
+  .lock-card .price{ font-family:'Fraunces', serif; font-size:1.6rem; margin:8px 0; }
+  #formMsg{ font-size:0.85rem; margin-top:12px; padding:10px 12px; border-radius:4px; display:none; }
+  #formMsg.error{ display:block; background:rgba(168,52,42,0.08); color:var(--stamp-red); }
+  #formMsg.success{ display:block; background:rgba(199,154,60,0.12); color:var(--ink-green-deep); }
+  .checklist{ list-style:none; padding:0; font-size:0.88rem; }
+  .checklist li{ padding:8px 0; border-bottom:1px dashed var(--line); }
+  .checklist li:last-child{ border-bottom:none; }
+  .checklist li::before{ content:"⚠ "; color:var(--stamp-red); font-weight:700; }
+</style>
+</head>
+<body>
+
+<header>
+  <nav class="nav">
+    <a href="/" class="logo">
+      <svg class="mark" viewBox="0 0 32 32" fill="none">
+        <circle cx="16" cy="16" r="14" stroke="#C79A3C" stroke-width="2.5"/>
+        <circle cx="16" cy="16" r="8" stroke="#C79A3C" stroke-width="1.5"/>
+      </svg>
+      KoboDocs
+    </a>
+    <button class="menu-btn" aria-label="Toggle menu" id="menuBtn"><span></span><span></span><span></span></button>
+    <div class="nav-links" id="navLinks">
+      <div class="nav-item">
+        <span class="nav-category">Business Tools ▾</span>
+        <div class="dropdown">
+          <a href="/invoice/">Invoice Generator</a>
+          <a href="/receipt/">Receipt Generator</a>
+          <a href="/quotation/">Quotation Generator</a>
+          <a href="/payslip/">Payslip / Salary Slip</a>
+          <a href="/budget/">Budget Planner</a>
+          <a href="/loan/">Loan Schedule</a>
+          <a href="/qr-code/">QR Code Generator</a>
+          <a href="/salary-calculator/">Take-Home Pay Calculator</a>
+          <a href="/hr-letters/">HR Letter Generator</a>
+          <a href="/waybill/">Waybill / Delivery Note</a>
+          <div class="dropdown-divider"></div>
+          <a href="/business-suite/">Business Suite (Pro)</a>
+          <a href="/school-report-card/">School Report Card (Pro)</a>
+        </div>
+      </div>
+      <a href="/ajo/">Ajo &amp; Esusu</a>
+      <div class="nav-item">
+        <span class="nav-category">Legal &amp; Personal ▾</span>
+        <div class="dropdown">
+          <a href="/affidavit-generator/">Affidavit Generator</a>
+          <a href="/visa-cover-letter/">Visa Cover Letter</a>
+          <a href="/land-sale-agreement/">Land Sale / Deed of Assignment</a>
+        </div>
+      </div>
+      <div class="nav-item">
+        <span class="nav-category">Relocation ▾</span>
+        <div class="dropdown">
+          <a href="/relocation/">Relocation Overview</a>
+          <a href="/relocation/japa-calculator/">Japa Cost Calculator</a>
+          <a href="/relocation/proof-of-funds/">Proof of Funds Calculator</a>
+          <a href="/relocation/cost-of-living/">Cost of Living Calculator</a>
+          <div class="dropdown-divider"></div>
+          <a href="/cac-calculator/">CAC Registration Cost</a>
+          <a href="/import-duty-calculator/">Import Duty Calculator</a>
+        </div>
+      </div>
+      <a href="/pricing/">Pricing</a>
+      <a href="/account/" id="navAccountLink">Sign in</a>
+      <a href="/invoice/" class="nav-cta">Start free</a>
+    </div>
+  </nav>
+</header>
+
+
+<section class="page-header">
+  <div class="wrap">
+    <h1>Land Sale Agreement / Deed of Assignment Generator</h1>
+    <p>A properly structured Deed of Assignment for a land transaction — a document to take to a lawyer, not a substitute for one.</p>
+  </div>
+</section>
+
+<section class="generator">
+  <div class="wrap">
+
+    <div class="form-panel">
+      <div class="warning-banner">
+        <strong>Read this before you use this tool</strong>
+        Land fraud is a serious, common problem in Nigeria. This tool generates a draft document in the standard format — it does not verify the seller's title, confirm the land isn't sold to multiple buyers, check for government acquisition, or replace a licensed surveyor's report. Before any money changes hands: verify title at the State Lands Registry, obtain a search report, use a licensed surveyor, and have a qualified property lawyer review everything and handle Governor's Consent where required. KoboDocs is not a law firm and this document is a starting draft only.
+      </div>
+
+      <div class="field-row">
+        <div class="field-group"><label for="assignorName">Seller / Assignor name</label><input type="text" id="assignorName" placeholder="Chief Emeka Obi"></div>
+        <div class="field-group"><label for="assignorAddress">Seller's address</label><input type="text" id="assignorAddress" placeholder="No. 4 Awolowo Road, Ikoyi, Lagos"></div>
+      </div>
+      <div class="field-row">
+        <div class="field-group"><label for="assigneeName">Buyer / Assignee name</label><input type="text" id="assigneeName" placeholder="Adaeze Okafor"></div>
+        <div class="field-group"><label for="assigneeAddress">Buyer's address</label><input type="text" id="assigneeAddress" placeholder="No. 12 Adeola Street, Ikeja, Lagos"></div>
+      </div>
+
+      <div class="field-group">
+        <label for="propertyAddress">Property location / description</label>
+        <input type="text" id="propertyAddress" placeholder="Plot 14, Block C, Abraham Adesanya Estate, Ajah, Lagos">
+      </div>
+      <div class="field-row">
+        <div class="field-group"><label for="propertySize">Property size</label><input type="text" id="propertySize" placeholder="600 square metres"></div>
+        <div class="field-group"><label for="surveyPlanNo">Survey plan number (optional)</label><input type="text" id="surveyPlanNo" placeholder="LA/2024/00123"></div>
+      </div>
+      <div class="field-row">
+        <div class="field-group"><label for="purchasePrice">Purchase price (₦)</label><input type="text" id="purchasePrice" placeholder="15,000,000"></div>
+        <div class="field-group"><label for="deedDate">Date</label><input type="date" id="deedDate"></div>
+      </div>
+
+      <div class="field-row">
+        <div class="field-group"><label for="witness1">Witness for Seller (name, address, occupation)</label><input type="text" id="witness1" placeholder="Tunde Bello, Lagos, Trader"></div>
+        <div class="field-group"><label for="witness2">Witness for Buyer (name, address, occupation)</label><input type="text" id="witness2" placeholder="Fatima Yusuf, Lagos, Teacher"></div>
+      </div>
+
+      <div class="action-row">
+        <button type="button" class="btn btn-primary" id="downloadPdfBtn">Download PDF</button>
+        <button type="button" class="btn btn-ghost" id="waBtn" style="border-color:var(--line); color:var(--ink-green-deep);">Share on WhatsApp</button>
+      </div>
+      <div id="formMsg"></div>
+    </div>
+
+    <div class="preview-panel">
+      <div class="deed-doc" id="deedDoc">
+        <div class="deed-content" id="deedContent"></div>
+        <div class="lock-overlay" id="lockOverlay">
+          <div class="lock-card">
+            <span style="font-family:'Space Mono', monospace; font-size:0.7rem; text-transform:uppercase; color:var(--stamp-gold);">Premium tool</span>
+            <div class="price">₦4,000 <small style="font-size:0.9rem; opacity:0.6;">one-time</small></div>
+            <p style="font-size:0.85rem; opacity:0.75; margin:10px 0 14px;">Unlocks this document, unlimited use, forever.</p>
+            <button type="button" class="btn btn-primary" id="buyPassBtn" style="width:100%;">Unlock for ₦4,000</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<section class="bs-section" style="max-width:720px; margin:0 auto; padding:20px 20px 80px;">
+  <h2 style="font-size:1.2rem; margin-bottom:14px;">Before you sign anything</h2>
+  <ul class="checklist">
+    <li>Verify the seller's title at the State Lands Registry — confirm they actually own it and it isn't already sold, gifted, or under litigation.</li>
+    <li>Get a professional search report, not just a verbal assurance.</li>
+    <li>Use a licensed surveyor to confirm the exact plot and boundaries match the survey plan.</li>
+    <li>Check whether the land is affected by government acquisition or a road/utility setback.</li>
+    <li>Have a qualified property lawyer review this document and handle Governor's Consent where the land requires it.</li>
+    <li>Never pay the full purchase price before these checks are complete.</li>
+  </ul>
+  <p style="font-size:0.78rem; opacity:0.5; margin-top:16px;">This tool produces a drafting template only. It is not legal advice, and KoboDocs is not liable for outcomes of transactions using this document — engage a lawyer for anything involving land.</p>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div class="footer-top">
+      <div>
+        <div class="footer-logo">KoboDocs</div>
+        <p class="footer-note">Every business document, stamped and sent — built for Nigeria, one Naira at a time.</p>
+      </div>
+      <div class="footer-links">
+        <div>
+          <strong>Business tools</strong>
+          <a href="/invoice/">Invoice</a>
+          <a href="/receipt/">Receipt</a>
+          <a href="/payslip/">Payslip</a>
+          <a href="/qr-code/">QR Code</a>
+        </div>
+        <div>
+          <strong>Legal &amp; more</strong>
+          <a href="/affidavit-generator/">Affidavit Generator</a>
+          <a href="/land-sale-agreement/">Land Sale Agreement</a>
+          <a href="/visa-cover-letter/">Visa Cover Letter</a>
+          <a href="/school-report-card/">School Report Card</a>
+        </div>
+        <div>
+          <strong>Company</strong>
+          <a href="/pricing/">Pricing</a>
+          <a href="/about/">About</a>
+          <a href="/contact/">Contact</a>
+          <a href="/blog/">Blog</a>
+        </div>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2026 KoboDocs. Not a financial institution — we never hold or move your money.</span>
+      <span><a href="/privacy/">Privacy</a> · <a href="/terms/">Terms</a> · Made in Lagos</span>
+    </div>
+  </div>
+</footer>
+
+<script src="/assets/app.js" defer></script>
+<script type="module" src="/assets/auth.js"></script>
+<script src="/assets/nav-auth.js" defer></script>
+<script src="/assets/subscribe.js" defer></script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
+<script src="/assets/export.js" defer></script>
+<script src="/land-sale-agreement/land-sale-agreement.js" defer></script>
+</body>
+</html>
