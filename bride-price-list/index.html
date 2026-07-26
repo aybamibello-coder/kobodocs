@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Free Bride Price / Traditional Wedding List Generator | KoboDocs</title>
+<meta name="description" content="Generate the traditional wedding list (items + cash) for Igbo, Yoruba, or any custom tradition — free, editable, shareable on WhatsApp.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Work+Sans:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/style.css">
+<style>
+  .type-tabs{ display:flex; flex-wrap:wrap; gap:8px; margin-bottom:20px; }
+  .type-tabs button{ font-size:0.82rem; border:1px solid var(--line); background:none; border-radius:20px; padding:6px 14px; cursor:pointer; }
+  .type-tabs button.active{ background:var(--ink-green-deep); color:var(--paper); border-color:var(--ink-green-deep); }
+  .list-row{ display:grid; grid-template-columns:24px 1.6fr 1fr 32px; gap:8px; align-items:center; margin-bottom:8px; }
+  .list-row input[type=checkbox]{ width:18px; height:18px; }
+  .list-row input[type=text], .list-row input[type=number]{ padding:8px 10px; font-size:0.88rem; }
+  .list-row.excluded input[type=text], .list-row.excluded input[type=number]{ opacity:0.4; }
+  .pro-lock{
+    display:flex; align-items:center; justify-content:space-between; gap:10px;
+    background:rgba(199,154,60,0.1); border:1px solid var(--stamp-gold);
+    border-radius:8px; padding:12px 14px; font-size:0.84rem; margin-bottom:18px;
+  }
+  .upgrade-pro-btn{ font-weight:600; white-space:nowrap; background:none; border:none; color:var(--ink-green-deep); cursor:pointer; font-size:inherit; font-family:inherit; text-decoration:underline; padding:0; }
+  #formMsg{ font-size:0.85rem; margin-top:12px; padding:10px 12px; border-radius:4px; display:none; }
+  #formMsg.error{ display:block; background:rgba(168,52,42,0.08); color:var(--stamp-red); }
+  #formMsg.success{ display:block; background:rgba(199,154,60,0.12); color:var(--ink-green-deep); }
+</style>
+</head>
+<body>
+
+<header>
+  <nav class="nav">
+    <a href="/" class="logo">
+      <svg class="mark" viewBox="0 0 32 32" fill="none">
+        <circle cx="16" cy="16" r="14" stroke="#C79A3C" stroke-width="2.5"/>
+        <circle cx="16" cy="16" r="8" stroke="#C79A3C" stroke-width="1.5"/>
+      </svg>
+      KoboDocs
+    </a>
+    <button class="menu-btn" aria-label="Toggle menu" id="menuBtn"><span></span><span></span><span></span></button>
+    <div class="nav-links" id="navLinks">
+      <div class="nav-item">
+        <span class="nav-category">Business Tools ▾</span>
+        <div class="dropdown">
+          <a href="/invoice/">Invoice Generator</a>
+          <a href="/receipt/">Receipt Generator</a>
+          <a href="/quotation/">Quotation Generator</a>
+          <a href="/payslip/">Payslip / Salary Slip</a>
+          <a href="/budget/">Budget Planner</a>
+          <a href="/loan/">Loan Schedule</a>
+          <a href="/qr-code/">QR Code Generator</a>
+          <a href="/salary-calculator/">Take-Home Pay Calculator</a>
+          <a href="/hr-letters/">HR Letter Generator</a>
+          <a href="/waybill/">Waybill / Delivery Note</a>
+          <a href="/freelancer-contract/">Freelancer Contract</a>
+          <a href="/rent-agreement/">Rent / Tenancy Agreement</a>
+          <div class="dropdown-divider"></div>
+          <a href="/business-suite/">Business Suite (Pro)</a>
+          <a href="/school-report-card/">School Report Card (Pro)</a>
+        </div>
+      </div>
+      <a href="/ajo/">Ajo &amp; Esusu</a>
+      <div class="nav-item">
+        <span class="nav-category">Weddings &amp; Events ▾</span>
+        <div class="dropdown">
+          <a href="/bride-price-list/">Bride Price / Wedding List</a>
+          <a href="/wedding-budget-planner/">Wedding/Party Budget Planner</a>
+        </div>
+      </div>
+      <div class="nav-item">
+        <span class="nav-category">Legal &amp; Personal ▾</span>
+        <div class="dropdown">
+          <a href="/affidavit-generator/">Affidavit Generator</a>
+          <a href="/visa-cover-letter/">Visa Cover Letter</a>
+          <a href="/land-sale-agreement/">Land Sale / Deed of Assignment</a>
+          <a href="/nysc-documents/">NYSC Documents</a>
+        </div>
+      </div>
+      <div class="nav-item">
+        <span class="nav-category">Relocation ▾</span>
+        <div class="dropdown">
+          <a href="/relocation/">Relocation Overview</a>
+          <a href="/relocation/japa-calculator/">Japa Cost Calculator</a>
+          <a href="/relocation/proof-of-funds/">Proof of Funds Calculator</a>
+          <a href="/relocation/cost-of-living/">Cost of Living Calculator</a>
+          <div class="dropdown-divider"></div>
+          <a href="/cac-calculator/">CAC Registration Cost</a>
+          <a href="/import-duty-calculator/">Import Duty Calculator</a>
+        </div>
+      </div>
+      <a href="/pricing/">Pricing</a>
+      <a href="/account/" id="navAccountLink">Sign in</a>
+      <a href="/invoice/" class="nav-cta">Start free</a>
+    </div>
+  </nav>
+</header>
+
+
+<section class="page-header">
+  <div class="wrap">
+    <h1>Free Bride Price / Traditional Wedding List Generator</h1>
+    <p>The customary list of items and cash exchanged before a traditional wedding — starting templates for Igbo and Yoruba customs, fully editable. Free, no signup.</p>
+  </div>
+</section>
+
+<section class="generator">
+  <div class="wrap">
+
+    <div class="form-panel">
+      <div class="field-group">
+        <label>Tradition</label>
+        <div class="type-tabs" id="typeTabs">
+          <button type="button" class="active" data-type="igbo">Igbo</button>
+          <button type="button" data-type="yoruba">Yoruba</button>
+          <button type="button" data-type="custom">Custom / Blank</button>
+        </div>
+      </div>
+
+      <div class="pro-lock" id="proLockBanner">
+        <span>Pro removes the watermark and adds your own accent color.</span>
+        <button type="button" class="upgrade-pro-btn" id="upgradeProBtn">Upgrade →</button>
+      </div>
+
+      <div class="field-row">
+        <div class="field-group"><label for="groomName">Groom's name</label><input type="text" id="groomName" placeholder="Chukwuemeka"></div>
+        <div class="field-group"><label for="brideName">Bride's name</label><input type="text" id="brideName" placeholder="Ngozi"></div>
+      </div>
+      <div class="field-row">
+        <div class="field-group"><label for="groomFamily">Groom's family/village</label><input type="text" id="groomFamily" placeholder="Nwosu family, Nnewi"></div>
+        <div class="field-group"><label for="brideFamily">Bride's family/village</label><input type="text" id="brideFamily" placeholder="Okafor family, Owerri"></div>
+      </div>
+
+      <div class="field-group">
+        <label>Items &amp; cash gifts (tick to include, edit as needed)</label>
+        <div id="listRows"></div>
+        <button type="button" class="add-item-btn" id="addItemBtn">+ Add item</button>
+      </div>
+
+      <div class="action-row">
+        <button type="button" class="btn btn-primary" id="downloadPdfBtn">Download PDF</button>
+        <button type="button" class="btn btn-ghost" id="waBtn" style="border-color:var(--line); color:var(--ink-green-deep);">Share on WhatsApp</button>
+      </div>
+      <div id="formMsg"></div>
+    </div>
+
+    <div class="preview-panel">
+      <div class="doc-preview" id="docPreview">
+        <div class="stamp" id="pStamp"><span class="stamp-label">List</span></div>
+        <div class="doc-head">
+          <div>
+            <div class="biz" id="pTitle">Traditional Wedding List</div>
+            <div class="biz-sub" id="pFamilies">Groom's family &amp; Bride's family</div>
+          </div>
+        </div>
+        <table class="doc-items">
+          <thead><tr><th>Item</th><th class="num">Qty / Amount</th></tr></thead>
+          <tbody id="pItemsBody"></tbody>
+        </table>
+        <div class="doc-totals" id="pTotals"></div>
+        <div class="doc-watermark" id="pWatermark">Made with KoboDocs — kobodocs.com.ng</div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<section class="bs-section" style="max-width:720px; margin:0 auto; padding:20px 20px 80px;">
+  <h2 style="font-size:1.2rem; margin-bottom:10px;">A starting template, not a rulebook</h2>
+  <p style="font-size:0.9rem; opacity:0.75; line-height:1.7;">Traditional wedding lists vary widely by state, community, and family within both Igbo and Yoruba customs. These pre-filled items reflect commonly seen lists, but every family adjusts theirs — tick off what applies, remove what doesn't, and add anything specific to your own tradition.</p>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div class="footer-top">
+      <div>
+        <div class="footer-logo">KoboDocs</div>
+        <p class="footer-note">Every business document, stamped and sent — built for Nigeria, one Naira at a time.</p>
+      </div>
+      <div class="footer-links">
+        <div>
+          <strong>Business tools</strong>
+          <a href="/invoice/">Invoice</a>
+          <a href="/receipt/">Receipt</a>
+          <a href="/payslip/">Payslip</a>
+          <a href="/freelancer-contract/">Freelancer Contract</a>
+        </div>
+        <div>
+          <strong>Legal &amp; more</strong>
+          <a href="/affidavit-generator/">Affidavit Generator</a>
+          <a href="/land-sale-agreement/">Land Sale Agreement</a>
+          <a href="/bride-price-list/">Bride Price List</a>
+          <a href="/school-report-card/">School Report Card</a>
+        </div>
+        <div>
+          <strong>Company</strong>
+          <a href="/pricing/">Pricing</a>
+          <a href="/about/">About</a>
+          <a href="/contact/">Contact</a>
+          <a href="/blog/">Blog</a>
+        </div>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2026 KoboDocs. Not a financial institution — we never hold or move your money.</span>
+      <span><a href="/privacy/">Privacy</a> · <a href="/terms/">Terms</a> · Made in Lagos</span>
+    </div>
+  </div>
+</footer>
+
+<script src="/assets/app.js" defer></script>
+<script type="module" src="/assets/auth.js"></script>
+<script src="/assets/nav-auth.js" defer></script>
+<script src="/assets/subscribe.js" defer></script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
+<script src="/assets/export.js" defer></script>
+<script src="/bride-price-list/bride-price-list.js" defer></script>
+</body>
+</html>
