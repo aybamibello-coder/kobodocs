@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Free Rent / Tenancy Agreement Generator for Nigeria | KoboDocs</title>
+<meta name="description" content="Generate a tenancy agreement with Nigerian rental terms — free, no signup. Pro adds agent fee, caution fee, and service charge breakdown clauses.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Work+Sans:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/style.css">
+<style>
+  .tenancy-doc{
+    background:var(--paper); border:1px solid var(--line); border-radius:4px;
+    padding:36px 32px; min-height:420px; font-size:0.9rem; line-height:1.7;
+  }
+  .tenancy-title{ font-family:'Fraunces', serif; font-weight:700; font-size:1.15rem; text-align:center; margin-bottom:6px; }
+  .tenancy-parties{ text-align:center; font-size:0.82rem; opacity:0.65; margin-bottom:24px; }
+  .tenancy-clause{ margin-bottom:14px; }
+  .tenancy-clause .num{ font-weight:600; margin-right:6px; }
+  .tenancy-sign-row{ display:flex; justify-content:space-between; margin-top:36px; gap:30px; }
+  .tenancy-sign-block{ flex:1; border-top:1px solid var(--charcoal); padding-top:6px; font-size:0.78rem; opacity:0.7; text-align:center; }
+  .tenancy-watermark{ text-align:center; font-size:0.76rem; opacity:0.5; margin-top:24px; }
+  .tenancy-watermark.hidden{ display:none; }
+  .pro-lock{
+    display:flex; align-items:center; justify-content:space-between; gap:10px;
+    background:rgba(199,154,60,0.1); border:1px solid var(--stamp-gold);
+    border-radius:8px; padding:12px 14px; font-size:0.84rem; margin-bottom:18px;
+  }
+  .upgrade-pro-btn{ font-weight:600; white-space:nowrap; background:none; border:none; color:var(--ink-green-deep); cursor:pointer; font-size:inherit; font-family:inherit; text-decoration:underline; padding:0; }
+  fieldset.pro-only{ border:none; padding:0; margin:0; opacity:0.45; pointer-events:none; }
+  fieldset.pro-only.unlocked{ opacity:1; pointer-events:auto; }
+  #savedTenantRow{ display:none; }
+  #formMsg{ font-size:0.85rem; margin-top:12px; padding:10px 12px; border-radius:4px; display:none; }
+  #formMsg.error{ display:block; background:rgba(168,52,42,0.08); color:var(--stamp-red); }
+  #formMsg.success{ display:block; background:rgba(199,154,60,0.12); color:var(--ink-green-deep); }
+</style>
+</head>
+<body>
+
+<header>
+  <nav class="nav">
+    <a href="/" class="logo">
+      <svg class="mark" viewBox="0 0 32 32" fill="none">
+        <circle cx="16" cy="16" r="14" stroke="#C79A3C" stroke-width="2.5"/>
+        <circle cx="16" cy="16" r="8" stroke="#C79A3C" stroke-width="1.5"/>
+      </svg>
+      KoboDocs
+    </a>
+    <button class="menu-btn" aria-label="Toggle menu" id="menuBtn"><span></span><span></span><span></span></button>
+    <div class="nav-links" id="navLinks">
+      <div class="nav-item">
+        <span class="nav-category">Business Tools ▾</span>
+        <div class="dropdown">
+          <a href="/invoice/">Invoice Generator</a>
+          <a href="/receipt/">Receipt Generator</a>
+          <a href="/quotation/">Quotation Generator</a>
+          <a href="/payslip/">Payslip / Salary Slip</a>
+          <a href="/budget/">Budget Planner</a>
+          <a href="/loan/">Loan Schedule</a>
+          <a href="/qr-code/">QR Code Generator</a>
+          <a href="/salary-calculator/">Take-Home Pay Calculator</a>
+          <a href="/hr-letters/">HR Letter Generator</a>
+          <a href="/waybill/">Waybill / Delivery Note</a>
+          <a href="/freelancer-contract/">Freelancer Contract</a>
+          <a href="/rent-agreement/">Rent / Tenancy Agreement</a>
+          <div class="dropdown-divider"></div>
+          <a href="/business-suite/">Business Suite (Pro)</a>
+          <a href="/school-report-card/">School Report Card (Pro)</a>
+        </div>
+      </div>
+      <a href="/ajo/">Ajo &amp; Esusu</a>
+      <div class="nav-item">
+        <span class="nav-category">Weddings &amp; Events ▾</span>
+        <div class="dropdown">
+          <a href="/bride-price-list/">Bride Price / Wedding List</a>
+          <a href="/wedding-budget-planner/">Wedding/Party Budget Planner</a>
+        </div>
+      </div>
+      <div class="nav-item">
+        <span class="nav-category">Legal &amp; Personal ▾</span>
+        <div class="dropdown">
+          <a href="/affidavit-generator/">Affidavit Generator</a>
+          <a href="/visa-cover-letter/">Visa Cover Letter</a>
+          <a href="/land-sale-agreement/">Land Sale / Deed of Assignment</a>
+          <a href="/nysc-documents/">NYSC Documents</a>
+        </div>
+      </div>
+      <div class="nav-item">
+        <span class="nav-category">Relocation ▾</span>
+        <div class="dropdown">
+          <a href="/relocation/">Relocation Overview</a>
+          <a href="/relocation/japa-calculator/">Japa Cost Calculator</a>
+          <a href="/relocation/proof-of-funds/">Proof of Funds Calculator</a>
+          <a href="/relocation/cost-of-living/">Cost of Living Calculator</a>
+          <div class="dropdown-divider"></div>
+          <a href="/cac-calculator/">CAC Registration Cost</a>
+          <a href="/import-duty-calculator/">Import Duty Calculator</a>
+        </div>
+      </div>
+      <a href="/pricing/">Pricing</a>
+      <a href="/account/" id="navAccountLink">Sign in</a>
+      <a href="/invoice/" class="nav-cta">Start free</a>
+    </div>
+  </nav>
+</header>
+
+
+<section class="page-header">
+  <div class="wrap">
+    <h1>Free Rent / Tenancy Agreement Generator</h1>
+    <p>A proper tenancy agreement with Nigerian rental terms — landlord, tenant, rent, and renewal notice. Free, no signup.</p>
+  </div>
+</section>
+
+<section class="generator">
+  <div class="wrap">
+
+    <div class="form-panel">
+      <div class="pro-lock" id="proLockBanner">
+        <span>Pro adds agent fee, caution fee, itemized service charge, and saved tenants.</span>
+        <button type="button" class="upgrade-pro-btn" id="upgradeProBtn">Upgrade →</button>
+      </div>
+
+      <div class="field-group" id="savedTenantRow">
+        <label for="savedTenantSelect">Load a saved tenant (Pro)</label>
+        <select id="savedTenantSelect"><option value="">Loading…</option></select>
+      </div>
+
+      <div class="field-row">
+        <div class="field-group"><label for="landlordName">Landlord's name</label><input type="text" id="landlordName" placeholder="Chief Emeka Obi"></div>
+        <div class="field-group"><label for="landlordAddress">Landlord's address</label><input type="text" id="landlordAddress" placeholder="No. 4 Awolowo Road, Ikoyi, Lagos"></div>
+      </div>
+      <div class="field-row">
+        <div class="field-group"><label for="tenantName">Tenant's name</label><input type="text" id="tenantName" placeholder="Adaeze Okafor"></div>
+        <div class="field-group"><label for="tenantAddress">Tenant's current address</label><input type="text" id="tenantAddress" placeholder="No. 12 Adeola Street, Ikeja, Lagos"></div>
+      </div>
+      <div class="field-group">
+        <label for="propertyAddress">Rental property address</label>
+        <input type="text" id="propertyAddress" placeholder="2-Bedroom Flat, No. 8 Bode Thomas Street, Surulere, Lagos">
+      </div>
+      <div class="field-row">
+        <div class="field-group"><label for="startDate">Tenancy start date</label><input type="date" id="startDate"></div>
+        <div class="field-group"><label for="term">Tenancy term</label><input type="text" id="term" placeholder="1 year"></div>
+      </div>
+      <div class="field-row">
+        <div class="field-group"><label for="rentAmount">Annual rent (₦)</label><input type="text" id="rentAmount" placeholder="1,200,000"></div>
+        <div class="field-group"><label for="noticeMonths">Renewal notice (months)</label><input type="number" id="noticeMonths" min="1" value="3"></div>
+      </div>
+
+      <div class="pro-lock" style="background:none; border:none; padding:0; margin-bottom:8px;">
+        <span style="font-size:0.8rem; font-weight:600; opacity:0.6;">Pro: agent fee, caution fee &amp; service charge</span>
+      </div>
+      <fieldset class="pro-only" id="proFieldset">
+        <div class="field-row">
+          <div class="field-group"><label for="agentFeePercent">Agent fee (%)</label><input type="number" id="agentFeePercent" min="0" max="100" value="10"></div>
+          <div class="field-group"><label for="cautionFee">Caution/security deposit (₦)</label><input type="text" id="cautionFee" placeholder="100,000"></div>
+        </div>
+        <div class="field-group">
+          <label for="serviceCharge">Annual service charge (₦, optional)</label>
+          <input type="text" id="serviceCharge" placeholder="150,000">
+        </div>
+        <div class="field-group">
+          <label for="serviceChargeBreakdown">Service charge covers</label>
+          <input type="text" id="serviceChargeBreakdown" placeholder="e.g. Security, waste disposal, compound maintenance, generator fuel">
+        </div>
+      </fieldset>
+
+      <div class="action-row">
+        <button type="button" class="btn btn-primary" id="downloadPdfBtn">Download PDF</button>
+        <button type="button" class="btn btn-ghost" id="waBtn" style="border-color:var(--line); color:var(--ink-green-deep);">Share on WhatsApp</button>
+      </div>
+      <div id="formMsg"></div>
+    </div>
+
+    <div class="preview-panel">
+      <div class="tenancy-doc" id="tenancyDoc"></div>
+    </div>
+
+  </div>
+</section>
+
+<section class="bs-section" style="max-width:900px; margin:0 auto; padding:20px 20px 80px;">
+  <h2 style="font-size:1.3rem; margin-bottom:14px;">Free vs Pro</h2>
+  <div style="display:grid; grid-template-columns:1fr 1fr; gap:20px;">
+    <div style="background:var(--paper); border:1px solid var(--line); border-radius:8px; padding:20px;">
+      <strong style="display:block; margin-bottom:10px;">Free</strong>
+      <p style="font-size:0.88rem; opacity:0.75; line-height:1.7; margin:0;">Landlord/tenant details, property, rent, and renewal notice terms. PDF download and WhatsApp share.</p>
+    </div>
+    <div style="background:var(--paper); border:2px solid var(--stamp-gold); border-radius:8px; padding:20px;">
+      <strong style="display:block; margin-bottom:10px;">Pro — ₦1,500/month or ₦12,000/year</strong>
+      <p style="font-size:0.88rem; opacity:0.75; line-height:1.7; margin:0;">Agent fee, caution deposit, and an itemized service charge breakdown clause — plus saved tenants and no watermark.</p>
+    </div>
+  </div>
+  <p style="font-size:0.78rem; opacity:0.5; margin-top:16px;">This is a general drafting template, not legal advice — for high-value tenancies, have a lawyer review the final agreement.</p>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div class="footer-top">
+      <div>
+        <div class="footer-logo">KoboDocs</div>
+        <p class="footer-note">Every business document, stamped and sent — built for Nigeria, one Naira at a time.</p>
+      </div>
+      <div class="footer-links">
+        <div>
+          <strong>Business tools</strong>
+          <a href="/invoice/">Invoice</a>
+          <a href="/rent-agreement/">Rent Agreement</a>
+          <a href="/freelancer-contract/">Freelancer Contract</a>
+          <a href="/waybill/">Waybill</a>
+        </div>
+        <div>
+          <strong>Legal &amp; more</strong>
+          <a href="/affidavit-generator/">Affidavit Generator</a>
+          <a href="/land-sale-agreement/">Land Sale Agreement</a>
+          <a href="/bride-price-list/">Bride Price List</a>
+          <a href="/school-report-card/">School Report Card</a>
+        </div>
+        <div>
+          <strong>Company</strong>
+          <a href="/pricing/">Pricing</a>
+          <a href="/about/">About</a>
+          <a href="/contact/">Contact</a>
+          <a href="/blog/">Blog</a>
+        </div>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2026 KoboDocs. Not a financial institution — we never hold or move your money.</span>
+      <span><a href="/privacy/">Privacy</a> · <a href="/terms/">Terms</a> · Made in Lagos</span>
+    </div>
+  </div>
+</footer>
+
+<script src="/assets/app.js" defer></script>
+<script type="module" src="/assets/auth.js"></script>
+<script src="/assets/nav-auth.js" defer></script>
+<script src="/assets/subscribe.js" defer></script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
+<script src="/assets/export.js" defer></script>
+<script src="/rent-agreement/rent-agreement.js" defer></script>
+</body>
+</html>
