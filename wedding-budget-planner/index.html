@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Free Wedding &amp; Party Budget Planner + Aso-Ebi Tracker | KoboDocs</title>
+<meta name="description" content="Estimate your wedding or party cost by city and guest count, plan an itemized budget, and track aso-ebi contributions — free, no signup.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Work+Sans:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/style.css">
+<style>
+  .section-tabs{ display:flex; flex-wrap:wrap; gap:10px; margin-bottom:28px; }
+  .section-tabs button{
+    font-size:0.88rem; border:1px solid var(--line); background:var(--paper); border-radius:20px;
+    padding:9px 18px; cursor:pointer; font-weight:600;
+  }
+  .section-tabs button.active{ background:var(--ink-green-deep); color:var(--paper); border-color:var(--ink-green-deep); }
+  .tool-panel{ display:none; }
+  .tool-panel.active{ display:block; }
+  .result-card{ background:var(--paper); border:1px solid var(--line); border-radius:10px; padding:28px 24px; }
+  .result-headline{ text-align:center; margin-bottom:20px; padding-bottom:20px; border-bottom:1px solid var(--line); }
+  .result-headline .label{ font-size:0.8rem; opacity:0.6; }
+  .result-headline .value{ font-family:'Fraunces', serif; font-size:1.9rem; color:var(--ink-green-deep); }
+  .result-row{ display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px dashed var(--line); font-size:0.9rem; }
+  .result-row:last-child{ border-bottom:none; }
+  .budget-row, .asoebi-row{ display:grid; gap:8px; margin-bottom:8px; align-items:center; }
+  .budget-row{ grid-template-columns:1.6fr 1fr 32px; }
+  .asoebi-row{ grid-template-columns:1.4fr 90px 90px 32px; }
+  .asoebi-row select{ padding:8px; font-size:0.85rem; }
+  .asoebi-total{ margin-top:16px; padding-top:14px; border-top:2px solid var(--charcoal); display:flex; justify-content:space-between; font-family:'Fraunces', serif; font-size:1.2rem; }
+  #formMsg{ font-size:0.85rem; margin-top:12px; padding:10px 12px; border-radius:4px; display:none; }
+  #formMsg.error{ display:block; background:rgba(168,52,42,0.08); color:var(--stamp-red); }
+  #formMsg.success{ display:block; background:rgba(199,154,60,0.12); color:var(--ink-green-deep); }
+</style>
+</head>
+<body>
+
+<header>
+  <nav class="nav">
+    <a href="/" class="logo">
+      <svg class="mark" viewBox="0 0 32 32" fill="none">
+        <circle cx="16" cy="16" r="14" stroke="#C79A3C" stroke-width="2.5"/>
+        <circle cx="16" cy="16" r="8" stroke="#C79A3C" stroke-width="1.5"/>
+      </svg>
+      KoboDocs
+    </a>
+    <button class="menu-btn" aria-label="Toggle menu" id="menuBtn"><span></span><span></span><span></span></button>
+    <div class="nav-links" id="navLinks">
+      <div class="nav-item">
+        <span class="nav-category">Business Tools ▾</span>
+        <div class="dropdown">
+          <a href="/invoice/">Invoice Generator</a>
+          <a href="/receipt/">Receipt Generator</a>
+          <a href="/quotation/">Quotation Generator</a>
+          <a href="/payslip/">Payslip / Salary Slip</a>
+          <a href="/budget/">Budget Planner</a>
+          <a href="/loan/">Loan Schedule</a>
+          <a href="/qr-code/">QR Code Generator</a>
+          <a href="/salary-calculator/">Take-Home Pay Calculator</a>
+          <a href="/hr-letters/">HR Letter Generator</a>
+          <a href="/waybill/">Waybill / Delivery Note</a>
+          <a href="/freelancer-contract/">Freelancer Contract</a>
+          <a href="/rent-agreement/">Rent / Tenancy Agreement</a>
+          <div class="dropdown-divider"></div>
+          <a href="/business-suite/">Business Suite (Pro)</a>
+          <a href="/school-report-card/">School Report Card (Pro)</a>
+        </div>
+      </div>
+      <a href="/ajo/">Ajo &amp; Esusu</a>
+      <div class="nav-item">
+        <span class="nav-category">Weddings &amp; Events ▾</span>
+        <div class="dropdown">
+          <a href="/bride-price-list/">Bride Price / Wedding List</a>
+          <a href="/wedding-budget-planner/">Wedding/Party Budget Planner</a>
+        </div>
+      </div>
+      <div class="nav-item">
+        <span class="nav-category">Legal &amp; Personal ▾</span>
+        <div class="dropdown">
+          <a href="/affidavit-generator/">Affidavit Generator</a>
+          <a href="/visa-cover-letter/">Visa Cover Letter</a>
+          <a href="/land-sale-agreement/">Land Sale / Deed of Assignment</a>
+          <a href="/nysc-documents/">NYSC Documents</a>
+        </div>
+      </div>
+      <div class="nav-item">
+        <span class="nav-category">Relocation ▾</span>
+        <div class="dropdown">
+          <a href="/relocation/">Relocation Overview</a>
+          <a href="/relocation/japa-calculator/">Japa Cost Calculator</a>
+          <a href="/relocation/proof-of-funds/">Proof of Funds Calculator</a>
+          <a href="/relocation/cost-of-living/">Cost of Living Calculator</a>
+          <div class="dropdown-divider"></div>
+          <a href="/cac-calculator/">CAC Registration Cost</a>
+          <a href="/import-duty-calculator/">Import Duty Calculator</a>
+        </div>
+      </div>
+      <a href="/pricing/">Pricing</a>
+      <a href="/account/" id="navAccountLink">Sign in</a>
+      <a href="/invoice/" class="nav-cta">Start free</a>
+    </div>
+  </nav>
+</header>
+
+
+<section class="page-header">
+  <div class="wrap">
+    <h1>Wedding &amp; Party Budget Planner</h1>
+    <p>Estimate your cost by city and guest count, plan an itemized budget, and track aso-ebi contributions — all free, no signup.</p>
+  </div>
+</section>
+
+<section style="padding:20px 0 80px;">
+  <div class="wrap">
+    <div class="section-tabs" id="sectionTabs">
+      <button type="button" class="active" data-section="calculator">Cost Calculator</button>
+      <button type="button" data-section="planner">Budget Planner</button>
+      <button type="button" data-section="asoebi">Aso-Ebi Tracker</button>
+    </div>
+
+    <!-- ============ COST CALCULATOR ============ -->
+    <div class="tool-panel active" id="panel-calculator">
+      <div class="generator" style="padding:0;">
+        <div class="wrap" style="padding:0; display:grid; grid-template-columns:1fr 1fr; gap:48px; align-items:start;">
+          <div class="form-panel">
+            <div class="field-row">
+              <div class="field-group"><label for="calcCity">City</label>
+                <select id="calcCity">
+                  <option value="premium">Lagos or Abuja</option>
+                  <option value="mid">Port Harcourt, Ibadan, Enugu, Kano, Owerri</option>
+                  <option value="budget">Other city/town</option>
+                </select>
+              </div>
+              <div class="field-group"><label for="guestCount">Guest count</label><input type="number" id="guestCount" min="10" value="200"></div>
+            </div>
+          </div>
+          <div class="preview-panel">
+            <div class="result-card">
+              <div class="result-headline">
+                <div class="label">Estimated total cost</div>
+                <div class="value" id="calcTotal">₦0</div>
+              </div>
+              <div class="result-row"><span>Catering</span><span id="calcCatering">₦0</span></div>
+              <div class="result-row"><span>Venue</span><span id="calcVenue">₦0</span></div>
+              <div class="result-row"><span>Decoration</span><span id="calcDecoration">₦0</span></div>
+              <div class="result-row"><span>Photography &amp; videography</span><span id="calcPhoto">₦0</span></div>
+              <div class="result-row"><span>Entertainment (MC, DJ)</span><span id="calcEntertainment">₦0</span></div>
+              <div class="result-row"><span>Contingency (10%)</span><span id="calcMisc">₦0</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <p style="font-size:0.78rem; opacity:0.5; margin-top:20px;">A starting estimate based on typical costs — actual prices vary widely by vendor and season. Use the Budget Planner tab to adjust to your own quotes.</p>
+    </div>
+
+    <!-- ============ BUDGET PLANNER ============ -->
+    <div class="tool-panel" id="panel-planner">
+      <div class="generator" style="padding:0;">
+        <div class="wrap" style="padding:0; display:grid; grid-template-columns:1fr 1fr; gap:48px; align-items:start;">
+          <div class="form-panel">
+            <div class="field-group">
+              <label>Budget categories</label>
+              <div id="budgetRows"></div>
+              <button type="button" class="add-item-btn" id="addBudgetBtn">+ Add category</button>
+            </div>
+            <div class="action-row">
+              <button type="button" class="btn btn-primary" id="downloadBudgetBtn">Download PDF</button>
+              <button type="button" class="btn btn-ghost" id="waBudgetBtn" style="border-color:var(--line); color:var(--ink-green-deep);">Share on WhatsApp</button>
+            </div>
+          </div>
+          <div class="preview-panel">
+            <div class="result-card">
+              <div class="result-headline">
+                <div class="label">Total planned budget</div>
+                <div class="value" id="budgetTotal">₦0</div>
+              </div>
+              <div id="budgetPreviewRows"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ ASO-EBI TRACKER ============ -->
+    <div class="tool-panel" id="panel-asoebi">
+      <div class="generator" style="padding:0;">
+        <div class="wrap" style="padding:0; display:grid; grid-template-columns:1fr 1fr; gap:48px; align-items:start;">
+          <div class="form-panel">
+            <div class="field-group">
+              <label>Contributors</label>
+              <div id="asoebiRows"></div>
+              <button type="button" class="add-item-btn" id="addAsoebiBtn">+ Add contributor</button>
+            </div>
+            <div class="action-row">
+              <button type="button" class="btn btn-primary" id="downloadAsoebiBtn">Download PDF</button>
+              <button type="button" class="btn btn-ghost" id="waAsoebiBtn" style="border-color:var(--line); color:var(--ink-green-deep);">Share on WhatsApp</button>
+            </div>
+          </div>
+          <div class="preview-panel">
+            <div class="result-card">
+              <div class="result-headline">
+                <div class="label">Collected so far</div>
+                <div class="value" id="asoebiCollected">₦0</div>
+              </div>
+              <div class="result-row"><span>Contributors paid</span><span id="asoebiPaidCount">0 of 0</span></div>
+              <div class="result-row"><span>Outstanding</span><span id="asoebiOutstanding">₦0</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="formMsg"></div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div class="footer-top">
+      <div>
+        <div class="footer-logo">KoboDocs</div>
+        <p class="footer-note">Every business document, stamped and sent — built for Nigeria, one Naira at a time.</p>
+      </div>
+      <div class="footer-links">
+        <div>
+          <strong>Weddings &amp; more</strong>
+          <a href="/bride-price-list/">Bride Price List</a>
+          <a href="/wedding-budget-planner/">Wedding Budget Planner</a>
+          <a href="/nysc-documents/">NYSC Documents</a>
+        </div>
+        <div>
+          <strong>Legal &amp; more</strong>
+          <a href="/affidavit-generator/">Affidavit Generator</a>
+          <a href="/land-sale-agreement/">Land Sale Agreement</a>
+          <a href="/school-report-card/">School Report Card</a>
+        </div>
+        <div>
+          <strong>Company</strong>
+          <a href="/pricing/">Pricing</a>
+          <a href="/about/">About</a>
+          <a href="/contact/">Contact</a>
+          <a href="/blog/">Blog</a>
+        </div>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2026 KoboDocs. Not a financial institution — we never hold or move your money.</span>
+      <span><a href="/privacy/">Privacy</a> · <a href="/terms/">Terms</a> · Made in Lagos</span>
+    </div>
+  </div>
+</footer>
+
+<script src="/assets/app.js" defer></script>
+<script type="module" src="/assets/auth.js"></script>
+<script src="/assets/nav-auth.js" defer></script>
+<script src="/assets/subscribe.js" defer></script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
+<script src="/assets/export.js" defer></script>
+<script src="/wedding-budget-planner/wedding-budget-planner.js" defer></script>
+</body>
+</html>
