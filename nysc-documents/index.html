@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Free NYSC Letter Generator — Relocation, Exemption, Discharge, PPA | KoboDocs</title>
+<meta name="description" content="Generate NYSC relocation/redeployment, exemption, discharge certificate inquiry, and PPA introduction letters — free, no signup.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Work+Sans:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/style.css">
+<style>
+  .type-tabs{ display:flex; flex-wrap:wrap; gap:8px; margin-bottom:20px; }
+  .type-tabs button{ font-size:0.82rem; border:1px solid var(--line); background:none; border-radius:20px; padding:6px 14px; cursor:pointer; }
+  .type-tabs button.active{ background:var(--ink-green-deep); color:var(--paper); border-color:var(--ink-green-deep); }
+  .nysc-fields{ display:none; }
+  .nysc-fields.active{ display:block; }
+  .letter-doc{
+    background:var(--paper); border:1px solid var(--line); border-radius:4px;
+    padding:40px 36px; min-height:400px; font-size:0.92rem; line-height:1.75;
+  }
+  .letter-doc .letterhead{ font-family:'Fraunces', serif; font-weight:700; font-size:1.1rem; margin-bottom:4px; }
+  .letter-doc .letter-date{ font-size:0.82rem; opacity:0.6; margin-bottom:24px; }
+  .letter-doc p{ margin-bottom:14px; white-space:pre-line; }
+  .pro-lock{
+    display:flex; align-items:center; justify-content:space-between; gap:10px;
+    background:rgba(199,154,60,0.1); border:1px solid var(--stamp-gold);
+    border-radius:8px; padding:12px 14px; font-size:0.84rem; margin-bottom:18px;
+  }
+  .upgrade-pro-btn{ font-weight:600; white-space:nowrap; background:none; border:none; color:var(--ink-green-deep); cursor:pointer; font-size:inherit; font-family:inherit; text-decoration:underline; padding:0; }
+  #formMsg{ font-size:0.85rem; margin-top:12px; padding:10px 12px; border-radius:4px; display:none; }
+  #formMsg.error{ display:block; background:rgba(168,52,42,0.08); color:var(--stamp-red); }
+  #formMsg.success{ display:block; background:rgba(199,154,60,0.12); color:var(--ink-green-deep); }
+</style>
+</head>
+<body>
+
+<header>
+  <nav class="nav">
+    <a href="/" class="logo">
+      <svg class="mark" viewBox="0 0 32 32" fill="none">
+        <circle cx="16" cy="16" r="14" stroke="#C79A3C" stroke-width="2.5"/>
+        <circle cx="16" cy="16" r="8" stroke="#C79A3C" stroke-width="1.5"/>
+      </svg>
+      KoboDocs
+    </a>
+    <button class="menu-btn" aria-label="Toggle menu" id="menuBtn"><span></span><span></span><span></span></button>
+    <div class="nav-links" id="navLinks">
+      <div class="nav-item">
+        <span class="nav-category">Business Tools ▾</span>
+        <div class="dropdown">
+          <a href="/invoice/">Invoice Generator</a>
+          <a href="/receipt/">Receipt Generator</a>
+          <a href="/quotation/">Quotation Generator</a>
+          <a href="/payslip/">Payslip / Salary Slip</a>
+          <a href="/budget/">Budget Planner</a>
+          <a href="/loan/">Loan Schedule</a>
+          <a href="/qr-code/">QR Code Generator</a>
+          <a href="/salary-calculator/">Take-Home Pay Calculator</a>
+          <a href="/hr-letters/">HR Letter Generator</a>
+          <a href="/waybill/">Waybill / Delivery Note</a>
+          <a href="/freelancer-contract/">Freelancer Contract</a>
+          <a href="/rent-agreement/">Rent / Tenancy Agreement</a>
+          <div class="dropdown-divider"></div>
+          <a href="/business-suite/">Business Suite (Pro)</a>
+          <a href="/school-report-card/">School Report Card (Pro)</a>
+        </div>
+      </div>
+      <a href="/ajo/">Ajo &amp; Esusu</a>
+      <div class="nav-item">
+        <span class="nav-category">Weddings &amp; Events ▾</span>
+        <div class="dropdown">
+          <a href="/bride-price-list/">Bride Price / Wedding List</a>
+          <a href="/wedding-budget-planner/">Wedding/Party Budget Planner</a>
+        </div>
+      </div>
+      <div class="nav-item">
+        <span class="nav-category">Legal &amp; Personal ▾</span>
+        <div class="dropdown">
+          <a href="/affidavit-generator/">Affidavit Generator</a>
+          <a href="/visa-cover-letter/">Visa Cover Letter</a>
+          <a href="/land-sale-agreement/">Land Sale / Deed of Assignment</a>
+          <a href="/nysc-documents/">NYSC Documents</a>
+        </div>
+      </div>
+      <div class="nav-item">
+        <span class="nav-category">Relocation ▾</span>
+        <div class="dropdown">
+          <a href="/relocation/">Relocation Overview</a>
+          <a href="/relocation/japa-calculator/">Japa Cost Calculator</a>
+          <a href="/relocation/proof-of-funds/">Proof of Funds Calculator</a>
+          <a href="/relocation/cost-of-living/">Cost of Living Calculator</a>
+          <div class="dropdown-divider"></div>
+          <a href="/cac-calculator/">CAC Registration Cost</a>
+          <a href="/import-duty-calculator/">Import Duty Calculator</a>
+        </div>
+      </div>
+      <a href="/pricing/">Pricing</a>
+      <a href="/account/" id="navAccountLink">Sign in</a>
+      <a href="/invoice/" class="nav-cta">Start free</a>
+    </div>
+  </nav>
+</header>
+
+
+<section class="page-header">
+  <div class="wrap">
+    <h1>Free NYSC Letter Generator</h1>
+    <p>Relocation/redeployment request, exemption application, discharge certificate inquiry, and PPA introduction letters — free, no signup.</p>
+  </div>
+</section>
+
+<section class="generator">
+  <div class="wrap">
+
+    <div class="form-panel">
+      <div class="field-group">
+        <label>Letter type</label>
+        <div class="type-tabs" id="typeTabs">
+          <button type="button" class="active" data-type="relocation">Relocation Request</button>
+          <button type="button" data-type="exemption">Exemption Application</button>
+          <button type="button" data-type="discharge">Discharge Inquiry</button>
+          <button type="button" data-type="ppa">PPA Introduction</button>
+        </div>
+      </div>
+
+      <div class="pro-lock" id="proLockBanner">
+        <span>Pro removes the KoboDocs watermark from your letter.</span>
+        <button type="button" class="upgrade-pro-btn" id="upgradeProBtn">Upgrade →</button>
+      </div>
+
+      <div class="field-row">
+        <div class="field-group"><label for="corpsName">Corps member's full name</label><input type="text" id="corpsName" placeholder="Chinedu Okonkwo"></div>
+        <div class="field-group"><label for="stateCode">State code</label><input type="text" id="stateCode" placeholder="LA/26A/1234"></div>
+      </div>
+      <div class="field-row">
+        <div class="field-group"><label for="callUpNo">Call-up number</label><input type="text" id="callUpNo" placeholder="NYSC/2026/123456"></div>
+        <div class="field-group"><label for="batch">Batch / Stream</label><input type="text" id="batch" placeholder="Batch A, Stream 2"></div>
+      </div>
+      <div class="field-row">
+        <div class="field-group"><label for="deployState">State of deployment</label><input type="text" id="deployState" placeholder="Lagos State"></div>
+        <div class="field-group"><label for="letterDate">Date</label><input type="date" id="letterDate"></div>
+      </div>
+
+      <div class="nysc-fields active" data-fields="relocation">
+        <div class="field-group"><label for="requestedState">Requested new state</label><input type="text" id="requestedState" placeholder="Enugu State"></div>
+        <div class="field-group">
+          <label for="relocationReason">Reason for relocation</label>
+          <textarea id="relocationReason" rows="3" placeholder="e.g. Medical condition requiring proximity to family/specialist care; spouse's employment location"></textarea>
+        </div>
+      </div>
+
+      <div class="nysc-fields" data-fields="exemption">
+        <div class="field-group">
+          <label for="exemptionGround">Grounds for exemption</label>
+          <textarea id="exemptionGround" rows="3" placeholder="e.g. Above 30 years of age at time of graduation; previously served in the Nigerian Armed Forces"></textarea>
+        </div>
+      </div>
+
+      <div class="nysc-fields" data-fields="discharge">
+        <div class="field-group"><label for="completionDate">Service completion date</label><input type="date" id="completionDate"></div>
+        <div class="field-group"><label for="dischargeReason">Purpose of inquiry</label><input type="text" id="dischargeReason" placeholder="e.g. Confirm collection date for Certificate of National Service"></div>
+      </div>
+
+      <div class="nysc-fields" data-fields="ppa">
+        <div class="field-group"><label for="ppaName">PPA (organization) name</label><input type="text" id="ppaName" placeholder="Adaeze Fabrics Co."></div>
+        <div class="field-group"><label for="ppaAddress">PPA address</label><input type="text" id="ppaAddress" placeholder="No. 4 Industrial Estate Road, Ikeja, Lagos"></div>
+        <div class="field-group"><label for="ppaSignatory">Signed by (name &amp; title)</label><input type="text" id="ppaSignatory" placeholder="Adaeze Okafor, HR Manager"></div>
+      </div>
+
+      <div class="action-row">
+        <button type="button" class="btn btn-primary" id="downloadPdfBtn">Download PDF</button>
+        <button type="button" class="btn btn-ghost" id="waBtn" style="border-color:var(--line); color:var(--ink-green-deep);">Share on WhatsApp</button>
+      </div>
+      <div id="formMsg"></div>
+    </div>
+
+    <div class="preview-panel">
+      <div class="letter-doc" id="letterDoc"></div>
+    </div>
+
+  </div>
+</section>
+
+<section class="bs-section" style="max-width:720px; margin:0 auto; padding:20px 20px 80px;">
+  <h2 style="font-size:1.2rem; margin-bottom:10px;">A drafting aid, not an official NYSC document</h2>
+  <p style="font-size:0.9rem; opacity:0.75; line-height:1.7;">These generate properly worded letters to submit to your Local Government Inspector, State Coordinator, or Zonal/National office — they don't submit anything to NYSC on your behalf. Requirements and formats can change, so confirm current requirements at your NYSC office before submitting.</p>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div class="footer-top">
+      <div>
+        <div class="footer-logo">KoboDocs</div>
+        <p class="footer-note">Every business document, stamped and sent — built for Nigeria, one Naira at a time.</p>
+      </div>
+      <div class="footer-links">
+        <div>
+          <strong>Business tools</strong>
+          <a href="/invoice/">Invoice</a>
+          <a href="/rent-agreement/">Rent Agreement</a>
+          <a href="/freelancer-contract/">Freelancer Contract</a>
+          <a href="/hr-letters/">HR Letters</a>
+        </div>
+        <div>
+          <strong>Legal &amp; more</strong>
+          <a href="/nysc-documents/">NYSC Documents</a>
+          <a href="/affidavit-generator/">Affidavit Generator</a>
+          <a href="/land-sale-agreement/">Land Sale Agreement</a>
+          <a href="/bride-price-list/">Bride Price List</a>
+        </div>
+        <div>
+          <strong>Company</strong>
+          <a href="/pricing/">Pricing</a>
+          <a href="/about/">About</a>
+          <a href="/contact/">Contact</a>
+          <a href="/blog/">Blog</a>
+        </div>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2026 KoboDocs. Not a financial institution — we never hold or move your money.</span>
+      <span><a href="/privacy/">Privacy</a> · <a href="/terms/">Terms</a> · Made in Lagos</span>
+    </div>
+  </div>
+</footer>
+
+<script src="/assets/app.js" defer></script>
+<script type="module" src="/assets/auth.js"></script>
+<script src="/assets/nav-auth.js" defer></script>
+<script src="/assets/subscribe.js" defer></script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
+<script src="/assets/export.js" defer></script>
+<script src="/nysc-documents/nysc-documents.js" defer></script>
+</body>
+</html>
