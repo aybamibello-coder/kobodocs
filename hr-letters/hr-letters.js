@@ -42,6 +42,14 @@ function buildBody(type) {
       return `Dear ${empName},\n\nThis letter serves as a formal query regarding the following:\n\n${val('queryReason') || '[details of the incident]'}\n\nPlease provide a written explanation by ${fmtDate(val('responseDeadline'))}. Failure to respond may result in further disciplinary action.\n\nYours sincerely,\n${signatory}`;
     case 'termination':
       return `Dear ${empName},\n\nWe regret to inform you that your employment with ${bizName} as ${position} will be terminated effective ${effectiveDate}.\n\nReason: ${val('termReason') || '[reason]'}\n\nPlease arrange to hand over all company property and complete any outstanding tasks before your last working day. You will receive your final entitlements in accordance with your contract and applicable labour law.\n\nWe thank you for your service and wish you well in your future endeavours.\n\nYours sincerely,\n${signatory}`;
+    case 'handover': {
+      const successorName = val('successorName') || 'my successor / supervisor';
+      const pendingTasks = val('pendingTasks') || '[list of ongoing tasks and their status]';
+      const keyContacts = val('keyContacts') || '[key contacts relevant to my role]';
+      const fileLocations = val('fileLocations') || '[where files and documents are kept]';
+      const handoverNotes = val('handoverNotes');
+      return `HANDOVER NOTE\n\nEmployee: ${empName}\nPosition: ${position}\nLast working day: ${effectiveDate}\nHanding over to: ${successorName}\n\n1. Ongoing Tasks / Projects\n${pendingTasks}\n\n2. Key Contacts\n${keyContacts}\n\n3. Location of Files / Documents\n${fileLocations}${handoverNotes ? `\n\n4. Other Notes\n${handoverNotes}` : ''}\n\nThis handover note is provided to ensure a smooth transition of my responsibilities.\n\n_________________________\n${empName}`;
+    }
     default:
       return '';
   }
