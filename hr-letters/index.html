@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Free HR Letter Generator for Nigerian Businesses | KoboDocs</title>
-<meta name="description" content="Generate offer, appointment, confirmation, promotion, query, and termination letters — free, no signup. Pro adds saved employees, batch letters, and letterhead.">
+<meta name="description" content="Generate offer, appointment, confirmation, promotion, query, termination, and handover note letters — free, no signup. Pro adds saved employees, batch letters, and letterhead.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Work+Sans:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
@@ -58,6 +58,8 @@
           <a href="/salary-calculator/">Take-Home Pay Calculator</a>
           <a href="/hr-letters/">HR Letter Generator</a>
           <a href="/waybill/">Waybill / Delivery Note</a>
+          <a href="/freelancer-contract/">Freelancer Contract</a>
+          <a href="/rent-agreement/">Rent / Tenancy Agreement</a>
           <div class="dropdown-divider"></div>
           <a href="/business-suite/">Business Suite (Pro)</a>
           <a href="/school-report-card/">School Report Card (Pro)</a>
@@ -65,11 +67,19 @@
       </div>
       <a href="/ajo/">Ajo &amp; Esusu</a>
       <div class="nav-item">
+        <span class="nav-category">Weddings &amp; Events ▾</span>
+        <div class="dropdown">
+          <a href="/bride-price-list/">Bride Price / Wedding List</a>
+          <a href="/wedding-budget-planner/">Wedding/Party Budget Planner</a>
+        </div>
+      </div>
+      <div class="nav-item">
         <span class="nav-category">Legal &amp; Personal ▾</span>
         <div class="dropdown">
           <a href="/affidavit-generator/">Affidavit Generator</a>
           <a href="/visa-cover-letter/">Visa Cover Letter</a>
           <a href="/land-sale-agreement/">Land Sale / Deed of Assignment</a>
+          <a href="/nysc-documents/">NYSC Documents</a>
         </div>
       </div>
       <div class="nav-item">
@@ -112,6 +122,7 @@
           <button type="button" data-type="promotion">Promotion</button>
           <button type="button" data-type="query">Query</button>
           <button type="button" data-type="termination">Termination</button>
+          <button type="button" data-type="handover">Handover Note</button>
         </div>
       </div>
 
@@ -156,6 +167,13 @@
       <div class="letter-fields" data-fields="termination">
         <div class="field-group"><label for="termReason">Reason for termination</label><textarea id="termReason" rows="3" placeholder="e.g. Restructuring of the sales department"></textarea></div>
       </div>
+      <div class="letter-fields" data-fields="handover">
+        <div class="field-group"><label for="successorName">Handing over to (optional)</label><input type="text" id="successorName" placeholder="e.g. Successor's name, or 'my supervisor'"></div>
+        <div class="field-group"><label for="pendingTasks">Ongoing tasks / projects</label><textarea id="pendingTasks" rows="3" placeholder="e.g. Q3 budget report (80% complete, due 15th); onboarding new vendor XYZ"></textarea></div>
+        <div class="field-group"><label for="keyContacts">Key contacts</label><textarea id="keyContacts" rows="2" placeholder="e.g. Mr. Tunde (Finance) - 0803..., Vendor ABC - abc@email.com"></textarea></div>
+        <div class="field-group"><label for="fileLocations">Location of files / documents</label><textarea id="fileLocations" rows="2" placeholder="e.g. Shared drive: Finance/2026/Reports; physical files in cabinet 3"></textarea></div>
+        <div class="field-group"><label for="handoverNotes">Other instructions (optional)</label><textarea id="handoverNotes" rows="2" placeholder="e.g. System passwords will be reset by IT on my last day"></textarea></div>
+      </div>
 
       <div class="action-row">
         <button type="button" class="btn btn-primary" id="downloadPdfBtn">Download PDF</button>
@@ -175,7 +193,7 @@
   <div style="display:grid; grid-template-columns:1fr 1fr; gap:20px;">
     <div style="background:var(--paper); border:1px solid var(--line); border-radius:8px; padding:20px;">
       <strong style="display:block; margin-bottom:10px;">Free</strong>
-      <p style="font-size:0.88rem; opacity:0.75; line-height:1.7; margin:0;">All 6 letter types, one at a time. PDF download and WhatsApp share.</p>
+      <p style="font-size:0.88rem; opacity:0.75; line-height:1.7; margin:0;">All 7 letter types, one at a time. PDF download and WhatsApp share.</p>
     </div>
     <div style="background:var(--paper); border:2px solid var(--stamp-gold); border-radius:8px; padding:20px;">
       <strong style="display:block; margin-bottom:10px;">Pro — ₦1,500/month or ₦12,000/year</strong>
