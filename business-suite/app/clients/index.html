@@ -40,6 +40,7 @@
     <div class="nav-links" id="navLinks">
       <a href="/business-suite/app/">Dashboard</a>
       <a href="/business-suite/app/debt/">Who owes you</a>
+      <a href="/business-suite/app/credit/">Credit & Collections</a>
       <a href="/business-suite/app/quotes/">Quotes</a>
       <a href="/business-suite/app/expenses/">Expenses</a>
       <a href="/business-suite/app/inventory/">Inventory</a>
@@ -235,6 +236,12 @@
     };
 
     const editingId = editingIdEl.value;
+    let previousCreditLimit = null;
+    if (editingId && business.suite_tier === 'growth') {
+      const { data: existing } = await supabase.from('clients').select('credit_limit').eq('id', editingId).maybeSingle();
+      previousCreditLimit = existing ? existing.credit_limit : null;
+    }
+
     const { error } = editingId
       ? await supabase.from('clients').update(payload).eq('id', editingId)
       : await supabase.from('clients').insert(payload);
@@ -242,6 +249,16 @@
     if (error) {
       showMsg('Could not save client: ' + error.message, 'error');
       return;
+    }
+
+    if (editingId && business.suite_tier === 'growth' && Number(previousCreditLimit || 0) !== Number(payload.credit_limit || 0)) {
+      await supabase.from('credit_audit_log').insert({
+        business_id: business.id,
+        client_id: editingId,
+        actor_user_id: session.user.id,
+        action: 'credit_limit_changed',
+        details: { from: previousCreditLimit, to: payload.credit_limit }
+      });
     }
 
     showMsg(editingId ? 'Client updated.' : 'Client added.', 'success');

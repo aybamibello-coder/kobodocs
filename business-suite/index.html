@@ -152,7 +152,7 @@
       <div class="hero-ctas">
         <a href="#pricing" class="btn btn-primary">Start your 21-day free trial</a>
       </div>
-      <div class="bs-trial-note">No card required to start. One plan, one price — no tier confusion.</div>
+      <div class="bs-trial-note">No card required to start. Two straightforward plans — upgrade only if you need it.</div>
     </div>
     <div class="hero-doc">
       <div class="stamp"><span class="stamp-label">Pro</span></div>
@@ -220,26 +220,48 @@
 </section>
 
 <section class="bs-section" id="pricing">
-  <h2>One plan. Everything included.</h2>
-  <p class="section-sub">Try it free for 21 days — no card required until you decide to continue.</p>
+  <h2>Two plans. Upgrade only if you need to.</h2>
+  <p class="section-sub">Try Starter free for 21 days — no card required until you decide to continue.</p>
 
-  <div class="bs-pricing-card">
-    <span class="plan-name">Business Suite</span>
-    <div class="price" id="planPrice">₦15,000 <small>/month</small></div>
-    <div class="billing-toggle">
-      <button type="button" class="active" id="monthlyBtn">Monthly</button>
-      <button type="button" id="yearlyBtn">Yearly — 2 months free</button>
+  <div class="bs-pricing-card" style="max-width:900px;">
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:28px; text-align:left;">
+      <div>
+        <span class="plan-name">Starter</span>
+        <div class="price" id="planPrice" style="font-size:2rem;">₦15,000 <small>/month</small></div>
+        <div class="billing-toggle" style="justify-content:flex-start;">
+          <button type="button" class="active" id="monthlyBtn">Monthly</button>
+          <button type="button" id="yearlyBtn">Yearly — 2 months free</button>
+        </div>
+        <ul>
+          <li>Invoicing with VAT &amp; WHT built in</li>
+          <li>Quotes &amp; estimates, one-click convert to invoice</li>
+          <li>Debt dashboard + one-click reminders</li>
+          <li>Bookkeeping: income, expenses, profit snapshot</li>
+          <li>Inventory tracking, auto-deducts on sale</li>
+          <li>21-day free trial, no card required</li>
+        </ul>
+        <button type="button" class="btn btn-primary" id="startTrialBtn" style="width:100%;">Start your 21-day free trial</button>
+        <div id="trialMsg"></div>
+      </div>
+      <div id="growth-upgrade" style="border-left:1px dashed var(--line); padding-left:28px;">
+        <span class="plan-name" style="color:var(--ink-green-deep);">Growth</span>
+        <div class="price" id="growthPlanPrice" style="font-size:2rem;">₦28,000 <small>/month</small></div>
+        <div class="billing-toggle" style="justify-content:flex-start;">
+          <button type="button" class="active" id="growthMonthlyBtn">Monthly</button>
+          <button type="button" id="growthYearlyBtn">Yearly — 2 months free</button>
+        </div>
+        <ul>
+          <li>Everything in Starter</li>
+          <li>Full debt aging (Current, 1–30, 31–60, 61–90, 90+)</li>
+          <li>Customer ledger &amp; downloadable statements</li>
+          <li>Promise-to-pay tracking</li>
+          <li>Collection notes &amp; audit log</li>
+          <li>Priority WhatsApp support</li>
+        </ul>
+        <button type="button" class="btn btn-primary" id="growthUpgradeBtn" style="width:100%;">Upgrade to Growth</button>
+        <div id="growthMsg"></div>
+      </div>
     </div>
-    <ul>
-      <li>Invoicing with VAT &amp; WHT built in</li>
-      <li>Quotes &amp; estimates, one-click convert to invoice</li>
-      <li>Debt dashboard + one-click reminders</li>
-      <li>Bookkeeping: income, expenses, profit snapshot</li>
-      <li>Inventory tracking, auto-deducts on sale</li>
-      <li>21-day free trial, no card required</li>
-    </ul>
-    <button type="button" class="btn btn-primary" id="startTrialBtn" style="width:100%;">Start your 21-day free trial</button>
-    <div id="trialMsg"></div>
   </div>
 </section>
 

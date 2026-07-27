@@ -15,8 +15,9 @@ Free invoice, receipt, quotation, and payslip generator for Nigerian businesses 
 | `/loan/` | Fully functional — reducing-balance amortization schedule |
 | `/ajo/` | Fully functional — rotation order, paid/pending status, PDF + WhatsApp export (session-only, not yet persistent) |
 | `/pricing/` | Built (billing not wired up) |
+| `/business-suite/app/credit/` | Built — Growth tier only (aging, ledger, promise-to-pay, collection notes, statement PDF, audit log) |
 | Pro accounts (Supabase auth) | Not started |
-| Paystack billing | Not started |
+| Paystack billing | Not started (Growth tier upgrade button calls `init-suite-growth-payment`, not yet deployed) |
 | Deployment | Not yet connected to Cloudflare Pages — pending domain purchase |
 
 ## Structure
@@ -52,6 +53,15 @@ Flagged in-app as estimates — tax rules and individual circumstances vary, so 
 ## Ajo/Esusu tracker
 
 The key differentiator from the market research: existing "ajo/esusu" competitors are all custodial fintech apps that hold members' money. This tool is deliberately **non-custodial** — it only tracks rotation order and payment status. Contributions still happen directly between members. Currently session-only; persistent, shareable circle links are a planned Pro feature (needs Supabase).
+
+## Business Suite tiers
+
+Business Suite now has two tiers, gated by `businesses.suite_tier`:
+
+- **Starter** (₦15,000/mo) — invoicing, quotes, basic debt dashboard, bookkeeping, inventory. Unchanged from before.
+- **Growth** (₦28,000/mo) — everything in Starter, plus `/business-suite/app/credit/`: full debt aging, a per-customer ledger with downloadable statements, promise-to-pay tracking, collection notes, and an audit log.
+
+Run `business-suite/supabase/migrations/0001_credit_collections.sql` against the live project (`vwmzulzluaxedkozxjfy`) before the Growth tier will work — it adds `suite_tier` to `businesses` and creates `promise_to_pay`, `collection_notes`, and `credit_audit_log`. The Starter tier's existing tables and pages are untouched.
 
 ## Stack
 

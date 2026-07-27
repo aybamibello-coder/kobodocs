@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Credit & Collections | KoboDocs Business Suite</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Work+Sans:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/style.css">
+<style>
+  .credit-wrap{ max-width:1080px; margin:0 auto; padding:36px 20px 100px; }
+  .credit-top{ display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:14px; margin-bottom:24px; }
+  .growth-badge{
+    font-family:'Space Mono', monospace; font-size:0.68rem; text-transform:uppercase; letter-spacing:0.04em;
+    background:rgba(199,154,60,0.15); color:#8a6a1f; padding:3px 10px; border-radius:20px; margin-left:8px;
+  }
+  .bs-panel{ background:var(--paper); border:1px solid var(--line); border-radius:8px; padding:22px 20px; margin-bottom:20px; }
+  .bs-panel h2{ font-size:1.05rem; margin-bottom:4px; }
+  .bs-panel .panel-sub{ font-size:0.82rem; opacity:0.65; margin-bottom:16px; }
+
+  .aging-grid{ display:grid; grid-template-columns:repeat(6, 1fr); gap:12px; margin-bottom:24px; }
+  @media (max-width:900px){ .aging-grid{ grid-template-columns:repeat(3, 1fr); } }
+  @media (max-width:520px){ .aging-grid{ grid-template-columns:repeat(2, 1fr); } }
+  .aging-card{ background:var(--paper); border:1px solid var(--line); border-radius:8px; padding:14px 12px; text-align:center; }
+  .aging-card .label{ font-size:0.68rem; text-transform:uppercase; letter-spacing:0.03em; opacity:0.6; margin-bottom:6px; }
+  .aging-card .value{ font-family:'Fraunces', serif; font-size:1.1rem; }
+  .aging-card.total{ border-color:var(--stamp-gold); }
+  .aging-card.danger .value{ color:var(--stamp-red); }
+
+  .ledger-row{ padding:14px 0; border-bottom:1px dashed var(--line); }
+  .ledger-row:last-child{ border-bottom:none; }
+  .ledger-head{ display:flex; justify-content:space-between; align-items:center; gap:14px; flex-wrap:wrap; cursor:pointer; }
+  .ledger-client{ font-weight:600; }
+  .ledger-meta{ font-size:0.82rem; opacity:0.65; }
+  .ledger-amount{ font-family:'Fraunces', serif; font-size:1.1rem; }
+  .bucket-tag{
+    font-family:'Space Mono', monospace; font-size:0.68rem; text-transform:uppercase;
+    padding:3px 10px; border-radius:20px; margin-left:8px;
+  }
+  .bucket-tag.current{ background:rgba(20,52,43,0.08); color:var(--ink-green-deep); }
+  .bucket-tag.b1{ background:rgba(199,154,60,0.15); color:#8a6a1f; }
+  .bucket-tag.b2, .bucket-tag.b3, .bucket-tag.b4{ background:rgba(168,52,42,0.12); color:var(--stamp-red); }
+  .credit-flag{
+    font-family:'Space Mono', monospace; font-size:0.68rem; text-transform:uppercase;
+    color:var(--stamp-red); background:rgba(168,52,42,0.08); padding:3px 10px; border-radius:20px; margin-left:8px;
+  }
+  .ledger-actions{ display:flex; gap:8px; flex-wrap:wrap; margin-top:10px; }
+  .ledger-actions button, .ledger-actions a{
+    font-size:0.8rem; border:1px solid var(--line); background:none; border-radius:20px;
+    padding:5px 12px; cursor:pointer; color:inherit; text-decoration:none;
+  }
+  .ledger-detail{ display:none; margin-top:14px; padding:14px; background:var(--bone); border-radius:8px; font-size:0.86rem; }
+  .ledger-detail.open{ display:block; }
+  .ledger-detail table{ width:100%; border-collapse:collapse; margin-bottom:12px; }
+  .ledger-detail th{ text-align:left; font-size:0.7rem; text-transform:uppercase; opacity:0.55; padding:4px 6px; }
+  .ledger-detail td{ padding:6px 6px; border-bottom:1px dashed var(--line); font-size:0.84rem; }
+  .mini-form{ display:flex; gap:8px; flex-wrap:wrap; margin-top:10px; align-items:flex-end; }
+  .mini-form label{ font-size:0.72rem; opacity:0.6; display:block; margin-bottom:3px; }
+  .mini-form input, .mini-form textarea{
+    font-family:inherit; font-size:0.84rem; padding:6px 8px; border:1px solid var(--line); border-radius:4px; background:var(--paper);
+  }
+  .mini-form textarea{ width:100%; resize:vertical; min-height:44px; }
+  .note-item, .promise-item{ padding:8px 0; border-bottom:1px dashed var(--line); font-size:0.84rem; }
+  .note-item:last-child, .promise-item:last-child{ border-bottom:none; }
+  .promise-status{
+    font-family:'Space Mono', monospace; font-size:0.68rem; text-transform:uppercase; padding:2px 8px; border-radius:20px; margin-left:6px;
+  }
+  .promise-status.pending{ background:rgba(199,154,60,0.15); color:#8a6a1f; }
+  .promise-status.kept{ background:rgba(20,52,43,0.1); color:var(--ink-green-deep); }
+  .promise-status.broken{ background:rgba(168,52,42,0.12); color:var(--stamp-red); }
+  .activity-item{ font-size:0.84rem; padding:8px 0; border-bottom:1px dashed var(--line); }
+  .activity-item:last-child{ border-bottom:none; }
+  .activity-time{ opacity:0.55; font-size:0.76rem; }
+  .empty-note{ font-size:0.88rem; opacity:0.6; padding:20px 0; text-align:center; }
+  #toast{
+    position:fixed; bottom:20px; left:50%; transform:translateX(-50%);
+    background:var(--ink-green-deep); color:var(--paper); padding:10px 20px; border-radius:6px;
+    font-size:0.85rem; display:none; z-index:50;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <nav class="nav">
+    <a href="/" class="logo">
+      <svg class="mark" viewBox="0 0 32 32" fill="none">
+        <circle cx="16" cy="16" r="14" stroke="#C79A3C" stroke-width="2.5"/>
+        <circle cx="16" cy="16" r="8" stroke="#C79A3C" stroke-width="1.5"/>
+      </svg>
+      KoboDocs
+    </a>
+    <button class="menu-btn" aria-label="Toggle menu" id="menuBtn"><span></span><span></span><span></span></button>
+    <div class="nav-links" id="navLinks">
+      <a href="/business-suite/app/">Dashboard</a>
+      <a href="/business-suite/app/debt/">Who owes you</a>
+      <a href="/business-suite/app/credit/">Credit & Collections</a>
+      <a href="/business-suite/app/quotes/">Quotes</a>
+      <a href="/business-suite/app/expenses/">Expenses</a>
+      <a href="/business-suite/app/inventory/">Inventory</a>
+      <a href="/business-suite/app/clients/">Clients</a>
+      <a href="/account/" id="navAccountLink">Sign in</a>
+    </div>
+  </nav>
+</header>
+
+<div class="credit-wrap">
+  <div class="credit-top">
+    <div>
+      <a href="/business-suite/app/">&larr; Dashboard</a>
+      <h1 style="font-size:1.4rem; margin-top:6px;">Credit &amp; Collections<span class="growth-badge">Growth</span></h1>
+      <p style="font-size:0.88rem; opacity:0.7; margin-top:4px;">Full debt aging, promise-to-pay tracking, collection notes and customer statements.</p>
+    </div>
+  </div>
+
+  <div class="aging-grid" id="agingGrid">
+    <div class="aging-card total"><div class="label">Total outstanding</div><div class="value" id="agTotal">—</div></div>
+    <div class="aging-card"><div class="label">Current</div><div class="value" id="agCurrent">—</div></div>
+    <div class="aging-card"><div class="label">1–30 days</div><div class="value" id="ag30">—</div></div>
+    <div class="aging-card danger"><div class="label">31–60 days</div><div class="value" id="ag60">—</div></div>
+    <div class="aging-card danger"><div class="label">61–90 days</div><div class="value" id="ag90">—</div></div>
+    <div class="aging-card danger"><div class="label">90+ days</div><div class="value" id="ag90plus">—</div></div>
+  </div>
+
+  <div class="bs-panel">
+    <h2>Customer ledger</h2>
+    <div class="panel-sub">Every customer with an outstanding balance. Tap a row for their full ledger, promises and notes.</div>
+    <div id="ledgerWrap"><div class="empty-note">Loading…</div></div>
+  </div>
+
+  <div class="bs-panel">
+    <h2>Promises to pay</h2>
+    <div class="panel-sub">Pending and recently resolved across all customers.</div>
+    <div id="promiseWrap"><div class="empty-note">Loading…</div></div>
+  </div>
+
+  <div class="bs-panel">
+    <h2>Recent activity</h2>
+    <div class="panel-sub">Audit trail — credit limit changes, promises, notes and reminders.</div>
+    <div id="activityWrap"><div class="empty-note">Loading…</div></div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script type="module" src="/assets/auth.js"></script>
+<script src="/assets/nav-auth.js" defer></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
+<script src="/assets/export.js" defer></script>
+<script src="/business-suite/app/guard.js"></script>
+<script src="/business-suite/app/credit/credit.js" defer></script>
+</body>
+</html>

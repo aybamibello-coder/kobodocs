@@ -58,5 +58,21 @@ window.BizSuiteGuard = {
         ? Math.max(0, Math.ceil((new Date(business.suite_trial_ends_at) - now) / (1000 * 60 * 60 * 24)))
         : null
     };
+  },
+
+  // Same as requireAccess, but also requires the Growth tier (Credit &
+  // Collections Manager, Quotation & Proposal Studio). A Starter business
+  // with an otherwise-valid trial/subscription gets bounced to the pricing
+  // section with an upgrade prompt rather than being treated as logged out.
+  async requireGrowthAccess() {
+    const ctx = await this.requireAccess();
+    if (!ctx) return null;
+
+    if (ctx.business.suite_tier !== 'growth') {
+      window.location.href = '/business-suite/#growth-upgrade';
+      return null;
+    }
+
+    return ctx;
   }
 };

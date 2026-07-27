@@ -155,3 +155,99 @@ startBtn.addEventListener('click', async () => {
   showMsg(`Trial started! You have ${TRIAL_DAYS} days of full access.`, 'success');
   setTimeout(() => { window.location.href = '/business-suite/app/'; }, 1200);
 });
+
+// ---------- Growth tier: pricing toggle + upgrade ----------
+const GROWTH_PRICE_MONTHLY = 28000;
+const GROWTH_PRICE_YEARLY = 280000; // 2 months free vs 12 x monthly
+
+const growthPriceEl = document.getElementById('growthPlanPrice');
+const growthMonthlyBtn = document.getElementById('growthMonthlyBtn');
+const growthYearlyBtn = document.getElementById('growthYearlyBtn');
+const growthBtn = document.getElementById('growthUpgradeBtn');
+const growthMsgEl = document.getElementById('growthMsg');
+
+let growthBillingCycle = 'monthly';
+
+function renderGrowthPrice() {
+  if (growthBillingCycle === 'monthly') {
+    growthPriceEl.innerHTML = `₦${GROWTH_PRICE_MONTHLY.toLocaleString()} <small>/month</small>`;
+    growthMonthlyBtn.classList.add('active');
+    growthYearlyBtn.classList.remove('active');
+  } else {
+    growthPriceEl.innerHTML = `₦${GROWTH_PRICE_YEARLY.toLocaleString()} <small>/year</small>`;
+    growthYearlyBtn.classList.add('active');
+    growthMonthlyBtn.classList.remove('active');
+  }
+}
+
+growthMonthlyBtn.addEventListener('click', () => { growthBillingCycle = 'monthly'; renderGrowthPrice(); });
+growthYearlyBtn.addEventListener('click', () => { growthBillingCycle = 'yearly'; renderGrowthPrice(); });
+renderGrowthPrice();
+
+function showGrowthMsg(text, type) {
+  growthMsgEl.textContent = text;
+  growthMsgEl.className = type;
+}
+
+(async function checkGrowthState() {
+  await new Promise(r => {
+    if (window.KoboAuth) return r();
+    window.addEventListener('kobo-auth-ready', r, { once: true });
+  });
+
+  const session = await window.KoboAuth.getSession();
+  if (!session) return;
+
+  const supabase = window.KoboAuth.supabase;
+  const { data: business } = await supabase
+    .from('businesses')
+    .select('id, suite_status, suite_tier, suite_trial_ends_at, suite_expires_at')
+    .eq('owner_user_id', session.user.id)
+    .maybeSingle();
+
+  if (!business) return;
+
+  const hasAccess = (business.suite_status === 'trial' && new Date(business.suite_trial_ends_at) > new Date())
+    || (business.suite_status === 'active' && new Date(business.suite_expires_at) > new Date());
+
+  if (business.suite_tier === 'growth' && hasAccess) {
+    growthBtn.textContent = 'Go to Credit & Collections';
+    showGrowthMsg('You already have Growth — enjoy the full Credit & Collections Manager.', 'success');
+    growthBtn.onclick = () => { window.location.href = '/business-suite/app/credit/'; };
+  }
+})();
+
+growthBtn.addEventListener('click', async () => {
+  await new Promise(r => {
+    if (window.KoboAuth) return r();
+    window.addEventListener('kobo-auth-ready', r, { once: true });
+  });
+
+  const session = await window.KoboAuth.getSession();
+  if (!session) {
+    showGrowthMsg('Create a free KoboDocs account first, then come back to upgrade.', 'error');
+    setTimeout(() => { window.location.href = '/account/'; }, 1800);
+    return;
+  }
+
+  const supabase = window.KoboAuth.supabase;
+  const { data: business } = await supabase
+    .from('businesses')
+    .select('id, suite_status')
+    .eq('owner_user_id', session.user.id)
+    .maybeSingle();
+
+  if (!business || business.suite_status === 'none') {
+    showGrowthMsg('Start your Starter trial first, then upgrade to Growth any time.', 'error');
+    return;
+  }
+
+  growthBtn.disabled = true;
+  growthBtn.textContent = 'Redirecting…';
+  try {
+    await KoboSubscribe.start('init-suite-growth-payment', { billing_cycle: growthBillingCycle });
+  } catch {
+    growthBtn.disabled = false;
+    growthBtn.textContent = 'Upgrade to Growth';
+  }
+});
