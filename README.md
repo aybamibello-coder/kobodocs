@@ -59,9 +59,11 @@ The key differentiator from the market research: existing "ajo/esusu" competitor
 Business Suite now has two tiers, gated by `businesses.suite_tier`:
 
 - **Starter** (₦15,000/mo) — invoicing, quotes, basic debt dashboard, bookkeeping, inventory. Unchanged from before.
-- **Growth** (₦28,000/mo) — everything in Starter, plus `/business-suite/app/credit/`: full debt aging, a per-customer ledger with downloadable statements, promise-to-pay tracking, collection notes, and an audit log.
+- **Growth** (₦28,000/mo) — everything in Starter, plus `/business-suite/app/credit/`: full debt aging, a per-customer ledger with downloadable statements, promise-to-pay tracking, collection notes, and an audit log. Also adds a **Quotation & Proposal Studio** on top of the existing `/business-suite/app/quotes/` pages: reusable templates, proposal sections, a public client approval link (`/proposal/?t=...`, accept/decline, no login), version history, and analytics (view rate, acceptance rate, accepted value).
 
-Run `business-suite/supabase/migrations/0001_credit_collections.sql` against the live project (`vwmzulzluaxedkozxjfy`) before the Growth tier will work — it adds `suite_tier` to `businesses` and creates `promise_to_pay`, `collection_notes`, and `credit_audit_log`. The Starter tier's existing tables and pages are untouched.
+Run `business-suite/supabase/migrations/0001_credit_collections.sql` and `0002_quotation_proposal_studio.sql` (in order) against the live project (`vwmzulzluaxedkozxjfy`) before the Growth tier will work. `0001` adds `suite_tier` to `businesses` and the credit/collections tables. `0002` adds `quote_templates`, `quote_versions`, `quote_share_links`, `quote_audit_log`, plus two SECURITY DEFINER RPCs (`get_quote_proposal_data`, `respond_to_quote_proposal`) that let the public `/proposal/` page work without a login. The Starter tier's existing tables and pages are untouched either way.
+
+Note: quote editing isn't built yet (only creation), so version history currently only ever holds one snapshot per quote — it's there so editing can be added later without a schema change.
 
 ## Stack
 

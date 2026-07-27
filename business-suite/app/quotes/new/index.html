@@ -12,6 +12,10 @@
   #formMsg{ font-size:0.85rem; margin-top:12px; padding:10px 12px; border-radius:4px; display:none; }
   #formMsg.error{ display:block; background:rgba(168,52,42,0.08); color:var(--stamp-red); }
   #formMsg.success{ display:block; background:rgba(199,154,60,0.12); color:var(--ink-green-deep); }
+  .section-row{ border:1px solid var(--line); border-radius:6px; padding:10px; margin-bottom:10px; }
+  .section-row input{ width:100%; margin-bottom:6px; padding:8px 10px; font-size:0.9rem; }
+  .section-row textarea{ width:100%; padding:8px 10px; font-size:0.88rem; font-family:inherit; resize:vertical; min-height:60px; }
+  .section-row .section-remove{ float:right; background:none; border:none; color:var(--stamp-red); cursor:pointer; font-size:1.1rem; }
 </style>
 </head>
 <body>
@@ -51,6 +55,14 @@
   <div class="wrap">
 
     <div class="form-panel">
+      <div class="field-group growth-only" id="templateRow" style="display:none;">
+        <label for="templateSelect">Start from a template (Growth)</label>
+        <div style="display:flex; gap:8px;">
+          <select id="templateSelect" style="flex:1;"><option value="">Blank quote</option></select>
+          <button type="button" class="btn btn-ghost" id="saveTemplateBtn" style="white-space:nowrap;">Save as template</button>
+        </div>
+      </div>
+
       <div class="field-group">
         <label for="clientSelect">For</label>
         <select id="clientSelect"><option value="">Loading clients…</option></select>
@@ -71,6 +83,12 @@
       <div class="field-group">
         <label for="validUntil">Valid until</label>
         <input type="date" id="validUntil">
+      </div>
+
+      <div class="field-group growth-only" id="proposalSectionsGroup" style="display:none;">
+        <label>Proposal sections (Growth)</label>
+        <div id="proposalSections"></div>
+        <button type="button" class="add-item-btn" id="addSectionBtn">+ Add section (e.g. Overview, Scope, Terms)</button>
       </div>
 
       <div class="field-group">
@@ -95,6 +113,10 @@
         <button type="button" class="btn btn-ghost" id="waBtn" style="border-color:var(--line); color:var(--ink-green-deep);">Share on WhatsApp</button>
       </div>
       <div id="formMsg"></div>
+      <div id="shareLinkBox" class="growth-only" style="display:none; margin-top:10px; font-size:0.84rem; background:var(--bone); border-radius:6px; padding:10px 12px;">
+        Client approval link: <a href="#" id="shareLinkAnchor" target="_blank" rel="noopener"></a>
+        <button type="button" id="copyShareLinkBtn" style="margin-left:8px; font-size:0.78rem; border:1px solid var(--line); background:none; border-radius:14px; padding:2px 10px; cursor:pointer;">Copy</button>
+      </div>
     </div>
 
     <div class="preview-panel">

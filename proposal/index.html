@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Your Proposal | KoboDocs</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Work+Sans:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/style.css">
+<style>
+  .prop-wrap{ max-width:760px; margin:0 auto; padding:56px 20px 100px; }
+  .prop-head{ margin-bottom:28px; display:flex; align-items:center; gap:14px; }
+  .prop-head img{ max-height:44px; }
+  .prop-head .biz-name{ font-family:'Space Mono', monospace; font-size:0.78rem; text-transform:uppercase; letter-spacing:0.06em; opacity:0.6; }
+  .prop-head h1{ font-size:1.5rem; margin-top:6px; }
+  .bs-panel{ background:var(--paper); border:1px solid var(--line); border-radius:8px; padding:22px 20px; margin-bottom:20px; }
+  .prop-section{ margin-bottom:18px; }
+  .prop-section:last-child{ margin-bottom:0; }
+  .prop-section h3{ font-size:0.9rem; margin-bottom:6px; }
+  .prop-section p{ font-size:0.9rem; opacity:0.8; line-height:1.55; white-space:pre-wrap; }
+  table.items-table{ width:100%; border-collapse:collapse; font-size:0.88rem; }
+  table.items-table th{ text-align:left; opacity:0.55; font-weight:500; font-size:0.76rem; text-transform:uppercase; padding:6px 8px; border-bottom:1px solid var(--line); }
+  table.items-table td{ padding:8px; border-bottom:1px dashed var(--line); }
+  table.items-table td.num{ text-align:right; }
+  .totals-row{ display:flex; justify-content:space-between; padding:6px 8px; font-size:0.9rem; }
+  .totals-row.grand{ font-family:'Fraunces', serif; font-size:1.2rem; border-top:2px solid var(--charcoal); margin-top:6px; padding-top:10px; }
+  .status-pill{ font-family:'Space Mono', monospace; font-size:0.72rem; text-transform:uppercase; padding:4px 12px; border-radius:20px; }
+  .status-pill.sent, .status-pill.viewed{ background:rgba(199,154,60,0.15); color:#8a6a1f; }
+  .status-pill.accepted{ background:rgba(20,52,43,0.1); color:var(--ink-green-deep); }
+  .status-pill.declined, .status-pill.expired{ background:rgba(168,52,42,0.1); color:var(--stamp-red); }
+  .prop-actions{ display:flex; gap:12px; margin-top:8px; }
+  .prop-actions button{
+    flex:1; padding:12px; border-radius:6px; font-size:0.95rem; cursor:pointer; border:1px solid var(--line);
+  }
+  .prop-actions .accept{ background:var(--ink-green-deep); color:var(--paper); border:none; }
+  .prop-actions .decline{ background:none; }
+  .empty-note, .error-note{ font-size:0.9rem; opacity:0.7; padding:24px 0; text-align:center; }
+  .resolved-note{ font-size:0.88rem; padding:14px; border-radius:6px; background:var(--bone); text-align:center; }
+</style>
+</head>
+<body>
+
+<header>
+  <nav class="nav">
+    <a href="/" class="logo">
+      <svg class="mark" viewBox="0 0 32 32" fill="none">
+        <circle cx="16" cy="16" r="14" stroke="#C79A3C" stroke-width="2.5"/>
+        <circle cx="16" cy="16" r="8" stroke="#C79A3C" stroke-width="1.5"/>
+      </svg>
+      KoboDocs
+    </a>
+  </nav>
+</header>
+
+<div class="prop-wrap" id="propWrap">
+  <div class="empty-note">Loading your proposal…</div>
+</div>
+
+<script type="module" src="/assets/auth.js"></script>
+<script>
+(async function () {
+  await new Promise(r => {
+    if (window.KoboAuth) return r();
+    window.addEventListener('kobo-auth-ready', r, { once: true });
+  });
+
+  const naira = (n) => '₦' + (Number(n) || 0).toLocaleString('en-NG', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const fmtDate = (isoDate) => isoDate
+    ? new Date(isoDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
+    : '—';
+
+  const wrap = document.getElementById('propWrap');
+  const params = new URLSearchParams(window.location.search);
+  const token = params.get('t');
+
+  if (!token) {
+    wrap.innerHTML = '<div class="error-note">This link is missing its access code. Please ask your supplier for the correct link.</div>';
+    return;
+  }
+
+  const supabase = window.KoboAuth.supabase;
+
+  async function load() {
+    const { data, error } = await supabase.rpc('get_quote_proposal_data', { p_token: token });
+
+    if (error || !data || data.error) {
+      wrap.innerHTML = '<div class="error-note">This link is invalid or has expired. Please ask your supplier for a new one.</div>';
+      return;
+    }
+
+    const d = data.data || {};
+    const items = d.items || [];
+    const sections = d.proposalSections || [];
+    const status = data.quote_status;
+
+    const itemRows = items.map(it => `
+      <tr>
+        <td>${escapeHtml(it.desc || '')}</td>
+        <td class="num">${it.qty}</td>
+        <td class="num">${naira((it.qty || 0) * (it.price || 0))}</td>
+      </tr>
+    `).join('');
+
+    const subtotal = items.reduce((s, it) => s + (it.qty || 0) * (it.price || 0), 0);
+    const vat = d.vatOn ? subtotal * 0.075 : 0;
+    const total = subtotal + vat;
+
+    const sectionsHtml = sections.map(s => `
+      <div class="prop-section"><h3>${escapeHtml(s.title || '')}</h3><p>${escapeHtml(s.body || '')}</p></div>
+    `).join('');
+
+    let actionsHtml = '';
+    if (status === 'sent' || status === 'viewed') {
+      actionsHtml = `
+        <div class="prop-actions">
+          <button class="decline" id="declineBtn">Decline</button>
+          <button class="accept" id="acceptBtn">Accept this quote</button>
+        </div>
+      `;
+    } else if (status === 'accepted') {
+      actionsHtml = '<div class="resolved-note">You accepted this quote. Your supplier has been notified.</div>';
+    } else if (status === 'declined') {
+      actionsHtml = '<div class="resolved-note">You declined this quote.</div>';
+    } else if (status === 'expired') {
+      actionsHtml = '<div class="resolved-note">This quote has expired. Please ask your supplier for a new one.</div>';
+    }
+
+    wrap.innerHTML = `
+      <div class="prop-head">
+        ${d.brand_logo_url ? `<img src="${d.brand_logo_url}" alt="">` : ''}
+        <div>
+          <div class="biz-name">${escapeHtml(data.business_name || 'Your supplier')}</div>
+          <h1>Hi ${escapeHtml(data.client_name)}, here's your proposal</h1>
+        </div>
+      </div>
+
+      <div class="bs-panel">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+          <span style="font-family:'Space Mono', monospace; font-size:0.8rem; opacity:0.7;">${d.quoteNumber || 'Quotation'}</span>
+          <span class="status-pill ${status}">${status}</span>
+        </div>
+        ${data.due_date ? `<div style="font-size:0.84rem; opacity:0.65;">Valid until ${fmtDate(data.due_date)}</div>` : ''}
+      </div>
+
+      ${sectionsHtml ? `<div class="bs-panel">${sectionsHtml}</div>` : ''}
+
+      <div class="bs-panel">
+        <table class="items-table">
+          <thead><tr><th>Description</th><th>Qty</th><th>Amount</th></tr></thead>
+          <tbody>${itemRows}</tbody>
+        </table>
+        <div class="totals-row"><span>Subtotal</span><span>${naira(subtotal)}</span></div>
+        ${d.vatOn ? `<div class="totals-row"><span>VAT (7.5%)</span><span>${naira(vat)}</span></div>` : ''}
+        <div class="totals-row grand"><span>Total</span><span>${naira(total)}</span></div>
+        ${d.note ? `<p style="font-size:0.86rem; opacity:0.75; margin-top:14px;">${escapeHtml(d.note)}</p>` : ''}
+      </div>
+
+      <div class="bs-panel">
+        ${actionsHtml}
+      </div>
+    `;
+
+    const acceptBtn = document.getElementById('acceptBtn');
+    const declineBtn = document.getElementById('declineBtn');
+    if (acceptBtn) acceptBtn.addEventListener('click', () => respond('accepted'));
+    if (declineBtn) declineBtn.addEventListener('click', () => respond('declined'));
+  }
+
+  async function respond(response) {
+    const confirmMsg = response === 'accepted'
+      ? 'Accept this quote? Your supplier will be notified.'
+      : 'Decline this quote? You can still contact your supplier directly if anything changes.';
+    if (!window.confirm(confirmMsg)) return;
+
+    const { data, error } = await supabase.rpc('respond_to_quote_proposal', { p_token: token, p_response: response });
+    if (error || !data || data.error) {
+      alert('Sorry, something went wrong. Please try again or contact your supplier directly.');
+      return;
+    }
+    load();
+  }
+
+  function escapeHtml(str) {
+    const div = document.createElement('div');
+    div.textContent = str == null ? '' : String(str);
+    return div.innerHTML;
+  }
+
+  load();
+})();
+</script>
+</body>
+</html>

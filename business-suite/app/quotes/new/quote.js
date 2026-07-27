@@ -21,6 +21,29 @@ function addItemRow(desc = '', qty = 1, price = '') {
   row.querySelector('.item-remove').addEventListener('click', () => { row.remove(); renderPreview(); });
 }
 
+let sectionId = 0;
+function addSectionRow(title = '', body = '') {
+  sectionId++;
+  const row = document.createElement('div');
+  row.className = 'section-row';
+  row.dataset.id = sectionId;
+  row.innerHTML = `
+    <button type="button" class="section-remove" aria-label="Remove section">&times;</button>
+    <input type="text" class="section-title" placeholder="Section title (e.g. Overview)" value="${title}">
+    <textarea class="section-body" placeholder="Section content…">${body}</textarea>
+  `;
+  document.getElementById('proposalSections').appendChild(row);
+  row.querySelector('.section-remove').addEventListener('click', () => row.remove());
+}
+
+function getSections() {
+  return [...document.querySelectorAll('.section-row')]
+    .map(row => ({ title: row.querySelector('.section-title').value.trim(), body: row.querySelector('.section-body').value.trim() }))
+    .filter(s => s.title || s.body);
+}
+
+document.getElementById('addSectionBtn').addEventListener('click', () => addSectionRow());
+
 function getItems() {
   return [...document.querySelectorAll('.item-row')].map(row => ({
     desc: row.querySelector('.item-desc').value || 'Item',
@@ -100,6 +123,52 @@ function showMsg(text, type) {
     document.getElementById('docPreview').style.setProperty('--stamp-gold', business.brand_color);
   }
 
+  const isGrowth = business.suite_tier === 'growth';
+  let templates = [];
+  if (isGrowth) {
+    document.querySelectorAll('.growth-only').forEach(el => { el.style.display = ''; });
+
+    const { data: tpls } = await supabase
+      .from('quote_templates')
+      .select('id, name, items, proposal_sections, default_note')
+      .eq('business_id', business.id)
+      .order('name');
+    templates = tpls || [];
+
+    const templateSelect = document.getElementById('templateSelect');
+    templateSelect.innerHTML = '<option value="">Blank quote</option>' +
+      templates.map(t => `<option value="${t.id}">${t.name}</option>`).join('');
+
+    templateSelect.addEventListener('change', () => {
+      const tpl = templates.find(t => t.id === templateSelect.value);
+      document.getElementById('itemRows').innerHTML = '';
+      document.getElementById('proposalSections').innerHTML = '';
+      if (tpl) {
+        (tpl.items || []).forEach(it => addItemRow(it.desc, it.qty, it.price));
+        (tpl.proposal_sections || []).forEach(s => addSectionRow(s.title, s.body));
+        if (tpl.default_note) document.getElementById('quoteNote').value = tpl.default_note;
+      } else {
+        addItemRow();
+      }
+      renderPreview();
+    });
+
+    document.getElementById('saveTemplateBtn').addEventListener('click', async () => {
+      const name = window.prompt('Name this template (e.g. "Website build — standard package"):');
+      if (!name) return;
+      const { error } = await supabase.from('quote_templates').insert({
+        business_id: business.id,
+        name,
+        items: getItems(),
+        proposal_sections: getSections(),
+        default_note: document.getElementById('quoteNote').value || null,
+        created_by: session.user.id
+      });
+      if (error) { showMsg('Could not save template: ' + error.message, 'error'); return; }
+      showMsg('Template saved.', 'success');
+    });
+  }
+
   const { data: clients } = await supabase
     .from('clients')
     .select('id, name')
@@ -139,7 +208,20 @@ function showMsg(text, type) {
     btn.disabled = true;
     btn.textContent = 'Saving…';
 
-    const { error } = await supabase.from('documents').insert({
+    const proposalSections = isGrowth ? getSections() : [];
+
+    const quoteData = {
+      quoteNumber: data.quoteNumber,
+      quoteDate: data.quoteDateRaw,
+      clientName: currentClient.name,
+      items: data.items,
+      subtotal: data.subtotal,
+      vatOn: data.vatOn,
+      note: data.note,
+      proposalSections
+    };
+
+    const { data: saved, error } = await supabase.from('documents').insert({
       business_id: business.id,
       user_id: session.user.id,
       doc_type: 'quotation',
@@ -148,16 +230,8 @@ function showMsg(text, type) {
       amount: data.total,
       vat_amount: data.vat,
       quote_status: 'sent',
-      data: {
-        quoteNumber: data.quoteNumber,
-        quoteDate: data.quoteDateRaw,
-        clientName: currentClient.name,
-        items: data.items,
-        subtotal: data.subtotal,
-        vatOn: data.vatOn,
-        note: data.note
-      }
-    });
+      data: quoteData
+    }).select().single();
 
     btn.disabled = false;
     btn.textContent = 'Save & send quote';
@@ -166,8 +240,49 @@ function showMsg(text, type) {
       showMsg('Could not save quote: ' + error.message, 'error');
       return;
     }
-    showMsg('Quote saved. Redirecting to your quotes list…', 'success');
-    setTimeout(() => { window.location.href = '/business-suite/app/quotes/'; }, 1200);
+
+    if (isGrowth && saved) {
+      await supabase.from('quote_versions').insert({
+        business_id: business.id,
+        quote_id: saved.id,
+        version_number: 1,
+        snapshot: quoteData,
+        created_by: session.user.id
+      });
+
+      const { data: link } = await supabase.from('quote_share_links').insert({
+        business_id: business.id,
+        quote_id: saved.id
+      }).select().single();
+
+      await supabase.from('quote_audit_log').insert({
+        business_id: business.id,
+        client_id: currentClient.id,
+        quote_id: saved.id,
+        actor_type: 'staff',
+        actor_user_id: session.user.id,
+        action: 'quote_created',
+        details: { total: data.total }
+      });
+
+      if (link) {
+        const url = `${window.location.origin}/proposal/?t=${link.token}`;
+        const box = document.getElementById('shareLinkBox');
+        const anchor = document.getElementById('shareLinkAnchor');
+        anchor.href = url;
+        anchor.textContent = url;
+        box.style.display = 'block';
+        document.getElementById('copyShareLinkBtn').addEventListener('click', () => {
+          navigator.clipboard.writeText(url);
+          showMsg('Link copied. Quote saved — you can keep this tab open or head to your quotes list.', 'success');
+        });
+      }
+    }
+
+    showMsg(isGrowth ? 'Quote saved. Copy the client approval link below, or head to your quotes list.' : 'Quote saved. Redirecting to your quotes list…', 'success');
+    if (!isGrowth) {
+      setTimeout(() => { window.location.href = '/business-suite/app/quotes/'; }, 1200);
+    }
   });
 
   function buildQuotePdf(data) {
