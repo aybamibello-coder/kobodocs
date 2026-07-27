@@ -87,6 +87,7 @@ function toast(text) {
               ).join('')}
             </select>
             ${isGrowth && token ? `<button class="convert-btn" data-copy-link="${token}">Copy client link</button>` : ''}
+            ${!['accepted', 'declined'].includes(q.quote_status) ? `<a class="convert-btn" href="/business-suite/app/quotes/edit/?id=${q.id}">Edit</a>` : ''}
             <button class="convert-btn" data-convert="${q.id}" ${converted ? 'disabled' : ''}>
               ${converted ? 'Converted' : 'Convert to invoice'}
             </button>
