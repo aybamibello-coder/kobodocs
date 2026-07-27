@@ -2,8 +2,15 @@
 -- Run this against the KoboDocs Supabase project (vwmzulzluaxedkozxjfy),
 -- after 0001_credit_collections.sql. Adds templates, version history,
 -- public approval links, and an audit log for quotations. Growth-gating
--- happens in the app (business.suite_tier check) — Starter keeps using
--- the existing basic quotes list/convert-to-invoice untouched.
+-- happens in the app (business.suite_tier check / guard.js) — Starter
+-- keeps using the existing basic quotes list/convert-to-invoice untouched.
+
+-- ---------- 0. documents.quote_status needs 'declined' ----------
+-- The existing check constraint only allowed sent/viewed/accepted/expired.
+-- The public proposal page needs a distinct declined state.
+alter table documents drop constraint if exists documents_quote_status_check;
+alter table documents add constraint documents_quote_status_check
+  check (quote_status = any (array['sent'::text, 'viewed'::text, 'accepted'::text, 'declined'::text, 'expired'::text]));
 
 -- ---------- 1. Reusable quote templates ----------
 create table if not exists quote_templates (
@@ -36,11 +43,13 @@ create table if not exists quote_versions (
 create index if not exists quote_versions_quote_idx on quote_versions(quote_id);
 
 -- ---------- 3. Public share links for online approval ----------
+-- Token is a text hex string, matching the existing client_portal_links
+-- convention (encode(gen_random_bytes(24), 'hex')), not a uuid.
 create table if not exists quote_share_links (
   id uuid primary key default gen_random_uuid(),
   business_id uuid not null references businesses(id) on delete cascade,
   quote_id uuid not null references documents(id) on delete cascade unique,
-  token uuid not null default gen_random_uuid() unique,
+  token text not null unique default encode(extensions.gen_random_bytes(24), 'hex'),
   view_count int not null default 0,
   first_viewed_at timestamptz,
   last_viewed_at timestamptz,
@@ -70,84 +79,34 @@ create index if not exists quote_audit_log_business_idx on quote_audit_log(busin
 create index if not exists quote_audit_log_quote_idx on quote_audit_log(quote_id);
 
 -- ---------- RLS ----------
+-- Uses the project's existing is_business_owner()/is_business_member()
+-- helpers, matching the pattern already used on businesses/clients/documents.
+-- Growth-tier gating for these features happens in the app, not in RLS,
+-- consistent with how Growth is gated everywhere else in this codebase.
 alter table quote_templates enable row level security;
 alter table quote_versions enable row level security;
 alter table quote_share_links enable row level security;
 alter table quote_audit_log enable row level security;
 
-create policy "growth business members manage templates"
+create policy "quote_templates_business_access"
   on quote_templates for all
-  using (
-    business_id in (
-      select id from businesses where owner_user_id = auth.uid()
-      union
-      select business_id from business_members where user_id = auth.uid()
-    )
-  )
-  with check (
-    business_id in (
-      select id from businesses where owner_user_id = auth.uid() and suite_tier = 'growth'
-      union
-      select business_id from business_members where user_id = auth.uid()
-    )
-  );
+  using (is_business_owner(business_id) or is_business_member(business_id))
+  with check (is_business_owner(business_id) or is_business_member(business_id));
 
-create policy "growth business members read versions"
-  on quote_versions for select
-  using (
-    business_id in (
-      select id from businesses where owner_user_id = auth.uid()
-      union
-      select business_id from business_members where user_id = auth.uid()
-    )
-  );
+create policy "quote_versions_business_access"
+  on quote_versions for all
+  using (is_business_owner(business_id) or is_business_member(business_id))
+  with check (is_business_owner(business_id) or is_business_member(business_id));
 
-create policy "growth business members write versions"
-  on quote_versions for insert
-  with check (
-    business_id in (
-      select id from businesses where owner_user_id = auth.uid() and suite_tier = 'growth'
-      union
-      select business_id from business_members where user_id = auth.uid()
-    )
-  );
-
-create policy "growth business members manage share links"
+create policy "quote_share_links_business_access"
   on quote_share_links for all
-  using (
-    business_id in (
-      select id from businesses where owner_user_id = auth.uid()
-      union
-      select business_id from business_members where user_id = auth.uid()
-    )
-  )
-  with check (
-    business_id in (
-      select id from businesses where owner_user_id = auth.uid() and suite_tier = 'growth'
-      union
-      select business_id from business_members where user_id = auth.uid()
-    )
-  );
+  using (is_business_owner(business_id) or is_business_member(business_id))
+  with check (is_business_owner(business_id) or is_business_member(business_id));
 
-create policy "growth business members read audit log"
-  on quote_audit_log for select
-  using (
-    business_id in (
-      select id from businesses where owner_user_id = auth.uid()
-      union
-      select business_id from business_members where user_id = auth.uid()
-    )
-  );
-
-create policy "growth business members write audit log"
-  on quote_audit_log for insert
-  with check (
-    business_id in (
-      select id from businesses where owner_user_id = auth.uid()
-      union
-      select business_id from business_members where user_id = auth.uid()
-    )
-  );
+create policy "quote_audit_log_business_access"
+  on quote_audit_log for all
+  using (is_business_owner(business_id) or is_business_member(business_id))
+  with check (is_business_owner(business_id) or is_business_member(business_id));
 
 -- No public SELECT/UPDATE policy on quote_share_links, documents, clients,
 -- or quote_audit_log for anon — the two RPC functions below are the only
@@ -156,7 +115,7 @@ create policy "growth business members write audit log"
 -- the token.
 
 -- ---------- RPC: read a proposal by its public token ----------
-create or replace function get_quote_proposal_data(p_token uuid)
+create or replace function get_quote_proposal_data(p_token text)
 returns jsonb
 language plpgsql
 security definer
@@ -206,7 +165,7 @@ end;
 $$;
 
 -- ---------- RPC: client accepts or declines a proposal ----------
-create or replace function respond_to_quote_proposal(p_token uuid, p_response text)
+create or replace function respond_to_quote_proposal(p_token text, p_response text)
 returns jsonb
 language plpgsql
 security definer
@@ -226,7 +185,7 @@ begin
   end if;
 
   select * into v_quote from documents where id = v_link.quote_id;
-  if v_quote.quote_status in ('accepted', 'expired') then
+  if v_quote.quote_status in ('accepted', 'declined', 'expired') then
     return jsonb_build_object('error', 'already_final', 'quote_status', v_quote.quote_status);
   end if;
 
@@ -241,5 +200,5 @@ begin
 end;
 $$;
 
-grant execute on function get_quote_proposal_data(uuid) to anon, authenticated;
-grant execute on function respond_to_quote_proposal(uuid, text) to anon, authenticated;
+grant execute on function get_quote_proposal_data(text) to anon, authenticated;
+grant execute on function respond_to_quote_proposal(text, text) to anon, authenticated;

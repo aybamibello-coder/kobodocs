@@ -60,76 +60,26 @@ create index if not exists credit_audit_log_business_idx on credit_audit_log(bus
 create index if not exists credit_audit_log_client_idx on credit_audit_log(client_id);
 
 -- ---------- RLS ----------
+-- Uses the project's existing is_business_owner()/is_business_member()
+-- helper functions (see businesses_owner_all / businesses_member_select
+-- policies) rather than re-deriving membership inline. Tier gating for
+-- Growth-only writes happens in the app (guard.js / isGrowth checks),
+-- matching how Growth is gated everywhere else in this codebase.
 alter table promise_to_pay enable row level security;
 alter table collection_notes enable row level security;
 alter table credit_audit_log enable row level security;
 
-create policy "growth business members can read promises"
-  on promise_to_pay for select
-  using (
-    business_id in (
-      select id from businesses where owner_user_id = auth.uid()
-      union
-      select business_id from business_members where user_id = auth.uid()
-    )
-  );
+create policy "promise_to_pay_business_access"
+  on promise_to_pay for all
+  using (is_business_owner(business_id) or is_business_member(business_id))
+  with check (is_business_owner(business_id) or is_business_member(business_id));
 
-create policy "growth business members can write promises"
-  on promise_to_pay for insert
-  with check (
-    business_id in (
-      select id from businesses where owner_user_id = auth.uid() and suite_tier = 'growth'
-      union
-      select business_id from business_members where user_id = auth.uid()
-    )
-  );
+create policy "collection_notes_business_access"
+  on collection_notes for all
+  using (is_business_owner(business_id) or is_business_member(business_id))
+  with check (is_business_owner(business_id) or is_business_member(business_id));
 
-create policy "growth business members can update promises"
-  on promise_to_pay for update
-  using (
-    business_id in (
-      select id from businesses where owner_user_id = auth.uid()
-      union
-      select business_id from business_members where user_id = auth.uid()
-    )
-  );
-
-create policy "growth business members can read notes"
-  on collection_notes for select
-  using (
-    business_id in (
-      select id from businesses where owner_user_id = auth.uid()
-      union
-      select business_id from business_members where user_id = auth.uid()
-    )
-  );
-
-create policy "growth business members can write notes"
-  on collection_notes for insert
-  with check (
-    business_id in (
-      select id from businesses where owner_user_id = auth.uid() and suite_tier = 'growth'
-      union
-      select business_id from business_members where user_id = auth.uid()
-    )
-  );
-
-create policy "growth business members can read audit log"
-  on credit_audit_log for select
-  using (
-    business_id in (
-      select id from businesses where owner_user_id = auth.uid()
-      union
-      select business_id from business_members where user_id = auth.uid()
-    )
-  );
-
-create policy "growth business members can write audit log"
-  on credit_audit_log for insert
-  with check (
-    business_id in (
-      select id from businesses where owner_user_id = auth.uid()
-      union
-      select business_id from business_members where user_id = auth.uid()
-    )
-  );
+create policy "credit_audit_log_business_access"
+  on credit_audit_log for all
+  using (is_business_owner(business_id) or is_business_member(business_id))
+  with check (is_business_owner(business_id) or is_business_member(business_id));
