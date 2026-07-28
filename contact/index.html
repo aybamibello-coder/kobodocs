@@ -133,7 +133,7 @@
 
   <div class="contact-panel">
     <h2>Other ways to reach us</h2>
-    <div class="contact-row"><span>Email</span><span><a href="mailto:hello@kobodocs.com.ng">hello@kobodocs.com.ng</a></span></div>
+    <div class="contact-row"><span>Email</span><span><a href="mailto:sales.avillonai@gmail.com">sales.avillonai@gmail.com</a></span></div>
     <div class="contact-row"><span>Based in</span><span>Lagos, Nigeria</span></div>
     <div class="contact-row"><span>Response time</span><span>Usually within 1–2 business days</span></div>
   </div>
@@ -197,7 +197,8 @@ document.getElementById('sendBtn').addEventListener('click', () => {
   }
 
   const body = `From: ${name || 'Not given'} (${email})\n\n${message}`;
-  window.location.href = `mailto:hello@kobodocs.com.ng?subject=${encodeURIComponent('[KoboDocs] ' + subject)}&body=${encodeURIComponent(body)}`;
+  const to = 'avillonmarketingagency@gmail.com,sales.avillonai@gmail.com';
+  window.location.href = `mailto:${to}?subject=${encodeURIComponent('[KoboDocs] ' + subject)}&body=${encodeURIComponent(body)}`;
   msgEl.textContent = 'Opening your email app…';
   msgEl.className = 'success';
 });
