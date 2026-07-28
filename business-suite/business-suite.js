@@ -83,18 +83,9 @@ function daysLeft(endDate) {
 KoboSubscribe.resumePendingIfAny();
 
 // ---------- Start trial button (default flow, before any state override above) ----------
-startBtn.addEventListener('click', async () => {
-  await new Promise(r => {
-    if (window.KoboAuth) return r();
-    window.addEventListener('kobo-auth-ready', r, { once: true });
-  });
-
+async function startTrial() {
   const session = await window.KoboAuth.getSession();
-  if (!session) {
-    showMsg('Create a free KoboDocs account first, then come back to start your trial.', 'error');
-    setTimeout(() => { window.location.href = '/account/'; }, 1800);
-    return;
-  }
+  if (!session) return; // shouldn't happen — callers only invoke this once a session exists
 
   startBtn.disabled = true;
   startBtn.textContent = 'Starting your trial…';
@@ -154,7 +145,44 @@ startBtn.addEventListener('click', async () => {
 
   showMsg(`Trial started! You have ${TRIAL_DAYS} days of full access.`, 'success');
   setTimeout(() => { window.location.href = '/business-suite/app/'; }, 1200);
+}
+
+startBtn.addEventListener('click', async () => {
+  await new Promise(r => {
+    if (window.KoboAuth) return r();
+    window.addEventListener('kobo-auth-ready', r, { once: true });
+  });
+
+  const session = await window.KoboAuth.getSession();
+  if (!session) {
+    // Preserve intent across signup — same pattern KoboSubscribe uses for
+    // paid checkouts — so the person lands back here and their trial starts
+    // automatically, instead of landing on the generic account dashboard.
+    sessionStorage.setItem('kobo_pending_trial_start', '1');
+    showMsg('Create a free KoboDocs account first — you\'ll come straight back here to start your trial.', 'error');
+    const currentUrl = window.location.pathname + window.location.search;
+    setTimeout(() => { window.location.href = `/account/?redirect=${encodeURIComponent(currentUrl)}`; }, 1400);
+    return;
+  }
+
+  await startTrial();
 });
+
+// If the person was bounced through signup/login mid-trial-start, resume
+// automatically the moment they land back here signed in.
+(async function resumePendingTrialIfAny() {
+  if (!sessionStorage.getItem('kobo_pending_trial_start')) return;
+
+  await new Promise(r => {
+    if (window.KoboAuth) return r();
+    window.addEventListener('kobo-auth-ready', r, { once: true });
+  });
+  const session = await window.KoboAuth.getSession();
+  if (!session) return;
+
+  sessionStorage.removeItem('kobo_pending_trial_start');
+  await startTrial();
+})();
 
 // ---------- Growth tier: pricing toggle + upgrade ----------
 const GROWTH_PRICE_MONTHLY = 28000;

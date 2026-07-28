@@ -55,6 +55,13 @@
     max-width:420px; margin:0 auto; background:var(--paper); border:2px solid var(--stamp-gold);
     border-radius:12px; padding:36px 30px; text-align:center;
   }
+  .bs-pricing-card.two-tier{ max-width:900px; }
+  .bs-tier-grid{ display:grid; grid-template-columns:1fr 1fr; gap:28px; text-align:left; }
+  .bs-tier-grid .growth-col{ border-left:1px dashed var(--line); padding-left:28px; }
+  @media (max-width:640px){
+    .bs-tier-grid{ grid-template-columns:1fr; gap:32px; }
+    .bs-tier-grid .growth-col{ border-left:none; padding-left:0; border-top:1px dashed var(--line); padding-top:28px; }
+  }
   .bs-pricing-card .plan-name{ font-family:'Space Mono', monospace; font-size:0.72rem; text-transform:uppercase; letter-spacing:0.08em; color:var(--stamp-gold); }
   .bs-pricing-card .price{ font-family:'Fraunces', serif; font-size:2.6rem; margin:14px 0 2px; }
   .bs-pricing-card .price small{ font-size:1rem; font-weight:500; opacity:0.6; }
@@ -184,13 +191,6 @@
     <div class="bs-feature"><h3>Lightweight bookkeeping</h3><p>Income auto-logged from paid invoices, expense entry with categories, and a profit snapshot by week or month.</p></div>
     <div class="bs-feature"><h3>Inventory tracking</h3><p>Stock levels, low-stock alerts, and restock logging — stock auto-deducts when you invoice a sale.</p></div>
   </div>
-
-  <div style="margin-top:32px; padding:20px 22px; background:var(--bone); border-radius:8px;">
-    <strong style="display:block; margin-bottom:8px; font-size:0.95rem;">On the roadmap</strong>
-    <p style="font-size:0.86rem; opacity:0.75; line-height:1.6; margin:0;">
-      Auto-generated recurring invoices, in-portal payment collection (Paystack and other rails), scheduled/automatic reminders, team invites for staff or a bookkeeper, multi-business switching, and exportable PDF/Excel reports are all in progress — not yet live.
-    </p>
-  </div>
 </section>
 
 <section class="bs-section">
@@ -223,8 +223,8 @@
   <h2>Two plans. Upgrade only if you need to.</h2>
   <p class="section-sub">Try Starter free for 21 days — no card required until you decide to continue.</p>
 
-  <div class="bs-pricing-card" style="max-width:900px;">
-    <div style="display:grid; grid-template-columns:1fr 1fr; gap:28px; text-align:left;">
+  <div class="bs-pricing-card two-tier">
+    <div class="bs-tier-grid">
       <div>
         <span class="plan-name">Starter</span>
         <div class="price" id="planPrice" style="font-size:2rem;">₦15,000 <small>/month</small></div>
@@ -243,7 +243,7 @@
         <button type="button" class="btn btn-primary" id="startTrialBtn" style="width:100%;">Start your 21-day free trial</button>
         <div id="trialMsg"></div>
       </div>
-      <div id="growth-upgrade" style="border-left:1px dashed var(--line); padding-left:28px;">
+      <div id="growth-upgrade" class="growth-col">
         <span class="plan-name" style="color:var(--ink-green-deep);">Growth</span>
         <div class="price" id="growthPlanPrice" style="font-size:2rem;">₦28,000 <small>/month</small></div>
         <div class="billing-toggle" style="justify-content:flex-start;">
