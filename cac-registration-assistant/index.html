@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Affidavit Generator Nigeria — Name Change, Age Declaration, Loss of Document | KoboDocs</title>
-<meta name="description" content="Generate a properly formatted Nigerian affidavit — name change, age declaration, loss of document, plus newspaper publication text. One pass, all four documents.">
+<title>CAC Business Name Registration Assistant Nigeria | KoboDocs</title>
+<meta name="description" content="Organize everything you need before registering a Business Name with CAC — proposed names, proprietor details, and a checklist that avoids the most common rejection reasons. Free.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Work+Sans:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
@@ -34,6 +34,21 @@
   .lock-overlay.show{ display:flex; }
   .lock-card{ background:var(--paper); border:2px solid var(--stamp-gold); border-radius:10px; padding:22px 20px; max-width:320px; box-shadow:0 10px 30px rgba(0,0,0,0.12); }
   .lock-card .price{ font-family:'Fraunces', serif; font-size:1.6rem; margin:8px 0; }
+  #formMsg{ font-size:0.85rem; margin-top:12px; padding:10px 12px; border-radius:4px; display:none; }
+  #formMsg.error{ display:block; background:rgba(168,52,42,0.08); color:var(--stamp-red); }
+  #formMsg.success{ display:block; background:rgba(199,154,60,0.12); color:var(--ink-green-deep); }
+</style>
+<style>
+  .checklist-panel, .warn-panel{ background:var(--paper); border:1px solid var(--line); border-radius:8px; padding:20px 22px; margin-bottom:22px; }
+  .checklist-panel h3, .warn-panel h3{ font-size:0.92rem; margin-bottom:10px; }
+  .checklist-item{ display:flex; gap:10px; align-items:flex-start; padding:6px 0; font-size:0.86rem; }
+  .checklist-item input{ margin-top:3px; }
+  .warn-panel{ border-color:var(--stamp-red); }
+  .warn-panel li{ font-size:0.86rem; opacity:0.85; margin-bottom:6px; line-height:1.5; }
+  .proprietor-block{ border:1px solid var(--line); border-radius:8px; padding:16px; margin-bottom:14px; position:relative; }
+  .proprietor-block .remove-proprietor{ position:absolute; top:10px; right:12px; background:none; border:none; color:var(--stamp-red); cursor:pointer; font-size:1.1rem; }
+  .inline-warning{ font-size:0.78rem; color:var(--stamp-red); margin-top:4px; display:none; }
+  .inline-warning.show{ display:block; }
   #formMsg{ font-size:0.85rem; margin-top:12px; padding:10px 12px; border-radius:4px; display:none; }
   #formMsg.error{ display:block; background:rgba(168,52,42,0.08); color:var(--stamp-red); }
   #formMsg.success{ display:block; background:rgba(199,154,60,0.12); color:var(--ink-green-deep); }
@@ -84,7 +99,6 @@
         <span class="nav-category">Legal &amp; Personal ▾</span>
         <div class="dropdown">
           <a href="/affidavit-generator/">Affidavit Generator</a>
-          <a href="/guarantor-form/">Guarantor's Form</a>
           <a href="/visa-cover-letter/">Visa Cover Letter</a>
           <a href="/land-sale-agreement/">Land Sale / Deed of Assignment</a>
           <a href="/nysc-documents/">NYSC Documents</a>
@@ -111,10 +125,12 @@
 </header>
 
 
+
 <section class="page-header">
   <div class="wrap">
-    <h1>Affidavit Generator</h1>
-    <p>Name change, age declaration, loss of document, and the newspaper publication text that goes with a name change — one pass covers all four.</p>
+    <h1>CAC Business Name Registration Assistant</h1>
+    <p>For sole proprietorships and partnerships. Organizes everything CAC needs — proposed names, proprietor details, business description — and flags the mistakes that cause the most rejections. Free.</p>
+    <p style="font-size:0.85rem; opacity:0.7; margin-top:10px;">Not sure what it'll cost first? See our <a href="/cac-calculator/">CAC registration cost calculator</a>.</p>
   </div>
 </section>
 
@@ -122,89 +138,68 @@
   <div class="wrap">
 
     <div class="form-panel">
-      <div class="field-group">
-        <label>Document type</label>
-        <div class="type-tabs" id="typeTabs">
-          <button type="button" class="active" data-type="name_change">Name Change</button>
-          <button type="button" data-type="age_declaration">Age Declaration</button>
-          <button type="button" data-type="loss_of_document">Loss of Document</button>
-          <button type="button" data-type="newspaper_text">Newspaper Text</button>
-        </div>
+
+      <div class="checklist-panel">
+        <h3>Have these ready before you start</h3>
+        <label class="checklist-item"><input type="checkbox">A recent passport photograph (clear, white background, no glare)</label>
+        <label class="checklist-item"><input type="checkbox">A scanned valid ID — NIN is mandatory; driver's license, voter's card, or international passport can support it</label>
+        <label class="checklist-item"><input type="checkbox">A scanned signature, signed on plain white paper</label>
+        <label class="checklist-item"><input type="checkbox">Two proposed business names, in order of preference</label>
+        <label class="checklist-item"><input type="checkbox">A physical business address (not a P.O. Box) — a recent utility bill helps if asked</label>
       </div>
 
-      <div class="field-row">
-        <div class="field-group"><label for="deponentName">Your full name (as deponent)</label><input type="text" id="deponentName" placeholder="Adaeze Chioma Okafor"></div>
-        <div class="field-group"><label for="gender">Gender</label>
-          <select id="gender"><option>Female</option><option>Male</option></select>
-        </div>
-      </div>
-      <div class="field-row">
-        <div class="field-group"><label for="occupation">Occupation</label><input type="text" id="occupation" placeholder="Trader"></div>
-        <div class="field-group"><label for="state">Court / State</label><input type="text" id="state" placeholder="Lagos State"></div>
+      <div class="field-group">
+        <label for="propName1">Proposed name 1</label>
+        <input type="text" id="propName1" placeholder="Adaeze Fashion House">
       </div>
       <div class="field-group">
-        <label for="address">Address</label>
-        <input type="text" id="address" placeholder="No. 12 Adeola Street, Ikeja, Lagos">
+        <label for="propName2">Proposed name 2 (backup)</label>
+        <input type="text" id="propName2" placeholder="Adaeze Couture Studio">
       </div>
+      <p style="font-size:0.78rem; opacity:0.6; margin-top:-10px; margin-bottom:18px;">Avoid restricted words (e.g. "Federal", "National", "Nigeria") unless you're authorized to use them, and avoid names that are too generic or too close to an existing registered name.</p>
+
       <div class="field-group">
-        <label for="affDate">Date</label>
-        <input type="date" id="affDate">
+        <label for="natureOfBusiness">Nature of business</label>
+        <textarea id="natureOfBusiness" rows="2" placeholder="e.g. Design, manufacture and retail sale of women's clothing and accessories"></textarea>
+        <p style="font-size:0.78rem; opacity:0.6; margin-top:4px;">Be specific — "trading" or "business" alone is a common reason for a query/delay.</p>
       </div>
 
-      <div class="aff-fields active" data-fields="name_change">
-        <div class="field-row">
-          <div class="field-group"><label for="formerName">Former name</label><input type="text" id="formerName" placeholder="Adaeze Chioma Nwosu"></div>
-          <div class="field-group"><label for="newName">New name</label><input type="text" id="newName" placeholder="Adaeze Chioma Okafor"></div>
-        </div>
-        <div class="field-group">
-          <label for="nameChangeReason">Reason (optional)</label>
-          <input type="text" id="nameChangeReason" placeholder="e.g. Following marriage">
-        </div>
+      <div class="field-group">
+        <label for="businessAddress">Business address</label>
+        <input type="text" id="businessAddress" placeholder="No. 12 Adeola Street, Ikeja, Lagos">
+        <div class="inline-warning" id="poBoxWarning">CAC requires a physical address — a P.O. Box won't be accepted.</div>
       </div>
 
-      <div class="aff-fields" data-fields="age_declaration">
-        <div class="field-group"><label for="declaredDob">Declared date of birth</label><input type="date" id="declaredDob"></div>
-        <div class="field-group">
-          <label for="ageSource">Source of knowledge</label>
-          <textarea id="ageSource" rows="2" placeholder="e.g. In the absence of a birth certificate, based on information given to me by my parents"></textarea>
-        </div>
-      </div>
+      <div id="proprietorsWrap"></div>
+      <button type="button" class="add-item-btn" id="addProprietorBtn" style="margin-bottom:20px;">+ Add another proprietor (for a partnership)</button>
 
-      <div class="aff-fields" data-fields="loss_of_document">
-        <div class="field-row">
-          <div class="field-group"><label for="lostDocType">Document lost</label><input type="text" id="lostDocType" placeholder="WAEC Certificate"></div>
-          <div class="field-group"><label for="lostDate">Date lost</label><input type="date" id="lostDate"></div>
-        </div>
-        <div class="field-group"><label for="lostPlace">Place lost</label><input type="text" id="lostPlace" placeholder="Along Allen Avenue, Ikeja"></div>
-        <div class="field-group">
-          <label for="lostCircumstances">Circumstances</label>
-          <textarea id="lostCircumstances" rows="2" placeholder="e.g. My bag was stolen while boarding a bus"></textarea>
-        </div>
-        <div class="field-group"><label for="policeRef">Police report reference (optional)</label><input type="text" id="policeRef" placeholder="e.g. CR: 234/2026"></div>
-      </div>
-
-      <div class="aff-fields" data-fields="newspaper_text">
-        <p style="font-size:0.82rem; opacity:0.6; margin-bottom:10px;">Uses the same former/new name entered under Name Change above.</p>
+      <div class="warn-panel">
+        <h3>Common reasons applications get queried or rejected</h3>
+        <ul>
+          <li>The name on the application doesn't exactly match the name on the ID provided.</li>
+          <li>Business description is too vague (e.g. just "business" or "trading").</li>
+          <li>A P.O. Box given instead of a physical address.</li>
+          <li>Expired ID, or a blurry/cropped scan.</li>
+          <li>Proprietor is under 18 with no adult co-proprietor.</li>
+        </ul>
       </div>
 
       <div class="action-row">
-        <button type="button" class="btn btn-primary" id="downloadPdfBtn">Download PDF</button>
+        <button type="button" class="btn btn-primary" id="downloadBriefBtn">Download registration brief (PDF)</button>
         <button type="button" class="btn btn-ghost" id="waBtn" style="border-color:var(--line); color:var(--ink-green-deep);">Share on WhatsApp</button>
       </div>
       <div id="formMsg"></div>
     </div>
 
     <div class="preview-panel">
-      <div class="aff-doc" id="affDoc">
-        <div class="aff-content" id="affContent"></div>
-        <div class="lock-overlay" id="lockOverlay">
-          <div class="lock-card">
-            <span style="font-family:'Space Mono', monospace; font-size:0.7rem; text-transform:uppercase; color:var(--stamp-gold);">Premium tool</span>
-            <div class="price">₦1,500 <small style="font-size:0.9rem; opacity:0.6;">one-time</small></div>
-            <p style="font-size:0.85rem; opacity:0.75; margin:10px 0 14px;">One pass unlocks all 4 document types — name change, age declaration, loss of document, and newspaper text — forever.</p>
-            <button type="button" class="btn btn-primary" id="buyPassBtn" style="width:100%;">Unlock for ₦1,500</button>
+      <div class="doc-preview" id="docPreview" style="min-height:420px;">
+        <div class="doc-head">
+          <div>
+            <div class="biz">Business Name Registration Brief</div>
+            <div class="biz-sub" id="pDate"></div>
           </div>
         </div>
+        <div id="previewBody" style="font-size:0.88rem; line-height:1.7;"></div>
       </div>
     </div>
 
@@ -213,8 +208,9 @@
 
 <section class="bs-section" style="max-width:720px; margin:0 auto; padding:20px 20px 80px;">
   <h2 style="font-size:1.2rem; margin-bottom:10px;">What this is — and isn't</h2>
-  <p style="font-size:0.9rem; opacity:0.75; line-height:1.7;">This generates a properly formatted draft affidavit in the standard Nigerian format. You'll still need to swear it before a Commissioner for Oaths at a High Court registry or notary — this tool prepares the document, it doesn't replace that step.</p>
-  <p style="font-size:0.78rem; opacity:0.5; margin-top:14px;">This is a drafting aid, not legal advice. For anything with significant consequences, have a lawyer review the final document.</p>
+  <p style="font-size:0.9rem; opacity:0.75; line-height:1.7;">This organizes what CAC's Business Name registration needs into one clean brief, and flags the mistakes that most often cause delays or queries — it doesn't file anything with CAC on your own behalf, and it doesn't check live name availability. Submit your application directly on the <a href="https://cac.gov.ng" target="_blank" rel="noopener">official CAC portal</a>, using this as your reference while you fill it in.</p>
+  <p style="font-size:0.9rem; opacity:0.75; line-height:1.7; margin-top:12px;">Registering a Limited Company instead of a Business Name? CAC requires your Memorandum &amp; Articles of Association to be prepared by a licensed legal practitioner — that's not something we (or any non-lawyer tool) can generate for you. We're working on a post-incorporation toolkit for the paperwork you'll need right after you're registered — Board Resolutions, share certificates, and statutory registers.</p>
+  <p style="font-size:0.78rem; opacity:0.5; margin-top:14px;">This is a planning aid, not legal advice. Confirm current requirements on CAC's official portal before submitting.</p>
 </section>
 
 <footer>
@@ -262,6 +258,6 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
 <script src="/assets/export.js" defer></script>
-<script src="/affidavit-generator/affidavit-generator.js" defer></script>
+<script src="/cac-registration-assistant/cac-registration-assistant.js" defer></script>
 </body>
 </html>
