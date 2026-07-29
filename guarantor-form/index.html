@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Affidavit Generator Nigeria — Name Change, Age Declaration, Loss of Document | KoboDocs</title>
-<meta name="description" content="Generate a properly formatted Nigerian affidavit — name change, age declaration, loss of document, plus newspaper publication text. One pass, all four documents.">
+<title>Guarantor's Form Generator Nigeria — Rent, Job, School &amp; Loan | KoboDocs</title>
+<meta name="description" content="Generate a Guarantor's Form for rent, a job, school/hostel admission, or a personal loan — free for your first document, with a better form-style Pro template after.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Work+Sans:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
@@ -34,6 +34,34 @@
   .lock-overlay.show{ display:flex; }
   .lock-card{ background:var(--paper); border:2px solid var(--stamp-gold); border-radius:10px; padding:22px 20px; max-width:320px; box-shadow:0 10px 30px rgba(0,0,0,0.12); }
   .lock-card .price{ font-family:'Fraunces', serif; font-size:1.6rem; margin:8px 0; }
+  #formMsg{ font-size:0.85rem; margin-top:12px; padding:10px 12px; border-radius:4px; display:none; }
+  #formMsg.error{ display:block; background:rgba(168,52,42,0.08); color:var(--stamp-red); }
+  #formMsg.success{ display:block; background:rgba(199,154,60,0.12); color:var(--ink-green-deep); }
+</style>
+<style>
+  .type-tabs{ display:flex; flex-wrap:wrap; gap:8px; margin-bottom:20px; }
+  .type-tabs button{ font-size:0.82rem; border:1px solid var(--line); background:none; border-radius:20px; padding:6px 14px; cursor:pointer; }
+  .type-tabs button.active{ background:var(--ink-green-deep); color:var(--paper); border-color:var(--ink-green-deep); }
+  .g-fields{ display:none; }
+  .g-fields.active{ display:block; }
+  .g-doc{
+    background:var(--paper); border:1px solid var(--line); border-radius:4px;
+    padding:36px 32px; min-height:420px; font-size:0.9rem; line-height:1.7; position:relative;
+  }
+  .g-content.locked{ filter:blur(5px); user-select:none; pointer-events:none; }
+  .g-title{ text-align:center; font-weight:700; text-transform:uppercase; letter-spacing:0.04em; margin-bottom:6px; }
+  .g-sub{ text-align:center; font-size:0.8rem; opacity:0.65; margin-bottom:24px; }
+  .g-clause{ margin-bottom:12px; }
+  .g-sign-row{ display:flex; justify-content:space-between; margin-top:36px; gap:30px; }
+  .g-sign-block{ flex:1; border-top:1px solid var(--charcoal); padding-top:6px; font-size:0.78rem; opacity:0.7; text-align:center; }
+  .lock-overlay{
+    position:absolute; inset:0; display:none; align-items:center; justify-content:center;
+    flex-direction:column; gap:14px; text-align:center; padding:20px; background:rgba(253,250,243,0.4);
+  }
+  .lock-overlay.show{ display:flex; }
+  .lock-card{ background:var(--paper); border:2px solid var(--stamp-gold); border-radius:10px; padding:22px 20px; max-width:320px; box-shadow:0 10px 30px rgba(0,0,0,0.12); }
+  .lock-card .price{ font-family:'Fraunces', serif; font-size:1.6rem; margin:8px 0; }
+  .free-note{ font-size:0.78rem; opacity:0.6; margin-top:8px; }
   #formMsg{ font-size:0.85rem; margin-top:12px; padding:10px 12px; border-radius:4px; display:none; }
   #formMsg.error{ display:block; background:rgba(168,52,42,0.08); color:var(--stamp-red); }
   #formMsg.success{ display:block; background:rgba(199,154,60,0.12); color:var(--ink-green-deep); }
@@ -110,10 +138,11 @@
 </header>
 
 
+
 <section class="page-header">
   <div class="wrap">
-    <h1>Affidavit Generator</h1>
-    <p>Name change, age declaration, loss of document, and the newspaper publication text that goes with a name change — one pass covers all four.</p>
+    <h1>Guarantor's Form Generator</h1>
+    <p>For rent, a new job, school or hostel admission, or a personal loan. Your first document is free — a better form-style template unlocks after with one ₦1,500 pass.</p>
   </div>
 </section>
 
@@ -122,68 +151,79 @@
 
     <div class="form-panel">
       <div class="field-group">
-        <label>Document type</label>
+        <label>What is this guarantee for?</label>
         <div class="type-tabs" id="typeTabs">
-          <button type="button" class="active" data-type="name_change">Name Change</button>
-          <button type="button" data-type="age_declaration">Age Declaration</button>
-          <button type="button" data-type="loss_of_document">Loss of Document</button>
-          <button type="button" data-type="newspaper_text">Newspaper Text</button>
+          <button type="button" class="active" data-type="rent">Rent / Tenancy</button>
+          <button type="button" data-type="employment">A Job</button>
+          <button type="button" data-type="school">School / Hostel</button>
+          <button type="button" data-type="loan">Personal Loan</button>
+          <button type="button" data-type="custom">Other</button>
         </div>
+      </div>
+
+      <p style="font-size:0.82rem; opacity:0.6; margin:-8px 0 18px;">Requirements vary by landlord, employer, or institution — check theirs before submitting.</p>
+
+      <div class="field-row">
+        <div class="field-group"><label for="guarantorName">Guarantor's full name</label><input type="text" id="guarantorName" placeholder="Chukwuemeka Obi"></div>
+        <div class="field-group"><label for="guarantorOccupation">Guarantor's occupation</label><input type="text" id="guarantorOccupation" placeholder="Civil Servant"></div>
+      </div>
+      <div class="field-group">
+        <label for="guarantorAddress">Guarantor's address</label>
+        <input type="text" id="guarantorAddress" placeholder="No. 4 Adeyemi Street, Surulere, Lagos">
+      </div>
+      <div class="field-row">
+        <div class="field-group"><label for="guarantorPhone">Guarantor's phone number</label><input type="text" id="guarantorPhone" placeholder="0803 000 0000"></div>
+        <div class="field-group"><label for="gDate">Date</label><input type="date" id="gDate"></div>
       </div>
 
       <div class="field-row">
-        <div class="field-group"><label for="deponentName">Your full name (as deponent)</label><input type="text" id="deponentName" placeholder="Adaeze Chioma Okafor"></div>
-        <div class="field-group"><label for="gender">Gender</label>
-          <select id="gender"><option>Female</option><option>Male</option></select>
-        </div>
-      </div>
-      <div class="field-row">
-        <div class="field-group"><label for="occupation">Occupation</label><input type="text" id="occupation" placeholder="Trader"></div>
-        <div class="field-group"><label for="state">Court / State</label><input type="text" id="state" placeholder="Lagos State"></div>
+        <div class="field-group"><label for="applicantName">Applicant's full name (the person being guaranteed)</label><input type="text" id="applicantName" placeholder="Ifeoma Nwachukwu"></div>
+        <div class="field-group"><label for="relationship">Relationship to applicant</label><input type="text" id="relationship" placeholder="Uncle"></div>
       </div>
       <div class="field-group">
-        <label for="address">Address</label>
-        <input type="text" id="address" placeholder="No. 12 Adeola Street, Ikeja, Lagos">
-      </div>
-      <div class="field-group">
-        <label for="affDate">Date</label>
-        <input type="date" id="affDate">
+        <label for="yearsKnown">Number of years known</label>
+        <input type="text" id="yearsKnown" placeholder="8">
       </div>
 
-      <div class="aff-fields active" data-fields="name_change">
+      <div class="g-fields active" data-fields="rent">
+        <div class="field-group"><label for="propertyAddress">Property address</label><input type="text" id="propertyAddress" placeholder="Flat 3, No. 15 Allen Avenue, Ikeja, Lagos"></div>
+        <div class="field-group"><label for="landlordName">Landlord / Agent name</label><input type="text" id="landlordName" placeholder="Mr. Bolaji Adeyemi"></div>
+      </div>
+
+      <div class="g-fields" data-fields="employment">
         <div class="field-row">
-          <div class="field-group"><label for="formerName">Former name</label><input type="text" id="formerName" placeholder="Adaeze Chioma Nwosu"></div>
-          <div class="field-group"><label for="newName">New name</label><input type="text" id="newName" placeholder="Adaeze Chioma Okafor"></div>
+          <div class="field-group"><label for="employerName">Employer name</label><input type="text" id="employerName" placeholder="Zenith Logistics Ltd"></div>
+          <div class="field-group"><label for="positionApplied">Position</label><input type="text" id="positionApplied" placeholder="Driver"></div>
         </div>
-        <div class="field-group">
-          <label for="nameChangeReason">Reason (optional)</label>
-          <input type="text" id="nameChangeReason" placeholder="e.g. Following marriage">
-        </div>
+        <div class="field-group"><label for="guarantorEmployer">Guarantor's own employer / place of work</label><input type="text" id="guarantorEmployer" placeholder="Lagos State Ministry of Works"></div>
       </div>
 
-      <div class="aff-fields" data-fields="age_declaration">
-        <div class="field-group"><label for="declaredDob">Declared date of birth</label><input type="date" id="declaredDob"></div>
-        <div class="field-group">
-          <label for="ageSource">Source of knowledge</label>
-          <textarea id="ageSource" rows="2" placeholder="e.g. In the absence of a birth certificate, based on information given to me by my parents"></textarea>
-        </div>
-      </div>
-
-      <div class="aff-fields" data-fields="loss_of_document">
+      <div class="g-fields" data-fields="school">
         <div class="field-row">
-          <div class="field-group"><label for="lostDocType">Document lost</label><input type="text" id="lostDocType" placeholder="WAEC Certificate"></div>
-          <div class="field-group"><label for="lostDate">Date lost</label><input type="date" id="lostDate"></div>
+          <div class="field-group"><label for="institutionName">Institution name</label><input type="text" id="institutionName" placeholder="University of Lagos"></div>
+          <div class="field-group"><label for="courseClass">Course / Class</label><input type="text" id="courseClass" placeholder="Hostel accommodation, 200 Level"></div>
         </div>
-        <div class="field-group"><label for="lostPlace">Place lost</label><input type="text" id="lostPlace" placeholder="Along Allen Avenue, Ikeja"></div>
-        <div class="field-group">
-          <label for="lostCircumstances">Circumstances</label>
-          <textarea id="lostCircumstances" rows="2" placeholder="e.g. My bag was stolen while boarding a bus"></textarea>
-        </div>
-        <div class="field-group"><label for="policeRef">Police report reference (optional)</label><input type="text" id="policeRef" placeholder="e.g. CR: 234/2026"></div>
       </div>
 
-      <div class="aff-fields" data-fields="newspaper_text">
-        <p style="font-size:0.82rem; opacity:0.6; margin-bottom:10px;">Uses the same former/new name entered under Name Change above.</p>
+      <div class="g-fields" data-fields="loan">
+        <div class="field-row">
+          <div class="field-group"><label for="loanAmount">Loan amount (₦)</label><input type="number" id="loanAmount" placeholder="200000"></div>
+          <div class="field-group"><label for="lenderName">Lender name</label><input type="text" id="lenderName" placeholder="First Cooperative Society"></div>
+        </div>
+        <div class="field-group"><label for="repaymentPeriod">Repayment period</label><input type="text" id="repaymentPeriod" placeholder="12 months"></div>
+      </div>
+
+      <div class="g-fields" data-fields="custom">
+        <div class="field-group"><label for="customPurpose">What is this for?</label><input type="text" id="customPurpose" placeholder="e.g. Visa sponsorship, club membership"></div>
+        <div class="field-group"><label for="customContext">Additional context (optional)</label><textarea id="customContext" rows="2" placeholder="Any extra detail the requesting party needs"></textarea></div>
+      </div>
+
+      <div class="field-group pro-only" id="witnessGroup" style="display:none;">
+        <label>Witness (Pro)</label>
+        <div class="field-row">
+          <div class="field-group"><label for="witnessName">Witness name</label><input type="text" id="witnessName" placeholder="Optional"></div>
+          <div class="field-group"><label for="witnessAddress">Witness address</label><input type="text" id="witnessAddress" placeholder="Optional"></div>
+        </div>
       </div>
 
       <div class="action-row">
@@ -191,16 +231,17 @@
         <button type="button" class="btn btn-ghost" id="waBtn" style="border-color:var(--line); color:var(--ink-green-deep);">Share on WhatsApp</button>
       </div>
       <div id="formMsg"></div>
+      <p class="free-note" id="freeNote">Your first document is free — no account needed.</p>
     </div>
 
     <div class="preview-panel">
-      <div class="aff-doc" id="affDoc">
-        <div class="aff-content" id="affContent"></div>
+      <div class="g-doc" id="gDoc">
+        <div class="g-content" id="gContent"></div>
         <div class="lock-overlay" id="lockOverlay">
           <div class="lock-card">
-            <span style="font-family:'Space Mono', monospace; font-size:0.7rem; text-transform:uppercase; color:var(--stamp-gold);">Premium tool</span>
+            <span style="font-family:'Space Mono', monospace; font-size:0.7rem; text-transform:uppercase; color:var(--stamp-gold);">Pro template</span>
             <div class="price">₦1,500 <small style="font-size:0.9rem; opacity:0.6;">one-time</small></div>
-            <p style="font-size:0.85rem; opacity:0.75; margin:10px 0 14px;">One pass unlocks all 4 document types — name change, age declaration, loss of document, and newspaper text — forever.</p>
+            <p style="font-size:0.85rem; opacity:0.75; margin:10px 0 14px;">You've used your free document. One pass unlocks the form-style Pro template — with a witness section and passport-photo box — unlimited, forever.</p>
             <button type="button" class="btn btn-primary" id="buyPassBtn" style="width:100%;">Unlock for ₦1,500</button>
           </div>
         </div>
@@ -212,8 +253,8 @@
 
 <section class="bs-section" style="max-width:720px; margin:0 auto; padding:20px 20px 80px;">
   <h2 style="font-size:1.2rem; margin-bottom:10px;">What this is — and isn't</h2>
-  <p style="font-size:0.9rem; opacity:0.75; line-height:1.7;">This generates a properly formatted draft affidavit in the standard Nigerian format. You'll still need to swear it before a Commissioner for Oaths at a High Court registry or notary — this tool prepares the document, it doesn't replace that step.</p>
-  <p style="font-size:0.78rem; opacity:0.5; margin-top:14px;">This is a drafting aid, not legal advice. For anything with significant consequences, have a lawyer review the final document.</p>
+  <p style="font-size:0.9rem; opacity:0.75; line-height:1.7;">This generates a properly worded guarantor's declaration for the situation you select. Requirements differ by landlord, employer, or institution — some ask for a civil servant specifically, a passport photograph, or a witnessed signature. Check what's specifically required before submitting, and have the guarantor sign in front of the relevant party or a notary where that's expected.</p>
+  <p style="font-size:0.78rem; opacity:0.5; margin-top:14px;">This is a drafting aid, not legal advice.</p>
 </section>
 
 <footer>
@@ -261,6 +302,6 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
 <script src="/assets/export.js" defer></script>
-<script src="/affidavit-generator/affidavit-generator.js" defer></script>
+<script src="/guarantor-form/guarantor-form.js" defer></script>
 </body>
 </html>
