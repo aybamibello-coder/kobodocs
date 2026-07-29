@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Guarantor's Form Generator Nigeria — Rent, Job, School &amp; Loan | KoboDocs</title>
-<meta name="description" content="Generate a Guarantor's Form for rent, a job, school/hostel admission, or a personal loan — free for your first document, with a better form-style Pro template after.">
+<title>Post-Incorporation Document Pack Nigeria — Board Resolution, Share Certificate, Statutory Registers | KoboDocs</title>
+<meta name="description" content="The paperwork every newly registered Nigerian company needs right after incorporation — Board Resolution to open a bank account, Share Certificates, and statutory registers. One pass, all four.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Work+Sans:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
@@ -39,29 +39,21 @@
   #formMsg.success{ display:block; background:rgba(199,154,60,0.12); color:var(--ink-green-deep); }
 </style>
 <style>
-  .type-tabs{ display:flex; flex-wrap:wrap; gap:8px; margin-bottom:20px; }
-  .type-tabs button{ font-size:0.82rem; border:1px solid var(--line); background:none; border-radius:20px; padding:6px 14px; cursor:pointer; }
-  .type-tabs button.active{ background:var(--ink-green-deep); color:var(--paper); border-color:var(--ink-green-deep); }
-  .g-fields{ display:none; }
-  .g-fields.active{ display:block; }
-  .g-doc{
-    background:var(--paper); border:1px solid var(--line); border-radius:4px;
-    padding:36px 32px; min-height:420px; font-size:0.9rem; line-height:1.7; position:relative;
-  }
-  .g-content.locked{ filter:blur(5px); user-select:none; pointer-events:none; }
-  .g-title{ text-align:center; font-weight:700; text-transform:uppercase; letter-spacing:0.04em; margin-bottom:6px; }
-  .g-sub{ text-align:center; font-size:0.8rem; opacity:0.65; margin-bottom:24px; }
-  .g-clause{ margin-bottom:12px; }
-  .g-sign-row{ display:flex; justify-content:space-between; margin-top:36px; gap:30px; }
-  .g-sign-block{ flex:1; border-top:1px solid var(--charcoal); padding-top:6px; font-size:0.78rem; opacity:0.7; text-align:center; }
+  .aff-content.locked{ filter:blur(5px); user-select:none; pointer-events:none; }
   .lock-overlay{
     position:absolute; inset:0; display:none; align-items:center; justify-content:center;
     flex-direction:column; gap:14px; text-align:center; padding:20px; background:rgba(253,250,243,0.4);
   }
   .lock-overlay.show{ display:flex; }
-  .lock-card{ background:var(--paper); border:2px solid var(--stamp-gold); border-radius:10px; padding:22px 20px; max-width:320px; box-shadow:0 10px 30px rgba(0,0,0,0.12); }
-  .lock-card .price{ font-family:'Fraunces', serif; font-size:1.6rem; margin:8px 0; }
-  .free-note{ font-size:0.78rem; opacity:0.6; margin-top:8px; }
+  .lock-card{ background:var(--paper); border:2px solid var(--stamp-gold); border-radius:10px; padding:22px 20px; max-width:340px; box-shadow:0 10px 30px rgba(0,0,0,0.12); }
+  .lock-card .price{ font-family:'Fraunces', serif; font-size:1.8rem; margin:8px 0; }
+  .doc-tabs{ display:flex; flex-wrap:wrap; gap:8px; margin-bottom:20px; }
+  .doc-tabs button{ font-size:0.82rem; border:1px solid var(--line); background:none; border-radius:20px; padding:6px 14px; cursor:pointer; }
+  .doc-tabs button.active{ background:var(--ink-green-deep); color:var(--paper); border-color:var(--ink-green-deep); }
+  .d-fields{ display:none; }
+  .d-fields.active{ display:block; }
+  .repeat-row{ border:1px solid var(--line); border-radius:8px; padding:14px; margin-bottom:10px; position:relative; }
+  .repeat-row .remove-row{ position:absolute; top:8px; right:10px; background:none; border:none; color:var(--stamp-red); cursor:pointer; font-size:1.1rem; }
   #formMsg{ font-size:0.85rem; margin-top:12px; padding:10px 12px; border-radius:4px; display:none; }
   #formMsg.error{ display:block; background:rgba(168,52,42,0.08); color:var(--stamp-red); }
   #formMsg.success{ display:block; background:rgba(199,154,60,0.12); color:var(--ink-green-deep); }
@@ -125,6 +117,7 @@
           <a href="/relocation/japa-calculator/">Japa Cost Calculator</a>
           <a href="/relocation/proof-of-funds/">Proof of Funds Calculator</a>
           <a href="/relocation/cost-of-living/">Cost of Living Calculator</a>
+          <a href="/visa-cover-letter/">Visa Cover Letter Generator</a>
           <div class="dropdown-divider"></div>
           <a href="/cac-calculator/">CAC Registration Cost</a>
           <a href="/cac-registration-assistant/">CAC Registration Assistant</a>
@@ -143,8 +136,8 @@
 
 <section class="page-header">
   <div class="wrap">
-    <h1>Guarantor's Form Generator</h1>
-    <p>For rent, a new job, school or hostel admission, or a personal loan. Your first document is free — a better form-style template unlocks after with one ₦1,500 pass.</p>
+    <h1>Post-Incorporation Document Pack</h1>
+    <p>The paperwork every newly registered Nigerian company needs right after CAC incorporation — a Board Resolution to open a corporate bank account, Share Certificates, and the statutory registers you're required to keep. One pass, all four document types.</p>
   </div>
 </section>
 
@@ -153,79 +146,69 @@
 
     <div class="form-panel">
       <div class="field-group">
-        <label>What is this guarantee for?</label>
-        <div class="type-tabs" id="typeTabs">
-          <button type="button" class="active" data-type="rent">Rent / Tenancy</button>
-          <button type="button" data-type="employment">A Job</button>
-          <button type="button" data-type="school">School / Hostel</button>
-          <button type="button" data-type="loan">Personal Loan</button>
-          <button type="button" data-type="custom">Other</button>
+        <label>Document type</label>
+        <div class="doc-tabs" id="docTabs">
+          <button type="button" class="active" data-type="resolution">Board Resolution</button>
+          <button type="button" data-type="certificate">Share Certificate</button>
+          <button type="button" data-type="members">Register of Members</button>
+          <button type="button" data-type="directors">Register of Directors</button>
         </div>
       </div>
 
-      <p style="font-size:0.82rem; opacity:0.6; margin:-8px 0 18px;">Requirements vary by landlord, employer, or institution — check theirs before submitting.</p>
-
       <div class="field-row">
-        <div class="field-group"><label for="guarantorName">Guarantor's full name</label><input type="text" id="guarantorName" placeholder="Chukwuemeka Obi"></div>
-        <div class="field-group"><label for="guarantorOccupation">Guarantor's occupation</label><input type="text" id="guarantorOccupation" placeholder="Civil Servant"></div>
+        <div class="field-group"><label for="companyName">Company name</label><input type="text" id="companyName" placeholder="Adaeze Fashion House Limited"></div>
+        <div class="field-group"><label for="rcNumber">RC number</label><input type="text" id="rcNumber" placeholder="RC 1234567"></div>
       </div>
       <div class="field-group">
-        <label for="guarantorAddress">Guarantor's address</label>
-        <input type="text" id="guarantorAddress" placeholder="No. 4 Adeyemi Street, Surulere, Lagos">
-      </div>
-      <div class="field-row">
-        <div class="field-group"><label for="guarantorPhone">Guarantor's phone number</label><input type="text" id="guarantorPhone" placeholder="0803 000 0000"></div>
-        <div class="field-group"><label for="gDate">Date</label><input type="date" id="gDate"></div>
+        <label for="registeredAddress">Registered office address</label>
+        <input type="text" id="registeredAddress" placeholder="No. 12 Adeola Street, Ikeja, Lagos">
       </div>
 
-      <div class="field-row">
-        <div class="field-group"><label for="applicantName">Applicant's full name (the person being guaranteed)</label><input type="text" id="applicantName" placeholder="Ifeoma Nwachukwu"></div>
-        <div class="field-group"><label for="relationship">Relationship to applicant</label><input type="text" id="relationship" placeholder="Uncle"></div>
-      </div>
-      <div class="field-group">
-        <label for="yearsKnown">Number of years known</label>
-        <input type="text" id="yearsKnown" placeholder="8">
-      </div>
-
-      <div class="g-fields active" data-fields="rent">
-        <div class="field-group"><label for="propertyAddress">Property address</label><input type="text" id="propertyAddress" placeholder="Flat 3, No. 15 Allen Avenue, Ikeja, Lagos"></div>
-        <div class="field-group"><label for="landlordName">Landlord / Agent name</label><input type="text" id="landlordName" placeholder="Mr. Bolaji Adeyemi"></div>
-      </div>
-
-      <div class="g-fields" data-fields="employment">
+      <div class="d-fields active" data-fields="resolution">
         <div class="field-row">
-          <div class="field-group"><label for="employerName">Employer name</label><input type="text" id="employerName" placeholder="Zenith Logistics Ltd"></div>
-          <div class="field-group"><label for="positionApplied">Position</label><input type="text" id="positionApplied" placeholder="Driver"></div>
+          <div class="field-group"><label for="meetingDate">Date of meeting</label><input type="date" id="meetingDate"></div>
+          <div class="field-group"><label for="bankName">Bank name</label><input type="text" id="bankName" placeholder="Zenith Bank Plc"></div>
         </div>
-        <div class="field-group"><label for="guarantorEmployer">Guarantor's own employer / place of work</label><input type="text" id="guarantorEmployer" placeholder="Lagos State Ministry of Works"></div>
+        <div class="field-group">
+          <label for="signingMandate">Signing mandate</label>
+          <select id="signingMandate">
+            <option>Any one signatory</option>
+            <option>Any two signatories jointly</option>
+            <option>All signatories jointly</option>
+          </select>
+        </div>
+        <div id="signatoriesWrap"></div>
+        <button type="button" class="add-item-btn" id="addSignatoryBtn" style="margin-bottom:20px;">+ Add signatory</button>
       </div>
 
-      <div class="g-fields" data-fields="school">
+      <div class="d-fields" data-fields="certificate">
         <div class="field-row">
-          <div class="field-group"><label for="institutionName">Institution name</label><input type="text" id="institutionName" placeholder="University of Lagos"></div>
-          <div class="field-group"><label for="courseClass">Course / Class</label><input type="text" id="courseClass" placeholder="Hostel accommodation, 200 Level"></div>
+          <div class="field-group"><label for="certNumber">Certificate number</label><input type="text" id="certNumber" placeholder="001"></div>
+          <div class="field-group"><label for="certDate">Date of issue</label><input type="date" id="certDate"></div>
         </div>
-      </div>
-
-      <div class="g-fields" data-fields="loan">
+        <div class="field-group"><label for="shareholderName">Shareholder name</label><input type="text" id="shareholderName" placeholder="Chinedu Eze"></div>
+        <div class="field-group"><label for="shareholderAddress">Shareholder address</label><input type="text" id="shareholderAddress" placeholder="No. 8 Marina Road, Lagos"></div>
         <div class="field-row">
-          <div class="field-group"><label for="loanAmount">Loan amount (₦)</label><input type="number" id="loanAmount" placeholder="200000"></div>
-          <div class="field-group"><label for="lenderName">Lender name</label><input type="text" id="lenderName" placeholder="First Cooperative Society"></div>
+          <div class="field-group"><label for="numShares">Number of shares</label><input type="number" id="numShares" placeholder="1000"></div>
+          <div class="field-group"><label for="shareClass">Class of shares</label>
+            <select id="shareClass"><option>Ordinary</option><option>Preference</option></select>
+          </div>
         </div>
-        <div class="field-group"><label for="repaymentPeriod">Repayment period</label><input type="text" id="repaymentPeriod" placeholder="12 months"></div>
-      </div>
-
-      <div class="g-fields" data-fields="custom">
-        <div class="field-group"><label for="customPurpose">What is this for?</label><input type="text" id="customPurpose" placeholder="e.g. Visa sponsorship, club membership"></div>
-        <div class="field-group"><label for="customContext">Additional context (optional)</label><textarea id="customContext" rows="2" placeholder="Any extra detail the requesting party needs"></textarea></div>
-      </div>
-
-      <div class="field-group pro-only" id="witnessGroup" style="display:none;">
-        <label>Witness (Pro)</label>
+        <div class="field-group"><label for="amountPaid">Amount paid per share (₦)</label><input type="number" id="amountPaid" placeholder="100"></div>
         <div class="field-row">
-          <div class="field-group"><label for="witnessName">Witness name</label><input type="text" id="witnessName" placeholder="Optional"></div>
-          <div class="field-group"><label for="witnessAddress">Witness address</label><input type="text" id="witnessAddress" placeholder="Optional"></div>
+          <div class="field-group"><label for="directorSignatory">Director's name (for signature)</label><input type="text" id="directorSignatory" placeholder="Adaeze Okafor"></div>
+          <div class="field-group"><label for="secretarySignatory">Company Secretary (optional)</label><input type="text" id="secretarySignatory" placeholder="Optional"></div>
         </div>
+      </div>
+
+      <div class="d-fields" data-fields="members">
+        <div id="membersWrap"></div>
+        <button type="button" class="add-item-btn" id="addMemberBtn" style="margin-bottom:20px;">+ Add member</button>
+      </div>
+
+      <div class="d-fields" data-fields="directors">
+        <div id="directorsWrap"></div>
+        <button type="button" class="add-item-btn" id="addDirectorBtn" style="margin-bottom:20px;">+ Add director</button>
       </div>
 
       <div class="action-row">
@@ -233,18 +216,17 @@
         <button type="button" class="btn btn-ghost" id="waBtn" style="border-color:var(--line); color:var(--ink-green-deep);">Share on WhatsApp</button>
       </div>
       <div id="formMsg"></div>
-      <p class="free-note" id="freeNote">Your first document is free — no account needed.</p>
     </div>
 
     <div class="preview-panel">
-      <div class="g-doc" id="gDoc">
-        <div class="g-content" id="gContent"></div>
+      <div class="doc-preview aff-content locked" id="affContent" style="min-height:460px; position:relative;">
+        <div id="previewInner"></div>
         <div class="lock-overlay" id="lockOverlay">
           <div class="lock-card">
-            <span style="font-family:'Space Mono', monospace; font-size:0.7rem; text-transform:uppercase; color:var(--stamp-gold);">Pro template</span>
-            <div class="price">₦1,500 <small style="font-size:0.9rem; opacity:0.6;">one-time</small></div>
-            <p style="font-size:0.85rem; opacity:0.75; margin:10px 0 14px;">You've used your free document. One pass unlocks the form-style Pro template — with a witness section and passport-photo box — unlimited, forever.</p>
-            <button type="button" class="btn btn-primary" id="buyPassBtn" style="width:100%;">Unlock for ₦1,500</button>
+            <span style="font-family:'Space Mono', monospace; font-size:0.7rem; text-transform:uppercase; color:var(--stamp-gold);">One pass, all four documents</span>
+            <div class="price">₦7,500 <small style="font-size:0.9rem; opacity:0.6;">one-time</small></div>
+            <p style="font-size:0.85rem; opacity:0.75; margin:10px 0 14px;">Board Resolution, Share Certificates, Register of Members, and Register of Directors — unlimited, forever, for this company.</p>
+            <button type="button" class="btn btn-primary" id="buyPassBtn" style="width:100%;">Unlock for ₦7,500</button>
           </div>
         </div>
       </div>
@@ -255,7 +237,7 @@
 
 <section class="bs-section" style="max-width:720px; margin:0 auto; padding:20px 20px 80px;">
   <h2 style="font-size:1.2rem; margin-bottom:10px;">What this is — and isn't</h2>
-  <p style="font-size:0.9rem; opacity:0.75; line-height:1.7;">This generates a properly worded guarantor's declaration for the situation you select. Requirements differ by landlord, employer, or institution — some ask for a civil servant specifically, a passport photograph, or a witnessed signature. Check what's specifically required before submitting, and have the guarantor sign in front of the relevant party or a notary where that's expected.</p>
+  <p style="font-size:0.9rem; opacity:0.75; line-height:1.7;">This generates standard company secretarial documents from the details you provide — it isn't a substitute for a company secretary or lawyer for anything beyond routine paperwork, and it doesn't file anything with CAC. Statutory registers should be kept updated as your company's membership or directorship changes — treat this as a starting point, not a one-time formality.</p>
   <p style="font-size:0.78rem; opacity:0.5; margin-top:14px;">This is a drafting aid, not legal advice.</p>
 </section>
 
@@ -304,6 +286,6 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
 <script src="/assets/export.js" defer></script>
-<script src="/guarantor-form/guarantor-form.js" defer></script>
+<script src="/post-incorporation-pack/post-incorporation-pack.js" defer></script>
 </body>
 </html>
