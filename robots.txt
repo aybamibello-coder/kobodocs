@@ -1,0 +1,11 @@
+User-agent: *
+Allow: /
+Disallow: /account/
+Disallow: /portal/
+Disallow: /proposal/
+Disallow: /business/
+Disallow: /business-suite/app/
+Disallow: /ajo/dashboard/
+Disallow: /ajo/circle/
+
+Sitemap: https://kobodocs.com.ng/sitemap.xml
