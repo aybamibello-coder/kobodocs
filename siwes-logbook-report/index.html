@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-EN4PYGX7EW"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-EN4PYGX7EW');
+</script>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SIWES Logbook &amp; Report Generator — Application Letter, Acceptance Letter, Weekly Report | KoboDocs</title>
+<meta name="description" content="Free SIWES logbook sample, application letter, acceptance letter format, and weekly report generator. Pro adds a multi-week logbook and full report outline for any department.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Work+Sans:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/style.css">
+<style>
+  .type-tabs{ display:flex; flex-wrap:wrap; gap:8px; margin-bottom:20px; }
+  .type-tabs button{ font-size:0.82rem; border:1px solid var(--line); background:none; border-radius:20px; padding:6px 14px; cursor:pointer; }
+  .type-tabs button.active{ background:var(--ink-green-deep); color:var(--paper); border-color:var(--ink-green-deep); }
+  .siwes-fields{ display:none; }
+  .siwes-fields.active{ display:block; }
+  fieldset.pro-only{ border:none; padding:0; margin:0; opacity:0.45; pointer-events:none; }
+  fieldset.pro-only.unlocked{ opacity:1; pointer-events:auto; }
+  .pro-lock{
+    display:flex; align-items:center; justify-content:space-between; gap:12px;
+    background:rgba(199,154,60,0.1); border:1px solid var(--stamp-gold); border-radius:6px;
+    padding:10px 14px; font-size:0.82rem; margin-bottom:16px;
+  }
+  .upgrade-pro-btn{
+    background:var(--stamp-gold); color:var(--charcoal); border:none; border-radius:20px;
+    padding:6px 14px; font-size:0.8rem; font-weight:600; cursor:pointer; white-space:nowrap;
+  }
+  .siwes-doc{
+    background:var(--paper); border:1px solid var(--line); border-radius:4px;
+    padding:36px 32px; min-height:420px; font-size:0.9rem; line-height:1.7;
+  }
+  .siwes-title{ text-align:center; font-weight:700; text-transform:uppercase; letter-spacing:0.04em; margin-bottom:22px; }
+  .siwes-body{ white-space:pre-line; }
+  .siwes-table{ width:100%; border-collapse:collapse; font-size:0.85rem; margin-bottom:18px; }
+  .siwes-table th, .siwes-table td{ border:1px solid var(--line); padding:6px 8px; text-align:left; vertical-align:top; }
+  .siwes-table th{ background:rgba(20,52,43,0.05); font-size:0.72rem; text-transform:uppercase; letter-spacing:0.03em; }
+  .siwes-week-label{ font-weight:600; margin:14px 0 6px; font-size:0.82rem; opacity:0.75; }
+  .siwes-watermark{ text-align:center; font-size:0.72rem; opacity:0.4; margin-top:20px; }
+  .siwes-watermark.hidden{ display:none; }
+  .log-day-row{ display:flex; gap:8px; align-items:center; margin-bottom:6px; }
+  .log-day-row label{ width:70px; font-size:0.8rem; opacity:0.7; flex-shrink:0; }
+  #formMsg{ font-size:0.85rem; margin-top:12px; padding:10px 12px; border-radius:4px; display:none; }
+  #formMsg.error{ display:block; background:rgba(168,52,42,0.08); color:var(--stamp-red); }
+  #formMsg.success{ display:block; background:rgba(199,154,60,0.12); color:var(--ink-green-deep); }
+</style>
+</head>
+<body>
+
+<header>
+  <nav class="nav">
+    <a href="/" class="logo">
+      <svg class="mark" viewBox="0 0 32 32" fill="none">
+        <circle cx="16" cy="16" r="14" stroke="#C79A3C" stroke-width="2.5"/>
+        <circle cx="16" cy="16" r="8" stroke="#C79A3C" stroke-width="1.5"/>
+      </svg>
+      KoboDocs
+    </a>
+    <button class="menu-btn" aria-label="Toggle menu" id="menuBtn"><span></span><span></span><span></span></button>
+    <div class="nav-links" id="navLinks">
+      <div class="nav-item">
+        <span class="nav-category">Business Tools ▾</span>
+        <div class="dropdown">
+          <a href="/invoice/">Invoice Generator</a>
+          <a href="/receipt/">Receipt Generator</a>
+          <a href="/quotation/">Quotation Generator</a>
+          <a href="/payslip/">Payslip / Salary Slip</a>
+          <a href="/budget/">Budget Planner</a>
+          <a href="/loan/">Loan Schedule</a>
+          <a href="/qr-code/">QR Code Generator</a>
+          <a href="/salary-calculator/">Take-Home Pay Calculator</a>
+          <a href="/hr-letters/">HR Letter Generator</a>
+          <a href="/waybill/">Waybill / Delivery Note</a>
+          <a href="/freelancer-contract/">Freelancer Contract</a>
+          <a href="/rent-agreement/">Rent / Tenancy Agreement</a>
+          <div class="dropdown-divider"></div>
+          <a href="/business-suite/">Business Suite (Pro)</a>
+          <a href="/school-report-card/">School Report Card (Pro)</a>
+        </div>
+      </div>
+      <a href="/ajo/">Ajo &amp; Esusu</a>
+      <div class="nav-item">
+        <span class="nav-category">Weddings &amp; Events ▾</span>
+        <div class="dropdown">
+          <a href="/bride-price-list/">Bride Price / Wedding List</a>
+          <a href="/wedding-budget-planner/">Wedding/Party Budget Planner</a>
+        </div>
+      </div>
+      <div class="nav-item">
+        <span class="nav-category">Legal &amp; Personal ▾</span>
+        <div class="dropdown">
+          <a href="/affidavit-generator/">Affidavit Generator</a>
+          <a href="/guarantor-form/">Guarantor's Form</a>
+          <a href="/visa-cover-letter/">Visa Cover Letter</a>
+          <a href="/land-sale-agreement/">Land Sale / Deed of Assignment</a>
+          <a href="/nysc-documents/">NYSC Documents</a>
+          <a href="/siwes-logbook-report/">SIWES Logbook &amp; Report</a>
+        </div>
+      </div>
+      <div class="nav-item">
+        <span class="nav-category">Relocation ▾</span>
+        <div class="dropdown">
+          <a href="/relocation/">Relocation Overview</a>
+          <a href="/relocation/japa-calculator/">Japa Cost Calculator</a>
+          <a href="/relocation/proof-of-funds/">Proof of Funds Calculator</a>
+          <a href="/relocation/cost-of-living/">Cost of Living Calculator</a>
+          <div class="dropdown-divider"></div>
+          <a href="/cac-calculator/">CAC Registration Cost</a>
+          <a href="/cac-registration-assistant/">CAC Registration Assistant</a>
+          <a href="/post-incorporation-pack/">Post-Incorporation Pack</a>
+          <a href="/import-duty-calculator/">Import Duty Calculator</a>
+        </div>
+      </div>
+      <a href="/pricing/">Pricing</a>
+      <a href="/account/" id="navAccountLink">Sign in</a>
+      <a href="/invoice/" class="nav-cta">Start free</a>
+    </div>
+  </nav>
+</header>
+
+
+<section class="page-header">
+  <div class="wrap">
+    <h1>SIWES Logbook &amp; Report Generator</h1>
+    <p>Application letter, acceptance letter format, logbook sample with daily activities, and weekly report — free. Pro adds a full multi-week logbook and a report outline tailored to your department.</p>
+    <p style="font-size:0.82rem; margin-top:10px;">Not sure what the difference is? <a href="/blog/">Browse our guides →</a></p>
+  </div>
+</section>
+
+<section class="generator">
+  <div class="wrap">
+
+    <div class="form-panel">
+      <div class="field-group">
+        <label>Document type</label>
+        <div class="type-tabs" id="typeTabs">
+          <button type="button" class="active" data-type="application_letter">Application Letter</button>
+          <button type="button" data-type="acceptance_letter">Acceptance Letter</button>
+          <button type="button" data-type="logbook">Logbook Sample</button>
+          <button type="button" data-type="weekly_report">Weekly Report</button>
+          <button type="button" data-type="full_report">Full Report Outline</button>
+        </div>
+      </div>
+
+      <div class="field-row">
+        <div class="field-group"><label for="studentName">Your full name</label><input type="text" id="studentName" placeholder="Chidinma Obi"></div>
+        <div class="field-group"><label for="matricNo">Matric / Reg. number</label><input type="text" id="matricNo" placeholder="ND/CS/2023/0142"></div>
+      </div>
+      <div class="field-row">
+        <div class="field-group"><label for="institution">Institution</label><input type="text" id="institution" placeholder="Yaba College of Technology"></div>
+        <div class="field-group"><label for="department">Department / Course</label><input type="text" id="department" placeholder="Computer Science"></div>
+      </div>
+      <div class="field-row">
+        <div class="field-group"><label for="companyName">Company / place of attachment</label><input type="text" id="companyName" placeholder="Zenith Systems Ltd"></div>
+        <div class="field-group"><label for="companyAddress">Company address</label><input type="text" id="companyAddress" placeholder="14 Marina Road, Lagos"></div>
+      </div>
+      <div class="field-row">
+        <div class="field-group"><label for="supervisorName">Industry supervisor</label><input type="text" id="supervisorName" placeholder="Engr. Bola Adekunle"></div>
+        <div class="field-group"><label for="startDate">Start date</label><input type="date" id="startDate"></div>
+      </div>
+
+      <div class="siwes-fields" data-fields="logbook">
+        <p style="font-size:0.82rem; opacity:0.65; margin-bottom:8px;">Sample week — edit each day's activity:</p>
+        <div class="log-day-row"><label>Monday</label><input type="text" id="logMon" placeholder="Reported to the IT unit; introduced to team and ongoing projects"></div>
+        <div class="log-day-row"><label>Tuesday</label><input type="text" id="logTue" placeholder="Assisted with installation and configuration of office network equipment"></div>
+        <div class="log-day-row"><label>Wednesday</label><input type="text" id="logWed" placeholder="Observed troubleshooting of a server connectivity issue"></div>
+        <div class="log-day-row"><label>Thursday</label><input type="text" id="logThu" placeholder="Assisted in documenting standard operating procedures"></div>
+        <div class="log-day-row"><label>Friday</label><input type="text" id="logFri" placeholder="Participated in weekly department review meeting"></div>
+      </div>
+
+      <div class="siwes-fields" data-fields="weekly_report">
+        <div class="field-group"><label for="weekNumber">Week number</label><input type="text" id="weekNumber" placeholder="3"></div>
+        <div class="field-group">
+          <label for="weeklySummary">Summary of activities this week</label>
+          <textarea id="weeklySummary" rows="4" placeholder="e.g. This week I was introduced to the company's ticketing system and assisted senior staff with resolving user support requests. I also learned how the network infrastructure is monitored."></textarea>
+        </div>
+      </div>
+
+      <fieldset class="pro-only" id="proFieldset">
+        <div class="pro-lock" id="proLockBanner">
+          <span>Pro: full multi-week logbook + report outline tailored to your department</span>
+          <button type="button" class="upgrade-pro-btn" id="upgradeProBtn">Unlock ₦1,500 →</button>
+        </div>
+        <div class="field-row">
+          <div class="field-group"><label for="durationWeeks">Total SIWES duration (weeks)</label><input type="text" id="durationWeeks" placeholder="24"></div>
+          <div class="field-group"><label for="deptType">Department category (for report outline)</label>
+            <select id="deptType">
+              <option value="engineering">Engineering / Technical</option>
+              <option value="sciences">Pure &amp; Applied Sciences</option>
+              <option value="environmental">Environmental Sciences / Design</option>
+              <option value="business">Management / Business / Social Sciences</option>
+              <option value="agriculture">Agriculture</option>
+              <option value="health">Health Sciences</option>
+              <option value="education">Education</option>
+              <option value="other">Other / General</option>
+            </select>
+          </div>
+        </div>
+      </fieldset>
+
+      <div class="action-row">
+        <button type="button" class="btn btn-primary" id="downloadPdfBtn">Download PDF</button>
+        <button type="button" class="btn btn-ghost" id="waBtn" style="border-color:var(--line); color:var(--ink-green-deep);">Share on WhatsApp</button>
+      </div>
+      <div id="formMsg"></div>
+    </div>
+
+    <div class="preview-panel">
+      <div class="siwes-doc" id="siwesDoc"></div>
+    </div>
+
+  </div>
+</section>
+
+<section class="bs-section" style="max-width:720px; margin:0 auto; padding:20px 20px 80px;">
+  <h2 style="font-size:1.2rem; margin-bottom:10px;">What this is — and isn't</h2>
+  <p style="font-size:0.9rem; opacity:0.75; line-height:1.7;">This gives you a properly formatted starting point — an application letter, a sample acceptance letter format, a logbook sample you can extend, a weekly report, and a report outline. Your institution's ITF/SIWES coordinator or industry supervisor may have specific requirements — always confirm those and adjust accordingly.</p>
+  <p style="font-size:0.78rem; opacity:0.5; margin-top:14px;">This is a drafting aid, not an official ITF document. Signatures, stamps, and supervisor sign-off still need to happen through the proper channel.</p>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div class="footer-top">
+      <div>
+        <div class="footer-logo">KoboDocs</div>
+        <p class="footer-note">Every business document, stamped and sent — built for Nigeria, one Naira at a time.</p>
+      </div>
+      <div class="footer-links">
+        <div>
+          <strong>Business tools</strong>
+          <a href="/invoice/">Invoice</a>
+          <a href="/receipt/">Receipt</a>
+          <a href="/payslip/">Payslip</a>
+          <a href="/qr-code/">QR Code</a>
+        </div>
+        <div>
+          <strong>Legal &amp; more</strong>
+          <a href="/affidavit-generator/">Affidavit Generator</a>
+          <a href="/siwes-logbook-report/">SIWES Logbook &amp; Report</a>
+          <a href="/nysc-documents/">NYSC Documents</a>
+          <a href="/business-suite/">Business Suite</a>
+        </div>
+        <div>
+          <strong>Company</strong>
+          <a href="/pricing/">Pricing</a>
+          <a href="/about/">About</a>
+          <a href="/contact/">Contact</a>
+          <a href="/blog/">Blog</a>
+        </div>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2026 KoboDocs. Not a financial institution — we never hold or move your money.</span>
+      <span><a href="/privacy/">Privacy</a> · <a href="/terms/">Terms</a> · Made in Lagos</span>
+    </div>
+  </div>
+</footer>
+
+<script src="/assets/app.js" defer></script>
+<script type="module" src="/assets/auth.js"></script>
+<script src="/assets/nav-auth.js" defer></script>
+<script src="/assets/subscribe.js" defer></script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
+<script src="/assets/export.js" defer></script>
+<script src="/siwes-logbook-report/siwes-logbook-report.js" defer></script>
+</body>
+</html>
