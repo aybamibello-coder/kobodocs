@@ -232,18 +232,20 @@ document.getElementById('waBtn').addEventListener('click', async () => {
   }
 });
 
-document.getElementById('upgradeProBtn').addEventListener('click', async () => {
-  const btn = document.getElementById('upgradeProBtn');
+async function startSiwesUpgrade(billingCycle, btn) {
   const original = btn.textContent;
   btn.textContent = 'Redirecting…';
   btn.disabled = true;
   try {
-    await KoboSubscribe.start('init-tool-pass-payment', { tool_key: 'siwes_report', callback_path: '/siwes-logbook-report/' });
+    await KoboSubscribe.start('init-siwes-payment', { billing_cycle: billingCycle, callback_path: '/siwes-logbook-report/' });
   } catch {
     btn.textContent = original;
     btn.disabled = false;
   }
-});
+}
+
+document.getElementById('upgrade3moBtn').addEventListener('click', (e) => startSiwesUpgrade('3month', e.currentTarget));
+document.getElementById('upgradeAnnualBtn').addEventListener('click', (e) => startSiwesUpgrade('annual', e.currentTarget));
 
 // ---------- Pro gating: multi-week logbook + tailored report outline ----------
 async function checkAccess() {

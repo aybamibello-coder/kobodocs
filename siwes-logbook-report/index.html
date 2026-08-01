@@ -28,7 +28,7 @@
   fieldset.pro-only{ border:none; padding:0; margin:0; opacity:0.45; pointer-events:none; }
   fieldset.pro-only.unlocked{ opacity:1; pointer-events:auto; }
   .pro-lock{
-    display:flex; align-items:center; justify-content:space-between; gap:12px;
+    display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;
     background:rgba(199,154,60,0.1); border:1px solid var(--stamp-gold); border-radius:6px;
     padding:10px 14px; font-size:0.82rem; margin-bottom:16px;
   }
@@ -186,11 +186,14 @@
         </div>
       </div>
 
-      <fieldset class="pro-only" id="proFieldset">
-        <div class="pro-lock" id="proLockBanner">
-          <span>Pro: full multi-week logbook + report outline tailored to your department</span>
-          <button type="button" class="upgrade-pro-btn" id="upgradeProBtn">Unlock ₦1,500 →</button>
+      <div class="pro-lock" id="proLockBanner">
+        <span>Pro: full multi-week logbook + report outline tailored to your department</span>
+        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+          <button type="button" class="upgrade-pro-btn" id="upgrade3moBtn">3 months — ₦1,500</button>
+          <button type="button" class="upgrade-pro-btn" id="upgradeAnnualBtn" style="background:var(--ink-green-deep); color:var(--paper);">1 year — ₦7,000</button>
         </div>
+      </div>
+      <fieldset class="pro-only" id="proFieldset">
         <div class="field-row">
           <div class="field-group"><label for="durationWeeks">Total SIWES duration (weeks)</label><input type="text" id="durationWeeks" placeholder="24"></div>
           <div class="field-group"><label for="deptType">Department category (for report outline)</label>
