@@ -1,7 +1,7 @@
 // ---------- KoboDocs shared subscribe/checkout helper ----------
 // Used by every "Upgrade" / "Subscribe" button across the site. Handles the
 // full journey: if not logged in, detour through /account/ (which redirects
-// back here after auth), then call the right Paystack init function and
+// back here after auth), then call the right Squad init function and
 // send the browser to the hosted checkout page. Each init-* edge function
 // decides its own post-payment callback_url server-side.
 window.KoboSubscribe = {
