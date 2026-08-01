@@ -2,9 +2,7 @@
 // Called by a logged-in user to upgrade KoboDocs Business Suite to the
 // Growth tier (₦28,000/mo or ₦280,000/yr) — Credit & Collections Manager
 // + Quotation & Proposal Studio. Mirrors init-suite-payment exactly.
-//
-// Payment processor: Squad (squadco.com) — replaced Paystack here.
-// Docs: https://docs.squadco.com/Payments/initiate-payment/
+// Requires SQUADCO_SECRET_KEY set in Supabase Edge Function secrets.
 
 import { createClient } from "jsr:@supabase/supabase-js@2";
 
@@ -19,11 +17,12 @@ const corsHeaders = {
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
+const SQUAD_BASE_URL = "https://api-d.squadco.com";
+
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
   }
-
   if (req.method !== "POST") {
     return new Response(JSON.stringify({ error: "Method not allowed" }), { status: 405, headers: { ...corsHeaders, "Content-Type": "application/json" } });
   }
@@ -44,9 +43,6 @@ Deno.serve(async (req: Request) => {
     }
     const user = userData.user;
 
-    // Growth is an upgrade on top of an existing Business Suite business —
-    // require one to already exist (matches the check already done client-side
-    // in business-suite.js before this function is ever called).
     const { data: business } = await supabase
       .from("businesses")
       .select("id, suite_status")
@@ -59,13 +55,23 @@ Deno.serve(async (req: Request) => {
 
     const { billing_cycle } = await req.json().catch(() => ({ billing_cycle: "monthly" }));
     const cycle = billing_cycle === "yearly" ? "yearly" : "monthly";
-    const amount = PRICING[cycle];
+    const amountKobo = PRICING[cycle];
 
-    // Squad wants a unique transaction_ref up front (Paystack generated its
-    // own). Prefix keeps it easy to spot in the Squad dashboard/logs.
-    const transactionRef = `KDGROWTH${user.id.slice(0, 8)}${Date.now()}`;
+    const orderReference = `kbd_${crypto.randomUUID()}`;
+    const supabaseAdmin = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+    );
+    await supabaseAdmin.from("payment_intents").insert({
+      order_reference: orderReference,
+      metadata: {
+        user_id: user.id,
+        product: "business_suite_growth",
+        billing_cycle: cycle,
+      },
+    });
 
-    const squadRes = await fetch("https://api-d.squadco.com/transaction/initiate", {
+    const squadRes = await fetch(`${SQUAD_BASE_URL}/transaction/initiate`, {
       method: "POST",
       headers: {
         Authorization: `Bearer ${Deno.env.get("SQUADCO_SECRET_KEY")}`,
@@ -73,16 +79,11 @@ Deno.serve(async (req: Request) => {
       },
       body: JSON.stringify({
         email: user.email,
-        amount, // already in kobo, matches Squad's lowest-currency-unit requirement
+        amount: amountKobo,
         currency: "NGN",
         initiate_type: "inline",
-        transaction_ref: transactionRef,
+        transaction_ref: orderReference,
         callback_url: `${Deno.env.get("SITE_URL") ?? "https://kobodocs.com.ng"}/business-suite/app/credit/`,
-        metadata: {
-          user_id: user.id,
-          product: "business_suite_growth",
-          billing_cycle: cycle,
-        },
       }),
     });
 
@@ -96,12 +97,9 @@ Deno.serve(async (req: Request) => {
     }
 
     return new Response(
-      // Field kept as `authorization_url` (not `checkout_url`) so
-      // assets/subscribe.js — which reads data.authorization_url and
-      // redirects the browser there — needs no changes.
       JSON.stringify({
         authorization_url: squadData.data.checkout_url,
-        reference: squadData.data.transaction_ref,
+        reference: squadData.data.transaction_ref ?? orderReference,
       }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );

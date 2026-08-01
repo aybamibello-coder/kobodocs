@@ -1,23 +1,16 @@
 // Supabase Edge Function: squad-webhook
-// Replaces paystack-webhook now that Squad (squadco.com) is the sole
-// payment processor for KoboDocs. Mirrors paystack-webhook's structure —
-// see that function's comment header for why: the *deployed* version of
-// that file historically handled every product on the site (document
-// payments, pro plan, business_teams, cooperative_plan, japa_pass,
-// tool_pass, school_report_card, event_pass, business_suite,
-// business_suite_growth), but this repo copy only ever had the
-// business_suite / business_suite_growth branches checked in.
+// Replaces nomba-webhook (and the older, already-unused paystack-webhook)
+// now that Squad (squadco.com) is the sole payment processor for KoboDocs.
+// Handles every product on the site via the payment_intents table — same
+// pattern nomba-webhook used, since Squad also doesn't reliably echo
+// custom metadata back on every payload variant.
 //
-// IMPORTANT: only the branches present in this repo are ported below.
-// Before this replaces paystack-webhook in production, pull the full
-// deployed source (Supabase dashboard → Edge Functions → paystack-webhook)
-// and port every other product branch across the same way, or those
-// products' payments will stop being credited.
-//
-// Signature verification differs from Paystack:
-//   Paystack: header x-paystack-signature, HMAC-SHA512, lowercase hex
-//   Squad:    header x-squad-encrypted-body, HMAC-SHA512, UPPERCASE hex
-// Docs: https://docs.squadco.com/Payments/webhook-and-redirect-url/signature-validation/
+// Squad webhook payload shape (confirmed from Squad docs):
+//   { "Event": "charge_successful", "TransactionRef": "...", "Body": {
+//       "amount": 10000, "transaction_ref": "...", "transaction_status": "Success", ... } }
+// Signature: header x-squad-encrypted-body, HMAC-SHA512 of the raw request
+// body using the secret key, compared as UPPERCASE hex (per Squad docs —
+// different from Paystack's lowercase and Nomba's SHA-256).
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
@@ -40,6 +33,12 @@ async function hmacSha512HexUpper(key: string, message: string): Promise<string>
   return [...new Uint8Array(sig)].map((b) => b.toString(16).padStart(2, "0")).join("").toUpperCase();
 }
 
+function addDays(days: number) {
+  const d = new Date();
+  d.setDate(d.getDate() + days);
+  return d.toISOString();
+}
+
 Deno.serve(async (req) => {
   if (req.method !== "POST") return new Response("Method not allowed", { status: 405 });
 
@@ -58,30 +57,84 @@ Deno.serve(async (req) => {
     return new Response("Bad payload", { status: 400 });
   }
 
-  // Squad's successful-transaction webhook payload nests details under
-  // `Body` — see Squad docs for the exact shape used by your dashboard's
-  // configured events. Adjust this destructure if your merchant account's
-  // payload differs (check a captured sample in Squad dashboard → Logs).
-  const data = event.Body ?? event.data ?? event;
-  const { transaction_ref, transaction_status, transaction_amount, meta_data } = data;
-
-  if (transaction_status !== "success") {
+  if (event.Event !== "charge_successful") {
     return new Response(JSON.stringify({ received: true }), { headers: { "Content-Type": "application/json" } });
   }
 
-  // metadata comes back as a JSON string from Squad in some payload
-  // variants (see meta_data in the Query Transactions sample response) —
-  // handle both stringified and already-parsed forms.
-  const metadata = typeof meta_data === "string" ? JSON.parse(meta_data) : (meta_data ?? {});
+  const body = event.Body ?? {};
+  const reference = body.transaction_ref as string | undefined;
+  const amountNaira = Number(body.amount ?? 0) / 100;
+
+  if (!reference) {
+    console.error("Squad webhook: missing transaction_ref");
+    return new Response(JSON.stringify({ received: true }), { headers: { "Content-Type": "application/json" } });
+  }
+
+  if (String(body.transaction_status).toLowerCase() !== "success") {
+    return new Response(JSON.stringify({ received: true }), { headers: { "Content-Type": "application/json" } });
+  }
+
+  const { data: intent } = await supabase
+    .from("payment_intents")
+    .select("metadata")
+    .eq("order_reference", reference)
+    .maybeSingle();
+
+  if (!intent) {
+    console.error("Squad webhook: no matching payment_intents row for", reference);
+    return new Response(JSON.stringify({ received: true }), { headers: { "Content-Type": "application/json" } });
+  }
+
+  const metadata = intent.metadata ?? {};
   const cycleDays = metadata?.billing_cycle === "yearly" ? 365 : 30;
 
   try {
-    // ... other product branches (document payments, pro plan, business
-    // teams, cooperative plan, japa pass, tool pass, school report card,
-    // event pass) need to be ported from the live paystack-webhook source
-    // — omitted here, see header comment.
+    if (metadata?.document_id) {
+      await supabase
+        .from("payment_transactions")
+        .update({ status: "success", paid_at: new Date().toISOString() })
+        .eq("provider_ref", reference);
 
-    if (metadata?.product === "business_suite") {
+      const { data: doc } = await supabase
+        .from("documents")
+        .select("amount, amount_paid")
+        .eq("id", metadata.document_id)
+        .single();
+
+      if (doc) {
+        const newAmountPaid = Number(doc.amount_paid || 0) + amountNaira;
+        const newStatus = newAmountPaid >= Number(doc.amount) ? "paid" : "partial";
+        await supabase
+          .from("documents")
+          .update({ amount_paid: newAmountPaid, payment_status: newStatus })
+          .eq("id", metadata.document_id);
+      }
+    } else if (metadata?.plan === "pro") {
+      await supabase
+        .from("profiles")
+        .update({ plan: "pro", plan_expires_at: addDays(cycleDays) })
+        .eq("id", metadata.user_id);
+    } else if (metadata?.product === "business_teams") {
+      await supabase
+        .from("profiles")
+        .update({ plan: "business", plan_expires_at: addDays(cycleDays) })
+        .eq("id", metadata.user_id);
+    } else if (metadata?.product === "cooperative_plan") {
+      await supabase
+        .from("ajo_circles")
+        .update({ plan: "cooperative", plan_expires_at: addDays(cycleDays) })
+        .eq("id", metadata.circle_id);
+    } else if (metadata?.product === "japa_pass") {
+      await supabase.from("relocation_passes").insert({
+        user_id: metadata.user_id,
+        tier: metadata.tier,
+        report_limit: metadata.report_limit,
+        reports_used: 0,
+        purchased_at: new Date().toISOString(),
+        expires_at: addDays(90),
+        paystack_reference: reference,
+      });
+    } else if (metadata?.product === "business_suite") {
       const { data: business } = await supabase
         .from("businesses")
         .select("id, suite_status, suite_expires_at")
@@ -104,7 +157,6 @@ Deno.serve(async (req) => {
           .eq("id", business.id);
       }
     } else if (metadata?.product === "business_suite_growth") {
-      // ---- KoboDocs Business Suite Growth tier (init-suite-growth-payment) ----
       const { data: business } = await supabase
         .from("businesses")
         .select("id, suite_status, suite_expires_at")
@@ -127,7 +179,92 @@ Deno.serve(async (req) => {
           })
           .eq("id", business.id);
       }
+    } else if (metadata?.product === "tool_pass") {
+      await supabase.from("tool_access_passes").insert({
+        user_id: metadata.user_id,
+        tool_key: metadata.tool_key,
+        purchased_at: new Date().toISOString(),
+        expires_at: null,
+        paystack_reference: reference,
+      });
+    } else if (metadata?.product === "siwes_report") {
+      const siwesDays = metadata.billing_cycle === "annual" ? 365 : 90;
+
+      const { data: existing } = await supabase
+        .from("tool_access_passes")
+        .select("id, expires_at")
+        .eq("user_id", metadata.user_id)
+        .eq("tool_key", "siwes_report")
+        .maybeSingle();
+
+      const currentExpiry = existing?.expires_at ? new Date(existing.expires_at) : null;
+      const base = currentExpiry && currentExpiry > new Date() ? currentExpiry : new Date();
+      const newExpiry = new Date(base);
+      newExpiry.setDate(newExpiry.getDate() + siwesDays);
+
+      if (existing) {
+        await supabase
+          .from("tool_access_passes")
+          .update({ expires_at: newExpiry.toISOString(), paystack_reference: reference })
+          .eq("id", existing.id);
+      } else {
+        await supabase.from("tool_access_passes").insert({
+          user_id: metadata.user_id,
+          tool_key: "siwes_report",
+          purchased_at: new Date().toISOString(),
+          expires_at: newExpiry.toISOString(),
+          paystack_reference: reference,
+        });
+      }
+    } else if (metadata?.product === "school_report_card") {
+      if (metadata.billing_mode === "per_term") {
+        await supabase.from("tool_access_passes").insert({
+          user_id: metadata.user_id,
+          tool_key: "school_report_card_term",
+          purchased_at: new Date().toISOString(),
+          expires_at: addDays(120),
+          paystack_reference: reference,
+        });
+      } else {
+        const { data: existing } = await supabase
+          .from("tool_access_passes")
+          .select("id, expires_at")
+          .eq("user_id", metadata.user_id)
+          .eq("tool_key", "school_report_card_subscription")
+          .maybeSingle();
+
+        const currentExpiry = existing?.expires_at ? new Date(existing.expires_at) : null;
+        const base = currentExpiry && currentExpiry > new Date() ? currentExpiry : new Date();
+        const newExpiry = new Date(base);
+        newExpiry.setDate(newExpiry.getDate() + cycleDays);
+
+        if (existing) {
+          await supabase
+            .from("tool_access_passes")
+            .update({ expires_at: newExpiry.toISOString(), paystack_reference: reference })
+            .eq("id", existing.id);
+        } else {
+          await supabase.from("tool_access_passes").insert({
+            user_id: metadata.user_id,
+            tool_key: "school_report_card_subscription",
+            purchased_at: new Date().toISOString(),
+            expires_at: newExpiry.toISOString(),
+            paystack_reference: reference,
+          });
+        }
+      }
+    } else if (metadata?.product === "event_pass") {
+      await supabase
+        .from("events")
+        .update({
+          pass_status: "active",
+          purchased_at: new Date().toISOString(),
+          paystack_reference: reference,
+        })
+        .eq("id", metadata.event_id);
     }
+
+    await supabase.from("payment_intents").delete().eq("order_reference", reference);
   } catch (err) {
     console.error("Webhook processing error:", err);
   }
