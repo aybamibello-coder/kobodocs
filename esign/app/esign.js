@@ -1,0 +1,162 @@
+// ---------- e-Signature app ----------
+function toast(text) {
+  const el = document.getElementById('toast');
+  el.textContent = text;
+  el.style.display = 'block';
+  setTimeout(() => { el.style.display = 'none'; }, 2600);
+}
+
+const FN_BASE = 'https://vwmzulzluaxedkozxjfy.supabase.co/functions/v1';
+
+async function callFn(name, session, payload) {
+  const res = await fetch(`${FN_BASE}/${name}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.access_token}` },
+    body: JSON.stringify(payload)
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Request failed');
+  return data;
+}
+
+function statusTag(status) {
+  return `<span class="status-tag ${status === 'completed' ? 'completed' : ''}">${status.replace('_',' ')}</span>`;
+}
+
+async function loadEnvelopes(ctx) {
+  const { data } = await ctx.supabase
+    .from('signature_envelopes')
+    .select('id, title, status, created_at, signature_signers(name, email, status)')
+    .eq('owner_user_id', ctx.session.user.id)
+    .order('created_at', { ascending: false });
+  return data || [];
+}
+
+function addSignerRow(container) {
+  const row = document.createElement('div');
+  row.className = 'signer-row';
+  row.innerHTML = `
+    <input placeholder="Signer name" class="signer-name" required>
+    <input placeholder="Signer email" type="email" class="signer-email" required>
+    <button type="button" class="btn small remove-signer">✕</button>
+  `;
+  row.querySelector('.remove-signer').addEventListener('click', () => row.remove());
+  container.appendChild(row);
+}
+
+async function renderApp(ctx) {
+  const area = document.getElementById('mainArea');
+  const envelopes = await loadEnvelopes(ctx);
+
+  const buyOptions = `
+    <div class="bs-panel">
+      <p style="margin-bottom:14px;">${ctx.subscription ? 'Out of envelopes — top up or subscribe below.' : "You haven't bought any envelopes yet."}</p>
+      <div class="plans-grid">
+        <div class="plan-card">
+          <h3>Pay as you go</h3>
+          <div class="plan-price">₦500<span style="font-size:0.7rem;">/envelope</span></div>
+          <button class="btn primary" id="buyPaygBtn">Buy 5 credits</button>
+        </div>
+        <div class="plan-card">
+          <h3>Starter</h3>
+          <div class="plan-price">₦3,500<span style="font-size:0.7rem;">/mo</span></div>
+          <p style="font-size:0.8rem; opacity:0.7; margin-bottom:14px;">15 envelopes/mo</p>
+          <button class="btn primary" data-plan="starter">Subscribe</button>
+        </div>
+        <div class="plan-card">
+          <h3>Growth</h3>
+          <div class="plan-price">₦9,000<span style="font-size:0.7rem;">/mo</span></div>
+          <p style="font-size:0.8rem; opacity:0.7; margin-bottom:14px;">60 envelopes/mo</p>
+          <button class="btn primary" data-plan="growth">Subscribe</button>
+        </div>
+      </div>
+    </div>
+  `;
+
+  area.innerHTML = `
+    <div class="bs-panel">
+      <h3 style="font-size:1rem; margin-bottom:12px;">Your envelopes</h3>
+      <div>${envelopes.length ? envelopes.map(e => `
+        <div class="es-row">
+          <div>
+            <div class="es-name">${e.title}${statusTag(e.status)}</div>
+            <div class="es-meta">${(e.signature_signers||[]).map(s => `${s.name} (${s.status})`).join(', ')}</div>
+          </div>
+          ${e.status === 'completed' ? `<button class="btn small download-signed" data-id="${e.id}">Download signed PDF</button>` : ''}
+        </div>
+      `).join('') : '<div class="empty-note">No envelopes sent yet.</div>'}</div>
+    </div>
+
+    ${ctx.canSend ? '' : buyOptions}
+
+    <div class="bs-panel" ${ctx.canSend ? '' : 'style="opacity:0.5; pointer-events:none;"'}>
+      <h3 style="font-size:1rem; margin-bottom:12px;">Send a document for signature</h3>
+      <form id="createEnvForm" class="es-form">
+        <label>Document title</label>
+        <input name="title" required placeholder="e.g. Service Agreement — Acme Ltd">
+        <label>Document URL (PDF)</label>
+        <input name="source_pdf_url" required placeholder="https://... link to a PDF">
+        <label style="margin-top:6px;">Signers</label>
+        <div id="signersContainer"></div>
+        <button type="button" class="btn small" id="addSignerBtn" style="margin-bottom:14px;">+ Add signer</button>
+        <br>
+        <button class="btn primary" type="submit">Send for signature</button>
+      </form>
+    </div>
+  `;
+
+  const signersContainer = document.getElementById('signersContainer');
+  addSignerRow(signersContainer);
+  document.getElementById('addSignerBtn').addEventListener('click', () => addSignerRow(signersContainer));
+
+  document.getElementById('createEnvForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const fd = new FormData(e.target);
+    const signers = Array.from(signersContainer.querySelectorAll('.signer-row')).map(row => ({
+      name: row.querySelector('.signer-name').value,
+      email: row.querySelector('.signer-email').value,
+    })).filter(s => s.name && s.email);
+
+    if (!signers.length) { toast('Add at least one signer'); return; }
+
+    try {
+      const result = await callFn('create-envelope', ctx.session, {
+        title: fd.get('title'),
+        source_pdf_url: fd.get('source_pdf_url'),
+        signers,
+      });
+      toast('Sent! Share these signing links:');
+      alert(result.signers.map(s => `${s.name}: ${s.signing_url}`).join('\n\n'));
+      renderApp(ctx);
+    } catch (err) {
+      toast(err.message);
+    }
+  });
+
+  area.querySelectorAll('.download-signed').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      try {
+        const result = await callFn('get-envelope-pdf', ctx.session, { envelope_id: btn.dataset.id });
+        window.open(result.signed_url, '_blank');
+      } catch (err) {
+        toast(err.message);
+      }
+    });
+  });
+
+  const paygBtn = document.getElementById('buyPaygBtn');
+  if (paygBtn) paygBtn.addEventListener('click', () => {
+    window.KoboSubscribe.start('init-esign-payment', { mode: 'payg', credit_count: 5 });
+  });
+  area.querySelectorAll('[data-plan]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      window.KoboSubscribe.start('init-esign-payment', { mode: 'subscription', plan: btn.dataset.plan });
+    });
+  });
+}
+
+(async function init() {
+  const ctx = await window.EsignGuard.requireAccess();
+  if (!ctx) return;
+  renderApp(ctx);
+})();

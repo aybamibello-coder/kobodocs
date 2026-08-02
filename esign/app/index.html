@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>e-Signature | KoboDocs</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Work+Sans:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/style.css">
+<style>
+  .es-wrap{ max-width:980px; margin:0 auto; padding:36px 20px 100px; }
+  .bs-panel{ background:var(--paper); border:1px solid var(--line); border-radius:8px; padding:22px 20px; margin-bottom:20px; }
+  .es-row{ display:flex; justify-content:space-between; align-items:center; gap:14px; padding:14px 0; border-bottom:1px dashed var(--line); flex-wrap:wrap; }
+  .es-row:last-child{ border-bottom:none; }
+  .es-name{ font-weight:600; }
+  .es-meta{ font-size:0.82rem; opacity:0.65; }
+  .status-tag{ font-family:'Space Mono', monospace; font-size:0.68rem; text-transform:uppercase; padding:3px 10px; border-radius:20px; margin-left:8px; background:rgba(0,0,0,0.06); }
+  .status-tag.completed{ background:rgba(35,120,60,0.12); color:#237838; }
+  .btn{ font-size:0.85rem; border:1px solid var(--line); background:none; border-radius:20px; padding:7px 16px; cursor:pointer; }
+  .btn.primary{ background:var(--ink-green-deep); color:var(--paper); border-color:var(--ink-green-deep); }
+  .btn.small{ padding:5px 12px; font-size:0.78rem; }
+  .empty-note{ font-size:0.88rem; opacity:0.6; padding:20px 0; text-align:center; }
+  .es-form input{ width:100%; padding:8px 10px; border:1px solid var(--line); border-radius:6px; font-family:inherit; font-size:0.9rem; margin-bottom:10px; }
+  .es-form label{ font-size:0.78rem; opacity:0.7; display:block; margin-bottom:3px; }
+  .signer-row{ display:flex; gap:8px; margin-bottom:8px; }
+  .signer-row input{ margin-bottom:0; }
+  .plans-grid{ display:grid; grid-template-columns:repeat(auto-fit, minmax(180px,1fr)); gap:14px; }
+  .plan-card{ border:1px solid var(--line); border-radius:8px; padding:18px; text-align:center; }
+  .plan-price{ font-size:1.3rem; margin-bottom:12px; }
+  #toast{ position:fixed; bottom:20px; left:50%; transform:translateX(-50%); background:var(--ink-green-deep); color:var(--paper); padding:10px 20px; border-radius:6px; font-size:0.85rem; display:none; z-index:50; }
+</style>
+</head>
+<body>
+
+<header>
+  <nav class="nav">
+    <a href="/" class="logo">
+      <svg class="mark" viewBox="0 0 32 32" fill="none">
+        <circle cx="16" cy="16" r="14" stroke="#C79A3C" stroke-width="2.5"/>
+        <circle cx="16" cy="16" r="8" stroke="#C79A3C" stroke-width="1.5"/>
+      </svg>
+      KoboDocs
+    </a>
+    <button class="menu-btn" aria-label="Toggle menu" id="menuBtn"><span></span><span></span><span></span></button>
+    <div class="nav-links" id="navLinks">
+      <a href="/business-suite/app/">Business Suite</a>
+      <a href="/payroll/app/">Payroll</a>
+      <a href="/esign/app/">e-Signature</a>
+      <a href="/account/" id="navAccountLink">Sign in</a>
+    </div>
+  </nav>
+</header>
+
+<div class="es-wrap">
+  <div>
+    <h1 style="font-size:1.4rem;">e-Signature</h1>
+    <p style="font-size:0.88rem; opacity:0.7; margin-top:4px; margin-bottom:20px;">Send any document out for signature and track it here.</p>
+  </div>
+
+  <div id="mainArea"><div class="empty-note">Loading…</div></div>
+</div>
+
+<div id="toast"></div>
+
+<script type="module" src="/assets/auth.js"></script>
+<script src="/assets/nav-auth.js" defer></script>
+<script src="/assets/subscribe.js"></script>
+<script src="/esign/app/guard.js"></script>
+<script src="/esign/app/esign.js"></script>
+</body>
+</html>
