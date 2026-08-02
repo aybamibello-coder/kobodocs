@@ -48,6 +48,16 @@ function renderPreview() {
   document.getElementById('pBizName').textContent = bizName;
   document.getElementById('pBizContact').textContent = bizPhone || 'Phone';
   document.getElementById('pReceiverName').textContent = receiverName;
+
+  const bizRc = document.getElementById('bizRc').value.trim();
+  const bizDirectors = document.getElementById('bizDirectors').value.trim();
+  const cacFooterEl = document.getElementById('pCacFooter');
+  if (bizRc && bizDirectors) {
+    cacFooterEl.textContent = `${bizName} · RC ${bizRc} · Director(s): ${bizDirectors}`;
+    cacFooterEl.style.display = 'block';
+  } else {
+    cacFooterEl.style.display = 'none';
+  }
   document.getElementById('pReceiverPhone').textContent = receiverPhone;
   document.getElementById('pWbNumber').textContent = wbNumber;
   document.getElementById('pWbDate').textContent = wbDateRaw

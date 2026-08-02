@@ -40,6 +40,16 @@ function renderPreview() {
     : todayStr();
   document.getElementById('pPayerName').textContent = payerName;
 
+  const bizRc = document.getElementById('bizRc').value.trim();
+  const bizDirectors = document.getElementById('bizDirectors').value.trim();
+  const cacFooterEl = document.getElementById('pCacFooter');
+  if (bizRc && bizDirectors) {
+    cacFooterEl.textContent = `${bizName} · RC ${bizRc} · Director(s): ${bizDirectors}`;
+    cacFooterEl.style.display = 'block';
+  } else {
+    cacFooterEl.style.display = 'none';
+  }
+
   const items = getItems();
   document.getElementById('pItemsBody').innerHTML = items.map(it => `
     <tr><td>${it.desc}</td><td class="num">${it.qty}</td><td class="num">${naira(it.qty * it.price)}</td></tr>
@@ -53,7 +63,7 @@ function renderPreview() {
   if (note) { noteEl.textContent = note; noteEl.style.display = 'block'; }
   else { noteEl.style.display = 'none'; }
 
-  if (window.KoboStorage) KoboStorage.save('receipt', { bizName, bizPhone, recNumber, recDate: recDateRaw, payerName, method, note, items });
+  if (window.KoboStorage) KoboStorage.save('receipt', { bizName, bizPhone, bizRc, bizDirectors, recNumber, recDate: recDateRaw, payerName, method, note, items });
 
   return { bizName, bizPhone, recNumber, payerName, method, items, total, note };
 }
@@ -62,6 +72,8 @@ function collectFormState() {
   return {
     bizName: document.getElementById('bizName').value,
     bizPhone: document.getElementById('bizPhone').value,
+    bizRc: document.getElementById('bizRc').value,
+    bizDirectors: document.getElementById('bizDirectors').value,
     recNumber: document.getElementById('recNumber').value,
     recDate: document.getElementById('recDate').value,
     payerName: document.getElementById('payerName').value,
@@ -74,6 +86,8 @@ function collectFormState() {
 function applyFormState(state) {
   document.getElementById('bizName').value = state.bizName || '';
   document.getElementById('bizPhone').value = state.bizPhone || '';
+  document.getElementById('bizRc').value = state.bizRc || '';
+  document.getElementById('bizDirectors').value = state.bizDirectors || '';
   document.getElementById('recNumber').value = state.recNumber || 'RCT-0001';
   document.getElementById('recDate').value = state.recDate || new Date().toISOString().split('T')[0];
   document.getElementById('payerName').value = state.payerName || '';
@@ -84,7 +98,7 @@ function applyFormState(state) {
     .forEach(it => addItemRow(it.desc, it.qty, it.price));
 }
 
-['bizName','bizPhone','recNumber','recDate','payerName','payMethod','recNote'].forEach(id => {
+['bizName','bizPhone','bizRc','bizDirectors','recNumber','recDate','payerName','payMethod','recNote'].forEach(id => {
   document.getElementById(id).addEventListener('input', renderPreview);
   document.getElementById(id).addEventListener('change', renderPreview);
 });

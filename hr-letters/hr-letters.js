@@ -58,10 +58,16 @@ function buildBody(type) {
 function renderLetter() {
   const bizName = val('bizName') || 'Your Business Name';
   const doc = document.getElementById('letterDoc');
+  const bizRc = val('bizRc');
+  const bizDirectors = val('bizDirectors');
+  const cacLine = (bizRc && bizDirectors)
+    ? `<p style="font-size:0.72rem; opacity:0.65; border-top:1px dashed #ccc; padding-top:8px; margin-top:16px;">${bizName} · RC ${bizRc} · Director(s): ${bizDirectors}</p>`
+    : '';
   doc.innerHTML = `
     <div class="letterhead">${bizName}</div>
     <div class="letter-date">${fmtDate(val('letterDate')) || new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' })}</div>
     <p>${buildBody(currentType)}</p>
+    ${cacLine}
   `;
 }
 
