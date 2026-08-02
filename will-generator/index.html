@@ -13,8 +13,8 @@
 
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Land Sale Agreement / Deed of Assignment Generator | KoboDocs</title>
-<meta name="description" content="Draft a Deed of Assignment for a land sale in the standard Nigerian format — a starting point for your lawyer to review, not a substitute for proper conveyancing.">
+<title>Last Will &amp; Testament Generator Nigeria | KoboDocs</title>
+<meta name="description" content="Draft a Last Will and Testament in the standard Nigerian format — executor, guardian for minor children, beneficiaries, and witness blocks. ₦3,500 one-time.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Work+Sans:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
@@ -25,17 +25,12 @@
     border-radius:8px; padding:18px 20px; margin:0 0 32px; font-size:0.92rem; line-height:1.6;
   }
   .warning-banner strong{ display:block; font-size:0.78rem; text-transform:uppercase; letter-spacing:0.04em; color:#ff9d94; margin-bottom:8px; }
-  .deed-doc{
+  .will-doc{
     background:var(--paper); border:1px solid var(--line); border-radius:4px;
     padding:36px 32px; min-height:420px; font-size:0.88rem; line-height:1.7; position:relative;
   }
-  .deed-content.locked{ filter:blur(5px); user-select:none; pointer-events:none; }
-  .deed-title{ text-align:center; font-weight:700; text-transform:uppercase; letter-spacing:0.04em; margin-bottom:20px; }
-  .deed-clause{ margin-bottom:14px; }
-  .deed-clause .num{ font-weight:600; margin-right:6px; }
-  .deed-parties{ margin-bottom:16px; }
-  .deed-sign-row{ display:flex; justify-content:space-between; margin-top:36px; gap:30px; }
-  .deed-sign-block{ flex:1; border-top:1px solid var(--charcoal); padding-top:6px; font-size:0.76rem; opacity:0.7; }
+  .will-content.locked{ filter:blur(5px); user-select:none; pointer-events:none; }
+  .will-title{ text-align:center; font-weight:700; text-transform:uppercase; letter-spacing:0.04em; margin-bottom:20px; }
   .lock-overlay{
     position:absolute; inset:0; display:none; align-items:center; justify-content:center;
     flex-direction:column; gap:14px; text-align:center; padding:20px; background:rgba(253,250,243,0.4);
@@ -46,6 +41,10 @@
   #formMsg{ font-size:0.85rem; margin-top:12px; padding:10px 12px; border-radius:4px; display:none; }
   #formMsg.error{ display:block; background:rgba(168,52,42,0.08); color:var(--stamp-red); }
   #formMsg.success{ display:block; background:rgba(199,154,60,0.12); color:var(--ink-green-deep); }
+  .beneficiary-row{ border:1px solid var(--line); border-radius:6px; padding:12px; margin-bottom:10px; }
+  .beneficiary-row .field-row{ margin-bottom:8px; }
+  .conditional-fields{ display:none; }
+  .conditional-fields.show{ display:block; }
   .checklist{ list-style:none; padding:0; font-size:0.88rem; }
   .checklist li{ padding:8px 0; border-bottom:1px dashed var(--line); }
   .checklist li:last-child{ border-bottom:none; }
@@ -130,9 +129,9 @@
 
 <section class="page-header">
   <div class="wrap">
-    <h1>Land Sale Agreement / Deed of Assignment Generator</h1>
-    <p>A properly structured Deed of Assignment for a land transaction — a document to take to a lawyer, not a substitute for one.</p>
-    <p style="font-size:0.82rem; margin-top:10px;"><a href="/blog/land-sale-agreement-guide-nigeria/">Read: What every land buyer needs to verify before signing →</a></p>
+    <h1>Last Will &amp; Testament Generator</h1>
+    <p>Put your wishes in writing — executor, guardian for minor children, beneficiaries, and a residuary clause, in the standard Nigerian format. A document to take for proper signing and witnessing, not a substitute for legal advice on a complex estate.</p>
+    <p style="font-size:0.82rem; margin-top:10px;">Also need to authorize someone to manage your affairs while you're away? <a href="/power-of-attorney/">Try the Power of Attorney generator</a>.</p>
   </div>
 </section>
 
@@ -142,34 +141,67 @@
     <div class="form-panel">
       <div class="warning-banner">
         <strong>Read this before you use this tool</strong>
-        Land fraud is a serious, common problem in Nigeria. This tool generates a draft document in the standard format — it does not verify the seller's title, confirm the land isn't sold to multiple buyers, check for government acquisition, or replace a licensed surveyor's report. Before any money changes hands: verify title at the State Lands Registry, obtain a search report, use a licensed surveyor, and have a qualified property lawyer review everything and handle Governor's Consent where required. KoboDocs is not a law firm and this document is a starting draft only.
+        A will only becomes valid once it's properly signed by you and witnessed by two people, in the presence of each other, in line with Nigerian law. This tool drafts the document — it doesn't sign, witness, or store it. For a large, complex, or contested-likely estate, or if you're unsure how state-specific succession rules apply to you, have a lawyer review this before you sign.
       </div>
 
       <div class="field-row">
-        <div class="field-group"><label for="assignorName">Seller / Assignor name</label><input type="text" id="assignorName" placeholder="Chief Emeka Obi"></div>
-        <div class="field-group"><label for="assignorAddress">Seller's address</label><input type="text" id="assignorAddress" placeholder="No. 4 Awolowo Road, Ikoyi, Lagos"></div>
+        <div class="field-group"><label for="testatorName">Your full name</label><input type="text" id="testatorName" placeholder="Chief Emeka Obi"></div>
+        <div class="field-group"><label for="testatorAddress">Your address</label><input type="text" id="testatorAddress" placeholder="No. 4 Awolowo Road, Ikoyi, Lagos"></div>
       </div>
       <div class="field-row">
-        <div class="field-group"><label for="assigneeName">Buyer / Assignee name</label><input type="text" id="assigneeName" placeholder="Adaeze Okafor"></div>
-        <div class="field-group"><label for="assigneeAddress">Buyer's address</label><input type="text" id="assigneeAddress" placeholder="No. 12 Adeola Street, Ikeja, Lagos"></div>
+        <div class="field-group"><label for="maritalStatus">Marital status</label>
+          <select id="maritalStatus">
+            <option value="married">Married</option>
+            <option value="single">Single</option>
+            <option value="widowed">Widowed</option>
+            <option value="divorced">Divorced</option>
+          </select>
+        </div>
+        <div class="field-group"><label for="willDate">Date</label><input type="date" id="willDate"></div>
       </div>
+
+      <div class="field-row">
+        <div class="field-group"><label for="executorName">Executor's name</label><input type="text" id="executorName" placeholder="Adaeze Okafor"></div>
+        <div class="field-group"><label for="executorAddress">Executor's address</label><input type="text" id="executorAddress" placeholder="No. 12 Adeola Street, Ikeja, Lagos"></div>
+      </div>
+      <div class="field-group"><label for="altExecutorName">Alternate executor (optional, if the first can't serve)</label><input type="text" id="altExecutorName" placeholder="Tunde Bello"></div>
 
       <div class="field-group">
-        <label for="propertyAddress">Property location / description</label>
-        <input type="text" id="propertyAddress" placeholder="Plot 14, Block C, Abraham Adesanya Estate, Ajah, Lagos">
+        <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
+          <input type="checkbox" id="hasMinorChildren" style="width:auto;"> I have children under 18 and want to name a guardian
+        </label>
       </div>
-      <div class="field-row">
-        <div class="field-group"><label for="propertySize">Property size</label><input type="text" id="propertySize" placeholder="600 square metres"></div>
-        <div class="field-group"><label for="surveyPlanNo">Survey plan number (optional)</label><input type="text" id="surveyPlanNo" placeholder="LA/2024/00123"></div>
-      </div>
-      <div class="field-row">
-        <div class="field-group"><label for="purchasePrice">Purchase price (₦)</label><input type="text" id="purchasePrice" placeholder="15,000,000"></div>
-        <div class="field-group"><label for="deedDate">Date</label><input type="date" id="deedDate"></div>
+      <div class="conditional-fields field-row" id="guardianFields">
+        <div class="field-group"><label for="guardianName">Guardian's name</label><input type="text" id="guardianName" placeholder="Ngozi Eze"></div>
+        <div class="field-group"><label for="guardianRelationship">Guardian's relationship to children</label><input type="text" id="guardianRelationship" placeholder="Sister"></div>
       </div>
 
+      <p style="font-size:0.82rem; opacity:0.65; margin:18px 0 8px;">Beneficiaries and what they receive:</p>
+      <div class="beneficiary-row">
+        <div class="field-row">
+          <div class="field-group"><label for="ben1Name">Beneficiary 1</label><input type="text" id="ben1Name" placeholder="Chioma Obi (daughter)"></div>
+          <div class="field-group"><label for="ben1Gift">Receives</label><input type="text" id="ben1Gift" placeholder="My house at Plot 14, Ajah, Lagos"></div>
+        </div>
+      </div>
+      <div class="beneficiary-row">
+        <div class="field-row">
+          <div class="field-group"><label for="ben2Name">Beneficiary 2 (optional)</label><input type="text" id="ben2Name" placeholder="Emeka Obi Jr. (son)"></div>
+          <div class="field-group"><label for="ben2Gift">Receives</label><input type="text" id="ben2Gift" placeholder="My Toyota Camry and ₦2,000,000"></div>
+        </div>
+      </div>
+      <div class="beneficiary-row">
+        <div class="field-row">
+          <div class="field-group"><label for="ben3Name">Beneficiary 3 (optional)</label><input type="text" id="ben3Name"></div>
+          <div class="field-group"><label for="ben3Gift">Receives</label><input type="text" id="ben3Gift"></div>
+        </div>
+      </div>
+
+      <div class="field-group"><label for="residuary">Who receives everything else not specifically mentioned?</label><input type="text" id="residuary" placeholder="To be shared equally among my named beneficiaries above"></div>
+      <div class="field-group"><label for="funeralWishes">Funeral wishes (optional)</label><textarea id="funeralWishes" rows="2" placeholder="e.g. I wish to be buried according to my family's customary rites in my hometown."></textarea></div>
+
       <div class="field-row">
-        <div class="field-group"><label for="witness1">Witness for Seller (name, address, occupation)</label><input type="text" id="witness1" placeholder="Tunde Bello, Lagos, Trader"></div>
-        <div class="field-group"><label for="witness2">Witness for Buyer (name, address, occupation)</label><input type="text" id="witness2" placeholder="Fatima Yusuf, Lagos, Teacher"></div>
+        <div class="field-group"><label for="witness1">Witness 1 (name, address, occupation)</label><input type="text" id="witness1" placeholder="Tunde Bello, Lagos, Trader"></div>
+        <div class="field-group"><label for="witness2">Witness 2 (name, address, occupation)</label><input type="text" id="witness2" placeholder="Fatima Yusuf, Lagos, Teacher"></div>
       </div>
 
       <div class="action-row">
@@ -180,14 +212,14 @@
     </div>
 
     <div class="preview-panel">
-      <div class="deed-doc" id="deedDoc">
-        <div class="deed-content" id="deedContent"></div>
+      <div class="will-doc" id="willDocWrap">
+        <div class="will-content" id="willContent"></div>
         <div class="lock-overlay" id="lockOverlay">
           <div class="lock-card">
             <span style="font-family:'Space Mono', monospace; font-size:0.7rem; text-transform:uppercase; color:var(--stamp-gold);">Premium tool</span>
-            <div class="price">₦4,000 <small style="font-size:0.9rem; opacity:0.6;">one-time</small></div>
-            <p style="font-size:0.85rem; opacity:0.75; margin:10px 0 14px;">Unlocks this document, unlimited use, forever.</p>
-            <button type="button" class="btn btn-primary" id="buyPassBtn" style="width:100%;">Unlock for ₦4,000</button>
+            <div class="price">₦3,500 <small style="font-size:0.9rem; opacity:0.6;">one-time</small></div>
+            <p style="font-size:0.85rem; opacity:0.75; margin:10px 0 14px;">Unlocks this document, unlimited edits and downloads, forever.</p>
+            <button type="button" class="btn btn-primary" id="buyPassBtn" style="width:100%;">Unlock for ₦3,500</button>
           </div>
         </div>
       </div>
@@ -197,16 +229,15 @@
 </section>
 
 <section class="bs-section" style="max-width:720px; margin:0 auto; padding:20px 20px 80px;">
-  <h2 style="font-size:1.2rem; margin-bottom:14px;">Before you sign anything</h2>
+  <h2 style="font-size:1.2rem; margin-bottom:14px;">Before you sign</h2>
   <ul class="checklist">
-    <li>Verify the seller's title at the State Lands Registry — confirm they actually own it and it isn't already sold, gifted, or under litigation.</li>
-    <li>Get a professional search report, not just a verbal assurance.</li>
-    <li>Use a licensed surveyor to confirm the exact plot and boundaries match the survey plan.</li>
-    <li>Check whether the land is affected by government acquisition or a road/utility setback.</li>
-    <li>Have a qualified property lawyer review this document and handle Governor's Consent where the land requires it.</li>
-    <li>Never pay the full purchase price before these checks are complete.</li>
+    <li>Sign in the presence of two witnesses, together, at the same time — not separately.</li>
+    <li>Your witnesses should not be beneficiaries under the will, or married to one — this can invalidate their gift.</li>
+    <li>Store the signed original somewhere safe, and tell your executor exactly where it is.</li>
+    <li>Review and update your will after major life events — marriage, divorce, a new child, or a significant change in what you own.</li>
+    <li>For a large or complex estate, or one likely to be contested, have a lawyer review this before you sign.</li>
   </ul>
-  <p style="font-size:0.78rem; opacity:0.5; margin-top:16px;">This tool produces a drafting template only. It is not legal advice, and KoboDocs is not liable for outcomes of transactions using this document — engage a lawyer for anything involving land.</p>
+  <p style="font-size:0.78rem; opacity:0.5; margin-top:16px;">This tool produces a drafting template only. It is not legal advice, and KoboDocs is not liable for outcomes arising from its use — engage a lawyer for complex estates.</p>
 </section>
 
 <footer>
@@ -230,8 +261,6 @@
           <a href="/power-of-attorney/">Power of Attorney</a>
           <a href="/affidavit-generator/">Affidavit Generator</a>
           <a href="/land-sale-agreement/">Land Sale Agreement</a>
-          <a href="/visa-cover-letter/">Visa Cover Letter</a>
-          <a href="/school-report-card/">School Report Card</a>
         </div>
         <div>
           <strong>Company</strong>
@@ -256,6 +285,6 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
 <script src="/assets/export.js" defer></script>
-<script src="/land-sale-agreement/land-sale-agreement.js" defer></script>
+<script src="/will-generator/will-generator.js" defer></script>
 </body>
 </html>
