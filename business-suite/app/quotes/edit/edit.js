@@ -130,14 +130,12 @@ function lockEditor(message) {
     document.getElementById('docPreview').style.setProperty('--stamp-gold', business.brand_color);
   }
 
-  window.renderCacFooter(business, 'pCacFooter', '.form-panel');
-
   const isGrowth = business.suite_tier === 'growth';
   if (isGrowth) document.querySelectorAll('.growth-only').forEach(el => { el.style.display = ''; });
 
   const { data: quote } = await supabase
     .from('documents')
-    .select('id, amount, vat_amount, quote_status, due_date, data, client_id, business_id, clients(id, name)')
+    .select('id, amount, vat_amount, quote_status, due_date, data, client_id, business_id, clients(id, name, tin)')
     .eq('id', quoteId)
     .eq('business_id', business.id)
     .eq('doc_type', 'quotation')
@@ -151,11 +149,13 @@ function lockEditor(message) {
   }
 
   const previousStatus = quote.quote_status;
-  currentClient = quote.clients ? { id: quote.clients.id, name: quote.clients.name } : null;
+  currentClient = quote.clients ? { id: quote.clients.id, name: quote.clients.name, tin: quote.clients.tin } : null;
+
+  window.renderCacFooter(business, 'pCacFooter', '.form-panel', currentClient && currentClient.tin);
 
   const { data: clients } = await supabase
     .from('clients')
-    .select('id, name')
+    .select('id, name, tin')
     .eq('business_id', business.id)
     .order('name');
 
@@ -165,7 +165,8 @@ function lockEditor(message) {
   ).join('');
   select.addEventListener('change', () => {
     const client = (clients || []).find(c => c.id === select.value);
-    currentClient = client ? { id: client.id, name: client.name } : null;
+    currentClient = client ? { id: client.id, name: client.name, tin: client.tin } : null;
+    window.renderCacFooter(business, 'pCacFooter', '.form-panel', currentClient && currentClient.tin);
     renderPreview();
   });
 
