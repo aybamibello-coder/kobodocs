@@ -165,6 +165,16 @@
         ${d.vatOn ? `<div class="totals-row"><span>VAT (7.5%)</span><span>${naira(vat)}</span></div>` : ''}
         <div class="totals-row grand"><span>Total</span><span>${naira(total)}</span></div>
         ${d.note ? `<p style="font-size:0.86rem; opacity:0.75; margin-top:14px;">${escapeHtml(d.note)}</p>` : ''}
+        ${(data.rc_number && Array.isArray(data.cac_directors) && data.cac_directors.length) ? `
+          <p style="font-size:0.72rem; opacity:0.65; border-top:1px dashed #ccc; padding-top:8px; margin-top:14px;">
+            ${escapeHtml(data.business_name || '')} · RC ${escapeHtml(data.rc_number)} · Director(s): ${escapeHtml(data.cac_directors.map(dir => {
+              let s = dir.name;
+              if (dir.former_name) s += ` (formerly ${dir.former_name})`;
+              if (dir.nationality) s += ` — ${dir.nationality}`;
+              return s;
+            }).join('; '))}
+          </p>
+        ` : ''}
       </div>
 
       <div class="bs-panel">

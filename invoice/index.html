@@ -138,8 +138,8 @@
       </div>
 
       <details style="margin-bottom:16px;">
-        <summary style="cursor:pointer; font-size:0.85rem; opacity:0.75;">Registered company? Add CAC compliance details (optional)</summary>
-        <p style="font-size:0.78rem; opacity:0.6; margin:8px 0;">Since 1 Aug 2026, CAC requires registered companies to show their RC number and director names on invoices.</p>
+        <summary style="cursor:pointer; font-size:0.85rem; opacity:0.75;">Registered company? Add tax &amp; compliance details (optional)</summary>
+        <p style="font-size:0.78rem; opacity:0.6; margin:8px 0;">CAC requires registered companies to show their RC number and director names on invoices. If you're VAT-registered, your TIN and VAT number are also expected on invoices under Nigeria's e-invoicing rules.</p>
         <div class="field-group">
           <label for="bizRc">RC number</label>
           <input type="text" id="bizRc" placeholder="RC1234567">
@@ -147,6 +147,16 @@
         <div class="field-group">
           <label for="bizDirectors">Director(s)</label>
           <input type="text" id="bizDirectors" placeholder="Adaeze Okafor; Tunde Bakare">
+        </div>
+        <div class="field-row">
+          <div class="field-group">
+            <label for="bizTin">TIN</label>
+            <input type="text" id="bizTin" placeholder="12345678-0001">
+          </div>
+          <div class="field-group">
+            <label for="bizVat">VAT number</label>
+            <input type="text" id="bizVat" placeholder="Optional">
+          </div>
         </div>
       </details>
 

@@ -173,7 +173,7 @@ function showMsg(text, type) {
 
   const { data: clients } = await supabase
     .from('clients')
-    .select('id, name')
+    .select('id, name, tin')
     .eq('business_id', business.id)
     .order('name');
 
@@ -185,7 +185,8 @@ function showMsg(text, type) {
       clients.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
     select.addEventListener('change', () => {
       const client = clients.find(c => c.id === select.value);
-      currentClient = client ? { id: client.id, name: client.name } : null;
+      currentClient = client ? { id: client.id, name: client.name, tin: client.tin } : null;
+      window.renderCacFooter(business, 'pCacFooter', '.form-panel', currentClient && currentClient.tin);
       renderPreview();
     });
   }
