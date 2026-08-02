@@ -66,11 +66,6 @@
 }
 </script>
 <style>
-  .es-hero{ background:var(--ink-green-deep); color:var(--paper); padding:60px 20px 50px; }
-  .es-hero .wrap{ max-width:760px; margin:0 auto; }
-  .es-hero h1{ font-family:'Fraunces', serif; font-size:2.1rem; line-height:1.15; margin-bottom:16px; color:var(--paper); }
-  .es-hero p{ font-size:1.02rem; opacity:0.85; margin-bottom:22px; }
-  .es-hero .btn-cta{ display:inline-block; background:#C79A3C; color:#141a14; font-weight:600; padding:12px 26px; border-radius:26px; text-decoration:none; }
   .es-section{ max-width:900px; margin:0 auto; padding:50px 20px; }
   .es-section h2{ font-family:'Fraunces', serif; font-size:1.5rem; margin-bottom:18px; text-align:center; }
   .feature-grid{ display:grid; grid-template-columns:repeat(auto-fit, minmax(220px,1fr)); gap:20px; margin-top:24px; }
@@ -112,11 +107,31 @@
   </nav>
 </header>
 
-<section class="es-hero">
+<section class="hero">
   <div class="wrap">
-    <h1>Send any document for signature — track it until it's done</h1>
-    <p>Upload a contract, invoice, or agreement, add who needs to sign, and send. Each signer gets a private link and signs right in their browser — no account needed on their end. Legally valid under Nigerian law.</p>
-    <a class="btn-cta" href="/esign/app/">Send a document →</a>
+    <div>
+      <span class="eyebrow">KoboDocs e-Signature · Legally valid in Nigeria</span>
+      <h1>Send any document for signature — <em>track it until it's done</em></h1>
+      <p class="lede">Upload a contract, invoice, or agreement, add who needs to sign, and send. Each signer gets a private link and signs right in their browser — no account needed on their end.</p>
+      <div class="hero-ctas">
+        <a href="/esign/app/" class="btn btn-primary">Send a document</a>
+      </div>
+      <div class="bs-trial-note">From ₦500 per document, no monthly commitment required.</div>
+    </div>
+    <div class="hero-doc">
+      <div class="stamp red"><span class="stamp-label">Signed</span></div>
+      <div class="hero-doc-head">
+        <div class="co">Service Agreement</div>
+        <div class="no">2 signers<br>Sent 1 Aug 2026</div>
+      </div>
+      <div class="hero-doc-row"><span>Adaeze Fabrics Co. (you)</span><span>Signed ✓</span></div>
+      <div class="hero-doc-row"><span>Tunde Bakare</span><span>Signed ✓</span></div>
+      <div class="hero-doc-total"><span>Status</span><span>Completed</span></div>
+      <div class="hero-doc-status">
+        <span>Finished 2 Aug 2026, 10:42am</span>
+        <span class="status-chip">Audit trail attached</span>
+      </div>
+    </div>
   </div>
 </section>
 

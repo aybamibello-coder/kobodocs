@@ -84,7 +84,18 @@ async function renderApp(ctx) {
           </div>
           ${e.status === 'completed' ? `<button class="btn small download-signed" data-id="${e.id}">Download signed PDF</button>` : ''}
         </div>
-      `).join('') : '<div class="empty-note">No envelopes sent yet.</div>'}</div>
+      `).join('') : `
+        <div class="preview-label">What a completed envelope looks like</div>
+        <div class="hero-doc mini">
+          <div class="hero-doc-head">
+            <div class="co">Service Agreement</div>
+            <div class="no">2 signers<br>Sent 1 Aug 2026</div>
+          </div>
+          <div class="hero-doc-row"><span>Adaeze Fabrics Co. (you)</span><span>Signed ✓</span></div>
+          <div class="hero-doc-row"><span>Tunde Bakare</span><span>Signed ✓</span></div>
+          <div class="hero-doc-total"><span>Status</span><span>Completed</span></div>
+        </div>
+      `}</div>
     </div>
 
     ${ctx.canSend ? '' : buyOptions}
