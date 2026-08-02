@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-EN4PYGX7EW"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-EN4PYGX7EW');
+</script>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>How Nigerian Import Duty Actually Gets Calculated (With a Full Example) | KoboDocs Blog</title>
+<meta name="description" content="Why your landed cost is much higher than the item price — CIF valuation, duty rate, surcharge, ETLS, FCS levy and VAT, with a full worked example.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Work+Sans:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/style.css">
+<style>
+  .post-wrap{ max-width:680px; margin:0 auto; padding:20px 20px 80px; }
+  .post-meta{ font-size:0.8rem; opacity:0.55; margin-bottom:28px; }
+  .post-wrap h2{ font-size:1.2rem; margin:32px 0 10px; }
+  .post-wrap p, .post-wrap li{ font-size:0.98rem; line-height:1.75; opacity:0.85; }
+  .post-wrap ul{ margin:0 0 18px 20px; }
+  .post-note{
+    background:rgba(20,52,43,0.05); border-left:3px solid var(--ink-green-deep);
+    padding:14px 18px; font-size:0.9rem; margin:20px 0;
+  }
+  .post-cta{ margin-top:36px; padding:24px; background:var(--paper); border:1px solid var(--line); border-radius:8px; text-align:center; }
+  .key-takeaways{
+    background:var(--paper); border:1px solid var(--stamp-gold); border-radius:8px;
+    padding:18px 22px; margin:24px 0 32px;
+  }
+  .key-takeaways strong{ display:block; font-size:0.78rem; text-transform:uppercase; letter-spacing:0.05em; color:var(--stamp-gold); margin-bottom:10px; }
+  .key-takeaways ul{ margin:0 0 0 18px; }
+  .key-takeaways li{ font-size:0.92rem; line-height:1.6; opacity:0.85; margin-bottom:4px; }
+  .band-table{ width:100%; border-collapse:collapse; font-size:0.88rem; margin:16px 0; }
+  .band-table th, .band-table td{ border:1px solid var(--line); padding:8px 10px; text-align:left; }
+  .band-table th{ background:rgba(20,52,43,0.05); font-size:0.75rem; text-transform:uppercase; letter-spacing:0.03em; }
+</style>
+</head>
+<body>
+
+<header>
+  <nav class="nav">
+    <a href="/" class="logo">
+      <svg class="mark" viewBox="0 0 32 32" fill="none">
+        <circle cx="16" cy="16" r="14" stroke="#C79A3C" stroke-width="2.5"/>
+        <circle cx="16" cy="16" r="8" stroke="#C79A3C" stroke-width="1.5"/>
+      </svg>
+      KoboDocs
+    </a>
+    <button class="menu-btn" aria-label="Toggle menu" id="menuBtn"><span></span><span></span><span></span></button>
+    <div class="nav-links" id="navLinks">
+      <div class="nav-item">
+        <span class="nav-category">Business Tools ▾</span>
+        <div class="dropdown">
+          <a href="/invoice/">Invoice Generator</a>
+          <a href="/receipt/">Receipt Generator</a>
+          <a href="/quotation/">Quotation Generator</a>
+          <a href="/payslip/">Payslip / Salary Slip</a>
+          <a href="/budget/">Budget Planner</a>
+          <a href="/loan/">Loan Schedule</a>
+          <a href="/qr-code/">QR Code Generator</a>
+          <a href="/salary-calculator/">Take-Home Pay Calculator</a>
+          <a href="/hr-letters/">HR Letter Generator</a>
+          <a href="/waybill/">Waybill / Delivery Note</a>
+          <a href="/freelancer-contract/">Freelancer Contract</a>
+          <a href="/rent-agreement/">Rent / Tenancy Agreement</a>
+          <div class="dropdown-divider"></div>
+          <a href="/business-suite/">Business Suite (Pro)</a>
+          <a href="/school-report-card/">School Report Card (Pro)</a>
+        </div>
+      </div>
+      <a href="/ajo/">Ajo &amp; Esusu</a>
+      <div class="nav-item">
+        <span class="nav-category">Weddings &amp; Events ▾</span>
+        <div class="dropdown">
+          <a href="/bride-price-list/">Bride Price / Wedding List</a>
+          <a href="/wedding-budget-planner/">Wedding/Party Budget Planner</a>
+        </div>
+      </div>
+      <div class="nav-item">
+        <span class="nav-category">Legal &amp; Personal ▾</span>
+        <div class="dropdown">
+          <a href="/affidavit-generator/">Affidavit Generator</a>
+          <a href="/guarantor-form/">Guarantor's Form</a>
+          <a href="/visa-cover-letter/">Visa Cover Letter</a>
+          <a href="/land-sale-agreement/">Land Sale / Deed of Assignment</a>
+          <a href="/nysc-documents/">NYSC Documents</a>
+          <a href="/siwes-logbook-report/">SIWES Logbook &amp; Report</a>
+        </div>
+      </div>
+      <div class="nav-item">
+        <span class="nav-category">Relocation ▾</span>
+        <div class="dropdown">
+          <a href="/relocation/">Relocation Overview</a>
+          <a href="/relocation/japa-calculator/">Japa Cost Calculator</a>
+          <a href="/relocation/proof-of-funds/">Proof of Funds Calculator</a>
+          <a href="/relocation/cost-of-living/">Cost of Living Calculator</a>
+          <div class="dropdown-divider"></div>
+          <a href="/cac-calculator/">CAC Registration Cost</a>
+          <a href="/cac-registration-assistant/">CAC Registration Assistant</a>
+          <a href="/post-incorporation-pack/">Post-Incorporation Pack</a>
+          <a href="/import-duty-calculator/">Import Duty Calculator</a>
+        </div>
+      </div>
+      <a href="/pricing/">Pricing</a>
+      <a href="/account/" id="navAccountLink">Sign in</a>
+      <a href="/invoice/" class="nav-cta">Start free</a>
+    </div>
+  </nav>
+</header>
+
+
+<section class="page-header">
+  <div class="wrap">
+    <a href="/blog/">&larr; Blog</a>
+    <h1>How Nigerian Import Duty Actually Gets Calculated (With a Full Example)</h1>
+  </div>
+</section>
+
+<div class="post-wrap">
+  <div class="post-meta">August 2026 · 8 min read</div>
+
+  <p>The item price on a supplier invoice and what actually clears through Nigerian customs are rarely the same number — often not close. Duty isn't a single flat percentage; it's calculated on a specific valuation base, then followed by several additional charges that stack on top of each other. Understanding the actual sequence is what turns "why is this so much more than I expected" into a number you can predict before you order.</p>
+
+  <div class="key-takeaways">
+    <strong>Key takeaways</strong>
+    <ul>
+      <li>Duty isn't calculated on the item price (FOB) alone — it's calculated on CIF: the cost of goods, freight, and insurance combined, converted to naira.</li>
+      <li>The duty rate itself varies by product (HS code classification), so there's no single "import duty rate" that applies to everything.</li>
+      <li>After duty, several additional charges stack: a surcharge on the duty amount, an ETLS levy, an FCS levy, and finally VAT on top of everything combined.</li>
+      <li>VAT is calculated last, on the sum of CIF plus all the other charges — not on the original item price.</li>
+      <li>The exchange rate used for conversion materially affects your final cost, since the whole calculation happens in naira from that point forward.</li>
+    </ul>
+  </div>
+
+  <h2>Duty is calculated on CIF, not the item price</h2>
+  <p>The valuation base for duty is CIF — Cost, Insurance, and Freight — not just what you paid for the goods themselves. That means:</p>
+  <ul>
+    <li><strong>Cost (FOB)</strong> — the price of the goods themselves.</li>
+    <li><strong>Freight</strong> — the shipping cost to get the goods to Nigeria.</li>
+    <li><strong>Insurance</strong> — if not separately known, commonly estimated as a small percentage of (FOB + Freight).</li>
+  </ul>
+  <p>These three, added together and converted to naira at the applicable exchange rate, give you CIF — the actual number duty and most of the other charges are calculated against, not the item price alone.</p>
+
+  <h2>The duty rate varies by product</h2>
+  <p>There's no single flat "import duty rate" in Nigeria — the applicable rate depends on the product's HS (Harmonized System) code classification, and rates can range considerably depending on what's being imported. This is why two importers bringing in different categories of goods, even at similar CIF values, can end up with meaningfully different total duty.</p>
+
+  <h2>The charges that stack after duty</h2>
+  <div class="post-note">
+    <strong>Duty is the start, not the total.</strong> After duty is calculated, several further charges apply, each building on what came before — and VAT is calculated last, on the combined total of everything, not on the original item price.
+  </div>
+  <ul>
+    <li><strong>Surcharge</strong> — a percentage of the duty amount itself, not of CIF.</li>
+    <li><strong>ETLS levy</strong> (ECOWAS Trade Liberalisation Scheme) — a small percentage of CIF.</li>
+    <li><strong>FCS levy</strong> — a percentage of the FOB value in naira.</li>
+    <li><strong>VAT</strong> — calculated last, applied to CIF plus duty plus all the charges above combined — meaning VAT is effectively charged on charges, not just on the goods.</li>
+  </ul>
+  <p>The total landed cost is CIF plus all of these charges added together — which is consistently higher than most people estimate when they only think in terms of "duty percentage on the item price."</p>
+
+  <h2>A worked example</h2>
+  <p>Take a shipment with a FOB value of $2,000, freight of $300, and an exchange rate of ₦1,550/$1, with a duty rate of 20% (for illustration — your actual rate depends on the product's HS code):</p>
+  <ul>
+    <li><strong>Insurance</strong> (estimated): 1.5% × ($2,000 + $300) = $34.50</li>
+    <li><strong>CIF (USD):</strong> $2,000 + $300 + $34.50 = $2,334.50 → <strong>CIF (₦):</strong> ₦3,618,475</li>
+    <li><strong>Duty:</strong> 20% × ₦3,618,475 = ₦723,695</li>
+    <li><strong>Surcharge:</strong> 7% × ₦723,695 = ₦50,659</li>
+    <li><strong>ETLS:</strong> 0.5% × ₦3,618,475 = ₦18,092</li>
+    <li><strong>FCS levy:</strong> 4% × FOB in naira (₦3,100,000) = ₦124,000</li>
+    <li><strong>VAT:</strong> 7.5% × (₦3,618,475 + ₦723,695 + ₦50,659 + ₦18,092 + ₦124,000) = 7.5% × ₦4,534,921 = ₦340,119</li>
+    <li><strong>Total landed cost:</strong> ₦4,875,040</li>
+  </ul>
+  <p>Against a FOB value that converts to ₦3,100,000, the final landed cost comes to roughly 57% more than the item price alone — this is exactly the gap that catches people off guard when they only budget for "the goods plus a rough duty estimate."</p>
+
+  <h2>Common mistakes that throw off the estimate</h2>
+  <ul>
+    <li><strong>Forgetting insurance entirely</strong> — even an estimated figure changes CIF, which everything else is built on.</li>
+    <li><strong>Using an outdated or wrong exchange rate</strong> — since the entire calculation happens in naira from CIF onward, this single input has an outsized effect on the final number.</li>
+    <li><strong>Assuming duty applies to FOB instead of CIF</strong> — a common simplification that understates the actual duty owed.</li>
+    <li><strong>Forgetting that VAT applies to the combined total</strong>, not just the goods — it's frequently the largest single miscalculation in a rough estimate.</li>
+  </ul>
+
+  <h2>How to estimate your own</h2>
+  <p>KoboDocs' free <a href="/import-duty-calculator/">Nigeria import duty calculator</a> runs this exact CIF-based calculation — duty, surcharge, ETLS, FCS levy, and VAT — for your own shipment values and exchange rate.</p>
+
+  <h2>Frequently asked questions</h2>
+  <p><strong>How do I find the correct duty rate for my product?</strong><br>
+  This depends on your product's HS code classification under Nigeria's customs tariff — a customs agent or the Nigeria Customs Service can help confirm the applicable rate for your specific goods.</p>
+  <p><strong>Can I use my own insurance figure instead of an estimate?</strong><br>
+  Yes — if you have actual insurance costs for the shipment, using that figure gives a more accurate CIF than an estimated percentage.</p>
+  <p><strong>Does the exchange rate used matter that much?</strong><br>
+  Yes, significantly — since CIF (and therefore duty, surcharge, ETLS, FCS levy, and VAT) is all calculated in naira from that conversion onward, a different exchange rate can meaningfully shift your total landed cost.</p>
+  <p><strong>Is VAT charged on the item price or the total?</strong><br>
+  VAT is calculated last, on the combined total of CIF plus duty plus the other charges — not on the original item price alone, which is why it tends to be larger than people initially expect.</p>
+  <p><strong>Do these charges apply to all types of imports?</strong><br>
+  Specific rates, exemptions, and applicable charges can vary by product category and import type — this calculation reflects the general structure, but always confirm specifics for your particular goods with a customs agent or the Nigeria Customs Service.</p>
+
+  <div class="post-cta">
+    <p style="margin-bottom:14px;">Estimate your actual landed cost before you place the order.</p>
+    <a href="/import-duty-calculator/" class="btn btn-primary">Calculate your import duty</a>
+  </div>
+
+  <p style="font-size:0.8rem; opacity:0.55; margin-top:24px;">This article is for general planning guidance and isn't customs or tax advice. Duty rates, levies, and formulas are subject to change — confirm current rates and classification for your specific goods with a licensed customs agent or the Nigeria Customs Service.</p>
+</div>
+
+<footer>
+  <div class="wrap">
+    <div class="footer-top">
+      <div>
+        <div class="footer-logo">KoboDocs</div>
+        <p class="footer-note">Every business document, stamped and sent — built for Nigeria, one Naira at a time.</p>
+      </div>
+      <div class="footer-links">
+        <div>
+          <strong>Business tools</strong>
+          <a href="/invoice/">Invoice</a>
+          <a href="/receipt/">Receipt</a>
+          <a href="/payslip/">Payslip</a>
+          <a href="/ajo/">Ajo &amp; Esusu</a>
+          <a href="/qr-code/">QR Code</a>
+        </div>
+        <div>
+          <strong>Relocation</strong>
+          <a href="/relocation/">Relocation home</a>
+          <a href="/relocation/japa-calculator/">Japa Cost Calculator</a>
+          <a href="/relocation/proof-of-funds/">Proof of Funds</a>
+          <a href="/relocation/cost-of-living/">Cost of Living</a>
+        </div>
+        <div>
+          <strong>Company</strong>
+          <a href="/pricing/">Pricing</a>
+          <a href="/about/">About</a>
+          <a href="/contact/">Contact</a>
+          <a href="/blog/">Blog</a>
+        </div>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2026 KoboDocs. Not a financial institution — we never hold or move your money.</span>
+      <span><a href="/privacy/">Privacy</a> · <a href="/terms/">Terms</a> · Made in Lagos</span>
+    </div>
+  </div>
+</footer>
+
+<script src="/assets/app.js" defer></script>
+<script type="module" src="/assets/auth.js"></script>
+<script src="/assets/nav-auth.js" defer></script>
+
+</body>
+</html>
