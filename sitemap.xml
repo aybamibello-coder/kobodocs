@@ -241,6 +241,24 @@
     <priority>0.8</priority>
   </url>
   <url>
+    <loc>https://kobodocs.com.ng/payroll/</loc>
+    <lastmod>2026-08-02</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://kobodocs.com.ng/esign/</loc>
+    <lastmod>2026-08-02</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://kobodocs.com.ng/cac-letterhead-checker/</loc>
+    <lastmod>2026-08-02</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
     <loc>https://kobodocs.com.ng/blog/</loc>
     <lastmod>2026-07-30</lastmod>
     <changefreq>weekly</changefreq>

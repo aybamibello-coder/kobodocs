@@ -123,6 +123,8 @@ function showMsg(text, type) {
     document.getElementById('docPreview').style.setProperty('--stamp-gold', business.brand_color);
   }
 
+  window.renderCacFooter(business, 'pCacFooter', '.form-panel');
+
   const isGrowth = business.suite_tier === 'growth';
   let templates = [];
   if (isGrowth) {

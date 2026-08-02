@@ -26,7 +26,19 @@ function renderPlanPicker(ctx) {
   const area = document.getElementById('mainArea');
   area.innerHTML = `
     <div class="bs-panel">
-      <p style="margin-bottom:16px;">No active Payroll plan for <strong>${ctx.business.name}</strong> yet. Pick one to get started — priced by headcount, billed monthly.</p>
+      <div class="preview-label">What a payslip looks like</div>
+      <div class="hero-doc mini">
+        <div class="hero-doc-head">
+          <div class="co">Funmi Adebayo</div>
+          <div class="no">PAYSLIP<br>August 2026</div>
+        </div>
+        <div class="hero-doc-row"><span>Basic salary</span><span>₦200,000</span></div>
+        <div class="hero-doc-row"><span>Housing allowance</span><span>₦60,000</span></div>
+        <div class="hero-doc-row"><span>Pension (employee, 8%)</span><span>−₦23,200</span></div>
+        <div class="hero-doc-row"><span>PAYE tax</span><span>−₦31,015</span></div>
+        <div class="hero-doc-total"><span>Net pay</span><span>₦235,785</span></div>
+      </div>
+      <p style="margin-bottom:16px; text-align:center;">No active Payroll plan for <strong>${ctx.business.name}</strong> yet. Pick one to get started — priced by headcount, billed monthly.</p>
       <div class="plans-grid">
         <div class="plan-card">
           <h3>Starter</h3>
@@ -93,7 +105,19 @@ async function renderApp(ctx) {
         <strong>${ctx.business.name}</strong>
         <span class="pr-meta">${ctx.subscription.plan} plan · ${employees.length}/${ctx.subscription.employee_limit} employees · renews ${new Date(ctx.subscription.expires_at).toLocaleDateString('en-GB')}</span>
       </div>
-      <div id="empListWrap">${employees.length ? employees.map(employeeRow).join('') : '<div class="empty-note">No employees added yet.</div>'}</div>
+      <div id="empListWrap">${employees.length ? employees.map(employeeRow).join('') : `
+        <div class="preview-label">What a payslip looks like once you add staff</div>
+        <div class="hero-doc mini">
+          <div class="hero-doc-head">
+            <div class="co">Funmi Adebayo</div>
+            <div class="no">PAYSLIP<br>August 2026</div>
+          </div>
+          <div class="hero-doc-row"><span>Basic salary</span><span>₦200,000</span></div>
+          <div class="hero-doc-row"><span>Pension (employee, 8%)</span><span>−₦23,200</span></div>
+          <div class="hero-doc-row"><span>PAYE tax</span><span>−₦31,015</span></div>
+          <div class="hero-doc-total"><span>Net pay</span><span>₦235,785</span></div>
+        </div>
+      `}</div>
     </div>
 
     <div class="bs-panel">

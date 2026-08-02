@@ -45,6 +45,16 @@ function renderPreview() {
     : todayStr();
   document.getElementById('pClientName').textContent = clientName;
 
+  const bizRc = document.getElementById('bizRc').value.trim();
+  const bizDirectors = document.getElementById('bizDirectors').value.trim();
+  const cacFooterEl = document.getElementById('pCacFooter');
+  if (bizRc && bizDirectors) {
+    cacFooterEl.textContent = `${bizName} · RC ${bizRc} · Director(s): ${bizDirectors}`;
+    cacFooterEl.style.display = 'block';
+  } else {
+    cacFooterEl.style.display = 'none';
+  }
+
   const items = getItems();
   const tbody = document.getElementById('pItemsBody');
   tbody.innerHTML = items.map(it => `
@@ -68,7 +78,7 @@ function renderPreview() {
   if (note) { noteEl.textContent = note; noteEl.style.display = 'block'; }
   else { noteEl.style.display = 'none'; }
 
-  if (window.KoboStorage) KoboStorage.save('invoice', { bizName, bizPhone, bizBank, invNumber, invDate: invDateRaw, clientName, vatOn, note, items });
+  if (window.KoboStorage) KoboStorage.save('invoice', { bizName, bizPhone, bizBank, bizRc, bizDirectors, invNumber, invDate: invDateRaw, clientName, vatOn, note, items });
 
   return { bizName, bizPhone, bizBank, invNumber, clientName, items, subtotal, vat, total, vatOn, note };
 }
@@ -78,6 +88,8 @@ function collectFormState() {
     bizName: document.getElementById('bizName').value,
     bizPhone: document.getElementById('bizPhone').value,
     bizBank: document.getElementById('bizBank').value,
+    bizRc: document.getElementById('bizRc').value,
+    bizDirectors: document.getElementById('bizDirectors').value,
     invNumber: document.getElementById('invNumber').value,
     invDate: document.getElementById('invDate').value,
     clientName: document.getElementById('clientName').value,
@@ -91,6 +103,8 @@ function applyFormState(state) {
   document.getElementById('bizName').value = state.bizName || '';
   document.getElementById('bizPhone').value = state.bizPhone || '';
   document.getElementById('bizBank').value = state.bizBank || '';
+  document.getElementById('bizRc').value = state.bizRc || '';
+  document.getElementById('bizDirectors').value = state.bizDirectors || '';
   document.getElementById('invNumber').value = state.invNumber || 'INV-0001';
   document.getElementById('invDate').value = state.invDate || new Date().toISOString().split('T')[0];
   document.getElementById('clientName').value = state.clientName || '';
@@ -102,7 +116,7 @@ function applyFormState(state) {
 }
 
 // ---------- wire up inputs ----------
-['bizName','bizPhone','bizBank','invNumber','invDate','clientName','vatToggle','invNote'].forEach(id => {
+['bizName','bizPhone','bizBank','bizRc','bizDirectors','invNumber','invDate','clientName','vatToggle','invNote'].forEach(id => {
   document.getElementById(id).addEventListener('input', renderPreview);
 });
 document.getElementById('vatToggle').addEventListener('change', renderPreview);

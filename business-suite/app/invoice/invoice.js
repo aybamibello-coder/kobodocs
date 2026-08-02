@@ -141,6 +141,10 @@ function showMsg(text, type) {
     document.getElementById('docPreview').style.setProperty('--stamp-gold', business.brand_color);
   }
 
+  // CAC compliance footer — required on invoices since CAC's Aug 2026
+  // enforcement of CAMA 2020 s.304 & s.729(1)(c).
+  window.renderCacFooter(business, 'pCacFooter', '.form-panel');
+
   // Load clients for the picker
   const { data: clients } = await supabase
     .from('clients')
