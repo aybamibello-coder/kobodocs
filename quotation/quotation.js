@@ -40,6 +40,16 @@ function renderPreview() {
   document.getElementById('pQuoDate').textContent = baseDate.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
   document.getElementById('pClientName').textContent = clientName;
 
+  const bizRc = document.getElementById('bizRc').value.trim();
+  const bizDirectors = document.getElementById('bizDirectors').value.trim();
+  const cacFooterEl = document.getElementById('pCacFooter');
+  if (bizRc && bizDirectors) {
+    cacFooterEl.textContent = `${bizName} · RC ${bizRc} · Director(s): ${bizDirectors}`;
+    cacFooterEl.style.display = 'block';
+  } else {
+    cacFooterEl.style.display = 'none';
+  }
+
   const items = getItems();
   document.getElementById('pItemsBody').innerHTML = items.map(it => `
     <tr><td>${it.desc}</td><td class="num">${it.qty}</td><td class="num">${naira(it.qty * it.price)}</td></tr>
@@ -63,7 +73,7 @@ function renderPreview() {
   if (note) { noteEl.textContent = note; noteEl.style.display = 'block'; }
   else { noteEl.style.display = 'none'; }
 
-  if (window.KoboStorage) KoboStorage.save('quotation', { bizName, bizPhone, quoNumber, quoDate: quoDateRaw, clientName, vatOn, validDays, note, items });
+  if (window.KoboStorage) KoboStorage.save('quotation', { bizName, bizPhone, bizRc, bizDirectors, quoNumber, quoDate: quoDateRaw, clientName, vatOn, validDays, note, items });
 
   return { bizName, bizPhone, quoNumber, clientName, items, subtotal, vat, total, vatOn, validStr, note };
 }
@@ -72,6 +82,8 @@ function collectFormState() {
   return {
     bizName: document.getElementById('bizName').value,
     bizPhone: document.getElementById('bizPhone').value,
+    bizRc: document.getElementById('bizRc').value,
+    bizDirectors: document.getElementById('bizDirectors').value,
     quoNumber: document.getElementById('quoNumber').value,
     quoDate: document.getElementById('quoDate').value,
     clientName: document.getElementById('clientName').value,
@@ -85,6 +97,8 @@ function collectFormState() {
 function applyFormState(state) {
   document.getElementById('bizName').value = state.bizName || '';
   document.getElementById('bizPhone').value = state.bizPhone || '';
+  document.getElementById('bizRc').value = state.bizRc || '';
+  document.getElementById('bizDirectors').value = state.bizDirectors || '';
   document.getElementById('quoNumber').value = state.quoNumber || 'QUO-0001';
   document.getElementById('quoDate').value = state.quoDate || new Date().toISOString().split('T')[0];
   document.getElementById('clientName').value = state.clientName || '';
@@ -96,7 +110,7 @@ function applyFormState(state) {
     .forEach(it => addItemRow(it.desc, it.qty, it.price));
 }
 
-['bizName','bizPhone','quoNumber','quoDate','clientName','vatToggle','validDays','quoNote'].forEach(id => {
+['bizName','bizPhone','bizRc','bizDirectors','quoNumber','quoDate','clientName','vatToggle','validDays','quoNote'].forEach(id => {
   document.getElementById(id).addEventListener('input', renderPreview);
   document.getElementById(id).addEventListener('change', renderPreview);
 });

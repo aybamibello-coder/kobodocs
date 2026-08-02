@@ -142,29 +142,8 @@ function showMsg(text, type) {
   }
 
   // CAC compliance footer — required on invoices since CAC's Aug 2026
-  // enforcement of CAMA 2020 s.304 & s.729(1)(c). Only shows once the
-  // owner has set RC number/directors in /business-suite/app/compliance/.
-  const cacFooterEl = document.getElementById('pCacFooter');
-  const directors = Array.isArray(business.cac_directors) ? business.cac_directors : [];
-  if (business.rc_number && directors.length) {
-    const directorNames = directors.map(d => {
-      let s = d.name;
-      if (d.former_name) s += ` (formerly ${d.former_name})`;
-      if (d.nationality) s += ` — ${d.nationality}`;
-      return s;
-    }).join('; ');
-    cacFooterEl.innerHTML = `${business.name} · RC ${business.rc_number} · Director(s): ${directorNames}`;
-    cacFooterEl.style.display = 'block';
-  } else {
-    // Deliberately NOT rendered inside #docPreview — this element gets
-    // captured into the exported PDF, and a call-to-action has no place
-    // on a real invoice sent to a client. Shown as a page-level banner
-    // instead, just above the form.
-    const banner = document.createElement('div');
-    banner.style.cssText = 'background:rgba(199,154,60,0.1); border:1px solid rgba(199,154,60,0.3); border-radius:8px; padding:12px 16px; font-size:0.82rem; margin-bottom:16px;';
-    banner.innerHTML = `Since 1 Aug 2026, CAC requires your RC number and director names on invoices. <a href="/business-suite/app/compliance/">Set this up once →</a>`;
-    document.querySelector('.form-panel')?.prepend(banner);
-  }
+  // enforcement of CAMA 2020 s.304 & s.729(1)(c).
+  window.renderCacFooter(business, 'pCacFooter', '.form-panel');
 
   // Load clients for the picker
   const { data: clients } = await supabase

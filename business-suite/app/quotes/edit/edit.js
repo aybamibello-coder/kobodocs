@@ -130,6 +130,8 @@ function lockEditor(message) {
     document.getElementById('docPreview').style.setProperty('--stamp-gold', business.brand_color);
   }
 
+  window.renderCacFooter(business, 'pCacFooter', '.form-panel');
+
   const isGrowth = business.suite_tier === 'growth';
   if (isGrowth) document.querySelectorAll('.growth-only').forEach(el => { el.style.display = ''; });
 
