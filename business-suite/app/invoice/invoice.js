@@ -160,8 +160,9 @@ function showMsg(text, type) {
       clients.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
     select.addEventListener('change', () => {
       const client = clients.find(c => c.id === select.value);
-      currentClient = client ? { id: client.id, name: client.name } : null;
+      currentClient = client ? { id: client.id, name: client.name, tin: client.tin } : null;
       document.getElementById('pBizContact').textContent = business.name || '';
+      window.renderCacFooter(business, 'pCacFooter', '.form-panel', currentClient && currentClient.tin);
       renderPreview();
     });
   }

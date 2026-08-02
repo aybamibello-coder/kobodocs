@@ -47,9 +47,17 @@ function renderPreview() {
 
   const bizRc = document.getElementById('bizRc').value.trim();
   const bizDirectors = document.getElementById('bizDirectors').value.trim();
+  const bizTin = document.getElementById('bizTin').value.trim();
+  const bizVat = document.getElementById('bizVat').value.trim();
   const cacFooterEl = document.getElementById('pCacFooter');
-  if (bizRc && bizDirectors) {
-    cacFooterEl.textContent = `${bizName} · RC ${bizRc} · Director(s): ${bizDirectors}`;
+  const footerParts = [];
+  if (bizRc) footerParts.push(`RC ${bizRc}`);
+  if (bizTin) footerParts.push(`TIN ${bizTin}`);
+  if (bizVat) footerParts.push(`VAT ${bizVat}`);
+  if (footerParts.length) {
+    let html = `${bizName} · ${footerParts.join(' · ')}`;
+    if (bizDirectors) html += ` · Director(s): ${bizDirectors}`;
+    cacFooterEl.innerHTML = html;
     cacFooterEl.style.display = 'block';
   } else {
     cacFooterEl.style.display = 'none';
@@ -78,7 +86,7 @@ function renderPreview() {
   if (note) { noteEl.textContent = note; noteEl.style.display = 'block'; }
   else { noteEl.style.display = 'none'; }
 
-  if (window.KoboStorage) KoboStorage.save('invoice', { bizName, bizPhone, bizBank, bizRc, bizDirectors, invNumber, invDate: invDateRaw, clientName, vatOn, note, items });
+  if (window.KoboStorage) KoboStorage.save('invoice', { bizName, bizPhone, bizBank, bizRc, bizDirectors, bizTin, bizVat, invNumber, invDate: invDateRaw, clientName, vatOn, note, items });
 
   return { bizName, bizPhone, bizBank, invNumber, clientName, items, subtotal, vat, total, vatOn, note };
 }
@@ -90,6 +98,8 @@ function collectFormState() {
     bizBank: document.getElementById('bizBank').value,
     bizRc: document.getElementById('bizRc').value,
     bizDirectors: document.getElementById('bizDirectors').value,
+    bizTin: document.getElementById('bizTin').value,
+    bizVat: document.getElementById('bizVat').value,
     invNumber: document.getElementById('invNumber').value,
     invDate: document.getElementById('invDate').value,
     clientName: document.getElementById('clientName').value,
@@ -105,6 +115,8 @@ function applyFormState(state) {
   document.getElementById('bizBank').value = state.bizBank || '';
   document.getElementById('bizRc').value = state.bizRc || '';
   document.getElementById('bizDirectors').value = state.bizDirectors || '';
+  document.getElementById('bizTin').value = state.bizTin || '';
+  document.getElementById('bizVat').value = state.bizVat || '';
   document.getElementById('invNumber').value = state.invNumber || 'INV-0001';
   document.getElementById('invDate').value = state.invDate || new Date().toISOString().split('T')[0];
   document.getElementById('clientName').value = state.clientName || '';
@@ -116,7 +128,7 @@ function applyFormState(state) {
 }
 
 // ---------- wire up inputs ----------
-['bizName','bizPhone','bizBank','bizRc','bizDirectors','invNumber','invDate','clientName','vatToggle','invNote'].forEach(id => {
+['bizName','bizPhone','bizBank','bizRc','bizDirectors','bizTin','bizVat','invNumber','invDate','clientName','vatToggle','invNote'].forEach(id => {
   document.getElementById(id).addEventListener('input', renderPreview);
 });
 document.getElementById('vatToggle').addEventListener('change', renderPreview);

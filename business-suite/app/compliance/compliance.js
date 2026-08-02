@@ -30,6 +30,10 @@ async function renderForm(ctx) {
         <input id="ccName" value="${ctx.business.name || ''}">
         <label>RC number</label>
         <input id="ccRc" placeholder="e.g. RC1234567" value="${ctx.business.rc_number || ''}">
+        <label>Tax Identification Number (TIN)</label>
+        <input id="ccTin" placeholder="e.g. 12345678-0001" value="${ctx.business.tin_number || ''}">
+        <label>VAT registration number</label>
+        <input id="ccVat" placeholder="Optional, if VAT-registered" value="${ctx.business.vat_number || ''}">
         <label style="margin-top:10px;">Directors</label>
         <div id="directorsList"></div>
         <button type="button" class="btn small" id="addDirectorBtn" style="margin:8px 0 18px;">+ Add director</button>
@@ -62,6 +66,8 @@ async function renderForm(ctx) {
       .update({
         name: document.getElementById('ccName').value.trim() || ctx.business.name,
         rc_number: document.getElementById('ccRc').value.trim() || null,
+        tin_number: document.getElementById('ccTin').value.trim() || null,
+        vat_number: document.getElementById('ccVat').value.trim() || null,
         cac_directors: cacDirectors,
       })
       .eq('id', ctx.business.id);

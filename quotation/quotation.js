@@ -42,9 +42,17 @@ function renderPreview() {
 
   const bizRc = document.getElementById('bizRc').value.trim();
   const bizDirectors = document.getElementById('bizDirectors').value.trim();
+  const bizTin = document.getElementById('bizTin').value.trim();
+  const bizVat = document.getElementById('bizVat').value.trim();
   const cacFooterEl = document.getElementById('pCacFooter');
-  if (bizRc && bizDirectors) {
-    cacFooterEl.textContent = `${bizName} · RC ${bizRc} · Director(s): ${bizDirectors}`;
+  const footerParts = [];
+  if (bizRc) footerParts.push(`RC ${bizRc}`);
+  if (bizTin) footerParts.push(`TIN ${bizTin}`);
+  if (bizVat) footerParts.push(`VAT ${bizVat}`);
+  if (footerParts.length) {
+    let html = `${bizName} · ${footerParts.join(' · ')}`;
+    if (bizDirectors) html += ` · Director(s): ${bizDirectors}`;
+    cacFooterEl.innerHTML = html;
     cacFooterEl.style.display = 'block';
   } else {
     cacFooterEl.style.display = 'none';
@@ -73,7 +81,7 @@ function renderPreview() {
   if (note) { noteEl.textContent = note; noteEl.style.display = 'block'; }
   else { noteEl.style.display = 'none'; }
 
-  if (window.KoboStorage) KoboStorage.save('quotation', { bizName, bizPhone, bizRc, bizDirectors, quoNumber, quoDate: quoDateRaw, clientName, vatOn, validDays, note, items });
+  if (window.KoboStorage) KoboStorage.save('quotation', { bizName, bizPhone, bizRc, bizDirectors, bizTin, bizVat, quoNumber, quoDate: quoDateRaw, clientName, vatOn, validDays, note, items });
 
   return { bizName, bizPhone, quoNumber, clientName, items, subtotal, vat, total, vatOn, validStr, note };
 }
@@ -84,6 +92,8 @@ function collectFormState() {
     bizPhone: document.getElementById('bizPhone').value,
     bizRc: document.getElementById('bizRc').value,
     bizDirectors: document.getElementById('bizDirectors').value,
+    bizTin: document.getElementById('bizTin').value,
+    bizVat: document.getElementById('bizVat').value,
     quoNumber: document.getElementById('quoNumber').value,
     quoDate: document.getElementById('quoDate').value,
     clientName: document.getElementById('clientName').value,
@@ -99,6 +109,8 @@ function applyFormState(state) {
   document.getElementById('bizPhone').value = state.bizPhone || '';
   document.getElementById('bizRc').value = state.bizRc || '';
   document.getElementById('bizDirectors').value = state.bizDirectors || '';
+  document.getElementById('bizTin').value = state.bizTin || '';
+  document.getElementById('bizVat').value = state.bizVat || '';
   document.getElementById('quoNumber').value = state.quoNumber || 'QUO-0001';
   document.getElementById('quoDate').value = state.quoDate || new Date().toISOString().split('T')[0];
   document.getElementById('clientName').value = state.clientName || '';
@@ -110,7 +122,7 @@ function applyFormState(state) {
     .forEach(it => addItemRow(it.desc, it.qty, it.price));
 }
 
-['bizName','bizPhone','bizRc','bizDirectors','quoNumber','quoDate','clientName','vatToggle','validDays','quoNote'].forEach(id => {
+['bizName','bizPhone','bizRc','bizDirectors','bizTin','bizVat','quoNumber','quoDate','clientName','vatToggle','validDays','quoNote'].forEach(id => {
   document.getElementById(id).addEventListener('input', renderPreview);
   document.getElementById(id).addEventListener('change', renderPreview);
 });
