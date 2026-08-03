@@ -180,13 +180,21 @@ Deno.serve(async (req) => {
           .eq("id", business.id);
       }
     } else if (metadata?.product === "tool_pass") {
-      await supabase.from("tool_access_passes").insert({
-        user_id: metadata.user_id,
-        tool_key: metadata.tool_key,
-        purchased_at: new Date().toISOString(),
-        expires_at: null,
-        paystack_reference: reference,
-      });
+      // estate_bundle is a fan-out pass: grant both Will and PoA from one purchase.
+      if (metadata.tool_key === "estate_bundle") {
+        await supabase.from("tool_access_passes").insert([
+          { user_id: metadata.user_id, tool_key: "will_generator", purchased_at: new Date().toISOString(), expires_at: null, paystack_reference: reference },
+          { user_id: metadata.user_id, tool_key: "power_of_attorney", purchased_at: new Date().toISOString(), expires_at: null, paystack_reference: reference },
+        ]);
+      } else {
+        await supabase.from("tool_access_passes").insert({
+          user_id: metadata.user_id,
+          tool_key: metadata.tool_key,
+          purchased_at: new Date().toISOString(),
+          expires_at: null,
+          paystack_reference: reference,
+        });
+      }
     } else if (metadata?.product === "siwes_report") {
       const siwesDays = metadata.billing_cycle === "annual" ? 365 : 90;
 

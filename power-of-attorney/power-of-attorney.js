@@ -142,6 +142,18 @@ document.getElementById('buyPassBtn').addEventListener('click', async () => {
   }
 });
 
+document.getElementById('bundleLink').addEventListener('click', async (e) => {
+  e.preventDefault();
+  const link = e.target;
+  const original = link.textContent;
+  link.textContent = 'Redirecting…';
+  try {
+    await KoboSubscribe.start('init-tool-pass-payment', { tool_key: 'estate_bundle', callback_path: '/power-of-attorney/' });
+  } catch {
+    link.textContent = original;
+  }
+});
+
 // ---------- Access check ----------
 async function checkAccess() {
   await new Promise(r => {
