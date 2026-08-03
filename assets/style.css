@@ -213,6 +213,24 @@
   .btn-ghost{ background:transparent; color:var(--bone); border:1.5px solid var(--line-light); }
   .btn-ghost:hover{ border-color:var(--stamp-gold); color:var(--stamp-gold); }
 
+  /* Small responsive CTA button — used for inline "read more" / "try it" /
+     "set this up" style links throughout the site, so a CTA never appears
+     as a bare arrow link. Works on both light (paper) and dark backgrounds. */
+  .link-btn{
+    display:inline-flex; align-items:center; gap:6px;
+    font-size:0.82rem; font-weight:600;
+    padding:8px 16px; border-radius:20px;
+    border:1.5px solid var(--ink-green-deep);
+    color:var(--ink-green-deep); background:var(--paper);
+    text-decoration:none; white-space:normal; line-height:1.3;
+    transition:background .15s ease, color .15s ease;
+  }
+  .link-btn:hover{ background:var(--ink-green-deep); color:var(--paper); }
+  .hero .link-btn, .link-btn.on-dark{
+    border-color:var(--stamp-gold); color:var(--stamp-gold); background:transparent;
+  }
+  .hero .link-btn:hover, .link-btn.on-dark:hover{ background:var(--stamp-gold); color:var(--ink-green-deep); }
+
   .hero-doc{
     background:var(--paper); color:var(--charcoal);
     border-radius:6px; padding:28px 26px;

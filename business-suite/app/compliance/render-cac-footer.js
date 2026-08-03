@@ -39,7 +39,7 @@ window.renderCacFooter = function (business, footerElId, formPanelSelector, buye
     const banner = document.createElement('div');
     banner.className = 'cac-reminder-banner';
     banner.style.cssText = 'background:rgba(199,154,60,0.1); border:1px solid rgba(199,154,60,0.3); border-radius:8px; padding:12px 16px; font-size:0.82rem; margin-bottom:16px;';
-    banner.innerHTML = `Since 1 Aug 2026, CAC requires your RC number and director names on invoices/quotations. <a href="/business-suite/app/compliance/">Set this up once →</a>`;
+    banner.innerHTML = `Since 1 Aug 2026, CAC requires your RC number and director names on invoices/quotations. <a href="/business-suite/app/compliance/" class="link-btn">Set this up once →</a>`;
     panel.prepend(banner);
   }
 };
