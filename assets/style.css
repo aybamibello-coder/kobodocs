@@ -291,6 +291,8 @@
   .tool-tag{ font-family:'Space Mono', monospace; font-size:0.65rem; letter-spacing:0.06em; text-transform:uppercase; color:var(--stamp-gold); background:rgba(199,154,60,0.12); padding:3px 8px; border-radius:20px; display:inline-block; margin-bottom:12px; }
   .tool-card .go.disabled{ color:var(--charcoal); opacity:0.4; cursor:default; }
   .tool-card .go.disabled::after{ content:''; }
+  .tool-card .go.link-btn{ color:var(--ink-green-deep); }
+  .tool-card .go.link-btn:hover{ color:var(--paper); }
 
   @media (max-width:900px){ .tools-grid{ grid-template-columns:repeat(2, 1fr); } }
   @media (max-width:600px){ .tools-grid{ grid-template-columns:1fr; } }
