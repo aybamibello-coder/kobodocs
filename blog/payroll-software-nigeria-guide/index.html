@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-EN4PYGX7EW"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-EN4PYGX7EW');
+</script>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Running Payroll in Nigeria: What Every Small Business Actually Needs to Get Right | KoboDocs Blog</title>
+<meta name="description" content="PAYE, pension, and NHF — what a Nigerian small business must deduct correctly, why 2026's penalties raise the stakes, and how to actually run payroll each month.">
+<link rel="canonical" href="https://kobodocs.com.ng/blog/payroll-software-nigeria-guide/">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Work+Sans:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/style.css">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "What deductions does a Nigerian employer have to get right on payroll?",
+      "acceptedAnswer": { "@type": "Answer", "text": "PAYE tax under the 2026 bands, pension (8% employee / 10% employer of basic + housing + transport), and NHF (2.5% of basic) where applicable — deducted correctly and on time." }
+    },
+    {
+      "@type": "Question",
+      "name": "What happens if PAYE is deducted incorrectly?",
+      "acceptedAnswer": { "@type": "Answer", "text": "Under the 2026 Nigeria Tax Act, under-deducted PAYE carries a penalty of up to 40%, and late pension remittance carries a 10% surcharge — a meaningful cost for errors that used to just get quietly corrected." }
+    },
+    {
+      "@type": "Question",
+      "name": "Can a small business with a handful of staff run payroll without a full HR system?",
+      "acceptedAnswer": { "@type": "Answer", "text": "Yes — a small business doesn't need enterprise HR software just to calculate deductions correctly and generate payslips. A focused payroll tool covering PAYE, pension, and NHF calculation is enough for most small teams." }
+    }
+  ]
+}
+</script>
+<style>
+  .post-wrap{ max-width:680px; margin:0 auto; padding:20px 20px 80px; }
+  .post-meta{ font-size:0.8rem; opacity:0.55; margin-bottom:28px; }
+  .post-wrap h2{ font-size:1.2rem; margin:32px 0 10px; }
+  .post-wrap p, .post-wrap li{ font-size:0.98rem; line-height:1.75; opacity:0.85; }
+  .post-wrap ul{ margin:0 0 18px 20px; }
+  .post-note{
+    background:rgba(20,52,43,0.05); border-left:3px solid var(--ink-green-deep);
+    padding:14px 18px; font-size:0.9rem; margin:20px 0;
+  }
+  .post-cta{ margin-top:36px; padding:24px; background:var(--paper); border:1px solid var(--line); border-radius:8px; text-align:center; }
+  .key-takeaways{
+    background:var(--paper); border:1px solid var(--stamp-gold); border-radius:8px;
+    padding:18px 22px; margin:24px 0 32px;
+  }
+  .key-takeaways strong{ display:block; font-size:0.78rem; text-transform:uppercase; letter-spacing:0.05em; color:var(--stamp-gold); margin-bottom:10px; }
+  .key-takeaways ul{ margin:0 0 0 18px; }
+  .key-takeaways li{ font-size:0.92rem; line-height:1.6; opacity:0.85; margin-bottom:4px; }
+</style>
+</head>
+<body>
+
+<header>
+  <nav class="nav">
+    <a href="/" class="logo">
+      <svg class="mark" viewBox="0 0 32 32" fill="none">
+        <circle cx="16" cy="16" r="14" stroke="#C79A3C" stroke-width="2.5"/>
+        <circle cx="16" cy="16" r="8" stroke="#C79A3C" stroke-width="1.5"/>
+      </svg>
+      KoboDocs
+    </a>
+    <button class="search-btn" id="searchBtn" aria-label="Search tools">
+      <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    </button>
+    <button class="menu-btn" aria-label="Toggle menu" id="menuBtn"><span></span><span></span><span></span></button>
+    <div class="nav-links" id="navLinks">
+      <a href="/" class="mobile-only-link">Home</a>
+      <a href="/pricing/">Pricing</a>
+      <a href="/blog/" class="mobile-only-link">Blog</a>
+      <a href="/about/" class="mobile-only-link">About</a>
+      <a href="/account/" id="navAccountLink">Sign in</a>
+      <a href="/invoice/" class="nav-cta">Start free</a>
+    </div>
+  </nav>
+</header>
+
+<div class="search-overlay" id="searchOverlay">
+  <div class="search-panel">
+    <div class="search-panel-head">
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input type="text" id="searchInput" placeholder="Search tools — e.g. invoice, will, visa, siwes..." autocomplete="off">
+      <button class="search-close" id="searchClose" aria-label="Close search">&times;</button>
+    </div>
+    <div class="search-results" id="searchResults"></div>
+    <div class="search-hint">↑↓ to navigate · Enter to open · Esc to close</div>
+  </div>
+</div>
+
+<section class="page-header">
+  <div class="wrap">
+    <a href="/blog/">&larr; Blog</a>
+    <h1>Running Payroll in Nigeria: What Every Small Business Actually Needs to Get Right</h1>
+  </div>
+</section>
+
+<div class="post-wrap">
+  <div class="post-meta">August 2026 · 7 min read</div>
+
+  <p>A lot of small Nigerian businesses run payroll the same way for years: an Excel sheet, a rough sense of what to deduct, and a payslip typed up fresh each month. It works, mostly — until a tax band changes, an employee asks why their deduction looks different from a colleague's, or a mistake goes unnoticed for months. The 2026 Nigeria Tax Act raised the cost of getting this wrong, which makes it a good time to look at what "correct" payroll actually requires.</p>
+
+  <div class="key-takeaways">
+    <strong>Key takeaways</strong>
+    <ul>
+      <li>Three deductions have to be right every month: PAYE tax, pension (8% employee / 10% employer), and NHF (2.5% of basic, where applicable).</li>
+      <li>Since 2026, under-deducted PAYE carries a penalty of up to 40%, and late pension remittance carries a 10% surcharge — real money, not just a correction notice.</li>
+      <li>PAYE is calculated on taxable income after pension and NHF are deducted — not on gross salary directly.</li>
+      <li>A small team doesn't need enterprise HR software — just something that calculates these three things correctly and produces a real payslip.</li>
+    </ul>
+  </div>
+
+  <h2>The three deductions that have to be right</h2>
+  <p><strong>PAYE (Pay As You Earn) tax.</strong> Calculated on annual taxable income using the 2026 bands (0% up to ₦800,000, then progressively up to 25% — see our <a href="/blog/paye-tax-nigeria-2026-guide/">full PAYE guide</a> for the complete table and a worked example). Taxable income isn't gross salary — pension, NHF, and rent relief are deducted first.</p>
+  <p><strong>Pension.</strong> 8% of the employee's basic + housing + transport allowance, deducted from their pay, plus a matching 10% employer contribution that the business pays on top (not deducted from the employee). Both go to the employee's Pension Fund Administrator.</p>
+  <p><strong>National Housing Fund (NHF).</strong> 2.5% of basic salary, where the employee is enrolled. Whether this applies can depend on sector and employment type — worth confirming for your specific business rather than assuming either way.</p>
+
+  <h2>Why the stakes went up in 2026</h2>
+  <div class="post-note">
+    <strong>The 2026 Nigeria Tax Act introduced real financial penalties for payroll errors.</strong> Under-deducted PAYE now carries a penalty of up to 40% of the shortfall, and late pension remittance carries a 10% surcharge. Previously, a payroll mistake was often just quietly corrected the following month — that's no longer a safe assumption.
+  </div>
+  <p>This changes the calculus for small businesses that have been running payroll informally. A spreadsheet error that used to cost nothing but embarrassment can now cost real money — and the kind of small arithmetic mistakes that creep into manual spreadsheets (an outdated tax band, a missed allowance in the pensionable calculation) are exactly what these penalties target.</p>
+
+  <h2>What a correct payslip actually shows</h2>
+  <p>A proper payslip breaks down gross pay into its components (basic, housing, transport, other allowances), shows each deduction separately (pension, NHF, PAYE), and arrives at a net pay figure that the employee can verify themselves. This transparency matters beyond compliance — employees who can see exactly how their net pay was calculated ask fewer questions and trust the process more than those handed a single number with no breakdown.</p>
+
+  <h2>Running payroll for a small team, practically</h2>
+  <p>For a business with five, ten, or twenty employees, the actual workflow each month is simple in principle: confirm each employee's current salary structure, run the calculation, generate payslips, and process the payments and statutory remittances. Where it goes wrong is usually in the calculation step — using last year's tax bands, forgetting to update pensionable pay when someone gets a raise, or miscounting which allowances count toward NHF.</p>
+  <p>This is exactly the kind of repetitive, rules-based calculation that's worth automating rather than redoing by hand every month. Add each employee's salary structure once; the calculation itself shouldn't need to be re-derived from scratch every payroll run.</p>
+
+  <h2>Frequently asked questions</h2>
+  <p><strong>Do I need full HR software just to run payroll for a small team?</strong><br>
+  No — a small business doesn't need recruitment tracking, leave management, and performance reviews just to calculate deductions correctly. A focused payroll tool that handles PAYE, pension, and NHF calculation and produces real payslips covers what actually matters for compliance.</p>
+  <p><strong>Is pension mandatory for a small business?</strong><br>
+  Pension obligations can depend on business size and employee count under Nigerian pension law — worth confirming your specific obligations rather than assuming a blanket rule either way.</p>
+  <p><strong>What if an employee's salary changes mid-year?</strong><br>
+  The calculation should simply use whatever their current salary structure is for that pay period — there's no need to recalculate prior months when a salary changes going forward.</p>
+  <p><strong>Can payroll and invoicing live in the same place?</strong><br>
+  There's no requirement that they must, but keeping payroll alongside the rest of a business's financial documents (invoices, receipts, quotations) in one place tends to reduce the number of separate logins and spreadsheets a business owner has to juggle.</p>
+
+  <div class="post-cta">
+    <p style="margin-bottom:14px;">Add your team once, run payroll every month in one click — PAYE, pension, and NHF calculated automatically.</p>
+    <a href="/payroll/" class="btn btn-primary">See Payroll</a>
+  </div>
+
+  <p style="font-size:0.8rem; opacity:0.55; margin-top:24px;">This article is for general guidance based on the Nigeria Tax Act as understood at time of writing — it isn't tax or legal advice. Confirm your specific obligations with an accountant or the Nigeria Revenue Service.</p>
+</div>
+
+<footer>
+  <div class="wrap">
+    <div class="footer-top">
+      <div>
+        <div class="footer-logo">KoboDocs</div>
+        <p class="footer-note">Every business document, stamped and sent — built for Nigeria, one Naira at a time.</p>
+      </div>
+      <div class="footer-links">
+        <div>
+          <strong>Business tools</strong>
+          <a href="/invoice/">Invoice</a>
+          <a href="/receipt/">Receipt</a>
+          <a href="/payslip/">Payslip</a>
+          <a href="/ajo/">Ajo &amp; Esusu</a>
+          <a href="/qr-code/">QR Code</a>
+        </div>
+        <div>
+          <strong>Relocation</strong>
+          <a href="/relocation/">Relocation home</a>
+          <a href="/relocation/japa-calculator/">Japa Cost Calculator</a>
+          <a href="/relocation/proof-of-funds/">Proof of Funds</a>
+          <a href="/relocation/cost-of-living/">Cost of Living</a>
+        </div>
+        <div>
+          <strong>Company</strong>
+          <a href="/pricing/">Pricing</a>
+          <a href="/about/">About</a>
+          <a href="/contact/">Contact</a>
+          <a href="/blog/">Blog</a>
+        </div>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2026 KoboDocs. Not a financial institution — we never hold or move your money.</span>
+      <span><a href="/privacy/">Privacy</a> · <a href="/terms/">Terms</a> · Made in Lagos</span>
+    </div>
+  </div>
+</footer>
+
+<script src="/assets/app.js" defer></script>
+<script type="module" src="/assets/auth.js"></script>
+<script src="/assets/nav-auth.js" defer></script>
+
+<script src="/assets/tools-index.js" defer></script>
+<script src="/assets/search.js" defer></script>
+</body>
+</html>
