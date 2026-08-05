@@ -35,8 +35,8 @@ function renderPlanPicker(ctx) {
         <div class="hero-doc-row"><span>Basic salary</span><span>₦200,000</span></div>
         <div class="hero-doc-row"><span>Housing allowance</span><span>₦60,000</span></div>
         <div class="hero-doc-row"><span>Pension (employee, 8%)</span><span>−₦23,200</span></div>
-        <div class="hero-doc-row"><span>PAYE tax</span><span>−₦31,015</span></div>
-        <div class="hero-doc-total"><span>Net pay</span><span>₦235,785</span></div>
+        <div class="hero-doc-row"><span>PAYE tax</span><span>−₦30,524</span></div>
+        <div class="hero-doc-total"><span>Net pay</span><span>₦236,276</span></div>
       </div>
       <p style="margin-bottom:16px; text-align:center;">No active Payroll plan for <strong>${ctx.business.name}</strong> yet. Pick one to get started — priced by headcount, billed monthly.</p>
       <div class="plans-grid">
@@ -114,8 +114,8 @@ async function renderApp(ctx) {
           </div>
           <div class="hero-doc-row"><span>Basic salary</span><span>₦200,000</span></div>
           <div class="hero-doc-row"><span>Pension (employee, 8%)</span><span>−₦23,200</span></div>
-          <div class="hero-doc-row"><span>PAYE tax</span><span>−₦31,015</span></div>
-          <div class="hero-doc-total"><span>Net pay</span><span>₦235,785</span></div>
+          <div class="hero-doc-row"><span>PAYE tax</span><span>−₦30,524</span></div>
+          <div class="hero-doc-total"><span>Net pay</span><span>₦236,276</span></div>
         </div>
       `}</div>
     </div>
@@ -132,6 +132,7 @@ async function renderApp(ctx) {
           <div><label>Other allowance (₦/mo)</label><input name="other_allowance" type="number" step="0.01" value="0"></div>
           <div><label>Bank name</label><input name="bank_name"></div>
           <div><label>Bank account number</label><input name="bank_account_number"></div>
+          <div><label>Annual rent paid (₦, optional)</label><input name="annual_rent" type="number" step="0.01" value="0"></div>
         </div>
         <label style="display:inline-flex; align-items:center; gap:6px; margin-bottom:10px;">
           <input type="checkbox" name="pension_opt_in" checked style="width:auto; margin:0;"> Enrolled in pension (8%/10%)
@@ -173,6 +174,7 @@ async function renderApp(ctx) {
       other_allowance: Number(fd.get('other_allowance')) || 0,
       bank_name: fd.get('bank_name') || null,
       bank_account_number: fd.get('bank_account_number') || null,
+      annual_rent: Number(fd.get('annual_rent')) || 0,
       pension_opt_in: fd.get('pension_opt_in') === 'on',
       nhf_opt_in: fd.get('nhf_opt_in') === 'on',
     };
