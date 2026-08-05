@@ -533,6 +533,7 @@ function renderPlanPicker(ctx) {
 
         const { data: newClient, error: clientErr } = await supabase.from('clients').insert({
           business_id: business.id,
+          user_id: session.user.id,
           name,
           phone: phone || null
         }).select().single();
