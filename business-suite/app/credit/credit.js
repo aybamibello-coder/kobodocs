@@ -46,12 +46,15 @@ function toast(text) {
   }
 
   // ---------- Load everything up front ----------
+  // Reads from `receivables`, not `documents`, directly — a trigger keeps
+  // receivables in sync with every invoice document, and this is the same
+  // table Receivable Manager (the standalone product) reads from, so the
+  // two products share one aging/ledger engine.
   const [{ data: invoices }, { data: promises }, { data: notes }, { data: activity }] = await Promise.all([
     supabase
-      .from('documents')
-      .select('id, amount, amount_paid, payment_status, due_date, data, client_id, created_at, clients(id, name, phone, email, credit_limit, address)')
+      .from('receivables')
+      .select('id, amount, amount_paid, payment_status, due_date, description, client_id, created_at, clients(id, name, phone, email, credit_limit, address)')
       .eq('business_id', business.id)
-      .eq('doc_type', 'invoice')
       .order('due_date', { ascending: true }),
     supabase
       .from('promise_to_pay')
@@ -153,7 +156,7 @@ function toast(text) {
 
     const invoiceRows = row.invoices.map(d => `
       <tr>
-        <td>${(d.data && d.data.invNumber) || 'Invoice'}</td>
+        <td>${escapeHtml(d.description || 'Invoice')}</td>
         <td>${fmtDate(d.due_date)}</td>
         <td>${naira(d.balance)}</td>
       </tr>
@@ -286,7 +289,7 @@ function toast(text) {
     const client = row.client || {};
 
     const rows = row.invoices.map(d => [
-      (d.data && d.data.invNumber) || 'Invoice',
+      d.description || 'Invoice',
       fmtDate(d.due_date),
       naira(Number(d.amount)),
       naira(Number(d.amount_paid || 0)),

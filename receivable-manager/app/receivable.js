@@ -111,6 +111,11 @@ function renderPlanPicker(ctx) {
       <strong style="font-size:0.9rem;">Recent activity</strong>
       <div id="activityWrap" style="margin-top:10px;"></div>
     </div>
+    <div class="bs-panel">
+      <strong style="font-size:0.9rem;">Automated reminders</strong>
+      <p style="font-size:0.8rem; opacity:0.65; margin-top:4px;">Sends an email automatically to any client with an email on file once their balance crosses a day threshold below. Checked once daily.</p>
+      <div id="reminderSettings" style="margin-top:12px;"></div>
+    </div>
   `;
 
   let clients = [];
@@ -561,6 +566,44 @@ function renderPlanPicker(ctx) {
     });
   }
 
+  async function loadAndRenderReminderSettings() {
+    const { data: rules } = await supabase
+      .from('reminder_rules')
+      .select('thresholds, email_reminders_enabled')
+      .eq('business_id', business.id)
+      .maybeSingle();
+
+    const thresholds = (rules?.thresholds || [7, 30, 60]).join(', ');
+    const enabled = rules ? rules.email_reminders_enabled : true;
+
+    const wrap = document.getElementById('reminderSettings');
+    wrap.innerHTML = `
+      <label style="display:flex; align-items:center; gap:8px; font-size:0.85rem; margin-bottom:10px;">
+        <input type="checkbox" id="remindersEnabled" ${enabled ? 'checked' : ''}>
+        Send automated email reminders
+      </label>
+      <label style="font-size:0.78rem; opacity:0.7; display:block; margin-bottom:3px;">Remind at these days overdue (comma-separated)</label>
+      <input type="text" id="remindersThresholds" value="${escapeHtml(thresholds)}" style="width:220px; padding:8px 10px; border:1px solid var(--line); border-radius:6px; font-family:inherit; font-size:0.9rem; margin-bottom:10px;">
+      <div><button id="saveReminderRules" class="btn primary small">Save</button></div>
+    `;
+
+    document.getElementById('saveReminderRules').addEventListener('click', async () => {
+      const enabledVal = document.getElementById('remindersEnabled').checked;
+      const thresholdsVal = document.getElementById('remindersThresholds').value
+        .split(',').map(s => parseInt(s.trim(), 10)).filter(n => !isNaN(n) && n > 0);
+
+      const { error } = await supabase.from('reminder_rules').upsert({
+        business_id: business.id,
+        thresholds: thresholdsVal.length ? thresholdsVal : [7, 30, 60],
+        email_reminders_enabled: enabledVal,
+        updated_at: new Date().toISOString()
+      }, { onConflict: 'business_id' });
+
+      if (error) { toast('Could not save reminder settings: ' + error.message); return; }
+      toast('Reminder settings saved.');
+    });
+  }
+
   await loadAll();
   computeDSO();
   renderAging();
@@ -568,4 +611,5 @@ function renderPlanPicker(ctx) {
   renderEntryForm();
   renderPromiseList();
   renderActivity();
+  loadAndRenderReminderSettings();
 })();
