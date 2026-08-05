@@ -26,6 +26,7 @@ window.KOBO_TOOLS_INDEX = [
   { name: "Will & Testament Generator", url: "/will-generator/", keywords: "will testament inheritance estate executor beneficiary" },
   { name: "Power of Attorney Generator", url: "/power-of-attorney/", keywords: "power of attorney poa authorize donee donor" },
   { name: "Business Plan Generator", url: "/business-plan-generator/", keywords: "business plan loan boi nirsal bank grant" },
+  { name: "Grant Application Generator", url: "/grant-application-generator/", keywords: "grant proposal ngo donor boi smedan cbn agsmeis csr tony elumelu logframe" },
   { name: "Ajo & Esusu Tracker", url: "/ajo/", keywords: "ajo esusu adashe contribution savings circle" },
   { name: "Budget Planner", url: "/budget/", keywords: "budget planner personal money" },
   { name: "Loan Schedule", url: "/loan/", keywords: "loan schedule repayment amortization" },
