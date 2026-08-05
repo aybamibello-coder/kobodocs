@@ -32,7 +32,7 @@ window.KOBO_TOOLS_INDEX = [
   { name: "Take-Home Pay Calculator", url: "/salary-calculator/", keywords: "take home pay salary paye tax calculator" },
   { name: "Import Duty Calculator", url: "/import-duty-calculator/", keywords: "import duty customs cif etls vat" },
   { name: "Business Suite", url: "/business-suite/", keywords: "business suite bookkeeping invoicing software debt tracking" },
-  { name: "Receivable Manager", url: "/receivable-manager/", keywords: "accounts receivable debt collection overdue invoice tracking dso aging" },
+  { name: "Receivable Manager", url: "/receivable-manager/", keywords: "receivable management accounts receivable account receivable debt collection overdue invoice tracking dso aging" },
   { name: "Relocation Overview", url: "/relocation/", keywords: "japa relocation move abroad" },
   { name: "Japa Cost Calculator", url: "/relocation/japa-calculator/", keywords: "japa cost calculator relocation visa fees" },
   { name: "Proof of Funds Calculator", url: "/relocation/proof-of-funds/", keywords: "proof of funds visa savings threshold" },
