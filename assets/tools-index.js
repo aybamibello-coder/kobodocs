@@ -13,6 +13,7 @@ window.KOBO_TOOLS_INDEX = [
   { name: "Rent / Tenancy Agreement", url: "/rent-agreement/", keywords: "rent tenancy agreement lease landlord tenant" },
   { name: "Land Sale Agreement / Deed of Assignment", url: "/land-sale-agreement/", keywords: "land sale deed of assignment property" },
   { name: "Guarantor's Form", url: "/guarantor-form/", keywords: "guarantor form rent job school loan" },
+  { name: "Next of Kin Form", url: "/next-of-kin-form/", keywords: "next of kin form bank job nysc hostel emergency contact inheritance" },
   { name: "Affidavit Generator", url: "/affidavit-generator/", keywords: "affidavit sworn statement name change age declaration loss of document" },
   { name: "NYSC Letter Generator", url: "/nysc-documents/", keywords: "nysc relocation exemption discharge ppa corps member" },
   { name: "SIWES Logbook & Report", url: "/siwes-logbook-report/", keywords: "siwes logbook industrial training report" },
