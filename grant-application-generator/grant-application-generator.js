@@ -326,7 +326,7 @@ document.getElementById('buyPassBtn').addEventListener('click', async () => {
   btn.textContent = 'Redirecting…';
   btn.disabled = true;
   try {
-    await KoboSubscribe.start('init-tool-pass-payment', { tool_key: 'grant_application_generator', callback_path: '/grant-application-generator/' });
+    await KoboSubscribe.start('init-grant-payment', {});
   } catch {
     btn.textContent = original;
     btn.disabled = false;
