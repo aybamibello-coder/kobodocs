@@ -175,6 +175,12 @@
     <priority>0.5</priority>
   </url>
   <url>
+    <loc>https://kobodocs.com.ng/events/</loc>
+    <lastmod>2026-08-04</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
     <loc>https://kobodocs.com.ng/bride-price-list/</loc>
     <lastmod>2026-07-30</lastmod>
     <changefreq>monthly</changefreq>
