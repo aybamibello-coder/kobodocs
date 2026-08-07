@@ -153,6 +153,7 @@
     <button class="ct-tab" data-view="calendar">Calendar</button>
     <button class="ct-tab" data-view="vault">Document vault</button>
     <button class="ct-tab" data-view="assistant">Assistant</button>
+    <button class="ct-tab" data-view="team">Team</button>
   </div>
 
   <!-- Dashboard -->
@@ -317,6 +318,38 @@
     <div class="bs-panel">
       <h2>Conversation</h2>
       <div id="assistantThread"><div class="empty-note">Ask a question above to get started.</div></div>
+    </div>
+  </div>
+
+  <!-- Team -->
+  <div class="ct-view" id="view-team">
+    <div class="bs-panel" id="inviteOwnerOnly" style="display:none;">
+      <h2>Invite a team member</h2>
+      <div class="panel-sub">They need an existing free KoboDocs account — invite by the email they signed up with. Everyone sees only what they need is coming; for now, all roles get full read/write access to this tracker.</div>
+      <form id="inviteForm" class="mini-form">
+        <div>
+          <label>Email</label>
+          <input id="inviteEmail" type="email" placeholder="teammate@email.com" required>
+        </div>
+        <div>
+          <label>Role</label>
+          <select id="inviteRole">
+            <option value="accountant">Accountant</option>
+            <option value="lawyer">Lawyer</option>
+            <option value="hr">HR</option>
+            <option value="finance">Finance</option>
+            <option value="staff">Staff (general)</option>
+          </select>
+        </div>
+        <div>
+          <button class="btn primary" type="submit">Invite</button>
+        </div>
+      </form>
+    </div>
+
+    <div class="bs-panel">
+      <h2>Team members</h2>
+      <div id="teamWrap"><div class="empty-note">Loading…</div></div>
     </div>
   </div>
 </div>
