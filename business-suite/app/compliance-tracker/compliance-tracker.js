@@ -16,6 +16,19 @@ function toast(text) {
   setTimeout(() => { el.style.display = 'none'; }, 2600);
 }
 
+function whatsappButtonsHtml(hasOwner, hasTeam) {
+  if (!hasOwner && !hasTeam) return '';
+  let html = '';
+  if (hasOwner) html += '<button data-action="wa-owner">WhatsApp owner</button>';
+  if (hasTeam) html += '<button data-action="wa-team">WhatsApp team</button>';
+  return html;
+}
+
+function openWhatsapp(number, message) {
+  const digits = (number || '').replace(/[^\d+]/g, '');
+  window.open(`https://wa.me/${digits}?text=${encodeURIComponent(message)}`, '_blank');
+}
+
 const OBLIGATION_LABELS = {
   vat: 'VAT', paye: 'PAYE', annual_return: 'CAC Annual Return', company_income_tax: 'Company Income Tax',
   pension: 'Pension', nsitf: 'NSITF', itf: 'ITF', nhf: 'NHF', business_permit: 'Business permit',
@@ -151,6 +164,21 @@ function standardObligations() {
     renderObligations();
   });
 
+  document.getElementById('ownerWhatsapp').value = business.owner_whatsapp_number || '';
+  document.getElementById('teamWhatsapp').value = business.team_whatsapp_number || '';
+  document.getElementById('contactsForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const owner_whatsapp_number = document.getElementById('ownerWhatsapp').value.trim() || null;
+    const team_whatsapp_number = document.getElementById('teamWhatsapp').value.trim() || null;
+    const { error } = await supabase.from('businesses').update({ owner_whatsapp_number, team_whatsapp_number }).eq('id', business.id);
+    if (error) { toast(error.message); return; }
+    business.owner_whatsapp_number = owner_whatsapp_number;
+    business.team_whatsapp_number = team_whatsapp_number;
+    toast('WhatsApp contacts saved');
+    renderObligations();
+    renderVault();
+  });
+
   // ---------- Calendar ----------
   async function renderObligations() {
     const obligations = await loadObligations();
@@ -170,11 +198,21 @@ function standardObligations() {
           <div class="ob-meta">${OBLIGATION_LABELS[ob.obligation_type] || ob.obligation_type} · Due ${fmtDate(ob.due_date)}${ob.recurrence !== 'none' ? ' · ' + ob.recurrence : ''}</div>
         </div>
         <div class="ob-actions">
+          ${whatsappButtonsHtml(!!business.owner_whatsapp_number, !!business.team_whatsapp_number)}
           ${status !== 'completed' ? '<button data-action="complete">Mark done</button>' : ''}
           ${status !== 'waived' ? '<button data-action="waive">Not applicable</button>' : ''}
           <button data-action="delete">Remove</button>
         </div>
       `;
+      const waMessage = `Compliance reminder from ${business.name}: "${ob.title}" (${OBLIGATION_LABELS[ob.obligation_type] || ob.obligation_type}) is due ${fmtDate(ob.due_date)}.`;
+      row.querySelector('[data-action="wa-owner"]')?.addEventListener('click', async () => {
+        openWhatsapp(business.owner_whatsapp_number, waMessage);
+        await supabase.from('compliance_reminder_log').insert({ business_id: business.id, obligation_id: ob.id, channel: 'whatsapp', tone: 'polite' });
+      });
+      row.querySelector('[data-action="wa-team"]')?.addEventListener('click', async () => {
+        openWhatsapp(business.team_whatsapp_number, waMessage);
+        await supabase.from('compliance_reminder_log').insert({ business_id: business.id, obligation_id: ob.id, channel: 'whatsapp', tone: 'polite' });
+      });
       row.querySelector('[data-action="complete"]')?.addEventListener('click', async () => {
         await supabase.from('compliance_obligations').update({ status: 'completed', completed_at: new Date().toISOString() }).eq('id', ob.id);
         renderObligations(); renderDashboard();
@@ -230,10 +268,22 @@ function standardObligations() {
           <div class="vault-meta ${metaClass}">${DOC_LABELS[doc.doc_type] || doc.doc_type}${doc.expiry_date ? ' · Expires ' + fmtDate(doc.expiry_date) : ' · No expiry'}</div>
         </div>
         <div class="ob-actions">
+          ${doc.expiry_date ? whatsappButtonsHtml(!!business.owner_whatsapp_number, !!business.team_whatsapp_number) : ''}
           ${doc.file_path ? '<button data-action="download">View</button>' : ''}
           <button data-action="delete">Remove</button>
         </div>
       `;
+      if (doc.expiry_date) {
+        const waMessage = `Renewal reminder from ${business.name}: "${doc.name}" (${DOC_LABELS[doc.doc_type] || doc.doc_type}) expires ${fmtDate(doc.expiry_date)}.`;
+        row.querySelector('[data-action="wa-owner"]')?.addEventListener('click', async () => {
+          openWhatsapp(business.owner_whatsapp_number, waMessage);
+          await supabase.from('compliance_reminder_log').insert({ business_id: business.id, compliance_document_id: doc.id, channel: 'whatsapp', tone: 'polite' });
+        });
+        row.querySelector('[data-action="wa-team"]')?.addEventListener('click', async () => {
+          openWhatsapp(business.team_whatsapp_number, waMessage);
+          await supabase.from('compliance_reminder_log').insert({ business_id: business.id, compliance_document_id: doc.id, channel: 'whatsapp', tone: 'polite' });
+        });
+      }
       row.querySelector('[data-action="download"]')?.addEventListener('click', async () => {
         const { data, error } = await supabase.storage.from('compliance-documents').createSignedUrl(doc.file_path, 60);
         if (error) { toast(error.message); return; }
