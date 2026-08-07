@@ -74,6 +74,12 @@
   }
   .empty-note{ font-size:0.88rem; opacity:0.6; padding:20px 0; text-align:center; }
 
+  .assist-msg{ padding:12px 0; border-bottom:1px dashed var(--line); }
+  .assist-msg:last-child{ border-bottom:none; }
+  .assist-msg .who{ font-family:'Space Mono', monospace; font-size:0.68rem; text-transform:uppercase; letter-spacing:0.03em; opacity:0.55; margin-bottom:4px; }
+  .assist-msg .body{ font-size:0.9rem; line-height:1.55; white-space:pre-wrap; }
+  .assist-msg.user .body{ opacity:0.85; }
+
   .vault-row{ padding:12px 0; border-bottom:1px dashed var(--line); display:flex; justify-content:space-between; align-items:center; gap:14px; flex-wrap:wrap; }
   .vault-row:last-child{ border-bottom:none; }
   .vault-name{ font-weight:600; }
@@ -146,6 +152,7 @@
     <button class="ct-tab active" data-view="dashboard">Dashboard</button>
     <button class="ct-tab" data-view="calendar">Calendar</button>
     <button class="ct-tab" data-view="vault">Document vault</button>
+    <button class="ct-tab" data-view="assistant">Assistant</button>
   </div>
 
   <!-- Dashboard -->
@@ -270,6 +277,28 @@
       <h2>Your documents</h2>
       <div class="panel-sub">Anything with an expiry date shows up as a renewal on your dashboard.</div>
       <div id="vaultWrap"><div class="empty-note">Loading…</div></div>
+    </div>
+  </div>
+
+  <!-- Assistant -->
+  <div class="ct-view" id="view-assistant">
+    <div class="bs-panel">
+      <h2>Ask about your compliance</h2>
+      <div class="panel-sub">Answers are grounded in your own obligations and vault data below — general guidance only, not legal or tax advice.</div>
+      <form id="assistantForm" class="mini-form" style="align-items:stretch;">
+        <div style="flex:1; min-width:240px;">
+          <label>Your question</label>
+          <textarea id="assistantQuestion" rows="2" style="width:100%; resize:vertical;" placeholder="e.g. Do I need to file annual returns this year?" required maxlength="1000"></textarea>
+        </div>
+        <div>
+          <button class="btn primary" type="submit" id="assistantSubmit">Ask</button>
+        </div>
+      </form>
+    </div>
+
+    <div class="bs-panel">
+      <h2>Conversation</h2>
+      <div id="assistantThread"><div class="empty-note">Ask a question above to get started.</div></div>
     </div>
   </div>
 </div>

@@ -276,4 +276,48 @@ function standardObligations() {
   renderDashboard();
   renderObligations();
   renderVault();
+  wireAssistant(supabase, business);
 })();
+
+function wireAssistant(supabase, business) {
+  const thread = document.getElementById('assistantThread');
+  const form = document.getElementById('assistantForm');
+  const input = document.getElementById('assistantQuestion');
+  const submitBtn = document.getElementById('assistantSubmit');
+  let hasMessages = false;
+
+  function addMessage(who, text) {
+    if (!hasMessages) { thread.innerHTML = ''; hasMessages = true; }
+    const el = document.createElement('div');
+    el.className = `assist-msg ${who}`;
+    el.innerHTML = `<div class="who">${who === 'user' ? 'You' : 'Assistant'}</div><div class="body"></div>`;
+    el.querySelector('.body').textContent = text;
+    thread.appendChild(el);
+    thread.scrollTop = thread.scrollHeight;
+  }
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const question = input.value.trim();
+    if (!question) return;
+
+    addMessage('user', question);
+    input.value = '';
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Thinking…';
+
+    try {
+      const { data, error } = await supabase.functions.invoke('compliance-assistant', {
+        body: { business_id: business.id, question },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      addMessage('assistant', data.answer);
+    } catch (err) {
+      addMessage('assistant', `Sorry, I couldn't answer that right now (${err.message || err}). Please try again shortly.`);
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Ask';
+    }
+  });
+}
