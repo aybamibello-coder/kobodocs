@@ -327,7 +327,64 @@ function standardObligations() {
   renderObligations();
   renderVault();
   wireAssistant(supabase, business);
+  wireTeam(supabase, business, ctx.role);
 })();
+
+const ROLE_LABELS = { owner: 'Owner', staff: 'Staff', accountant: 'Accountant', lawyer: 'Lawyer', hr: 'HR', finance: 'Finance' };
+
+function wireTeam(supabase, business, myRole) {
+  const wrap = document.getElementById('teamWrap');
+  const inviteForm = document.getElementById('inviteForm');
+  const isOwner = myRole === 'owner';
+  document.getElementById('inviteOwnerOnly').style.display = isOwner ? 'block' : 'none';
+
+  async function renderTeam() {
+    const { data: members } = await supabase
+      .from('business_members')
+      .select('id, user_id, role, member_email, member_name, created_at')
+      .eq('business_id', business.id)
+      .order('created_at', { ascending: true });
+
+    const rows = [{ id: 'owner-row', role: 'owner', member_name: null, member_email: null, isOwnerRow: true }, ...(members || [])];
+    wrap.innerHTML = '';
+    rows.forEach(m => {
+      const row = document.createElement('div');
+      row.className = 'vault-row';
+      const label = m.isOwnerRow ? (business.name + ' (you, business owner)') : (m.member_name || m.member_email || 'Team member');
+      row.innerHTML = `
+        <div>
+          <div class="vault-name">${label}</div>
+          <div class="vault-meta">${ROLE_LABELS[m.role] || m.role}${m.member_email && !m.isOwnerRow ? ' · ' + m.member_email : ''}</div>
+        </div>
+        ${(isOwner && !m.isOwnerRow) ? '<div class="ob-actions"><button data-action="remove">Remove</button></div>' : ''}
+      `;
+      row.querySelector('[data-action="remove"]')?.addEventListener('click', async () => {
+        if (!confirm(`Remove ${label} from the team?`)) return;
+        await supabase.from('business_members').delete().eq('id', m.id);
+        renderTeam();
+      });
+      wrap.appendChild(row);
+    });
+  }
+
+  if (isOwner) {
+    inviteForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const email = document.getElementById('inviteEmail').value.trim();
+      const role = document.getElementById('inviteRole').value;
+      const { data, error } = await supabase.functions.invoke('invite-team-member', {
+        body: { business_id: business.id, email, role },
+      });
+      if (error) { toast(error.message); return; }
+      if (data?.error) { toast(data.error); return; }
+      e.target.reset();
+      toast(`${email} added as ${ROLE_LABELS[role]}`);
+      renderTeam();
+    });
+  }
+
+  renderTeam();
+}
 
 function wireAssistant(supabase, business) {
   const thread = document.getElementById('assistantThread');
