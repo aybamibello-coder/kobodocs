@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>You're Invited | KoboDocs</title>
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Work+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/style.css">
+<style>
+  body{ background:var(--ink-green-deep, #14342b); min-height:100vh; }
+  .rsvp-wrap{ max-width:480px; margin:0 auto; padding:60px 20px; }
+  .rsvp-card{ background:var(--paper, #fdfaf3); border-radius:12px; padding:36px 28px; box-shadow:0 20px 60px rgba(0,0,0,0.3); }
+  .rsvp-logo{ text-align:center; margin-bottom:24px; font-family:'Fraunces', serif; font-weight:600; opacity:0.4; font-size:0.9rem; }
+  .rsvp-type{ text-align:center; font-family:'Space Mono', monospace; font-size:0.72rem; text-transform:uppercase; letter-spacing:0.08em; color:var(--stamp-gold); margin-bottom:6px; }
+  .rsvp-title{ text-align:center; font-family:'Fraunces', serif; font-size:1.6rem; margin-bottom:14px; }
+  .rsvp-meta{ text-align:center; font-size:0.9rem; opacity:0.75; margin-bottom:8px; }
+  .rsvp-message{ text-align:center; font-size:0.92rem; opacity:0.85; line-height:1.6; margin:18px 0; white-space:pre-line; }
+  .rsvp-form label{ font-size:0.8rem; opacity:0.7; display:block; margin:14px 0 4px; }
+  .rsvp-form input, .rsvp-form select{ width:100%; padding:10px 12px; border:1px solid var(--line, #e4ddc9); border-radius:6px; font-family:inherit; font-size:0.92rem; }
+  .rsvp-choices{ display:flex; gap:10px; margin-top:16px; }
+  .rsvp-choices button{
+    flex:1; padding:12px; border-radius:8px; border:2px solid var(--line, #e4ddc9);
+    background:none; font-family:inherit; font-size:0.9rem; cursor:pointer; font-weight:600;
+  }
+  .rsvp-choices button.selected.attending{ border-color:#147850; background:rgba(20,120,80,0.1); color:#147850; }
+  .rsvp-choices button.selected.not_attending{ border-color:var(--stamp-red); background:rgba(168,52,42,0.08); color:var(--stamp-red); }
+  .rsvp-submit{ width:100%; margin-top:20px; padding:13px; border-radius:8px; border:none; background:var(--ink-green-deep, #14342b); color:var(--paper, #fdfaf3); font-family:inherit; font-size:0.95rem; font-weight:600; cursor:pointer; }
+  .rsvp-submit:disabled{ opacity:0.5; cursor:default; }
+  .rsvp-plusones{ display:none; }
+  .rsvp-plusones.show{ display:block; }
+  .rsvp-success{ text-align:center; padding:20px 0; }
+  .rsvp-success h2{ font-family:'Fraunces', serif; font-size:1.3rem; margin-bottom:8px; }
+  .rsvp-error{ text-align:center; padding:40px 0; opacity:0.7; }
+  #formMsg{ font-size:0.82rem; margin-top:10px; text-align:center; display:none; }
+  #formMsg.error{ display:block; color:var(--stamp-red); }
+</style>
+</head>
+<body>
+
+<div class="rsvp-wrap">
+  <div class="rsvp-card" id="rsvpCard">
+    <div class="rsvp-logo">KoboDocs</div>
+    <div class="empty-note" style="text-align:center; opacity:0.6;">Loading your invitation…</div>
+  </div>
+</div>
+
+<script src="/events/rsvp/rsvp.js" defer></script>
+</body>
+</html>
