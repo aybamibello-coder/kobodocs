@@ -130,9 +130,12 @@
   }
 
   /* Shift page content right so it sits beside the rail, not under it.
-     :has() is well-supported by 2026 and this keeps every page's
-     markup untouched — no per-page body class needed. */
-  body:has(.suite-nav) {
+     Uses an explicit class on <body> (added to all 13 pages) rather than
+     body:has(.suite-nav) — :has() isn't universally supported yet, and on
+     browsers without it the sidebar was rendering on top of content
+     instead of pushing it aside, hiding page text behind the rail. An
+     explicit class works on every browser regardless of :has() support. */
+  body.suite-body {
     padding-left: 220px;
   }
 }
