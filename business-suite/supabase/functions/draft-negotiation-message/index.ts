@@ -110,21 +110,34 @@ Deno.serve(async (req: Request) => {
     .eq("business_id", business_id).eq("id", client_id).maybeSingle();
   if (!client) return ok({ error: "Client not found" });
 
-  const [{ data: receivables }, { data: promises }, { data: notes }] = await Promise.all([
-    supabase.from("receivables").select("description, amount, amount_paid, due_date")
+  const [{ data: receivables }, { data: promises }, { data: notes }, { data: openDisputes }] = await Promise.all([
+    supabase.from("receivables").select("id, description, amount, amount_paid, due_date")
       .eq("business_id", business_id).eq("client_id", client_id).neq("payment_status", "paid"),
     supabase.from("promise_to_pay").select("promised_date, promised_amount, status")
       .eq("business_id", business_id).eq("client_id", client_id).order("promised_date", { ascending: false }),
     supabase.from("collection_notes").select("note, created_at")
       .eq("business_id", business_id).eq("client_id", client_id).order("created_at", { ascending: false }).limit(1),
+    supabase.from("receivable_disputes").select("receivable_id")
+      .eq("business_id", business_id).eq("status", "open"),
   ]);
 
-  const items = (receivables ?? []).map((rv: any) => {
-    const balance = Number(rv.amount) - Number(rv.amount_paid || 0);
-    return { description: rv.description, balance, due_date: rv.due_date, days_overdue: daysOverdue(rv.due_date) };
-  }).filter((i: any) => i.balance > 0);
+  const disputedReceivableIds = new Set((openDisputes ?? []).map((d: any) => d.receivable_id));
+  const disputedCount = (receivables ?? []).filter((rv: any) => disputedReceivableIds.has(rv.id)).length;
 
-  if (!items.length) return ok({ error: "This client has no outstanding balance to negotiate." });
+  const items = (receivables ?? [])
+    .filter((rv: any) => !disputedReceivableIds.has(rv.id)) // don't ask for payment on items under dispute
+    .map((rv: any) => {
+      const balance = Number(rv.amount) - Number(rv.amount_paid || 0);
+      return { description: rv.description, balance, due_date: rv.due_date, days_overdue: daysOverdue(rv.due_date) };
+    }).filter((i: any) => i.balance > 0);
+
+  if (!items.length) {
+    return ok({
+      error: disputedCount > 0
+        ? "This client's outstanding balance is entirely under dispute. Resolve the dispute before requesting payment."
+        : "This client has no outstanding balance to negotiate."
+    });
+  }
 
   const totalBalance = items.reduce((s: number, i: any) => s + i.balance, 0);
   const worstDays = items.reduce((max: number | null, i: any) => (i.days_overdue !== null && (max === null || i.days_overdue > max)) ? i.days_overdue : max, null);
@@ -141,13 +154,15 @@ Deno.serve(async (req: Request) => {
     broken_promise: brokenPromise ? { promised_date: brokenPromise.promised_date, promised_amount: Number(brokenPromise.promised_amount) } : null,
     pending_promise: pendingPromise ? { promised_date: pendingPromise.promised_date, promised_amount: Number(pendingPromise.promised_amount) } : null,
     last_note: lastNote,
+    has_separate_disputed_items: disputedCount > 0,
   };
 
   const systemPrompt = `You draft ONE short WhatsApp message for a Nigerian small business owner to send to a customer who owes them money.
-You will be given JSON facts: business_name, client_name, total_balance_naira, items (list of what's owed), worst_days_overdue, broken_promise (or null), pending_promise (or null), last_note (or null).
+You will be given JSON facts: business_name, client_name, total_balance_naira, items (list of what's owed), worst_days_overdue, broken_promise (or null), pending_promise (or null), last_note (or null), has_separate_disputed_items (boolean).
 
 Rules you must follow strictly:
 - Use ONLY the facts given. Never invent, round differently, or restate an amount or date that isn't exactly in the input.
+- total_balance_naira already EXCLUDES any items under dispute \u2014 do not mention or reference a dispute in the message even if has_separate_disputed_items is true, since that is being handled separately.
 - Address the client by name, mention the business name, state the exact total balance owed.
 - If broken_promise is present, acknowledge it firmly but respectfully and ask for a new concrete commitment.
 - If pending_promise is present (no broken promise), reference it as a friendly check-in.
