@@ -2,6 +2,12 @@
 // Used by every page under /business-suite/app/. Resolves the signed-in
 // user's business (as owner, or as staff via business_members), checks
 // trial/subscription is active, and redirects to the plan page if not.
+//
+// A ?business_id=<uuid> query param lets a multi-business user (e.g. an
+// accountant who's a member of several client businesses) tell any page
+// which business to load, instead of always getting whichever business
+// happens to match first. Without the param, behavior is unchanged from
+// before — single-business users are unaffected.
 window.BizSuiteGuard = {
   async requireAccess() {
     await new Promise(r => {
@@ -16,26 +22,47 @@ window.BizSuiteGuard = {
     }
 
     const supabase = window.KoboAuth.supabase;
+    const requestedId = new URLSearchParams(window.location.search).get('business_id');
 
-    // Try as owner first
-    let { data: business } = await supabase
-      .from('businesses')
-      .select('*')
-      .eq('owner_user_id', session.user.id)
-      .maybeSingle();
+    let business = null;
+    let role = null;
 
-    let role = 'owner';
-
-    // Fall back to staff membership
-    if (!business) {
-      const { data: membership } = await supabase
-        .from('business_members')
-        .select('business_id, role, businesses(*)')
-        .eq('user_id', session.user.id)
-        .maybeSingle();
-      if (membership && membership.businesses) {
-        business = membership.businesses;
-        role = membership.role;
+    if (requestedId) {
+      // Explicit business requested: verify the caller is its owner or a member.
+      const { data: ownedBiz } = await supabase
+        .from('businesses').select('*').eq('id', requestedId).eq('owner_user_id', session.user.id).maybeSingle();
+      if (ownedBiz) {
+        business = ownedBiz;
+        role = 'owner';
+      } else {
+        const { data: membership } = await supabase
+          .from('business_members')
+          .select('role, businesses(*)')
+          .eq('business_id', requestedId)
+          .eq('user_id', session.user.id)
+          .maybeSingle();
+        if (membership && membership.businesses) {
+          business = membership.businesses;
+          role = membership.role;
+        }
+      }
+    } else {
+      // Default (unchanged): owner match first, else first membership row.
+      const { data: ownedBiz } = await supabase
+        .from('businesses').select('*').eq('owner_user_id', session.user.id).maybeSingle();
+      if (ownedBiz) {
+        business = ownedBiz;
+        role = 'owner';
+      } else {
+        const { data: membership } = await supabase
+          .from('business_members')
+          .select('business_id, role, businesses(*)')
+          .eq('user_id', session.user.id)
+          .maybeSingle();
+        if (membership && membership.businesses) {
+          business = membership.businesses;
+          role = membership.role;
+        }
       }
     }
 
@@ -74,5 +101,31 @@ window.BizSuiteGuard = {
     }
 
     return ctx;
+  },
+
+  // Lists every business the signed-in user can access, as owner or member
+  // (any role) — regardless of which one requireAccess() would pick by
+  // default. Used by the My Businesses / multi-client dashboard. Does NOT
+  // redirect on its own; callers should handle an empty result themselves.
+  async listMyBusinesses() {
+    await new Promise(r => {
+      if (window.KoboAuth) return r();
+      window.addEventListener('kobo-auth-ready', r, { once: true });
+    });
+    const session = await window.KoboAuth.getSession();
+    if (!session) return { session: null, businesses: [] };
+
+    const supabase = window.KoboAuth.supabase;
+    const [{ data: owned }, { data: memberships }] = await Promise.all([
+      supabase.from('businesses').select('*').eq('owner_user_id', session.user.id),
+      supabase.from('business_members').select('role, businesses(*)').eq('user_id', session.user.id),
+    ]);
+
+    const businesses = [
+      ...(owned || []).map(b => ({ ...b, myRole: 'owner' })),
+      ...(memberships || []).filter(m => m.businesses).map(m => ({ ...m.businesses, myRole: m.role })),
+    ];
+
+    return { session, supabase, businesses };
   }
 };
