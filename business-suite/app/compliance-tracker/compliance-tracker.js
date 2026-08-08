@@ -343,6 +343,7 @@ function wireTeam(supabase, business, myRole) {
       .from('business_members')
       .select('id, user_id, role, member_email, member_name, created_at')
       .eq('business_id', business.id)
+      .neq('role', 'owner') // a DB trigger auto-adds an owner-role row on business creation; the synthetic owner-row below already covers this
       .order('created_at', { ascending: true });
 
     const rows = [{ id: 'owner-row', role: 'owner', member_name: null, member_email: null, isOwnerRow: true }, ...(members || [])];

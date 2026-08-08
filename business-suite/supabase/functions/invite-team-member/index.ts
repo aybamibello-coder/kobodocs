@@ -1,13 +1,15 @@
 // Supabase Edge Function: invite-team-member
 // Platform-wide (not compliance-specific): lets a business owner add an
 // existing KoboDocs user to their business_members with a chosen role.
-// Needed because business_members.role expansion (owner/staff/accountant/
-// lawyer/hr/finance) is only useful once owners can actually assign roles —
-// there was previously no invite UI anywhere in Business Suite.
-// Looks up the invitee by email via the service role (profiles has
-// select-own-only RLS, so a plain client-side lookup isn't possible), and
-// denormalizes their email/name onto business_members so the team list can
-// be read client-side afterwards without needing another edge function.
+//
+// IMPORTANT: expected/handleable outcomes (validation errors, not-found,
+// not-owner) return HTTP 200 with { error: "..." } in the body, NOT a
+// non-2xx status. supabase-js's functions.invoke() surfaces a generic
+// "Edge Function returned a non-2xx status code" for any non-2xx response
+// instead of the actual message in the JSON body, so using 400/403/404 for
+// normal business-logic conditions silently broke the friendly error
+// messages this function was written to provide. Only genuine auth failures
+// (401, no session) and truly unexpected server errors (500) stay non-2xx.
 
 import { createClient } from "jsr:@supabase/supabase-js@2";
 
@@ -18,6 +20,13 @@ const corsHeaders = {
 };
 
 const VALID_ROLES = ["staff", "accountant", "lawyer", "hr", "finance"];
+
+function ok(body: Record<string, unknown>) {
+  return new Response(JSON.stringify(body), {
+    status: 200,
+    headers: { ...corsHeaders, "Content-Type": "application/json" },
+  });
+}
 
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") {
@@ -54,10 +63,7 @@ Deno.serve(async (req: Request) => {
   try {
     body = await req.json();
   } catch {
-    return new Response(JSON.stringify({ error: "Invalid JSON body" }), {
-      status: 400,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    return ok({ error: "Invalid request" });
   }
 
   const businessId = body.business_id;
@@ -65,16 +71,10 @@ Deno.serve(async (req: Request) => {
   const role = body.role ?? "";
 
   if (!businessId || !email || !role) {
-    return new Response(JSON.stringify({ error: "business_id, email and role are required" }), {
-      status: 400,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    return ok({ error: "Email and role are required" });
   }
   if (!VALID_ROLES.includes(role)) {
-    return new Response(JSON.stringify({ error: `role must be one of: ${VALID_ROLES.join(", ")}` }), {
-      status: 400,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    return ok({ error: `Role must be one of: ${VALID_ROLES.join(", ")}` });
   }
 
   const { data: ownedBusiness } = await callerClient
@@ -85,10 +85,7 @@ Deno.serve(async (req: Request) => {
     .maybeSingle();
 
   if (!ownedBusiness) {
-    return new Response(JSON.stringify({ error: "Only the business owner can invite team members" }), {
-      status: 403,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    return ok({ error: "Only the business owner can invite team members" });
   }
 
   const adminClient = createClient(
@@ -103,17 +100,11 @@ Deno.serve(async (req: Request) => {
     .maybeSingle();
 
   if (!invitee) {
-    return new Response(JSON.stringify({ error: "No KoboDocs account found for that email. Ask them to sign up first, then invite again." }), {
-      status: 404,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    return ok({ error: "No KoboDocs account found for that email. Ask them to sign up first, then invite again." });
   }
 
   if (invitee.id === user.id) {
-    return new Response(JSON.stringify({ error: "You're already the owner of this business." }), {
-      status: 400,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    return ok({ error: "You're already the owner of this business." });
   }
 
   const { error: upsertError } = await adminClient
@@ -138,8 +129,5 @@ Deno.serve(async (req: Request) => {
     });
   }
 
-  return new Response(
-    JSON.stringify({ success: true, member: { email: invitee.email, full_name: invitee.full_name, role } }),
-    { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-  );
+  return ok({ success: true, member: { email: invitee.email, full_name: invitee.full_name, role } });
 });

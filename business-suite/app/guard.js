@@ -121,9 +121,14 @@ window.BizSuiteGuard = {
       supabase.from('business_members').select('role, businesses(*)').eq('user_id', session.user.id),
     ]);
 
+    // A DB trigger auto-adds an 'owner'-role business_members row whenever a
+    // business is created, alongside owner_user_id on businesses itself —
+    // so owned businesses would otherwise appear twice (once from each
+    // query). Exclude role:'owner' memberships here; the `owned` query
+    // above is already the source of truth for those.
     const businesses = [
       ...(owned || []).map(b => ({ ...b, myRole: 'owner' })),
-      ...(memberships || []).filter(m => m.businesses).map(m => ({ ...m.businesses, myRole: m.role })),
+      ...(memberships || []).filter(m => m.businesses && m.role !== 'owner').map(m => ({ ...m.businesses, myRole: m.role })),
     ];
 
     return { session, supabase, businesses };
