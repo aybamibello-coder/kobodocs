@@ -16,6 +16,19 @@ function toast(text) {
   setTimeout(() => { el.style.display = 'none'; }, 2600);
 }
 
+function whatsappButtonsHtml(hasOwner, hasTeam) {
+  if (!hasOwner && !hasTeam) return '';
+  let html = '';
+  if (hasOwner) html += '<button data-action="wa-owner">WhatsApp owner</button>';
+  if (hasTeam) html += '<button data-action="wa-team">WhatsApp team</button>';
+  return html;
+}
+
+function openWhatsapp(number, message) {
+  const digits = (number || '').replace(/[^\d+]/g, '');
+  window.open(`https://wa.me/${digits}?text=${encodeURIComponent(message)}`, '_blank');
+}
+
 const OBLIGATION_LABELS = {
   vat: 'VAT', paye: 'PAYE', annual_return: 'CAC Annual Return', company_income_tax: 'Company Income Tax',
   pension: 'Pension', nsitf: 'NSITF', itf: 'ITF', nhf: 'NHF', business_permit: 'Business permit',
@@ -151,6 +164,21 @@ function standardObligations() {
     renderObligations();
   });
 
+  document.getElementById('ownerWhatsapp').value = business.owner_whatsapp_number || '';
+  document.getElementById('teamWhatsapp').value = business.team_whatsapp_number || '';
+  document.getElementById('contactsForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const owner_whatsapp_number = document.getElementById('ownerWhatsapp').value.trim() || null;
+    const team_whatsapp_number = document.getElementById('teamWhatsapp').value.trim() || null;
+    const { error } = await supabase.from('businesses').update({ owner_whatsapp_number, team_whatsapp_number }).eq('id', business.id);
+    if (error) { toast(error.message); return; }
+    business.owner_whatsapp_number = owner_whatsapp_number;
+    business.team_whatsapp_number = team_whatsapp_number;
+    toast('WhatsApp contacts saved');
+    renderObligations();
+    renderVault();
+  });
+
   // ---------- Calendar ----------
   async function renderObligations() {
     const obligations = await loadObligations();
@@ -170,11 +198,21 @@ function standardObligations() {
           <div class="ob-meta">${OBLIGATION_LABELS[ob.obligation_type] || ob.obligation_type} · Due ${fmtDate(ob.due_date)}${ob.recurrence !== 'none' ? ' · ' + ob.recurrence : ''}</div>
         </div>
         <div class="ob-actions">
+          ${whatsappButtonsHtml(!!business.owner_whatsapp_number, !!business.team_whatsapp_number)}
           ${status !== 'completed' ? '<button data-action="complete">Mark done</button>' : ''}
           ${status !== 'waived' ? '<button data-action="waive">Not applicable</button>' : ''}
           <button data-action="delete">Remove</button>
         </div>
       `;
+      const waMessage = `Compliance reminder from ${business.name}: "${ob.title}" (${OBLIGATION_LABELS[ob.obligation_type] || ob.obligation_type}) is due ${fmtDate(ob.due_date)}.`;
+      row.querySelector('[data-action="wa-owner"]')?.addEventListener('click', async () => {
+        openWhatsapp(business.owner_whatsapp_number, waMessage);
+        await supabase.from('compliance_reminder_log').insert({ business_id: business.id, obligation_id: ob.id, channel: 'whatsapp', tone: 'polite' });
+      });
+      row.querySelector('[data-action="wa-team"]')?.addEventListener('click', async () => {
+        openWhatsapp(business.team_whatsapp_number, waMessage);
+        await supabase.from('compliance_reminder_log').insert({ business_id: business.id, obligation_id: ob.id, channel: 'whatsapp', tone: 'polite' });
+      });
       row.querySelector('[data-action="complete"]')?.addEventListener('click', async () => {
         await supabase.from('compliance_obligations').update({ status: 'completed', completed_at: new Date().toISOString() }).eq('id', ob.id);
         renderObligations(); renderDashboard();
@@ -230,10 +268,22 @@ function standardObligations() {
           <div class="vault-meta ${metaClass}">${DOC_LABELS[doc.doc_type] || doc.doc_type}${doc.expiry_date ? ' · Expires ' + fmtDate(doc.expiry_date) : ' · No expiry'}</div>
         </div>
         <div class="ob-actions">
+          ${doc.expiry_date ? whatsappButtonsHtml(!!business.owner_whatsapp_number, !!business.team_whatsapp_number) : ''}
           ${doc.file_path ? '<button data-action="download">View</button>' : ''}
           <button data-action="delete">Remove</button>
         </div>
       `;
+      if (doc.expiry_date) {
+        const waMessage = `Renewal reminder from ${business.name}: "${doc.name}" (${DOC_LABELS[doc.doc_type] || doc.doc_type}) expires ${fmtDate(doc.expiry_date)}.`;
+        row.querySelector('[data-action="wa-owner"]')?.addEventListener('click', async () => {
+          openWhatsapp(business.owner_whatsapp_number, waMessage);
+          await supabase.from('compliance_reminder_log').insert({ business_id: business.id, compliance_document_id: doc.id, channel: 'whatsapp', tone: 'polite' });
+        });
+        row.querySelector('[data-action="wa-team"]')?.addEventListener('click', async () => {
+          openWhatsapp(business.team_whatsapp_number, waMessage);
+          await supabase.from('compliance_reminder_log').insert({ business_id: business.id, compliance_document_id: doc.id, channel: 'whatsapp', tone: 'polite' });
+        });
+      }
       row.querySelector('[data-action="download"]')?.addEventListener('click', async () => {
         const { data, error } = await supabase.storage.from('compliance-documents').createSignedUrl(doc.file_path, 60);
         if (error) { toast(error.message); return; }
@@ -276,4 +326,105 @@ function standardObligations() {
   renderDashboard();
   renderObligations();
   renderVault();
+  wireAssistant(supabase, business);
+  wireTeam(supabase, business, ctx.role);
 })();
+
+const ROLE_LABELS = { owner: 'Owner', staff: 'Staff', accountant: 'Accountant', lawyer: 'Lawyer', hr: 'HR', finance: 'Finance' };
+
+function wireTeam(supabase, business, myRole) {
+  const wrap = document.getElementById('teamWrap');
+  const inviteForm = document.getElementById('inviteForm');
+  const isOwner = myRole === 'owner';
+  document.getElementById('inviteOwnerOnly').style.display = isOwner ? 'block' : 'none';
+
+  async function renderTeam() {
+    const { data: members } = await supabase
+      .from('business_members')
+      .select('id, user_id, role, member_email, member_name, created_at')
+      .eq('business_id', business.id)
+      .order('created_at', { ascending: true });
+
+    const rows = [{ id: 'owner-row', role: 'owner', member_name: null, member_email: null, isOwnerRow: true }, ...(members || [])];
+    wrap.innerHTML = '';
+    rows.forEach(m => {
+      const row = document.createElement('div');
+      row.className = 'vault-row';
+      const label = m.isOwnerRow ? (business.name + ' (you, business owner)') : (m.member_name || m.member_email || 'Team member');
+      row.innerHTML = `
+        <div>
+          <div class="vault-name">${label}</div>
+          <div class="vault-meta">${ROLE_LABELS[m.role] || m.role}${m.member_email && !m.isOwnerRow ? ' · ' + m.member_email : ''}</div>
+        </div>
+        ${(isOwner && !m.isOwnerRow) ? '<div class="ob-actions"><button data-action="remove">Remove</button></div>' : ''}
+      `;
+      row.querySelector('[data-action="remove"]')?.addEventListener('click', async () => {
+        if (!confirm(`Remove ${label} from the team?`)) return;
+        await supabase.from('business_members').delete().eq('id', m.id);
+        renderTeam();
+      });
+      wrap.appendChild(row);
+    });
+  }
+
+  if (isOwner) {
+    inviteForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const email = document.getElementById('inviteEmail').value.trim();
+      const role = document.getElementById('inviteRole').value;
+      const { data, error } = await supabase.functions.invoke('invite-team-member', {
+        body: { business_id: business.id, email, role },
+      });
+      if (error) { toast(error.message); return; }
+      if (data?.error) { toast(data.error); return; }
+      e.target.reset();
+      toast(`${email} added as ${ROLE_LABELS[role]}`);
+      renderTeam();
+    });
+  }
+
+  renderTeam();
+}
+
+function wireAssistant(supabase, business) {
+  const thread = document.getElementById('assistantThread');
+  const form = document.getElementById('assistantForm');
+  const input = document.getElementById('assistantQuestion');
+  const submitBtn = document.getElementById('assistantSubmit');
+  let hasMessages = false;
+
+  function addMessage(who, text) {
+    if (!hasMessages) { thread.innerHTML = ''; hasMessages = true; }
+    const el = document.createElement('div');
+    el.className = `assist-msg ${who}`;
+    el.innerHTML = `<div class="who">${who === 'user' ? 'You' : 'Assistant'}</div><div class="body"></div>`;
+    el.querySelector('.body').textContent = text;
+    thread.appendChild(el);
+    thread.scrollTop = thread.scrollHeight;
+  }
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const question = input.value.trim();
+    if (!question) return;
+
+    addMessage('user', question);
+    input.value = '';
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Thinking…';
+
+    try {
+      const { data, error } = await supabase.functions.invoke('compliance-assistant', {
+        body: { business_id: business.id, question },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      addMessage('assistant', data.answer);
+    } catch (err) {
+      addMessage('assistant', `Sorry, I couldn't answer that right now (${err.message || err}). Please try again shortly.`);
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Ask';
+    }
+  });
+}
