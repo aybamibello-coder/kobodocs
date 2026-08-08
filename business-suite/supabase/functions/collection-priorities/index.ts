@@ -180,7 +180,7 @@ Deno.serve(async (req: Request) => {
     .maybeSingle();
   if (!business) return ok({ error: "Business not found or access denied" });
 
-  const [{ data: clients }, { data: receivables }, { data: promises }, { data: notes }] = await Promise.all([
+  const [{ data: clients }, { data: receivables }, { data: promises }, { data: notes }, { data: openDisputes }] = await Promise.all([
     supabase.from("clients").select("id, name, phone").eq("business_id", businessId),
     supabase.from("receivables").select("id, client_id, description, amount, amount_paid, due_date, payment_status")
       .eq("business_id", businessId).neq("payment_status", "paid"),
@@ -188,13 +188,18 @@ Deno.serve(async (req: Request) => {
       .eq("business_id", businessId),
     supabase.from("collection_notes").select("client_id, note, created_at")
       .eq("business_id", businessId).order("created_at", { ascending: false }),
+    supabase.from("receivable_disputes").select("receivable_id")
+      .eq("business_id", businessId).eq("status", "open"),
   ]);
+
+  const disputedReceivableIds = new Set((openDisputes ?? []).map((d: any) => d.receivable_id));
 
   const clientById = new Map((clients ?? []).map((c: any) => [c.id, c]));
 
   // ---------- Deterministic scoring (no AI involved) ----------
   const byClient = new Map<string, { balance: number; worstDays: number | null }>();
   for (const rv of receivables ?? []) {
+    if (disputedReceivableIds.has(rv.id)) continue; // don't chase money that's legitimately in dispute
     const balance = Number(rv.amount) - Number(rv.amount_paid || 0);
     if (balance <= 0) continue;
     const days = daysOverdue(rv.due_date);
