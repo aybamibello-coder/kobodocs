@@ -785,10 +785,12 @@ function renderPlanPicker(ctx) {
         <tbody>${itemRows}</tbody>
       </table>
 
-      <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:14px;">
+      <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:10px;">
         <button data-statement="${cid}" class="btn small">Download statement (PDF)</button>
         ${client.phone ? `<button data-remind="${cid}" class="btn small">WhatsApp reminder</button>` : ''}
+        <button data-draft-negotiation="${cid}" class="btn small">Draft AI negotiation message</button>
       </div>
+      <div id="negotiationDraft-${cid}" style="margin-bottom:14px;"></div>
 
       <strong style="font-size:0.82rem;">Promises to pay</strong>
       <div style="margin:6px 0 10px;">
@@ -837,6 +839,48 @@ function renderPlanPicker(ctx) {
         logActivity('reminder_sent', { channel: 'whatsapp', balance: row.balance }, cid);
       });
     }
+
+    const draftBtn = detail.querySelector(`[data-draft-negotiation="${cid}"]`);
+    const draftWrap = detail.querySelector(`#negotiationDraft-${cid}`);
+    async function generateDraft() {
+      draftBtn.disabled = true;
+      draftBtn.textContent = 'Drafting…';
+      draftWrap.innerHTML = '<div class="empty-note">Writing a personalized message from this client\u2019s balance and history…</div>';
+      try {
+        const { data, error } = await supabase.functions.invoke('draft-negotiation-message', {
+          body: { business_id: business.id, client_id: cid }
+        });
+        if (error || data?.error) {
+          draftWrap.innerHTML = '';
+          toast('Could not draft message: ' + (data?.error || error.message));
+          return;
+        }
+        draftWrap.innerHTML = `
+          <textarea id="negotiationText-${cid}" style="width:100%; min-height:100px; font-size:0.85rem;">${escapeHtml(data.message)}</textarea>
+          <div style="font-size:0.68rem; opacity:0.55; margin-top:4px;">AI-drafted${data.provider ? ` (${data.provider})` : ''} — review and edit before sending.</div>
+          <div style="display:flex; gap:8px; margin-top:8px; flex-wrap:wrap;">
+            ${client.phone ? `<button data-send-negotiation="${cid}" class="btn primary small">Send via WhatsApp</button>` : ''}
+            <button data-copy-negotiation="${cid}" class="btn small">Copy</button>
+            <button data-regen-negotiation="${cid}" class="btn small">Regenerate</button>
+          </div>
+        `;
+        draftWrap.querySelector(`[data-send-negotiation="${cid}"]`)?.addEventListener('click', () => {
+          const text = draftWrap.querySelector(`#negotiationText-${cid}`).value;
+          window.open(`https://wa.me/${client.phone.replace(/[^\d+]/g, '')}?text=${encodeURIComponent(text)}`, '_blank');
+          logActivity('reminder_sent', { channel: 'whatsapp', method: 'ai_negotiation', balance: row.balance }, cid);
+        });
+        draftWrap.querySelector(`[data-copy-negotiation="${cid}"]`)?.addEventListener('click', async () => {
+          const text = draftWrap.querySelector(`#negotiationText-${cid}`).value;
+          await navigator.clipboard.writeText(text);
+          toast('Copied to clipboard.');
+        });
+        draftWrap.querySelector(`[data-regen-negotiation="${cid}"]`)?.addEventListener('click', generateDraft);
+      } finally {
+        draftBtn.disabled = false;
+        draftBtn.textContent = 'Draft AI negotiation message';
+      }
+    }
+    draftBtn.addEventListener('click', generateDraft);
 
     detail.querySelectorAll('[data-pay]').forEach(btn => {
       btn.addEventListener('click', async () => {
