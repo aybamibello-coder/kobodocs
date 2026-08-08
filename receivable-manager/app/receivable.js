@@ -92,6 +92,17 @@ function renderPlanPicker(ctx) {
   area.innerHTML = `
     <div class="bs-panel" id="dsoPanel"></div>
     <div class="bs-panel">
+      <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+        <div>
+          <strong style="font-size:0.9rem;">Today's priorities</strong>
+          <p style="font-size:0.78rem; opacity:0.65; margin-top:2px;">Who to chase today, ranked by amount owed, how overdue, and broken promises.</p>
+        </div>
+        <button id="priorityRefreshBtn" class="btn small">Refresh</button>
+      </div>
+      <div id="priorityMeta" style="font-size:0.72rem; opacity:0.55; margin-top:6px;"></div>
+      <div id="priorityWrap" style="margin-top:14px;"></div>
+    </div>
+    <div class="bs-panel">
       <strong style="font-size:0.9rem;">Aging summary</strong>
       <div class="aging-grid" id="agingGrid" style="display:grid; grid-template-columns:repeat(auto-fit,minmax(110px,1fr)); gap:10px; margin-top:12px;"></div>
     </div>
@@ -219,6 +230,101 @@ function renderPlanPicker(ctx) {
       }
     });
   }
+
+  // ---------- Today's priorities (AI-assisted, deterministically scored) ----------
+  function isToday(iso) {
+    if (!iso) return false;
+    const d = new Date(iso), now = new Date();
+    return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth() && d.getDate() === now.getDate();
+  }
+
+  function renderPriorityList(priorities, meta) {
+    const wrap = document.getElementById('priorityWrap');
+    const metaEl = document.getElementById('priorityMeta');
+
+    metaEl.textContent = meta?.generatedAt
+      ? `Last generated ${fmtDateTime(meta.generatedAt)}${meta.provider ? ` · ${meta.provider}` : ''}`
+      : '';
+
+    if (!priorities || !priorities.length) {
+      wrap.innerHTML = '<div class="empty-note">Nothing overdue right now — every account is settled or current.</div>';
+      return;
+    }
+
+    wrap.innerHTML = priorities.map(p => {
+      const client = clientById(p.client_id);
+      return `
+        <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:12px; padding:10px 0; border-bottom:1px dashed var(--line);">
+          <div style="flex:1; min-width:0;">
+            <div class="pr-name">${p.rank}. ${escapeHtml(p.client_name)}
+              <span style="font-size:0.68rem; opacity:0.65; font-weight:400; margin-left:6px;">${p.bucket}${p.broken_promise ? ' · broke a promise' : ''}</span>
+            </div>
+            <div style="font-size:0.82rem; opacity:0.75; margin-top:3px;">${escapeHtml(p.suggested_action)}</div>
+          </div>
+          <div style="text-align:right; flex-shrink:0;">
+            <div class="pr-amount">${naira(p.balance)}</div>
+            ${client.phone ? `<button data-priority-remind="${p.client_id}" class="btn small" style="margin-top:6px;">WhatsApp</button>` : ''}
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    wrap.querySelectorAll('[data-priority-remind]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const cid = btn.dataset.priorityRemind;
+        const client = clientById(cid);
+        const row = byClient[cid];
+        const balance = naira(row ? row.balance : 0);
+        const message = `Hello ${client.name}, this is a reminder that your outstanding balance with ${business.name} is ${balance}. Please let us know when we can expect payment. Thank you.`;
+        window.open(`https://wa.me/${client.phone.replace(/[^\d+]/g, '')}?text=${encodeURIComponent(message)}`, '_blank');
+        logActivity('reminder_sent', { channel: 'whatsapp', balance: row ? row.balance : 0, source: 'priorities' }, cid);
+      });
+    });
+  }
+
+  async function generatePriorities() {
+    const btn = document.getElementById('priorityRefreshBtn');
+    const wrap = document.getElementById('priorityWrap');
+    btn.disabled = true;
+    btn.textContent = 'Generating…';
+    wrap.innerHTML = '<div class="empty-note">Scoring accounts and drafting today\u2019s priorities…</div>';
+
+    try {
+      const { data, error } = await supabase.functions.invoke('collection-priorities', {
+        body: { business_id: business.id }
+      });
+      if (error || data?.error) {
+        toast('Could not generate priorities: ' + (data?.error || error.message));
+        renderPriorityList([], null);
+        return;
+      }
+      renderPriorityList(data.priorities, { generatedAt: data.generated_at, provider: data.provider });
+    } catch (err) {
+      toast('Could not generate priorities: ' + err.message);
+      renderPriorityList([], null);
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Refresh';
+    }
+  }
+
+  async function loadAndRenderPriorities() {
+    const { data: lastRun } = await supabase
+      .from('collection_priority_runs')
+      .select('priorities, provider, created_at')
+      .eq('business_id', business.id)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (lastRun && isToday(lastRun.created_at)) {
+      renderPriorityList(lastRun.priorities, { generatedAt: lastRun.created_at, provider: lastRun.provider });
+    } else {
+      await generatePriorities();
+    }
+  }
+
+  document.getElementById('priorityRefreshBtn').addEventListener('click', generatePriorities);
 
   function renderLedger() {
     const wrap = document.getElementById('ledgerWrap');
@@ -787,4 +893,5 @@ function renderPlanPicker(ctx) {
   renderActivity();
   renderAnalytics();
   loadAndRenderReminderSettings();
+  loadAndRenderPriorities();
 })();
