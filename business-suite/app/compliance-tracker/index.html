@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-EN4PYGX7EW"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-EN4PYGX7EW');
+</script>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Compliance Tracker | KoboDocs Business Suite</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Work+Sans:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/style.css">
+<style>
+  .ct-wrap{ max-width:1080px; margin:0 auto; padding:36px 20px 100px; }
+  .ct-top{ display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:14px; margin-bottom:24px; }
+  .bs-panel{ background:var(--paper); border:1px solid var(--line); border-radius:8px; padding:22px 20px; margin-bottom:20px; }
+  .bs-panel h2{ font-size:1.05rem; margin-bottom:4px; }
+  .bs-panel .panel-sub{ font-size:0.82rem; opacity:0.65; margin-bottom:16px; }
+
+  .ct-tabs{ display:flex; gap:6px; margin-bottom:20px; flex-wrap:wrap; }
+  .ct-tab{
+    font-family:'Space Mono', monospace; font-size:0.78rem; text-transform:uppercase; letter-spacing:0.03em;
+    padding:8px 16px; border:1px solid var(--line); border-radius:20px; background:var(--paper); cursor:pointer; color:inherit;
+  }
+  .ct-tab.active{ background:var(--ink-green-deep); color:var(--paper); border-color:var(--ink-green-deep); }
+  .ct-view{ display:none; }
+  .ct-view.active{ display:block; }
+
+  .score-grid{ display:grid; grid-template-columns:1.2fr 2fr; gap:16px; margin-bottom:20px; }
+  @media (max-width:700px){ .score-grid{ grid-template-columns:1fr; } }
+  .score-card{ background:var(--paper); border:1px solid var(--line); border-radius:8px; padding:22px 20px; text-align:center; }
+  .score-value{ font-family:'Fraunces', serif; font-size:2.6rem; line-height:1; }
+  .score-value.good{ color:var(--ink-green-deep); }
+  .score-value.warn{ color:#8a6a1f; }
+  .score-value.bad{ color:var(--stamp-red); }
+  .score-label{ font-size:0.78rem; opacity:0.6; text-transform:uppercase; letter-spacing:0.03em; margin-top:6px; }
+
+  .up-grid{ display:grid; grid-template-columns:repeat(3, 1fr); gap:12px; }
+  @media (max-width:700px){ .up-grid{ grid-template-columns:1fr; } }
+  .up-card{ background:var(--paper); border:1px solid var(--line); border-radius:8px; padding:14px 12px; }
+  .up-card .label{ font-size:0.68rem; text-transform:uppercase; letter-spacing:0.03em; opacity:0.6; margin-bottom:6px; }
+  .up-card .value{ font-family:'Fraunces', serif; font-size:1.3rem; }
+
+  .ob-row{ padding:14px 0; border-bottom:1px dashed var(--line); display:flex; justify-content:space-between; align-items:center; gap:14px; flex-wrap:wrap; }
+  .ob-row:last-child{ border-bottom:none; }
+  .ob-title{ font-weight:600; }
+  .ob-meta{ font-size:0.82rem; opacity:0.65; }
+  .ob-actions{ display:flex; gap:8px; flex-wrap:wrap; }
+  .ob-actions button{
+    font-size:0.8rem; border:1px solid var(--line); background:none; border-radius:20px;
+    padding:5px 12px; cursor:pointer; color:inherit;
+  }
+  .status-tag{
+    font-family:'Space Mono', monospace; font-size:0.68rem; text-transform:uppercase;
+    padding:3px 10px; border-radius:20px; margin-left:8px;
+  }
+  .status-tag.pending{ background:rgba(199,154,60,0.15); color:#8a6a1f; }
+  .status-tag.completed{ background:rgba(20,52,43,0.1); color:var(--ink-green-deep); }
+  .status-tag.overdue{ background:rgba(168,52,42,0.12); color:var(--stamp-red); }
+  .status-tag.waived{ background:rgba(0,0,0,0.06); color:inherit; opacity:0.6; }
+
+  .mini-form{ display:flex; gap:8px; flex-wrap:wrap; margin-top:10px; align-items:flex-end; }
+  .mini-form label{ font-size:0.72rem; opacity:0.6; display:block; margin-bottom:3px; }
+  .mini-form input, .mini-form select, .mini-form textarea{
+    font-family:inherit; font-size:0.84rem; padding:6px 8px; border:1px solid var(--line); border-radius:4px; background:var(--paper);
+  }
+  .empty-note{ font-size:0.88rem; opacity:0.6; padding:20px 0; text-align:center; }
+
+  .assist-msg{ padding:12px 0; border-bottom:1px dashed var(--line); }
+  .assist-msg:last-child{ border-bottom:none; }
+  .assist-msg .who{ font-family:'Space Mono', monospace; font-size:0.68rem; text-transform:uppercase; letter-spacing:0.03em; opacity:0.55; margin-bottom:4px; }
+  .assist-msg .body{ font-size:0.9rem; line-height:1.55; white-space:pre-wrap; }
+  .assist-msg.user .body{ opacity:0.85; }
+
+  .vault-row{ padding:12px 0; border-bottom:1px dashed var(--line); display:flex; justify-content:space-between; align-items:center; gap:14px; flex-wrap:wrap; }
+  .vault-row:last-child{ border-bottom:none; }
+  .vault-name{ font-weight:600; }
+  .vault-meta{ font-size:0.82rem; opacity:0.65; }
+  .vault-meta.expiring{ color:#8a6a1f; }
+  .vault-meta.expired{ color:var(--stamp-red); }
+
+  #toast{
+    position:fixed; bottom:20px; left:50%; transform:translateX(-50%);
+    background:var(--ink-green-deep); color:var(--paper); padding:10px 20px; border-radius:6px;
+    font-size:0.85rem; display:none; z-index:50;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <nav class="nav">
+    <a href="/" class="logo">
+      <svg class="mark" viewBox="0 0 32 32" fill="none">
+        <circle cx="16" cy="16" r="14" stroke="#C79A3C" stroke-width="2.5"/>
+        <circle cx="16" cy="16" r="8" stroke="#C79A3C" stroke-width="1.5"/>
+      </svg>
+      KoboDocs
+    </a>
+    <button class="search-btn" id="searchBtn" aria-label="Search tools">
+      <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    </button>
+    <button class="menu-btn" aria-label="Toggle menu" id="menuBtn"><span></span><span></span><span></span></button>
+    <div class="nav-links" id="navLinks">
+      <a href="/" class="mobile-only-link">Home</a>
+      <a href="/business-suite/app/">Dashboard</a>
+      <a href="/business-suite/app/debt/">Who owes you</a>
+      <a href="/business-suite/app/credit/">Credit & Collections</a>
+      <a href="/business-suite/app/quotes/">Quotes</a>
+      <a href="/business-suite/app/expenses/">Expenses</a>
+      <a href="/business-suite/app/inventory/">Inventory</a>
+      <a href="/business-suite/app/clients/">Clients</a>
+      <a href="/business-suite/app/compliance-tracker/">Compliance Tracker</a>
+      <a href="/business-suite/app/my-businesses/">My Businesses</a>
+      <a href="/business-suite/app/compliance/">CAC Compliance</a>
+      <a href="/blog/" class="mobile-only-link">Blog</a>
+      <a href="/about/" class="mobile-only-link">About</a>
+      <a href="/account/" id="navAccountLink">Sign in</a>
+    </div>
+  </nav>
+</header>
+
+<div class="search-overlay" id="searchOverlay">
+  <div class="search-panel">
+    <div class="search-panel-head">
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input type="text" id="searchInput" placeholder="Search tools — e.g. invoice, will, visa, siwes..." autocomplete="off">
+      <button class="search-close" id="searchClose" aria-label="Close search">&times;</button>
+    </div>
+    <div class="search-results" id="searchResults"></div>
+    <div class="search-hint">↑↓ to navigate · Enter to open · Esc to close</div>
+  </div>
+</div>
+
+<div class="ct-wrap">
+  <div class="ct-top">
+    <div>
+      <a href="/business-suite/app/">&larr; Dashboard</a>
+      <h1 style="font-size:1.4rem; margin-top:6px;">Compliance Tracker</h1>
+      <p style="font-size:0.88rem; opacity:0.7; margin-top:4px;">CAC, tax and license deadlines in one place — with a document vault and renewal tracking. Estimates only, not a substitute for your accountant or lawyer.</p>
+    </div>
+  </div>
+
+  <div class="ct-tabs">
+    <button class="ct-tab active" data-view="dashboard">Dashboard</button>
+    <button class="ct-tab" data-view="calendar">Calendar</button>
+    <button class="ct-tab" data-view="vault">Document vault</button>
+    <button class="ct-tab" data-view="assistant">Assistant</button>
+    <button class="ct-tab" data-view="team">Team</button>
+  </div>
+
+  <!-- Dashboard -->
+  <div class="ct-view active" id="view-dashboard">
+    <div class="score-grid">
+      <div class="score-card">
+        <div class="score-value" id="scoreValue">—</div>
+        <div class="score-label">Compliance score</div>
+      </div>
+      <div class="up-grid">
+        <div class="up-card"><div class="label">Overdue</div><div class="value" id="statOverdue">—</div></div>
+        <div class="up-card"><div class="label">Due in 30 days</div><div class="value" id="statDueSoon">—</div></div>
+        <div class="up-card"><div class="label">Documents expiring soon</div><div class="value" id="statExpiring">—</div></div>
+      </div>
+    </div>
+
+    <div class="bs-panel">
+      <h2>Upcoming</h2>
+      <div class="panel-sub">Obligations and document renewals coming up, soonest first.</div>
+      <div id="upcomingWrap"><div class="empty-note">Loading…</div></div>
+    </div>
+
+    <div class="bs-panel" id="starterPanel">
+      <h2>Get started</h2>
+      <div class="panel-sub">Add the deadlines that typically apply to every registered Nigerian business. You can edit or remove any of these afterwards.</div>
+      <button class="btn primary" id="seedBtn" type="button">Add standard obligations</button>
+    </div>
+
+    <div class="bs-panel">
+      <h2>WhatsApp reminder contacts</h2>
+      <div class="panel-sub">Set a number here to get a "Send via WhatsApp" button on each obligation and document — opens WhatsApp with the reminder pre-filled, you just hit send.</div>
+      <form id="contactsForm" class="mini-form">
+        <div>
+          <label>Owner's WhatsApp</label>
+          <input id="ownerWhatsapp" type="tel" placeholder="e.g. 08012345678">
+        </div>
+        <div>
+          <label>Team/accountant's WhatsApp</label>
+          <input id="teamWhatsapp" type="tel" placeholder="e.g. 08087654321">
+        </div>
+        <div>
+          <button class="btn primary" type="submit">Save</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Calendar -->
+  <div class="ct-view" id="view-calendar">
+    <div class="bs-panel">
+      <h2>Add an obligation</h2>
+      <form id="obForm" class="mini-form">
+        <div>
+          <label>Type</label>
+          <select id="obType">
+            <option value="vat">VAT</option>
+            <option value="paye">PAYE</option>
+            <option value="annual_return">CAC Annual Return</option>
+            <option value="company_income_tax">Company Income Tax</option>
+            <option value="pension">Pension</option>
+            <option value="nsitf">NSITF</option>
+            <option value="itf">ITF</option>
+            <option value="nhf">NHF</option>
+            <option value="business_permit">Business permit</option>
+            <option value="nafdac">NAFDAC</option>
+            <option value="son">SON</option>
+            <option value="ncc">NCC</option>
+            <option value="other">Other</option>
+          </select>
+        </div>
+        <div>
+          <label>Title</label>
+          <input id="obTitle" placeholder="e.g. Q1 VAT filing" required>
+        </div>
+        <div>
+          <label>Due date</label>
+          <input id="obDueDate" type="date" required>
+        </div>
+        <div>
+          <label>Repeats</label>
+          <select id="obRecurrence">
+            <option value="none">One-off</option>
+            <option value="monthly">Monthly</option>
+            <option value="quarterly">Quarterly</option>
+            <option value="annually">Annually</option>
+          </select>
+        </div>
+        <div>
+          <button class="btn primary" type="submit">Add</button>
+        </div>
+      </form>
+    </div>
+
+    <div class="bs-panel">
+      <h2>All obligations</h2>
+      <div class="panel-sub">Mark items done as you file them. Overdue items are flagged automatically.</div>
+      <div id="obligationsWrap"><div class="empty-note">Loading…</div></div>
+    </div>
+  </div>
+
+  <!-- Vault -->
+  <div class="ct-view" id="view-vault">
+    <div class="bs-panel">
+      <h2>Add a document</h2>
+      <form id="docForm" class="mini-form">
+        <div>
+          <label>Type</label>
+          <select id="docType">
+            <option value="cac_certificate">CAC certificate</option>
+            <option value="memart">MEMART</option>
+            <option value="tax_clearance">Tax clearance</option>
+            <option value="tin_certificate">TIN certificate</option>
+            <option value="nafdac_certificate">NAFDAC certificate</option>
+            <option value="son_certificate">SON certificate</option>
+            <option value="business_permit">Business permit</option>
+            <option value="insurance">Insurance</option>
+            <option value="contract">Contract</option>
+            <option value="other">Other</option>
+          </select>
+        </div>
+        <div>
+          <label>Name</label>
+          <input id="docName" placeholder="e.g. CAC Certificate of Incorporation" required>
+        </div>
+        <div>
+          <label>Expiry date (if any)</label>
+          <input id="docExpiry" type="date">
+        </div>
+        <div>
+          <label>File (optional)</label>
+          <input id="docFile" type="file" accept=".pdf,.jpg,.jpeg,.png">
+        </div>
+        <div>
+          <button class="btn primary" type="submit">Add to vault</button>
+        </div>
+      </form>
+    </div>
+
+    <div class="bs-panel">
+      <h2>Your documents</h2>
+      <div class="panel-sub">Anything with an expiry date shows up as a renewal on your dashboard.</div>
+      <div id="vaultWrap"><div class="empty-note">Loading…</div></div>
+    </div>
+  </div>
+
+  <!-- Assistant -->
+  <div class="ct-view" id="view-assistant">
+    <div class="bs-panel">
+      <h2>Ask about your compliance</h2>
+      <div class="panel-sub">Answers are grounded in your own obligations and vault data below — general guidance only, not legal or tax advice.</div>
+      <form id="assistantForm" class="mini-form" style="align-items:stretch;">
+        <div style="flex:1; min-width:240px;">
+          <label>Your question</label>
+          <textarea id="assistantQuestion" rows="2" style="width:100%; resize:vertical;" placeholder="e.g. Do I need to file annual returns this year?" required maxlength="1000"></textarea>
+        </div>
+        <div>
+          <button class="btn primary" type="submit" id="assistantSubmit">Ask</button>
+        </div>
+      </form>
+    </div>
+
+    <div class="bs-panel">
+      <h2>Conversation</h2>
+      <div id="assistantThread"><div class="empty-note">Ask a question above to get started.</div></div>
+    </div>
+  </div>
+
+  <!-- Team -->
+  <div class="ct-view" id="view-team">
+    <div class="bs-panel" id="inviteOwnerOnly" style="display:none;">
+      <h2>Invite a team member</h2>
+      <div class="panel-sub">They need an existing free KoboDocs account — invite by the email they signed up with. Everyone sees only what they need is coming; for now, all roles get full read/write access to this tracker.</div>
+      <form id="inviteForm" class="mini-form">
+        <div>
+          <label>Email</label>
+          <input id="inviteEmail" type="email" placeholder="teammate@email.com" required>
+        </div>
+        <div>
+          <label>Role</label>
+          <select id="inviteRole">
+            <option value="accountant">Accountant</option>
+            <option value="lawyer">Lawyer</option>
+            <option value="hr">HR</option>
+            <option value="finance">Finance</option>
+            <option value="staff">Staff (general)</option>
+          </select>
+        </div>
+        <div>
+          <button class="btn primary" type="submit">Invite</button>
+        </div>
+      </form>
+    </div>
+
+    <div class="bs-panel">
+      <h2>Team members</h2>
+      <div id="teamWrap"><div class="empty-note">Loading…</div></div>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script type="module" src="/assets/auth.js"></script>
+<script src="/assets/nav-auth.js" defer></script>
+<script src="/business-suite/app/guard.js"></script>
+<script src="/business-suite/app/compliance-tracker/compliance-tracker.js" defer></script>
+<script src="/assets/tools-index.js" defer></script>
+<script src="/assets/search.js" defer></script>
+</body>
+</html>

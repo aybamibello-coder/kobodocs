@@ -71,6 +71,8 @@
       <a href="/business-suite/app/expenses/">Expenses</a>
       <a href="/business-suite/app/inventory/">Inventory</a>
       <a href="/business-suite/app/clients/">Clients</a>
+      <a href="/business-suite/app/my-businesses/">My Businesses</a>
+      <a href="/business-suite/app/compliance-tracker/">Compliance Tracker</a>
       <a href="/business-suite/app/compliance/">CAC Compliance</a>
       <a href="/blog/" class="mobile-only-link">Blog</a>
       <a href="/about/" class="mobile-only-link">About</a>
@@ -120,6 +122,10 @@
     <a href="/business-suite/app/inventory/" class="stat-card" id="lowStockCard" style="display:block; text-decoration:none; color:inherit;">
       <div class="label">Low stock items</div>
       <div class="value" id="statLowStock">—</div>
+    </a>
+    <a href="/business-suite/app/compliance-tracker/" class="stat-card" style="display:block; text-decoration:none; color:inherit;">
+      <div class="label">Compliance</div>
+      <div class="value" id="statComplianceScore">—</div>
     </a>
   </div>
 
@@ -181,6 +187,24 @@
   const lowCount = (lowStockItems || []).filter(i => Number(i.quantity_on_hand) <= Number(i.reorder_level || 0)).length;
   document.getElementById('statLowStock').textContent = lowCount;
   if (lowCount > 0) document.getElementById('lowStockCard').classList.add('warn');
+
+  const [{ data: obligations }, { data: complianceDocs }] = await Promise.all([
+    supabase.from('compliance_obligations').select('due_date, status').eq('business_id', business.id),
+    supabase.from('compliance_documents').select('expiry_date').eq('business_id', business.id).not('expiry_date', 'is', null),
+  ]);
+  const today = new Date().setHours(0, 0, 0, 0);
+  const obligationsList = obligations || [];
+  const complianceDocsList = complianceDocs || [];
+  const trackedTotal = obligationsList.length + complianceDocsList.length;
+  const overdueObligations = obligationsList.filter(o => o.status !== 'completed' && o.status !== 'waived' && new Date(o.due_date).setHours(0,0,0,0) < today).length;
+  const expiredDocs = complianceDocsList.filter(d => new Date(d.expiry_date).setHours(0,0,0,0) < today).length;
+  const complianceScoreEl = document.getElementById('statComplianceScore');
+  if (trackedTotal === 0) {
+    complianceScoreEl.textContent = 'Set up';
+  } else {
+    const score = Math.round(100 * (1 - (overdueObligations + expiredDocs) / trackedTotal));
+    complianceScoreEl.textContent = `${score}%`;
+  }
 
   const wrap = document.getElementById('invoiceTableWrap');
   if (!docs.length) {
