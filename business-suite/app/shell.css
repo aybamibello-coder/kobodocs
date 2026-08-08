@@ -73,6 +73,70 @@
   background: var(--stamp-gold);
 }
 
+/* ---- Desktop: left sidebar instead of a horizontal row ----
+   With 11+ flat items, a sidebar is the more scalable pattern than a
+   scrolling horizontal row — no scroll gesture needed to see what's
+   available, and it reads as a proper app shell rather than a
+   stretched marketing nav. Kept the header (logo/search) exactly as
+   it is, in normal flow, unchanged — only .nav-links leaves the flow
+   to become a fixed left rail below it. Below 821px (the same
+   breakpoint style.css already uses for the mobile hamburger drawer)
+   this rule doesn't apply at all, so mobile behavior — and its
+   existing markup/JS bindings in nav-auth.js/search.js — is
+   completely untouched. */
+@media (min-width: 821px) {
+  .suite-nav .nav-links {
+    position: fixed;
+    top: 64px;
+    left: 0;
+    width: 220px;
+    height: calc(100vh - 64px);
+    flex-direction: column;
+    align-items: stretch;
+    gap: 2px;
+    background: var(--ink-green-deep);
+    padding: 20px 14px 24px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    z-index: 40;
+  }
+
+  .suite-nav .nav-links a:not(.nav-cta) {
+    width: 100%;
+    border-radius: 6px;
+    color: var(--bone);
+    opacity: 0.85;
+    padding: 9px 12px;
+  }
+  .suite-nav .nav-links a:not(.nav-cta):hover {
+    background: rgba(251,250,246,0.08);
+    opacity: 1;
+  }
+  .suite-nav .nav-links a:not(.nav-cta)::before {
+    border-color: var(--stamp-gold);
+  }
+  .suite-nav .nav-links a.suite-nav-active {
+    background: var(--stamp-gold);
+    color: var(--ink-green-deep);
+    opacity: 1;
+  }
+  .suite-nav .nav-links a.suite-nav-active::before {
+    background: var(--ink-green-deep);
+    border-color: var(--ink-green-deep);
+  }
+  .suite-nav .nav-links .nav-cta {
+    margin-top: 10px;
+    text-align: center;
+  }
+
+  /* Shift page content right so it sits beside the rail, not under it.
+     :has() is well-supported by 2026 and this keeps every page's
+     markup untouched — no per-page body class needed. */
+  body:has(.suite-nav) {
+    padding-left: 220px;
+  }
+}
+
 /* ---- Cards: subtle elevation + gold accent edge instead of a flat line ---- */
 .suite-card {
   background: var(--paper);
