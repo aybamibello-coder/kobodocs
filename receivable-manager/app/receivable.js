@@ -114,6 +114,18 @@ function renderPlanPicker(ctx) {
       <div id="priorityWrap" style="margin-top:14px;"></div>
     </div>
     <div class="bs-panel">
+      <div>
+        <strong style="font-size:0.9rem;">Reconcile bank statement</strong>
+        <p style="font-size:0.78rem; opacity:0.65; margin-top:2px;">Upload a CSV export from your business bank account. We match incoming payments to outstanding balances so you don't have to log them one by one.</p>
+      </div>
+      <div style="display:flex; align-items:center; gap:10px; margin-top:12px; flex-wrap:wrap;">
+        <input type="file" id="reconFileInput" accept=".csv" />
+        <button id="reconConfirmAllBtn" class="btn small" style="display:none;">Confirm all strong matches</button>
+      </div>
+      <div id="reconSummary" style="font-size:0.78rem; opacity:0.65; margin-top:8px;"></div>
+      <div id="reconWrap" style="margin-top:14px;"></div>
+    </div>
+    <div class="bs-panel">
       <strong style="font-size:0.9rem;">Aging summary</strong>
       <div class="aging-grid" id="agingGrid" style="display:grid; grid-template-columns:repeat(auto-fit,minmax(110px,1fr)); gap:10px; margin-top:12px;"></div>
     </div>
@@ -194,6 +206,26 @@ function renderPlanPicker(ctx) {
     const stats = paymentBehaviour[rv.client_id];
     if (!stats) return null;
     return { date: addDays(rv.due_date, stats.avgDelay), count: stats.count, avgDelay: stats.avgDelay };
+  }
+
+  async function logPaymentForReceivable(receivableId, amountNum, clientId, paidAtIso) {
+    const item = receivables.find(i => i.id === receivableId);
+    if (!item) return { error: 'Receivable not found' };
+
+    const newAmountPaid = Number(item.amount_paid || 0) + amountNum;
+    const newStatus = newAmountPaid >= Number(item.amount) ? 'paid' : 'partial';
+
+    const { error } = await supabase.from('receivables')
+      .update({ amount_paid: newAmountPaid, payment_status: newStatus, updated_at: new Date().toISOString() })
+      .eq('id', receivableId);
+    if (error) return { error: error.message };
+
+    const paymentRow = { receivable_id: receivableId, business_id: business.id, amount: amountNum, created_by: session.user.id };
+    if (paidAtIso) paymentRow.paid_at = paidAtIso;
+    await supabase.from('receivable_payments').insert(paymentRow);
+
+    await logActivity('payment_logged', { amount: amountNum }, clientId);
+    return { error: null };
   }
 
   async function loadAll() {
@@ -362,6 +394,238 @@ function renderPlanPicker(ctx) {
 
   document.getElementById('priorityRefreshBtn').addEventListener('click', generatePriorities);
 
+  // ---------- Bank/payment reconciliation (deterministic matching, no AI) ----------
+  let reconRows = [];              // parsed + matched transactions from the uploaded CSV
+  let reconciledKeys = new Set();  // already-processed transactions, loaded from db
+
+  function txKey(dateStr, amount, description) {
+    return `${dateStr}|${Number(amount).toFixed(2)}|${(description || '').trim().toLowerCase()}`;
+  }
+
+  async function loadReconciledKeys() {
+    const { data } = await supabase
+      .from('reconciled_transactions')
+      .select('tx_date, amount, description')
+      .eq('business_id', business.id);
+    reconciledKeys = new Set((data || []).map(r => txKey(r.tx_date, r.amount, r.description)));
+  }
+
+  function parseCSV(text) {
+    const rows = [];
+    let row = [], field = '', inQuotes = false;
+    for (let i = 0; i < text.length; i++) {
+      const c = text[i];
+      if (inQuotes) {
+        if (c === '"') { if (text[i + 1] === '"') { field += '"'; i++; } else inQuotes = false; }
+        else field += c;
+      } else if (c === '"') inQuotes = true;
+      else if (c === ',') { row.push(field); field = ''; }
+      else if (c === '\n' || c === '\r') {
+        if (c === '\r' && text[i + 1] === '\n') i++;
+        row.push(field); field = '';
+        if (row.length > 1 || row[0] !== '') rows.push(row);
+        row = [];
+      } else field += c;
+    }
+    if (field !== '' || row.length) { row.push(field); rows.push(row); }
+    return rows;
+  }
+
+  function detectColumns(headerRow) {
+    const norm = headerRow.map(h => h.trim().toLowerCase());
+    const find = (candidates) => norm.findIndex(h => candidates.some(c => h.includes(c)));
+    return {
+      date: find(['date']),
+      description: find(['narration', 'description', 'details', 'remark', 'particular']),
+      credit: find(['credit', 'cr amount']),
+      amount: find(['amount'])
+    };
+  }
+
+  function parseAmount(raw) {
+    if (raw === undefined || raw === null || raw === '') return null;
+    const cleaned = String(raw).replace(/[₦, ]/g, '').replace(/\((.*)\)/, '-$1');
+    const n = Number(cleaned);
+    return isNaN(n) ? null : n;
+  }
+
+  function parseDate(raw) {
+    if (!raw) return null;
+    const s = String(raw).trim();
+    let m = s.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})$/);
+    if (m) {
+      let [, d, mo, y] = m;
+      if (y.length === 2) y = '20' + y;
+      return `${y}-${mo.padStart(2, '0')}-${d.padStart(2, '0')}`;
+    }
+    const d = new Date(s);
+    return isNaN(d.getTime()) ? null : d.toISOString().slice(0, 10);
+  }
+
+  function matchTransaction(description, amount) {
+    const desc = (description || '').toLowerCase();
+    let best = null;
+    Object.keys(byClient).forEach(cid => {
+      const clientRow = byClient[cid];
+      const tokens = clientRow.client.name.toLowerCase().split(/\s+/).filter(t => t.length > 2);
+      const hits = tokens.filter(t => desc.includes(t)).length;
+      const nameScore = tokens.length ? hits / tokens.length : 0;
+
+      clientRow.items.forEach(item => {
+        const diff = Math.abs(item.balance - amount);
+        const amountScore = diff < 1 ? 1 : diff <= item.balance * 0.02 ? 0.85 : 0;
+        if (amountScore === 0 && nameScore === 0) return;
+        const score = nameScore * 0.6 + amountScore * 0.4;
+        if (!best || score > best.score) {
+          best = { clientId: cid, receivableId: item.id, score };
+        }
+      });
+    });
+    return best;
+  }
+
+  function confidenceLabel(score) {
+    if (score >= 0.75) return 'Strong match';
+    if (score >= 0.4) return 'Possible match';
+    return 'No confident match';
+  }
+
+  function renderRecon() {
+    const wrap = document.getElementById('reconWrap');
+    const summary = document.getElementById('reconSummary');
+    const confirmAllBtn = document.getElementById('reconConfirmAllBtn');
+
+    if (!reconRows.length) { wrap.innerHTML = ''; summary.textContent = ''; confirmAllBtn.style.display = 'none'; return; }
+
+    const actionable = reconRows.filter(r => !r.done);
+    const strongCount = actionable.filter(r => r.match && r.match.score >= 0.75).length;
+    const alreadyCount = reconRows.length - actionable.length;
+    summary.textContent = `${reconRows.length} transaction${reconRows.length > 1 ? 's' : ''} found` +
+      (alreadyCount ? ` · ${alreadyCount} already reconciled` : '') +
+      (actionable.length ? ` · ${actionable.length} need review` : ' · all handled');
+    confirmAllBtn.style.display = strongCount > 0 ? 'inline-block' : 'none';
+    confirmAllBtn.textContent = `Confirm all strong matches (${strongCount})`;
+
+    wrap.innerHTML = actionable.map((r) => {
+      const idx = reconRows.indexOf(r);
+      const confLabel = r.match ? confidenceLabel(r.match.score) : 'No confident match';
+      const options = [];
+      Object.keys(byClient).forEach(cid => {
+        byClient[cid].items.forEach(item => {
+          const selected = r.match && r.match.receivableId === item.id ? 'selected' : '';
+          options.push(`<option value="${cid}::${item.id}" ${selected}>${escapeHtml(byClient[cid].client.name)} — ${escapeHtml(item.description || 'balance')} (${naira(item.balance)})</option>`);
+        });
+      });
+      return `
+        <div style="display:flex; justify-content:space-between; align-items:center; gap:12px; padding:10px 0; border-bottom:1px dashed var(--line); flex-wrap:wrap;">
+          <div style="flex:1; min-width:220px;">
+            <div style="font-size:0.82rem;">${escapeHtml(r.description || '(no narration)')}</div>
+            <div style="font-size:0.72rem; opacity:0.6; margin-top:2px;">${r.date || 'unknown date'} · ${naira(r.amount)} · ${confLabel}</div>
+          </div>
+          <select data-recon-select="${idx}" style="min-width:200px; max-width:280px;">
+            <option value="">— ignore this transaction —</option>
+            ${options.join('')}
+          </select>
+          <button data-recon-confirm="${idx}" class="btn small">Confirm</button>
+        </div>
+      `;
+    }).join('');
+
+    wrap.querySelectorAll('[data-recon-confirm]').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const idx = Number(btn.dataset.reconConfirm);
+        const select = wrap.querySelector(`[data-recon-select="${idx}"]`);
+        await confirmReconRow(idx, select.value);
+      });
+    });
+  }
+
+  async function confirmReconRow(idx, selectedValue) {
+    const r = reconRows[idx];
+    if (!r || r.done) return;
+
+    if (!selectedValue) {
+      await supabase.from('reconciled_transactions').insert({
+        business_id: business.id, tx_date: r.date, description: r.description, amount: r.amount,
+        status: 'ignored', created_by: session.user.id
+      });
+      r.done = true;
+      renderRecon();
+      return;
+    }
+
+    const [clientId, receivableId] = selectedValue.split('::');
+    const paidAtIso = r.date ? new Date(r.date).toISOString() : null;
+    const { error } = await logPaymentForReceivable(receivableId, r.amount, clientId, paidAtIso);
+    if (error) { toast('Could not log payment: ' + error); return; }
+
+    await supabase.from('reconciled_transactions').insert({
+      business_id: business.id, tx_date: r.date, description: r.description, amount: r.amount,
+      status: 'matched', matched_receivable_id: receivableId, matched_client_id: clientId, created_by: session.user.id
+    });
+
+    r.done = true;
+    await loadAll();
+    computePaymentBehaviour();
+    renderAging();
+    renderLedger();
+    computeDSO();
+    renderAnalytics();
+    renderRecon();
+    toast('Payment matched and logged.');
+  }
+
+  async function handleReconFile(file) {
+    const text = await file.text();
+    const rows = parseCSV(text).filter(r => r.some(cell => cell.trim() !== ''));
+    if (rows.length < 2) { toast('No transactions found in that file.'); return; }
+
+    const cols = detectColumns(rows[0]);
+    if (cols.date === -1 || cols.description === -1) {
+      toast('Could not find date/description columns. Expected headers like Date, Narration/Description, Amount.');
+      return;
+    }
+
+    await loadReconciledKeys();
+
+    reconRows = [];
+    for (let i = 1; i < rows.length; i++) {
+      const raw = rows[i];
+      const date = parseDate(raw[cols.date]);
+      const description = (raw[cols.description] || '').trim();
+      let amount = null;
+      if (cols.credit !== -1) amount = parseAmount(raw[cols.credit]);
+      else if (cols.amount !== -1) {
+        const a = parseAmount(raw[cols.amount]);
+        amount = a !== null && a > 0 ? a : null; // only treat positive values as an incoming credit
+      }
+      if (!date || amount === null || amount <= 0) continue;
+
+      const key = txKey(date, amount, description);
+      const alreadyDone = reconciledKeys.has(key);
+      reconRows.push({
+        date, description, amount, done: alreadyDone,
+        match: alreadyDone ? null : matchTransaction(description, amount)
+      });
+    }
+
+    if (!reconRows.length) { toast('No incoming (credit) transactions found in that file.'); return; }
+    renderRecon();
+  }
+
+  document.getElementById('reconFileInput').addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (file) handleReconFile(file);
+  });
+
+  document.getElementById('reconConfirmAllBtn').addEventListener('click', async () => {
+    const strongOnes = reconRows.filter(r => !r.done && r.match && r.match.score >= 0.75);
+    for (const r of strongOnes) {
+      const idx = reconRows.indexOf(r);
+      await confirmReconRow(idx, `${r.match.clientId}::${r.match.receivableId}`);
+    }
+  });
+
   function renderLedger() {
     const wrap = document.getElementById('ledgerWrap');
     const clientIds = Object.keys(byClient).sort((a, b) => byClient[b].balance - byClient[a].balance);
@@ -517,24 +781,9 @@ function renderPlanPicker(ctx) {
         const amountNum = Number(amountStr);
         if (!amountNum || amountNum <= 0) { toast('Enter a valid amount.'); return; }
 
-        const newAmountPaid = Number(item.amount_paid || 0) + amountNum;
-        const newStatus = newAmountPaid >= Number(item.amount) ? 'paid' : 'partial';
+        const { error } = await logPaymentForReceivable(id, amountNum, cid, null);
+        if (error) { toast('Could not log payment: ' + error); return; }
 
-        const { error } = await supabase.from('receivables')
-          .update({ amount_paid: newAmountPaid, payment_status: newStatus, updated_at: new Date().toISOString() })
-          .eq('id', id);
-        if (error) { toast('Could not log payment: ' + error.message); return; }
-
-        // Log this as its own event (not just a running-total mutation) so
-        // "collected this month" and DSO trend can be computed accurately.
-        await supabase.from('receivable_payments').insert({
-          receivable_id: id,
-          business_id: business.id,
-          amount: amountNum,
-          created_by: session.user.id
-        });
-
-        await logActivity('payment_logged', { amount: amountNum }, cid);
         toast('Payment logged.');
         await loadAll();
         computePaymentBehaviour();
