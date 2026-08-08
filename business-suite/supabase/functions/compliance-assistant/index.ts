@@ -5,6 +5,14 @@
 // legal or tax research.
 // Provider order: Gemini (primary) -> Groq (fallback on error/timeout).
 // Requires GEMINI_API_KEY and GROQ_API_KEY as Edge Function secrets.
+//
+// IMPORTANT: expected/handleable outcomes (validation errors, not-found,
+// not-configured, temporarily-unavailable) return HTTP 200 with
+// { error: "..." } in the body, NOT a non-2xx status — supabase-js's
+// functions.invoke() replaces non-2xx bodies with a generic "non-2xx
+// status code" message client-side, which silently broke the friendly
+// error text this function was written to return. Only genuine auth
+// failures (401) stay non-2xx.
 
 import { createClient } from "jsr:@supabase/supabase-js@2";
 
@@ -19,6 +27,13 @@ const DISCLAIMER =
 
 const GEMINI_MODEL = "gemini-2.5-flash";
 const GROQ_MODEL = "llama-3.3-70b-versatile";
+
+function ok(body: Record<string, unknown>) {
+  return new Response(JSON.stringify(body), {
+    status: 200,
+    headers: { ...corsHeaders, "Content-Type": "application/json" },
+  });
+}
 
 async function askGemini(apiKey: string, systemPrompt: string, question: string): Promise<string> {
   const res = await fetch(
@@ -82,8 +97,6 @@ Deno.serve(async (req: Request) => {
     });
   }
 
-  // Scoped to the calling user so RLS (is_business_member) enforces access —
-  // this function can only ever see data for businesses the caller belongs to.
   const supabase = createClient(
     Deno.env.get("SUPABASE_URL")!,
     Deno.env.get("SUPABASE_ANON_KEY")!,
@@ -104,38 +117,24 @@ Deno.serve(async (req: Request) => {
   try {
     body = await req.json();
   } catch {
-    return new Response(JSON.stringify({ error: "Invalid JSON body" }), {
-      status: 400,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    return ok({ error: "Invalid request" });
   }
 
   const businessId = body.business_id;
   const question = (body.question ?? "").trim();
   if (!businessId || !question) {
-    return new Response(JSON.stringify({ error: "business_id and question are required" }), {
-      status: 400,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    return ok({ error: "business_id and question are required" });
   }
   if (question.length > 1000) {
-    return new Response(JSON.stringify({ error: "Question is too long (max 1000 characters)" }), {
-      status: 400,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    return ok({ error: "Question is too long (max 1000 characters)" });
   }
 
   const geminiKey = Deno.env.get("GEMINI_API_KEY");
   const groqKey = Deno.env.get("GROQ_API_KEY");
   if (!geminiKey && !groqKey) {
-    return new Response(JSON.stringify({ error: "Assistant is not configured yet. Set GEMINI_API_KEY and/or GROQ_API_KEY in Supabase Edge Function secrets." }), {
-      status: 503,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    return ok({ error: "Assistant is not configured yet. Set GEMINI_API_KEY and/or GROQ_API_KEY in Supabase Edge Function secrets." });
   }
 
-  // RLS-scoped reads: this will simply come back empty if the user isn't a
-  // member of businessId, rather than leaking another business's data.
   const { data: business } = await supabase
     .from("businesses")
     .select("id, name, rc_number, tin_number, vat_number, cac_directors")
@@ -143,10 +142,7 @@ Deno.serve(async (req: Request) => {
     .maybeSingle();
 
   if (!business) {
-    return new Response(JSON.stringify({ error: "Business not found or access denied" }), {
-      status: 404,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    return ok({ error: "Business not found or access denied" });
   }
 
   const { data: obligations } = await supabase
@@ -210,10 +206,7 @@ Vault documents (up to 30, soonest expiry first): ${JSON.stringify(documents ?? 
 
   if (!answer) {
     console.error("compliance-assistant: both providers failed:", errors.join(" | "));
-    return new Response(JSON.stringify({ error: "Assistant is temporarily unavailable" }), {
-      status: 502,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    return ok({ error: "Assistant is temporarily unavailable — please try again shortly." });
   }
 
   const fullAnswer = `${answer}\n\n${DISCLAIMER}`;
@@ -229,8 +222,5 @@ Vault documents (up to 30, soonest expiry first): ${JSON.stringify(documents ?? 
     console.error("Failed to log compliance assistant Q&A:", err);
   }
 
-  return new Response(JSON.stringify({ answer: fullAnswer, provider: providerUsed }), {
-    status: 200,
-    headers: { ...corsHeaders, "Content-Type": "application/json" },
-  });
+  return ok({ answer: fullAnswer, provider: providerUsed });
 });
