@@ -179,6 +179,7 @@ function renderPlanPicker(ctx) {
   let promises = [];
   let notes = [];
   let activity = [];
+  let disputes = [];
   let byClient = {};
   let paymentEvents = [];
   let paymentBehaviour = {}; // client_id -> { avgDelay, count }
@@ -284,13 +285,14 @@ function renderPlanPicker(ctx) {
   }
 
   async function loadAll() {
-    const [c, r, p, n, a, pe] = await Promise.all([
+    const [c, r, p, n, a, pe, d] = await Promise.all([
       supabase.from('clients').select('id, name, phone, email, credit_limit, address').eq('business_id', business.id).order('name', { ascending: true }),
       supabase.from('receivables').select('id, client_id, description, amount, amount_paid, due_date, payment_status, source, created_at').eq('business_id', business.id).order('due_date', { ascending: true }),
       supabase.from('promise_to_pay').select('id, client_id, promised_date, promised_amount, note, status, created_at').eq('business_id', business.id).order('promised_date', { ascending: true }),
       supabase.from('collection_notes').select('id, client_id, note, created_at').eq('business_id', business.id).order('created_at', { ascending: false }),
       supabase.from('credit_audit_log').select('id, client_id, action, details, created_at, clients(name)').eq('business_id', business.id).order('created_at', { ascending: false }).limit(30),
-      supabase.from('receivable_payments').select('id, receivable_id, amount, paid_at').eq('business_id', business.id).order('paid_at', { ascending: true })
+      supabase.from('receivable_payments').select('id, receivable_id, amount, paid_at').eq('business_id', business.id).order('paid_at', { ascending: true }),
+      supabase.from('receivable_disputes').select('id, receivable_id, client_id, reason, description, status, resolution_note, created_at, resolved_at').eq('business_id', business.id).order('created_at', { ascending: false })
     ]);
     clients = c.data || [];
     receivables = r.data || [];
@@ -298,6 +300,21 @@ function renderPlanPicker(ctx) {
     notes = n.data || [];
     activity = a.data || [];
     paymentEvents = pe.data || [];
+    disputes = d.data || [];
+  }
+
+  const DISPUTE_REASON_LABEL = {
+    missing_po: 'Missing PO',
+    quality_issue: 'Quality issue',
+    pricing_disagreement: 'Pricing disagreement',
+    goods_not_received: 'Goods not received',
+    duplicate_billing: 'Duplicate billing',
+    already_paid_claim: 'Client claims already paid',
+    other: 'Other'
+  };
+
+  function openDisputeFor(receivableId) {
+    return disputes.find(d => d.receivable_id === receivableId && d.status === 'open') || null;
   }
 
   function clientById(id) { return clients.find(c => c.id === id) || { name: 'Unknown client' }; }
@@ -343,9 +360,15 @@ function renderPlanPicker(ctx) {
     byClient = {};
     outstanding.forEach(rv => {
       if (!rv.client_id) return;
-      if (!byClient[rv.client_id]) byClient[rv.client_id] = { client: clientById(rv.client_id), items: [], balance: 0, worstBucket: 'current' };
+      const dispute = openDisputeFor(rv.id);
+      rv.dispute = dispute;
+      if (!byClient[rv.client_id]) byClient[rv.client_id] = { client: clientById(rv.client_id), items: [], balance: 0, worstBucket: 'current', hasOpenDispute: false };
       byClient[rv.client_id].items.push(rv);
       byClient[rv.client_id].balance += rv.balance;
+      if (dispute) {
+        byClient[rv.client_id].hasOpenDispute = true;
+        return; // disputed items don't count toward "how bad is this client's aging" severity
+      }
       const order = ['current', 'b1', 'b2', 'b3', 'b4'];
       const bucket = agingBucket(rv.overdueDays);
       if (order.indexOf(bucket) > order.indexOf(byClient[rv.client_id].worstBucket)) {
@@ -703,6 +726,7 @@ function renderPlanPicker(ctx) {
                 <span class="bucket-tag ${row.worstBucket}" style="font-size:0.68rem; margin-left:6px; opacity:0.75;">${BUCKET_LABEL[row.worstBucket]}</span>
                 ${scoreInfo ? `<span style="font-size:0.68rem; margin-left:6px; color:${SCORE_TIER_COLOR[scoreInfo.tier]};">${scoreInfo.tier} (${scoreInfo.score})</span>` : ''}
                 ${overLimit ? `<span style="color:#b3402e; font-size:0.68rem; margin-left:6px;">Over ${naira(client.credit_limit)} limit</span>` : ''}
+                ${row.hasOpenDispute ? `<span style="color:#8a5a00; font-size:0.68rem; margin-left:6px;">⚠ Dispute open</span>` : ''}
               </div>
               <div class="pr-meta">${row.items.length} open item${row.items.length > 1 ? 's' : ''}${(() => {
                 const preds = row.items.map(predictedPaymentDate).filter(Boolean);
@@ -746,13 +770,19 @@ function renderPlanPicker(ctx) {
       const expectedCell = predicted
         ? `${fmtDate(predicted.date)} <span style="opacity:0.55;">(${predicted.count} past pmt${predicted.count > 1 ? 's' : ''})</span>`
         : '<span style="opacity:0.5;">—</span>';
+      const dispute = rv.dispute;
+      const actionCell = dispute
+        ? `<span style="color:#8a5a00; font-size:0.75rem;">⚠ ${escapeHtml(DISPUTE_REASON_LABEL[dispute.reason] || 'Disputed')}</span>
+           <button data-resolve-dispute="${dispute.id}" data-receivable="${rv.id}" class="btn small" style="margin-left:6px;">Resolve</button>`
+        : `<button data-pay="${rv.id}" class="btn small">Log payment</button>
+           <button data-flag-dispute="${rv.id}" class="btn small">Flag dispute</button>`;
       return `
       <tr>
         <td>${escapeHtml(rv.description || 'Balance')}</td>
         <td>${fmtDate(rv.due_date)}</td>
         <td>${expectedCell}</td>
         <td>${naira(rv.balance)}</td>
-        <td><button data-pay="${rv.id}" class="btn small">Log payment</button></td>
+        <td style="white-space:nowrap;">${actionCell}</td>
       </tr>
     `;
     }).join('');
@@ -780,10 +810,11 @@ function renderPlanPicker(ctx) {
         </div>
       </div>` : ''}
       <p style="font-size:0.78rem; opacity:0.65; margin-bottom:10px;">${behaviourNote}</p>
-      <table style="width:100%; font-size:0.85rem; margin-bottom:12px;">
+      <table style="width:100%; font-size:0.85rem; margin-bottom:8px;">
         <thead><tr><th style="text-align:left;">Item</th><th style="text-align:left;">Due</th><th style="text-align:left;">Expected</th><th style="text-align:left;">Balance</th><th></th></tr></thead>
         <tbody>${itemRows}</tbody>
       </table>
+      <div id="disputeForm-${cid}" style="display:none; margin-bottom:12px;"></div>
 
       <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:10px;">
         <button data-statement="${cid}" class="btn small">Download statement (PDF)</button>
@@ -901,6 +932,73 @@ function renderPlanPicker(ctx) {
         renderLedger();
         computeDSO();
         renderAnalytics();
+      });
+    });
+
+    const disputeFormEl = detail.querySelector(`#disputeForm-${cid}`);
+    detail.querySelectorAll('[data-flag-dispute]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const rvId = btn.dataset.flagDispute;
+        const item = row.items.find(i => i.id === rvId);
+        disputeFormEl.innerHTML = `
+          <div class="pr-form" style="display:flex; gap:8px; flex-wrap:wrap; align-items:flex-end; border:1px solid var(--line); border-radius:8px; padding:10px;">
+            <div>
+              <label>Reason — "${escapeHtml(item.description || 'this balance')}"</label>
+              <select id="disputeReason-${cid}">
+                ${Object.keys(DISPUTE_REASON_LABEL).map(k => `<option value="${k}">${DISPUTE_REASON_LABEL[k]}</option>`).join('')}
+              </select>
+            </div>
+            <div style="flex:1; min-width:180px;"><label>Details (optional)</label><input type="text" id="disputeDesc-${cid}" placeholder="e.g. client says goods were short-shipped"></div>
+            <button data-save-dispute="${rvId}" class="btn primary small">Save dispute</button>
+            <button data-cancel-dispute class="btn small">Cancel</button>
+          </div>
+        `;
+        disputeFormEl.style.display = 'block';
+
+        disputeFormEl.querySelector('[data-cancel-dispute]').addEventListener('click', () => {
+          disputeFormEl.style.display = 'none';
+          disputeFormEl.innerHTML = '';
+        });
+
+        disputeFormEl.querySelector(`[data-save-dispute="${rvId}"]`).addEventListener('click', async () => {
+          const reason = document.getElementById(`disputeReason-${cid}`).value;
+          const description = document.getElementById(`disputeDesc-${cid}`).value.trim() || null;
+
+          const { error } = await supabase.from('receivable_disputes').insert({
+            business_id: business.id, receivable_id: rvId, client_id: cid,
+            reason, description, raised_by: session.user.id
+          });
+          if (error) { toast('Could not save dispute: ' + error.message); return; }
+
+          await logActivity('dispute_flagged', { reason }, cid);
+          toast('Dispute flagged.');
+          await loadAll();
+          computePaymentBehaviour();
+          renderAging();
+          renderLedger();
+          renderActivity();
+        });
+      });
+    });
+
+    detail.querySelectorAll('[data-resolve-dispute]').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const disputeId = btn.dataset.resolveDispute;
+        const note = prompt('How was this resolved? (e.g. PO received, credit note issued, client paid)');
+        if (note === null) return;
+
+        const { error } = await supabase.from('receivable_disputes')
+          .update({ status: 'resolved', resolution_note: note || null, resolved_at: new Date().toISOString() })
+          .eq('id', disputeId);
+        if (error) { toast('Could not resolve dispute: ' + error.message); return; }
+
+        await logActivity('dispute_resolved', { note }, cid);
+        toast('Dispute resolved.');
+        await loadAll();
+        computePaymentBehaviour();
+        renderAging();
+        renderLedger();
+        renderActivity();
       });
     });
 
