@@ -208,6 +208,61 @@ function renderPlanPicker(ctx) {
     return { date: addDays(rv.due_date, stats.avgDelay), count: stats.count, avgDelay: stats.avgDelay };
   }
 
+  // ---------- Customer collection score (0-100, deterministic) ----------
+  const BUCKET_PENALTY = { current: 0, b1: 8, b2: 18, b3: 30, b4: 45 };
+
+  function computeCollectionScore(cid) {
+    const row = byClient[cid];
+    if (!row) return null;
+
+    let score = 100;
+    const reasons = [];
+
+    const overduePenalty = BUCKET_PENALTY[row.worstBucket] || 0;
+    score -= overduePenalty;
+    if (overduePenalty > 0) reasons.push(`${BUCKET_LABEL[row.worstBucket].toLowerCase()} currently`);
+
+    const behaviour = paymentBehaviour[cid];
+    if (behaviour) {
+      if (behaviour.avgDelay > 0) {
+        const latePenalty = Math.min(behaviour.avgDelay, 60) / 60 * 25;
+        score -= latePenalty;
+        reasons.push(`pays ~${Math.round(behaviour.avgDelay)}d late on average`);
+      } else if (behaviour.avgDelay < 0) {
+        const earlyBonus = Math.min(-behaviour.avgDelay, 30) / 30 * 10;
+        score += earlyBonus;
+        reasons.push('typically pays early');
+      } else {
+        reasons.push('pays on the due date');
+      }
+    }
+
+    const clientPromiseList = clientPromises(cid);
+    if (clientPromiseList.length) {
+      const brokenCount = clientPromiseList.filter(p => p.status === 'broken').length;
+      const brokenRatio = brokenCount / clientPromiseList.length;
+      if (brokenRatio > 0) {
+        score -= brokenRatio * 25;
+        reasons.push(`broke ${brokenCount} of ${clientPromiseList.length} promise${clientPromiseList.length > 1 ? 's' : ''} to pay`);
+      }
+    }
+
+    score = Math.max(0, Math.min(100, Math.round(score)));
+
+    let tier = 'Poor';
+    if (score >= 85) tier = 'Excellent';
+    else if (score >= 70) tier = 'Good';
+    else if (score >= 50) tier = 'Fair';
+    else if (score >= 30) tier = 'Watch';
+
+    const limitedHistory = !behaviour && !clientPromiseList.length;
+    return { score, tier, reasons, limitedHistory };
+  }
+
+  const SCORE_TIER_COLOR = {
+    Excellent: '#2f8a4e', Good: '#4a8f3c', Fair: '#b3902e', Watch: '#c46a1f', Poor: '#b3402e'
+  };
+
   async function logPaymentForReceivable(receivableId, amountNum, clientId, paidAtIso) {
     const item = receivables.find(i => i.id === receivableId);
     if (!item) return { error: 'Receivable not found' };
@@ -639,12 +694,14 @@ function renderPlanPicker(ctx) {
       const row = byClient[cid];
       const client = row.client;
       const overLimit = client.credit_limit && row.balance > Number(client.credit_limit);
+      const scoreInfo = computeCollectionScore(cid);
       return `
         <div class="pr-row" data-toggle="${cid}" style="cursor:pointer; display:block;">
           <div style="display:flex; justify-content:space-between; align-items:center;">
             <div>
               <div class="pr-name">${escapeHtml(client.name)}
                 <span class="bucket-tag ${row.worstBucket}" style="font-size:0.68rem; margin-left:6px; opacity:0.75;">${BUCKET_LABEL[row.worstBucket]}</span>
+                ${scoreInfo ? `<span style="font-size:0.68rem; margin-left:6px; color:${SCORE_TIER_COLOR[scoreInfo.tier]};">${scoreInfo.tier} (${scoreInfo.score})</span>` : ''}
                 ${overLimit ? `<span style="color:#b3402e; font-size:0.68rem; margin-left:6px;">Over ${naira(client.credit_limit)} limit</span>` : ''}
               </div>
               <div class="pr-meta">${row.items.length} open item${row.items.length > 1 ? 's' : ''}${(() => {
@@ -711,8 +768,17 @@ function renderPlanPicker(ctx) {
 
     const pList = clientPromises(cid);
     const nList = clientNotes(cid);
+    const scoreInfo = computeCollectionScore(cid);
 
     detail.innerHTML = `
+      ${scoreInfo ? `
+      <div style="display:flex; align-items:center; gap:10px; margin-bottom:10px; padding:8px 10px; border:1px solid var(--line); border-radius:8px;">
+        <div class="pr-amount" style="color:${SCORE_TIER_COLOR[scoreInfo.tier]}; font-size:1.1rem;">${scoreInfo.score}</div>
+        <div style="font-size:0.78rem;">
+          <strong style="color:${SCORE_TIER_COLOR[scoreInfo.tier]};">${scoreInfo.tier} collection score</strong>
+          <div style="opacity:0.65; margin-top:2px;">${scoreInfo.reasons.length ? scoreInfo.reasons.join(', ') : 'No negative factors on record.'}${scoreInfo.limitedHistory ? ' · limited history' : ''}</div>
+        </div>
+      </div>` : ''}
       <p style="font-size:0.78rem; opacity:0.65; margin-bottom:10px;">${behaviourNote}</p>
       <table style="width:100%; font-size:0.85rem; margin-bottom:12px;">
         <thead><tr><th style="text-align:left;">Item</th><th style="text-align:left;">Due</th><th style="text-align:left;">Expected</th><th style="text-align:left;">Balance</th><th></th></tr></thead>
