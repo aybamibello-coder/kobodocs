@@ -13,6 +13,17 @@ function daysOverdue(dueDate) {
   return Math.round(ms / (1000 * 60 * 60 * 24));
 }
 
+function daysBetween(fromIso, toIso) {
+  const ms = new Date(toIso).setHours(0, 0, 0, 0) - new Date(fromIso).setHours(0, 0, 0, 0);
+  return Math.round(ms / (1000 * 60 * 60 * 24));
+}
+
+function addDays(isoDate, days) {
+  const d = new Date(isoDate);
+  d.setDate(d.getDate() + Math.round(days));
+  return d.toISOString().slice(0, 10);
+}
+
 function agingBucket(days) {
   if (days === null || days <= 0) return 'current';
   if (days <= 30) return 'b1';
@@ -158,7 +169,32 @@ function renderPlanPicker(ctx) {
   let activity = [];
   let byClient = {};
   let paymentEvents = [];
+  let paymentBehaviour = {}; // client_id -> { avgDelay, count }
   const charts = {};
+
+  // ---------- Payment prediction (deterministic, from paid history) ----------
+  function computePaymentBehaviour() {
+    const delaysByClient = {};
+    paymentEvents.forEach(pe => {
+      const rv = receivables.find(r => r.id === pe.receivable_id);
+      if (!rv || !rv.due_date) return;
+      const delay = daysBetween(rv.due_date, pe.paid_at);
+      (delaysByClient[rv.client_id] ||= []).push(delay);
+    });
+    const result = {};
+    Object.keys(delaysByClient).forEach(cid => {
+      const arr = delaysByClient[cid];
+      result[cid] = { avgDelay: arr.reduce((s, d) => s + d, 0) / arr.length, count: arr.length };
+    });
+    paymentBehaviour = result;
+  }
+
+  function predictedPaymentDate(rv) {
+    if (!rv.due_date) return null;
+    const stats = paymentBehaviour[rv.client_id];
+    if (!stats) return null;
+    return { date: addDays(rv.due_date, stats.avgDelay), count: stats.count, avgDelay: stats.avgDelay };
+  }
 
   async function loadAll() {
     const [c, r, p, n, a, pe] = await Promise.all([
@@ -167,7 +203,7 @@ function renderPlanPicker(ctx) {
       supabase.from('promise_to_pay').select('id, client_id, promised_date, promised_amount, note, status, created_at').eq('business_id', business.id).order('promised_date', { ascending: true }),
       supabase.from('collection_notes').select('id, client_id, note, created_at').eq('business_id', business.id).order('created_at', { ascending: false }),
       supabase.from('credit_audit_log').select('id, client_id, action, details, created_at, clients(name)').eq('business_id', business.id).order('created_at', { ascending: false }).limit(30),
-      supabase.from('receivable_payments').select('id, amount, paid_at').eq('business_id', business.id).order('paid_at', { ascending: true })
+      supabase.from('receivable_payments').select('id, receivable_id, amount, paid_at').eq('business_id', business.id).order('paid_at', { ascending: true })
     ]);
     clients = c.data || [];
     receivables = r.data || [];
@@ -347,7 +383,12 @@ function renderPlanPicker(ctx) {
                 <span class="bucket-tag ${row.worstBucket}" style="font-size:0.68rem; margin-left:6px; opacity:0.75;">${BUCKET_LABEL[row.worstBucket]}</span>
                 ${overLimit ? `<span style="color:#b3402e; font-size:0.68rem; margin-left:6px;">Over ${naira(client.credit_limit)} limit</span>` : ''}
               </div>
-              <div class="pr-meta">${row.items.length} open item${row.items.length > 1 ? 's' : ''}</div>
+              <div class="pr-meta">${row.items.length} open item${row.items.length > 1 ? 's' : ''}${(() => {
+                const preds = row.items.map(predictedPaymentDate).filter(Boolean);
+                if (!preds.length) return '';
+                const earliest = preds.reduce((a, b) => (a.date < b.date ? a : b));
+                return ` · expected ~${fmtDate(earliest.date)}`;
+              })()}</div>
             </div>
             <div class="pr-amount">${naira(row.balance)}</div>
           </div>
@@ -379,21 +420,38 @@ function renderPlanPicker(ctx) {
     const client = row.client;
     const detail = document.getElementById(`detail-${cid}`);
 
-    const itemRows = row.items.map(rv => `
+    const itemRows = row.items.map(rv => {
+      const predicted = predictedPaymentDate(rv);
+      const expectedCell = predicted
+        ? `${fmtDate(predicted.date)} <span style="opacity:0.55;">(${predicted.count} past pmt${predicted.count > 1 ? 's' : ''})</span>`
+        : '<span style="opacity:0.5;">—</span>';
+      return `
       <tr>
         <td>${escapeHtml(rv.description || 'Balance')}</td>
         <td>${fmtDate(rv.due_date)}</td>
+        <td>${expectedCell}</td>
         <td>${naira(rv.balance)}</td>
         <td><button data-pay="${rv.id}" class="btn small">Log payment</button></td>
       </tr>
-    `).join('');
+    `;
+    }).join('');
+
+    const behaviour = paymentBehaviour[cid];
+    const behaviourNote = behaviour
+      ? (behaviour.avgDelay > 0.5
+          ? `Based on ${behaviour.count} past payment${behaviour.count > 1 ? 's' : ''}, this client typically pays ~${Math.round(behaviour.avgDelay)} day${Math.round(behaviour.avgDelay) === 1 ? '' : 's'} after the due date.`
+          : behaviour.avgDelay < -0.5
+          ? `Based on ${behaviour.count} past payment${behaviour.count > 1 ? 's' : ''}, this client typically pays ~${Math.round(Math.abs(behaviour.avgDelay))} day${Math.round(Math.abs(behaviour.avgDelay)) === 1 ? '' : 's'} before the due date.`
+          : `Based on ${behaviour.count} past payment${behaviour.count > 1 ? 's' : ''}, this client typically pays on the due date.`)
+      : 'No payment history yet — predictions will appear once this client has paid at least once with a due date on file.';
 
     const pList = clientPromises(cid);
     const nList = clientNotes(cid);
 
     detail.innerHTML = `
+      <p style="font-size:0.78rem; opacity:0.65; margin-bottom:10px;">${behaviourNote}</p>
       <table style="width:100%; font-size:0.85rem; margin-bottom:12px;">
-        <thead><tr><th style="text-align:left;">Item</th><th style="text-align:left;">Due</th><th style="text-align:left;">Balance</th><th></th></tr></thead>
+        <thead><tr><th style="text-align:left;">Item</th><th style="text-align:left;">Due</th><th style="text-align:left;">Expected</th><th style="text-align:left;">Balance</th><th></th></tr></thead>
         <tbody>${itemRows}</tbody>
       </table>
 
@@ -479,6 +537,7 @@ function renderPlanPicker(ctx) {
         await logActivity('payment_logged', { amount: amountNum }, cid);
         toast('Payment logged.');
         await loadAll();
+        computePaymentBehaviour();
         renderAging();
         renderLedger();
         computeDSO();
@@ -885,6 +944,7 @@ function renderPlanPicker(ctx) {
   }
 
   await loadAll();
+  computePaymentBehaviour();
   computeDSO();
   renderAging();
   renderLedger();
