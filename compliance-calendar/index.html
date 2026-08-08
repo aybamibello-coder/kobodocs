@@ -20,22 +20,21 @@
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Work+Sans:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/assets/style.css">
 <style>
-  .cc-results{ display:none; margin-top:28px; }
-  .cc-results.active{ display:block; }
   .cc-item{
-    display:flex; justify-content:space-between; align-items:center; gap:14px; flex-wrap:wrap;
-    padding:14px 0; border-bottom:1px dashed var(--line);
+    display:flex; justify-content:space-between; align-items:flex-start; gap:10px;
+    padding:9px 0; border-bottom:1px dashed var(--line); font-size:0.86rem;
   }
   .cc-item:last-child{ border-bottom:none; }
-  .cc-item .title{ font-weight:600; }
-  .cc-item .meta{ font-size:0.82rem; opacity:0.65; }
-  .cc-actions{ display:flex; gap:10px; flex-wrap:wrap; margin-top:18px; }
+  .cc-item .cc-title{ font-weight:600; }
+  .cc-item .cc-meta{ font-size:0.76rem; opacity:0.6; }
+  .cc-item .cc-date{ font-family:'Space Mono', monospace; font-size:0.76rem; white-space:nowrap; text-align:right; }
+  .cc-empty{ font-size:0.86rem; opacity:0.55; padding:20px 0; text-align:center; }
   .cc-cta{
-    margin-top:32px; padding:22px 20px; border:1px solid var(--line); border-radius:8px;
-    background:var(--paper);
+    margin-top:28px; padding:20px 18px; border:1px solid var(--line); border-radius:8px;
+    background:var(--bone);
   }
-  .cc-cta h3{ font-size:1.05rem; margin-bottom:6px; }
-  .cc-cta p{ font-size:0.88rem; opacity:0.75; margin-bottom:14px; }
+  .cc-cta h3{ font-size:1rem; margin-bottom:6px; }
+  .cc-cta p{ font-size:0.86rem; opacity:0.75; margin-bottom:14px; }
 </style>
 </head>
 <body>
@@ -196,22 +195,27 @@
         </select>
       </div>
 
-      <button class="btn btn-primary" id="generateBtn" type="button">Generate my compliance calendar</button>
+      <p style="font-size:0.8rem; opacity:0.6; margin-top:-8px;">Your checklist updates automatically on the right as you change these — estimates only, not legal or tax advice.</p>
 
-      <div class="cc-results" id="ccResults">
-        <h2 style="font-size:1.1rem; margin-top:28px; margin-bottom:4px;">Your compliance checklist</h2>
-        <p style="font-size:0.85rem; opacity:0.65; margin-bottom:16px;">Estimates based on common Nigerian requirements — not legal or tax advice. Confirm specifics with your accountant.</p>
+      <div class="action-row">
+        <button type="button" class="btn btn-primary" id="downloadBtn">Download as PDF</button>
+        <button type="button" class="btn btn-ghost" id="shareBtn" style="border-color:var(--line); color:var(--ink-green-deep);">Share on WhatsApp</button>
+      </div>
+
+      <div class="cc-cta">
+        <h3>Want this tracked automatically, with reminders?</h3>
+        <p>Compliance Tracker (part of KoboDocs Business Suite) turns this checklist into a live dashboard — email and WhatsApp reminders before each deadline, a document vault for your certificates, and an AI assistant to answer compliance questions in plain English.</p>
+        <a href="/compliance-tracker/" class="btn btn-primary">Try Compliance Tracker free</a>
+      </div>
+    </div>
+
+    <div class="preview-panel">
+      <div class="doc-preview" id="docPreview">
+        <div class="stamp"><span class="stamp-label">Compliance</span></div>
+        <div class="doc-head">
+          <div><div class="biz">My Business</div></div>
+        </div>
         <div id="ccList"></div>
-        <div class="cc-actions">
-          <button class="btn btn-primary" id="downloadBtn" type="button">Download as PDF</button>
-          <button class="btn" id="shareBtn" type="button">Share on WhatsApp</button>
-        </div>
-
-        <div class="cc-cta">
-          <h3>Want this tracked automatically, with reminders?</h3>
-          <p>Compliance Tracker (part of KoboDocs Business Suite) turns this checklist into a live dashboard — email and WhatsApp reminders before each deadline, a document vault for your certificates, and an AI assistant to answer compliance questions in plain English.</p>
-          <a href="/compliance-tracker/" class="btn btn-primary">Try Compliance Tracker free</a>
-        </div>
       </div>
     </div>
   </div>
