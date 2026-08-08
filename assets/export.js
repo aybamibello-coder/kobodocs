@@ -128,19 +128,19 @@ window.KoboExport = {
       doc.setLineWidth(0.9);
       doc.circle(stampCx, stampCy, stampR * 0.55, 'S');
 
-      this._setColor(doc, 'setFillColor', C.paper);
+      this._setColor(doc, 'setTextColor', C.paper);
       doc.setFont('Fraunces', 'bold');
       doc.setFontSize(18);
       doc.text(businessName || 'Business name', m, 42);
 
-      this._setColor(doc, 'setFillColor', C.gold);
+      this._setColor(doc, 'setTextColor', C.gold);
       doc.setFont('SpaceMono', 'normal');
       doc.setFontSize(8);
       const labelLine = [docLabel ? docLabel.toUpperCase() : '', ...metaLines].filter(Boolean).join('   ·   ');
       doc.text(labelLine, m, 62);
 
       if (businessSub) {
-        this._setColor(doc, 'setFillColor', C.bone);
+        this._setColor(doc, 'setTextColor', C.bone);
         doc.setFont('WorkSans', 'normal');
         doc.setFontSize(8.5);
         doc.text(businessSub, m, 78);
