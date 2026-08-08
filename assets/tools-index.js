@@ -6,6 +6,7 @@ window.KOBO_TOOLS_INDEX = [
   { name: "Receipt Generator", url: "/receipt/", keywords: "receipt payment proof" },
   { name: "Quotation Generator", url: "/quotation/", keywords: "quote quotation price estimate" },
   { name: "Payslip / Salary Slip", url: "/payslip/", keywords: "payslip salary slip paye pension nhf" },
+  { name: "Compliance Calendar", url: "/compliance-calendar/", keywords: "compliance calendar cac annual return vat paye pension deadline checklist filing" },
   { name: "Waybill / Delivery Note", url: "/waybill/", keywords: "waybill delivery note shipping goods" },
   { name: "QR Code Generator", url: "/qr-code/", keywords: "qr code scan" },
   { name: "HR Letter Generator", url: "/hr-letters/", keywords: "hr letter employment appointment termination offer" },
