@@ -49,7 +49,7 @@ function daysUntil(dateStr) {
     const scoreClass = score === null ? '' : score >= 90 ? 'good' : score >= 60 ? 'warn' : 'bad';
 
     const card = document.createElement('a');
-    card.className = 'biz-card';
+    card.className = 'biz-card suite-card';
     card.href = `/business-suite/app/compliance-tracker/?business_id=${biz.id}`;
     card.innerHTML = `
       <div class="name">${biz.name}</div>
