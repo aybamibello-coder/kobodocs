@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-EN4PYGX7EW"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-EN4PYGX7EW');
+</script>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>How Nigerian Freelancers Should Invoice International Clients</title>
+<meta name="description" content="Which currency to bill in, how to handle exchange rate swings, and what to include so a US or UK client pays without back-and-forth.">
+<link rel="canonical" href="https://kobodocs.com.ng/blog/invoice-international-clients-usd-nigeria/">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Work+Sans:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/style.css">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "Should a Nigerian freelancer invoice in dollars or naira?",
+      "acceptedAnswer": { "@type": "Answer", "text": "Most international clients expect and prefer to be billed in their own currency (usually USD or GBP) — invoicing in that currency avoids confusion and matches how they've budgeted the project." }
+    },
+    {
+      "@type": "Question",
+      "name": "How should exchange rate changes between invoicing and payment be handled?",
+      "acceptedAnswer": { "@type": "Answer", "text": "The invoice amount is fixed in the billed currency (e.g. USD) — what changes is how much that converts to in naira once received, which depends on the exchange rate and platform used at the time of conversion, not the invoice itself." }
+    },
+    {
+      "@type": "Question",
+      "name": "Do international invoices need different information than local Nigerian invoices?",
+      "acceptedAnswer": { "@type": "Answer", "text": "The core structure is the same — itemized services, amount, payment terms — but international invoices should clearly state the currency, and may need to specify the payment method or platform (Wise, Payoneer, bank wire) the client should use." }
+    }
+  ]
+}
+</script>
+<style>
+  .post-wrap{ max-width:680px; margin:0 auto; padding:20px 20px 80px; }
+  .post-meta{ font-size:0.8rem; opacity:0.55; margin-bottom:28px; }
+  .post-wrap h2{ font-size:1.2rem; margin:32px 0 10px; }
+  .post-wrap p, .post-wrap li{ font-size:0.98rem; line-height:1.75; opacity:0.85; }
+  .post-wrap ul{ margin:0 0 18px 20px; }
+  .post-note{
+    background:rgba(20,52,43,0.05); border-left:3px solid var(--ink-green-deep);
+    padding:14px 18px; font-size:0.9rem; margin:20px 0;
+  }
+  .post-cta{ margin-top:36px; padding:24px; background:var(--paper); border:1px solid var(--line); border-radius:8px; text-align:center; }
+  .key-takeaways{
+    background:var(--paper); border:1px solid var(--stamp-gold); border-radius:8px;
+    padding:18px 22px; margin:24px 0 32px;
+  }
+  .key-takeaways strong{ display:block; font-size:0.78rem; text-transform:uppercase; letter-spacing:0.05em; color:var(--stamp-gold); margin-bottom:10px; }
+  .key-takeaways ul{ margin:0 0 0 18px; }
+  .key-takeaways li{ font-size:0.92rem; line-height:1.6; opacity:0.85; margin-bottom:4px; }
+</style>
+</head>
+<body>
+
+<header>
+  <nav class="nav">
+    <a href="/" class="logo">
+      <svg class="mark" viewBox="0 0 32 32" fill="none">
+        <circle cx="16" cy="16" r="14" stroke="#C79A3C" stroke-width="2.5"/>
+        <circle cx="16" cy="16" r="8" stroke="#C79A3C" stroke-width="1.5"/>
+      </svg>
+      KoboDocs
+    </a>
+    <button class="search-btn" id="searchBtn" aria-label="Search tools">
+      <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    </button>
+    <button class="menu-btn" aria-label="Toggle menu" id="menuBtn"><span></span><span></span><span></span></button>
+    <div class="nav-links" id="navLinks">
+      <a href="/" class="mobile-only-link">Home</a>
+      <a href="/pricing/">Pricing</a>
+      <a href="/blog/" class="mobile-only-link">Blog</a>
+      <a href="/about/" class="mobile-only-link">About</a>
+      <a href="/account/" id="navAccountLink">Sign in</a>
+      <a href="/invoice/" class="nav-cta">Start free</a>
+    </div>
+  </nav>
+</header>
+
+<div class="search-overlay" id="searchOverlay">
+  <div class="search-panel">
+    <div class="search-panel-head">
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input type="text" id="searchInput" placeholder="Search tools — e.g. invoice, will, visa, siwes..." autocomplete="off">
+      <button class="search-close" id="searchClose" aria-label="Close search">&times;</button>
+    </div>
+    <div class="search-results" id="searchResults"></div>
+    <div class="search-hint">↑↓ to navigate · Enter to open · Esc to close</div>
+  </div>
+</div>
+
+<section class="page-header">
+  <div class="wrap">
+    <a href="/blog/">&larr; Blog</a>
+    <h1>How Nigerian Freelancers Should Invoice International Clients</h1>
+  </div>
+</section>
+
+<div class="post-wrap">
+  <div class="post-meta">August 2026 · 6 min read</div>
+
+  <p>A growing number of Nigerian freelancers earn primarily from international clients — a US company paying for design work, a UK agency paying for writing, a European startup paying for development. The work itself isn't that different from working with a local client. The invoicing side has a few extra things worth getting right, mostly around currency and clarity.</p>
+
+  <div class="key-takeaways">
+    <strong>Key takeaways</strong>
+    <ul>
+      <li>Bill in the client's currency (usually USD or GBP) — it's what they've budgeted in and expect to see.</li>
+      <li>The invoiced amount is fixed; what changes with exchange rates is how much it converts to in naira, not the invoice itself.</li>
+      <li>State the payment platform clearly (Wise, Payoneer, bank wire) so there's no back-and-forth about how to pay.</li>
+      <li>Keep your own naira-denominated records too — for your own bookkeeping, separate from what the client sees.</li>
+    </ul>
+  </div>
+
+  <h2>Which currency to invoice in</h2>
+  <p>For an international client, invoicing in their own currency is almost always the right call. A US client paying a Nigerian freelancer generally expects a dollar figure — it matches how they budgeted the project, and it avoids putting the burden of currency conversion on them. Invoicing in naira to a client who's never handled naira before just adds friction to getting paid.</p>
+
+  <h2>The exchange rate question</h2>
+  <p>A common point of confusion: does the invoice amount change if the exchange rate moves between when it's sent and when it's paid? No — the invoiced amount is fixed in whatever currency you billed (say, $500). What changes is purely how much that $500 becomes in naira once it's converted, which depends on the exchange rate and the platform used at the time of conversion. The invoice itself doesn't need to account for exchange rate movement; only your own mental math about take-home naira does.</p>
+
+  <div class="post-note">
+    <strong>Where the money actually goes matters as much as the invoice.</strong> How you receive and convert international payments (Payoneer, Wise, a domiciliary account, a fintech platform) affects fees and the effective rate you get far more than anything on the invoice itself. It's worth understanding your platform's fee structure separately from getting the invoice right — they're two different problems.
+  </div>
+
+  <h2>What to include that a purely local invoice might not need</h2>
+  <ul>
+    <li><strong>Currency stated explicitly</strong> — "$500 USD," not just "500," removes any ambiguity.</li>
+    <li><strong>Payment method or platform</strong> — telling the client upfront whether you're expecting payment via Wise, Payoneer, PayPal, or bank wire avoids a delay while they ask.</li>
+    <li><strong>Clear itemization</strong> — international clients, especially agencies and companies with their own accounting processes, often need a clear breakdown for their own internal records, not just a lump sum.</li>
+  </ul>
+
+  <h2>Keeping your own records straight</h2>
+  <p>Even when invoicing a client in dollars, it's worth keeping your own bookkeeping in naira (or tracking both) for your own financial picture and any tax obligations that apply to your income. The client-facing invoice and your internal record don't have to be the same document — the client sees the dollar invoice; your own books can reflect what actually landed in your account after conversion and fees.</p>
+
+  <h2>Frequently asked questions</h2>
+  <p><strong>Should I include my Nigerian bank account details on an international invoice?</strong><br>
+  Generally no, unless the client specifically pays via direct bank wire — most international freelance payments route through a platform (Payoneer, Wise) rather than a direct SWIFT transfer, so the platform's payment details matter more than your local bank account on the invoice itself.</p>
+  <p><strong>Do I still need to show my business name and details on an international invoice?</strong><br>
+  Yes — the same professionalism and clarity that applies to local invoices applies here. Your name or business name, contact details, and a clear description of the work still matter for an international client's own records.</p>
+  <p><strong>What if the client asks to pay in naira instead?</strong><br>
+  Some clients with an existing Nigerian presence or team may prefer this — if so, it's worth agreeing on the exchange rate or naira figure explicitly upfront rather than leaving it ambiguous on the invoice.</p>
+
+  <div class="post-cta">
+    <p style="margin-bottom:14px;">Create a clean, professional invoice in minutes — itemized, downloadable as a PDF, ready to send.</p>
+    <a href="/invoice/" class="btn btn-primary">Create a free invoice</a>
+  </div>
+
+  <p style="font-size:0.8rem; opacity:0.55; margin-top:24px;">This article offers general practical guidance, not tax or financial advice. Confirm your specific tax obligations on foreign-earned income with an accountant.</p>
+</div>
+
+<footer>
+  <div class="wrap">
+    <div class="footer-top">
+      <div>
+        <div class="footer-logo">KoboDocs</div>
+        <p class="footer-note">Every business document, stamped and sent — built for Nigeria, one Naira at a time.</p>
+      </div>
+      <div class="footer-links">
+        <div>
+          <strong>Business tools</strong>
+          <a href="/invoice/">Invoice</a>
+          <a href="/receipt/">Receipt</a>
+          <a href="/payslip/">Payslip</a>
+          <a href="/ajo/">Ajo &amp; Esusu</a>
+          <a href="/qr-code/">QR Code</a>
+        </div>
+        <div>
+          <strong>Relocation</strong>
+          <a href="/relocation/">Relocation home</a>
+          <a href="/relocation/japa-calculator/">Japa Cost Calculator</a>
+          <a href="/relocation/proof-of-funds/">Proof of Funds</a>
+          <a href="/relocation/cost-of-living/">Cost of Living</a>
+        </div>
+        <div>
+          <strong>Company</strong>
+          <a href="/pricing/">Pricing</a>
+          <a href="/about/">About</a>
+          <a href="/contact/">Contact</a>
+          <a href="/blog/">Blog</a>
+        </div>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2026 KoboDocs. Not a financial institution — we never hold or move your money.</span>
+      <span><a href="/privacy/">Privacy</a> · <a href="/terms/">Terms</a> · Made in Lagos</span>
+    </div>
+  </div>
+</footer>
+
+<script src="/assets/app.js" defer></script>
+<script type="module" src="/assets/auth.js"></script>
+<script src="/assets/nav-auth.js" defer></script>
+
+<script src="/assets/tools-index.js" defer></script>
+<script src="/assets/search.js" defer></script>
+</body>
+</html>
