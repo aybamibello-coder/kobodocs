@@ -18,6 +18,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Work+Sans:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/assets/style.css">
+<link rel="stylesheet" href="/business-suite/app/shell.css">
 <style>
   .bs-dash-wrap{ max-width:1000px; margin:0 auto; padding:36px 20px 100px; }
   .bs-dash-top{ display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:16px; margin-bottom:26px; }
@@ -50,7 +51,7 @@
 <body>
 
 <header>
-  <nav class="nav">
+  <nav class="nav suite-nav">
     <a href="/" class="logo">
       <svg class="mark" viewBox="0 0 32 32" fill="none">
         <circle cx="16" cy="16" r="14" stroke="#C79A3C" stroke-width="2.5"/>
@@ -95,9 +96,9 @@
 
 
 <div class="bs-dash-wrap">
-  <div class="bs-dash-top">
+  <div class="bs-dash-top suite-page-header">
     <div>
-      <h1 style="font-size:1.5rem; margin-bottom:6px;" id="bizNameHeading">Business Suite</h1>
+      <h1 style="margin-bottom:6px;" id="bizNameHeading">Business Suite</h1>
       <span class="trial-badge" id="trialBadge">Checking access…</span>
     </div>
     <div class="bs-actions">
@@ -111,19 +112,19 @@
       <div class="label">Outstanding (who owes you)</div>
       <div class="value" id="statOutstanding">—</div>
     </a>
-    <div class="stat-card">
+    <div class="stat-card suite-stat">
       <div class="label">Collected this month</div>
       <div class="value" id="statMonthIncome">—</div>
     </div>
-    <div class="stat-card">
+    <div class="stat-card suite-stat">
       <div class="label">Invoices this month</div>
       <div class="value" id="statInvoiceCount">—</div>
     </div>
-    <a href="/business-suite/app/inventory/" class="stat-card" id="lowStockCard" style="display:block; text-decoration:none; color:inherit;">
+    <a href="/business-suite/app/inventory/" class="stat-card suite-stat" id="lowStockCard" style="display:block; text-decoration:none; color:inherit;">
       <div class="label">Low stock items</div>
       <div class="value" id="statLowStock">—</div>
     </a>
-    <a href="/business-suite/app/compliance-tracker/" class="stat-card" style="display:block; text-decoration:none; color:inherit;">
+    <a href="/business-suite/app/compliance-tracker/" class="stat-card suite-stat" style="display:block; text-decoration:none; color:inherit;">
       <div class="label">Compliance</div>
       <div class="value" id="statComplianceScore">—</div>
     </a>
@@ -140,6 +141,7 @@
 <script type="module" src="/assets/auth.js"></script>
 <script src="/assets/nav-auth.js" defer></script>
 <script src="/business-suite/app/guard.js"></script>
+<script src="/business-suite/app/shell.js" defer></script>
 <script>
 (async function () {
   const naira = (n) => '₦' + (Number(n) || 0).toLocaleString('en-NG', { minimumFractionDigits: 2, maximumFractionDigits: 2 });

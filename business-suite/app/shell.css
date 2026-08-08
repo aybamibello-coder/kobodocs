@@ -1,0 +1,133 @@
+/* ---------- Business Suite app shell ----------
+   Shared across every /business-suite/app/* page. Upgrades the plain
+   utilitarian look of the internal dashboard to actually carry the
+   KoboDocs brand (stamp motif, ledger-tab wayfinding, Fraunces/Space
+   Mono type system) instead of reading as a generic admin panel.
+   Existing tokens only (--ink-green-deep, --stamp-gold, --paper, --bone,
+   --charcoal, --line) — no new colors invented. Scoped to .suite-nav /
+   .suite-card so it never touches the public marketing-page nav. */
+
+/* ---- Nav: ledger-tab treatment for the module list ---- */
+.suite-nav .nav-links a:not(.nav-cta) {
+  font-family: 'Space Mono', monospace;
+  font-size: 0.76rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 14px;
+  border-radius: 20px;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.suite-nav .nav-links a:not(.nav-cta)::before {
+  content: '';
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  border: 1.5px solid var(--stamp-gold);
+  flex-shrink: 0;
+}
+
+.suite-nav .nav-links a:not(.nav-cta):hover {
+  background: var(--bone);
+}
+
+.suite-nav .nav-links a.suite-nav-active {
+  background: var(--ink-green-deep);
+  color: var(--paper);
+}
+
+.suite-nav .nav-links a.suite-nav-active::before {
+  background: var(--stamp-gold);
+}
+
+/* ---- Cards: subtle elevation + gold accent edge instead of a flat line ---- */
+.suite-card {
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--stamp-gold);
+  border-radius: 6px;
+  padding: 22px 20px;
+  box-shadow: 0 1px 2px rgba(35,39,34,0.04), 0 6px 16px rgba(35,39,34,0.03);
+}
+
+.suite-card h2 {
+  font-family: 'Fraunces', serif;
+  font-size: 1.05rem;
+  margin-bottom: 4px;
+}
+
+.suite-card .panel-sub {
+  font-size: 0.82rem;
+  opacity: 0.65;
+  margin-bottom: 16px;
+}
+
+/* ---- Stat tiles: Fraunces numerals, Space Mono labels (mirrors marketing-page stamp-label voice) ---- */
+.suite-stat {
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 16px 14px;
+}
+
+.suite-stat .suite-stat-label {
+  font-family: 'Space Mono', monospace;
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  opacity: 0.6;
+  margin-bottom: 6px;
+}
+
+.suite-stat .suite-stat-value {
+  font-family: 'Fraunces', serif;
+  font-size: 1.5rem;
+  color: var(--ink-green-deep);
+}
+
+.suite-stat.warn .suite-stat-value { color: #8a6a1f; }
+.suite-stat.bad .suite-stat-value { color: var(--stamp-red); }
+
+/* Compatibility: some existing stat cards use .label/.value rather than
+   .suite-stat-label/.suite-stat-value — give them the same type treatment
+   without renaming markup across every module. */
+.suite-stat .label {
+  font-family: 'Space Mono', monospace;
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  opacity: 0.6;
+}
+.suite-stat .value {
+  font-family: 'Fraunces', serif;
+  font-size: 1.5rem;
+  color: var(--ink-green-deep);
+}
+
+/* ---- Page header: consistent across every module ---- */
+.suite-page-header { margin-bottom: 24px; }
+.suite-page-header h1 {
+  font-family: 'Fraunces', serif;
+  font-size: 1.5rem;
+  margin-top: 8px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.suite-page-header h1::before {
+  content: '';
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 2px solid var(--stamp-gold);
+  flex-shrink: 0;
+}
+.suite-page-header p {
+  font-size: 0.88rem;
+  opacity: 0.7;
+  margin-top: 4px;
+  max-width: 640px;
+}

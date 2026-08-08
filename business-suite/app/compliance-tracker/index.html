@@ -18,6 +18,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Work+Sans:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/assets/style.css">
+<link rel="stylesheet" href="/business-suite/app/shell.css">
 <style>
   .ct-wrap{ max-width:1080px; margin:0 auto; padding:36px 20px 100px; }
   .ct-top{ display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:14px; margin-bottom:24px; }
@@ -97,7 +98,7 @@
 <body>
 
 <header>
-  <nav class="nav">
+  <nav class="nav suite-nav">
     <a href="/" class="logo">
       <svg class="mark" viewBox="0 0 32 32" fill="none">
         <circle cx="16" cy="16" r="14" stroke="#C79A3C" stroke-width="2.5"/>
@@ -141,7 +142,7 @@
 </div>
 
 <div class="ct-wrap">
-  <div class="ct-top">
+  <div class="ct-top suite-page-header">
     <div>
       <a href="/business-suite/app/">&larr; Dashboard</a>
       <h1 style="font-size:1.4rem; margin-top:6px;">Compliance Tracker</h1>
@@ -171,19 +172,19 @@
       </div>
     </div>
 
-    <div class="bs-panel">
+    <div class="bs-panel suite-card">
       <h2>Upcoming</h2>
       <div class="panel-sub">Obligations and document renewals coming up, soonest first.</div>
       <div id="upcomingWrap"><div class="empty-note">Loading…</div></div>
     </div>
 
-    <div class="bs-panel" id="starterPanel">
+    <div class="bs-panel suite-card" id="starterPanel">
       <h2>Get started</h2>
       <div class="panel-sub">Add the deadlines that typically apply to every registered Nigerian business. You can edit or remove any of these afterwards.</div>
       <button class="btn primary" id="seedBtn" type="button">Add standard obligations</button>
     </div>
 
-    <div class="bs-panel">
+    <div class="bs-panel suite-card">
       <h2>WhatsApp reminder contacts</h2>
       <div class="panel-sub">Set a number here to get a "Send via WhatsApp" button on each obligation and document — opens WhatsApp with the reminder pre-filled, you just hit send.</div>
       <form id="contactsForm" class="mini-form">
@@ -204,7 +205,7 @@
 
   <!-- Calendar -->
   <div class="ct-view" id="view-calendar">
-    <div class="bs-panel">
+    <div class="bs-panel suite-card">
       <h2>Add an obligation</h2>
       <form id="obForm" class="mini-form">
         <div>
@@ -248,7 +249,7 @@
       </form>
     </div>
 
-    <div class="bs-panel">
+    <div class="bs-panel suite-card">
       <h2>All obligations</h2>
       <div class="panel-sub">Mark items done as you file them. Overdue items are flagged automatically.</div>
       <div id="obligationsWrap"><div class="empty-note">Loading…</div></div>
@@ -257,7 +258,7 @@
 
   <!-- Vault -->
   <div class="ct-view" id="view-vault">
-    <div class="bs-panel">
+    <div class="bs-panel suite-card">
       <h2>Add a document</h2>
       <form id="docForm" class="mini-form">
         <div>
@@ -293,7 +294,7 @@
       </form>
     </div>
 
-    <div class="bs-panel">
+    <div class="bs-panel suite-card">
       <h2>Your documents</h2>
       <div class="panel-sub">Anything with an expiry date shows up as a renewal on your dashboard.</div>
       <div id="vaultWrap"><div class="empty-note">Loading…</div></div>
@@ -302,7 +303,7 @@
 
   <!-- Assistant -->
   <div class="ct-view" id="view-assistant">
-    <div class="bs-panel">
+    <div class="bs-panel suite-card">
       <h2>Ask about your compliance</h2>
       <div class="panel-sub">Answers are grounded in your own obligations and vault data below — general guidance only, not legal or tax advice.</div>
       <form id="assistantForm" class="mini-form" style="align-items:stretch;">
@@ -316,7 +317,7 @@
       </form>
     </div>
 
-    <div class="bs-panel">
+    <div class="bs-panel suite-card">
       <h2>Conversation</h2>
       <div id="assistantThread"><div class="empty-note">Ask a question above to get started.</div></div>
     </div>
@@ -324,7 +325,7 @@
 
   <!-- Team -->
   <div class="ct-view" id="view-team">
-    <div class="bs-panel" id="inviteOwnerOnly" style="display:none;">
+    <div class="bs-panel suite-card" id="inviteOwnerOnly" style="display:none;">
       <h2>Invite a team member</h2>
       <div class="panel-sub">They need an existing free KoboDocs account — invite by the email they signed up with. Everyone sees only what they need is coming; for now, all roles get full read/write access to this tracker.</div>
       <form id="inviteForm" class="mini-form">
@@ -348,7 +349,7 @@
       </form>
     </div>
 
-    <div class="bs-panel">
+    <div class="bs-panel suite-card">
       <h2>Team members</h2>
       <div id="teamWrap"><div class="empty-note">Loading…</div></div>
     </div>
@@ -360,6 +361,7 @@
 <script type="module" src="/assets/auth.js"></script>
 <script src="/assets/nav-auth.js" defer></script>
 <script src="/business-suite/app/guard.js"></script>
+<script src="/business-suite/app/shell.js" defer></script>
 <script src="/business-suite/app/compliance-tracker/compliance-tracker.js" defer></script>
 <script src="/assets/tools-index.js" defer></script>
 <script src="/assets/search.js" defer></script>
