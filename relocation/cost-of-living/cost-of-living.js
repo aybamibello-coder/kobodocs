@@ -138,7 +138,7 @@ document.getElementById('destination').addEventListener('change', () => { popula
   document.getElementById(id).addEventListener('change', renderPreview);
 });
 
-document.getElementById('clearFormBtn').addEventListener('click', () => {
+document.getElementById('clearFormBtn').addEventListener('click', async () => {
   if (!confirm('Clear this form? This only affects this device.')) return;
   KoboStorage.clear('cost-of-living');
   applyFormState({});
@@ -193,7 +193,7 @@ document.getElementById('downloadBtn').addEventListener('click', async () => {
 
   const data = renderPreview();
   try {
-    const doc = buildCostOfLivingPdf(data);
+    const doc = await buildCostOfLivingPdf(data);
     KoboExport.download(`cost-of-living-${data.city.label.replace(/\s+/g, '-')}.pdf`, doc);
   } catch (err) {
     alert('Could not generate PDF: ' + err.message);
@@ -228,7 +228,7 @@ document.getElementById('waBtn').addEventListener('click', async () => {
   ].join('\n');
 
   try {
-    const doc = buildCostOfLivingPdf(data);
+    const doc = await buildCostOfLivingPdf(data);
     const result = await KoboExport.shareWhatsApp(`cost-of-living-${city.label.replace(/\s+/g, '-')}.pdf`, caption, doc);
   } catch (err) {
     if (err.name !== 'AbortError') alert('Could not prepare the PDF: ' + err.message);

@@ -196,6 +196,7 @@ function buildInvoicePdf(data) {
   totals.push({ label: 'Total due', value: naira(data.total), emphasis: true });
 
   return KoboExport.buildTablePdf({
+    style: 'branded',
     docLabel: 'Invoice',
     businessName: data.bizName,
     businessSub: [data.bizPhone, data.bizBank].filter(Boolean).join(' · '),
@@ -212,10 +213,10 @@ function buildInvoicePdf(data) {
 }
 
 // ---------- PDF export ----------
-document.getElementById('downloadBtn').addEventListener('click', () => {
+document.getElementById('downloadBtn').addEventListener('click', async () => {
   const data = renderPreview();
   try {
-    const doc = buildInvoicePdf(data);
+    const doc = await buildInvoicePdf(data);
     KoboExport.download(`${data.invNumber || 'invoice'}.pdf`, doc);
   } catch (err) {
     alert('Could not generate PDF: ' + err.message);
@@ -238,7 +239,7 @@ document.getElementById('waBtn').addEventListener('click', async () => {
   ].filter(Boolean).join('\n');
 
   try {
-    const doc = buildInvoicePdf(data);
+    const doc = await buildInvoicePdf(data);
     const result = await KoboExport.shareWhatsApp(`${data.invNumber || 'invoice'}.pdf`, caption, doc);
   } catch (err) {
     if (err.name !== 'AbortError') alert('Could not prepare the PDF: ' + err.message);

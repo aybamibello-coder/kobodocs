@@ -156,24 +156,25 @@ document.getElementById('waShareBtn').addEventListener('click', async () => {
   }
 });
 
-document.getElementById('downloadPdfBtn').addEventListener('click', () => {
+document.getElementById('downloadPdfBtn').addEventListener('click', async () => {
   const canvas = document.querySelector('#qrCanvasWrap canvas');
   if (!canvas) return;
   try {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF({ unit: 'pt', format: 'a4' });
+    await window.KoboExport._registerFonts(doc);
     const pageWidth = 595.28;
     const imgSize = 280;
     const x = (pageWidth - imgSize) / 2;
     const y = 160;
 
-    doc.setFont('helvetica', 'bold');
+    doc.setFont('Fraunces', 'bold');
     doc.setFontSize(14);
     doc.text('QR Code', pageWidth / 2, 100, { align: 'center' });
     doc.addImage(canvas.toDataURL('image/png'), 'PNG', x, y, imgSize, imgSize);
 
     if (!isPro) {
-      doc.setFont('helvetica', 'normal');
+      doc.setFont('WorkSans', 'normal');
       doc.setFontSize(9);
       doc.setTextColor(150);
       doc.text('Made with KoboDocs — kobodocs.com.ng', pageWidth / 2, y + imgSize + 30, { align: 'center' });

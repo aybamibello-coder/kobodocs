@@ -104,18 +104,19 @@ function buildBasicPdf() {
   });
 }
 
-function buildProFormPdf() {
+async function buildProFormPdf() {
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF({ unit: 'pt', format: 'a4' });
+  await window.KoboExport._registerFonts(doc);
   const m = 56;
   const pw = doc.internal.pageSize.getWidth();
   let y = m;
 
-  doc.setFont('times', 'bold');
+  doc.setFont('Fraunces', 'bold');
   doc.setFontSize(16);
   doc.text(titleFor(currentType).toUpperCase(), pw / 2, y, { align: 'center' });
   y += 22;
-  doc.setFont('times', 'normal');
+  doc.setFont('WorkSans', 'normal');
   doc.setFontSize(9.5);
   doc.setTextColor(110);
   doc.text(`Date: ${fmtDate(val('nDate'))}`, pw / 2, y, { align: 'center' });
@@ -133,18 +134,18 @@ function buildProFormPdf() {
   doc.setTextColor(20);
 
   function fieldRow(label, value, yPos, width) {
-    doc.setFont('times', 'bold');
+    doc.setFont('Fraunces', 'bold');
     doc.setFontSize(10);
     doc.text(label, m, yPos);
     doc.setDrawColor(180);
     doc.line(m + 150, yPos + 2, m + (width || 320), yPos + 2);
-    doc.setFont('times', 'normal');
+    doc.setFont('WorkSans', 'normal');
     doc.text(value || '', m + 155, yPos);
     return yPos + 24;
   }
 
   y += 10;
-  doc.setFont('times', 'bold'); doc.setFontSize(10.5);
+  doc.setFont('Fraunces', 'bold'); doc.setFontSize(10.5);
   doc.text('APPLICANT', m, y);
   y += 18;
   y = fieldRow("Full Name:", val('applicantName'), y);
@@ -152,7 +153,7 @@ function buildProFormPdf() {
   y = fieldRow("Phone Number:", val('applicantPhone'), y);
   y += 12;
 
-  doc.setFont('times', 'bold'); doc.setFontSize(10.5);
+  doc.setFont('Fraunces', 'bold'); doc.setFontSize(10.5);
   doc.text('NEXT OF KIN', m, y);
   y += 18;
   y = fieldRow("Full Name:", val('kinName'), y);
@@ -163,7 +164,7 @@ function buildProFormPdf() {
   y += 10;
 
   if (val('altKinName') || val('altKinPhone')) {
-    doc.setFont('times', 'bold'); doc.setFontSize(10.5);
+    doc.setFont('Fraunces', 'bold'); doc.setFontSize(10.5);
     doc.text('ALTERNATE NEXT OF KIN', m, y);
     y += 18;
     y = fieldRow("Full Name:", val('altKinName'), y);
@@ -175,11 +176,11 @@ function buildProFormPdf() {
   doc.line(m, y, pw - m, y);
   y += 24;
 
-  doc.setFont('times', 'bold');
+  doc.setFont('Fraunces', 'bold');
   doc.setFontSize(10.5);
   doc.text('DECLARATION', m, y);
   y += 18;
-  doc.setFont('times', 'normal');
+  doc.setFont('WorkSans', 'normal');
   doc.setFontSize(10.5);
   const lines = doc.splitTextToSize(declarationFor(currentType), pw - m * 2);
   lines.forEach(line => {
@@ -212,14 +213,14 @@ function markFreeUsedIfNeeded() {
   }
 }
 
-document.getElementById('downloadPdfBtn').addEventListener('click', () => {
+document.getElementById('downloadPdfBtn').addEventListener('click', async () => {
   if (!hasPass && freeUsed) {
     showMsg("You've used your free document — unlock the Pro template on the right to continue.", 'error');
     document.getElementById('lockOverlay').classList.add('show');
     return;
   }
   try {
-    const doc = buildActivePdf();
+    const doc = await buildActivePdf();
     KoboExport.download(`next-of-kin-form-${currentType}.pdf`, doc);
     markFreeUsedIfNeeded();
     if (!hasPass) {
@@ -240,7 +241,7 @@ document.getElementById('waBtn').addEventListener('click', async () => {
   const btn = document.getElementById('waBtn');
   const original = btn.textContent;
   try {
-    const doc = buildActivePdf();
+    const doc = await buildActivePdf();
     await KoboExport.shareWhatsApp(`next-of-kin-form-${currentType}.pdf`, 'My Next of Kin Form, made with KoboDocs.', doc);
     markFreeUsedIfNeeded();
     if (!hasPass) document.getElementById('freeNote').style.display = 'none';

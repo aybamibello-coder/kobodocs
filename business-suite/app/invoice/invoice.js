@@ -267,6 +267,7 @@ function showMsg(text, type) {
     totals.push({ label: 'Total due', value: naira(data.total), emphasis: true });
 
     return KoboExport.buildTablePdf({
+      style: 'branded',
       docLabel: 'Invoice',
       businessName: business.name,
       metaLines: [data.invNumber, data.dueDateRaw ? `Due ${fmtDate(data.dueDateRaw)}` : ''].filter(Boolean),
@@ -281,10 +282,10 @@ function showMsg(text, type) {
     });
   }
 
-  document.getElementById('downloadBtn').addEventListener('click', () => {
+  document.getElementById('downloadBtn').addEventListener('click', async () => {
     const data = renderPreview();
     try {
-      const doc = buildInvoicePdf(data);
+      const doc = await buildInvoicePdf(data);
       KoboExport.download(`${data.invNumber || 'invoice'}.pdf`, doc);
     } catch (err) {
       showMsg('Could not generate PDF: ' + err.message, 'error');
@@ -307,7 +308,7 @@ function showMsg(text, type) {
     ].filter(Boolean).join('\n');
 
     try {
-      const doc = buildInvoicePdf(data);
+      const doc = await buildInvoicePdf(data);
       const result = await KoboExport.shareWhatsApp(`${data.invNumber || 'invoice'}.pdf`, caption, doc);
       if (result === 'downloaded') {
         showMsg('PDF downloaded — attach it in WhatsApp. Opening WhatsApp with the caption now.', 'success');

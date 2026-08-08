@@ -97,19 +97,20 @@ function showMsg(text, type) {
   el.className = type;
 }
 
-function buildBriefPdf() {
+async function buildBriefPdf() {
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF({ unit: 'pt', format: 'a4' });
+  await window.KoboExport._registerFonts(doc);
   const m = 56;
   const pw = doc.internal.pageSize.getWidth();
   const ph = doc.internal.pageSize.getHeight();
   let y = m;
 
-  doc.setFont('times', 'bold');
+  doc.setFont('Fraunces', 'bold');
   doc.setFontSize(16);
   doc.text('BUSINESS NAME REGISTRATION BRIEF', pw / 2, y, { align: 'center' });
   y += 18;
-  doc.setFont('times', 'normal');
+  doc.setFont('WorkSans', 'normal');
   doc.setFontSize(9);
   doc.setTextColor(110);
   doc.text('For reference while completing registration on the official CAC portal', pw / 2, y, { align: 'center' });
@@ -118,22 +119,22 @@ function buildBriefPdf() {
 
   function section(title) {
     if (y > ph - m - 40) { doc.addPage(); y = m; }
-    doc.setFont('times', 'bold');
+    doc.setFont('Fraunces', 'bold');
     doc.setFontSize(11.5);
     doc.text(title, m, y);
     y += 6;
     doc.setDrawColor(200);
     doc.line(m, y, pw - m, y);
     y += 18;
-    doc.setFont('times', 'normal');
+    doc.setFont('WorkSans', 'normal');
     doc.setFontSize(10.5);
   }
 
   function line(label, value) {
     if (y > ph - m) { doc.addPage(); y = m; }
-    doc.setFont('times', 'bold');
+    doc.setFont('Fraunces', 'bold');
     doc.text(label, m, y);
-    doc.setFont('times', 'normal');
+    doc.setFont('WorkSans', 'normal');
     const lines = doc.splitTextToSize(value || '', pw - m * 2 - 150);
     doc.text(lines, m + 150, y);
     y += 15 * Math.max(lines.length, 1) + 4;
@@ -169,9 +170,9 @@ function buildBriefPdf() {
   return doc;
 }
 
-document.getElementById('downloadBriefBtn').addEventListener('click', () => {
+document.getElementById('downloadBriefBtn').addEventListener('click', async () => {
   try {
-    const doc = buildBriefPdf();
+    const doc = await buildBriefPdf();
     KoboExport.download('cac-business-name-registration-brief.pdf', doc);
   } catch (err) {
     showMsg('Could not generate PDF: ' + err.message, 'error');
@@ -182,7 +183,7 @@ document.getElementById('waBtn').addEventListener('click', async () => {
   const btn = document.getElementById('waBtn');
   const original = btn.textContent;
   try {
-    const doc = buildBriefPdf();
+    const doc = await buildBriefPdf();
     await KoboExport.shareWhatsApp('cac-business-name-registration-brief.pdf', 'CAC Business Name Registration Brief, made with KoboDocs.', doc);
   } catch (err) {
     if (err.name !== 'AbortError') showMsg('Could not prepare the PDF: ' + err.message, 'error');

@@ -144,10 +144,10 @@ function buildAffidavitPdf() {
   });
 }
 
-document.getElementById('downloadPdfBtn').addEventListener('click', () => {
+document.getElementById('downloadPdfBtn').addEventListener('click', async () => {
   if (!hasAccess) { showMsg('Unlock this tool first — see the card on the right.', 'error'); return; }
   try {
-    const doc = buildAffidavitPdf();
+    const doc = await buildAffidavitPdf();
     KoboExport.download(`${currentType}-affidavit.pdf`, doc);
   } catch (err) {
     showMsg('Could not generate PDF: ' + err.message, 'error');
@@ -159,7 +159,7 @@ document.getElementById('waBtn').addEventListener('click', async () => {
   const btn = document.getElementById('waBtn');
   const original = btn.textContent;
   try {
-    const doc = buildAffidavitPdf();
+    const doc = await buildAffidavitPdf();
     await KoboExport.shareWhatsApp(`${currentType}-affidavit.pdf`, `${titleFor(currentType)}, made with KoboDocs.`, doc);
   } catch (err) {
     if (err.name !== 'AbortError') showMsg('Could not prepare the PDF: ' + err.message, 'error');

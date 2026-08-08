@@ -153,6 +153,7 @@ function buildQuotationPdf(data) {
   totals.push({ label: 'Estimated total', value: naira(data.total), emphasis: true });
 
   return KoboExport.buildTablePdf({
+    style: 'branded',
     docLabel: 'Quotation',
     businessName: data.bizName,
     businessSub: data.bizPhone,
@@ -168,10 +169,10 @@ function buildQuotationPdf(data) {
   });
 }
 
-document.getElementById('downloadBtn').addEventListener('click', () => {
+document.getElementById('downloadBtn').addEventListener('click', async () => {
   const data = renderPreview();
   try {
-    const doc = buildQuotationPdf(data);
+    const doc = await buildQuotationPdf(data);
     KoboExport.download(`${data.quoNumber || 'quotation'}.pdf`, doc);
   } catch (err) {
     alert('Could not generate PDF: ' + err.message);
@@ -193,7 +194,7 @@ document.getElementById('waBtn').addEventListener('click', async () => {
   ].filter(Boolean).join('\n');
 
   try {
-    const doc = buildQuotationPdf(data);
+    const doc = await buildQuotationPdf(data);
     const result = await KoboExport.shareWhatsApp(`${data.quoNumber || 'quotation'}.pdf`, caption, doc);
   } catch (err) {
     if (err.name !== 'AbortError') alert('Could not prepare the PDF: ' + err.message);

@@ -97,6 +97,7 @@ function buildBudgetPdf(d) {
   const label = d.balance >= 0 ? 'Balance left over' : 'Shortfall';
 
   return KoboExport.buildTablePdf({
+    style: 'branded',
     docLabel: 'Budget Plan',
     businessName: d.month,
     columns: ['Item', 'Amount'],
@@ -111,10 +112,10 @@ function buildBudgetPdf(d) {
   });
 }
 
-document.getElementById('downloadBtn').addEventListener('click', () => {
+document.getElementById('downloadBtn').addEventListener('click', async () => {
   const d = renderPreview();
   try {
-    const doc = buildBudgetPdf(d);
+    const doc = await buildBudgetPdf(d);
     KoboExport.download(`budget-${(d.month || 'plan').replace(/\s+/g, '-')}.pdf`, doc);
   } catch (err) {
     alert('Could not generate PDF: ' + err.message);
@@ -135,7 +136,7 @@ document.getElementById('waBtn').addEventListener('click', async () => {
   ].join('\n');
 
   try {
-    const doc = buildBudgetPdf(d);
+    const doc = await buildBudgetPdf(d);
     const result = await KoboExport.shareWhatsApp(`budget-${(d.month || 'plan').replace(/\s+/g, '-')}.pdf`, caption, doc);
   } catch (err) {
     if (err.name !== 'AbortError') alert('Could not prepare the PDF: ' + err.message);

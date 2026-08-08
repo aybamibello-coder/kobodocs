@@ -121,7 +121,7 @@ document.getElementById('destination').addEventListener('change', () => { popula
   document.getElementById(id).addEventListener('change', renderPreview);
 });
 
-document.getElementById('clearFormBtn').addEventListener('click', () => {
+document.getElementById('clearFormBtn').addEventListener('click', async () => {
   if (!confirm('Clear this form? This only affects this device.')) return;
   KoboStorage.clear('proof-of-funds');
   applyFormState({});
@@ -178,7 +178,7 @@ document.getElementById('downloadBtn').addEventListener('click', async () => {
 
   const data = renderPreview();
   try {
-    const doc = buildProofOfFundsPdf(data);
+    const doc = await buildProofOfFundsPdf(data);
     KoboExport.download(`proof-of-funds-${data.dest.label.replace(/\s+/g, '-')}.pdf`, doc);
   } catch (err) {
     alert('Could not generate PDF: ' + err.message);
@@ -214,7 +214,7 @@ document.getElementById('waBtn').addEventListener('click', async () => {
   ].join('\n');
 
   try {
-    const doc = buildProofOfFundsPdf(data);
+    const doc = await buildProofOfFundsPdf(data);
     const result = await KoboExport.shareWhatsApp(`proof-of-funds-${dest.label.replace(/\s+/g, '-')}.pdf`, caption, doc);
   } catch (err) {
     if (err.name !== 'AbortError') alert('Could not prepare the PDF: ' + err.message);

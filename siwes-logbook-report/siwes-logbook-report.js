@@ -210,9 +210,9 @@ function buildPdf() {
   });
 }
 
-document.getElementById('downloadPdfBtn').addEventListener('click', () => {
+document.getElementById('downloadPdfBtn').addEventListener('click', async () => {
   try {
-    const doc = buildPdf();
+    const doc = await buildPdf();
     KoboExport.download(`siwes-${currentType}.pdf`, doc);
   } catch (err) {
     showMsg('Could not generate PDF: ' + err.message, 'error');
@@ -223,7 +223,7 @@ document.getElementById('waBtn').addEventListener('click', async () => {
   const btn = document.getElementById('waBtn');
   const original = btn.textContent;
   try {
-    const doc = buildPdf();
+    const doc = await buildPdf();
     await KoboExport.shareWhatsApp(`siwes-${currentType}.pdf`, `${titleFor(currentType)}, made with KoboDocs.`, doc);
   } catch (err) {
     if (err.name !== 'AbortError') showMsg('Could not prepare the PDF: ' + err.message, 'error');

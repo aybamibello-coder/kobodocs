@@ -105,8 +105,10 @@ function showMsg(text, type) {
 // ---------- PDF building (custom, since this needs mixed prose + multiple tables) ----------
 const PAGE_W = 595.28, PAGE_H = 841.89, MARGIN = 50;
 
-function newDoc() {
-  return new window.jspdf.jsPDF({ unit: 'pt', format: 'a4' });
+async function newDoc() {
+  const doc = new window.jspdf.jsPDF({ unit: 'pt', format: 'a4' });
+  await window.KoboExport._registerFonts(doc);
+  return doc;
 }
 
 function checkPageBreak(doc, y, needed = 60) {
@@ -118,22 +120,22 @@ function checkPageBreak(doc, y, needed = 60) {
 }
 
 function addTitle(doc, title, subtitle) {
-  doc.setFont('times', 'bold'); doc.setFontSize(16);
+  doc.setFont('Fraunces', 'bold'); doc.setFontSize(16);
   doc.text(title, PAGE_W / 2, MARGIN, { align: 'center' });
-  doc.setFont('times', 'normal'); doc.setFontSize(11);
+  doc.setFont('WorkSans', 'normal'); doc.setFontSize(11);
   doc.text(subtitle, PAGE_W / 2, MARGIN + 20, { align: 'center' });
   return MARGIN + 50;
 }
 
 function addHeading(doc, text, y) {
   y = checkPageBreak(doc, y, 40);
-  doc.setFont('times', 'bold'); doc.setFontSize(12);
+  doc.setFont('Fraunces', 'bold'); doc.setFontSize(12);
   doc.text(text, MARGIN, y);
   return y + 18;
 }
 
 function addParagraph(doc, text, y) {
-  doc.setFont('times', 'normal'); doc.setFontSize(10);
+  doc.setFont('WorkSans', 'normal'); doc.setFontSize(10);
   const lines = doc.splitTextToSize(text || '—', PAGE_W - MARGIN * 2);
   for (const line of lines) {
     y = checkPageBreak(doc, y, 20);
@@ -147,13 +149,13 @@ function addTable(doc, headers, rows, y, colWidths) {
   const totalW = PAGE_W - MARGIN * 2;
   const widths = colWidths || headers.map(() => totalW / headers.length);
   y = checkPageBreak(doc, y, 40);
-  doc.setFont('times', 'bold'); doc.setFontSize(9);
+  doc.setFont('Fraunces', 'bold'); doc.setFontSize(9);
   let x = MARGIN;
   headers.forEach((h, i) => { doc.text(h, i === 0 ? x : x + widths[i] - 4, y, { align: i === 0 ? 'left' : 'right' }); x += widths[i]; });
   y += 6;
   doc.line(MARGIN, y, MARGIN + totalW, y);
   y += 14;
-  doc.setFont('times', 'normal');
+  doc.setFont('WorkSans', 'normal');
   rows.forEach(row => {
     y = checkPageBreak(doc, y, 20);
     x = MARGIN;
@@ -163,8 +165,8 @@ function addTable(doc, headers, rows, y, colWidths) {
   return y + 10;
 }
 
-function buildPlanPdf() {
-  const doc = newDoc();
+async function buildPlanPdf() {
+  const doc = await newDoc();
   const businessName = val('businessName') || '[Business name]';
   const startupCosts = getStartupCosts();
   const startupTotal = totalStartupCost();
@@ -200,8 +202,8 @@ function buildPlanPdf() {
   return doc;
 }
 
-function buildFinancialsPdf() {
-  const doc = newDoc();
+async function buildFinancialsPdf() {
+  const doc = await newDoc();
   const businessName = val('businessName') || '[Business name]';
   const startupCosts = getStartupCosts();
   const startupTotal = totalStartupCost();
@@ -231,19 +233,21 @@ function buildFinancialsPdf() {
   return doc;
 }
 
-document.getElementById('downloadPlanBtn').addEventListener('click', () => {
+document.getElementById('downloadPlanBtn').addEventListener('click', async () => {
   if (!hasAccess) { showMsg('Unlock this tool first — see the card on the right.', 'error'); return; }
   try {
-    buildPlanPdf().save('business-plan.pdf');
+    const doc = await buildPlanPdf();
+    doc.save('business-plan.pdf');
   } catch (err) {
     showMsg('Could not generate PDF: ' + err.message, 'error');
   }
 });
 
-document.getElementById('downloadFinancialsBtn').addEventListener('click', () => {
+document.getElementById('downloadFinancialsBtn').addEventListener('click', async () => {
   if (!hasAccess) { showMsg('Unlock this tool first — see the card on the right.', 'error'); return; }
   try {
-    buildFinancialsPdf().save('financial-projections.pdf');
+    const doc = await buildFinancialsPdf();
+    doc.save('financial-projections.pdf');
   } catch (err) {
     showMsg('Could not generate PDF: ' + err.message, 'error');
   }
@@ -252,7 +256,7 @@ document.getElementById('downloadFinancialsBtn').addEventListener('click', () =>
 document.getElementById('waBtn').addEventListener('click', async () => {
   if (!hasAccess) { showMsg('Unlock this tool first — see the card on the right.', 'error'); return; }
   try {
-    const doc = buildPlanPdf();
+    const doc = await buildPlanPdf();
     const blob = doc.output('blob');
     const file = new File([blob], 'business-plan.pdf', { type: 'application/pdf' });
     if (navigator.canShare && navigator.canShare({ files: [file] })) {

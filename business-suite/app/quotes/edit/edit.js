@@ -288,6 +288,7 @@ function lockEditor(message) {
     totals.push({ label: 'Estimated total', value: naira(data.total), emphasis: true });
 
     return KoboExport.buildTablePdf({
+      style: 'branded',
       docLabel: 'Quotation',
       businessName: business.name,
       metaLines: [data.quoteNumber, data.validUntilRaw ? `Valid until ${fmtDate(data.validUntilRaw)}` : ''].filter(Boolean),
@@ -302,10 +303,10 @@ function lockEditor(message) {
     });
   }
 
-  document.getElementById('downloadBtn').addEventListener('click', () => {
+  document.getElementById('downloadBtn').addEventListener('click', async () => {
     const data = renderPreview();
     try {
-      const doc = buildQuotePdf(data);
+      const doc = await buildQuotePdf(data);
       KoboExport.download(`${data.quoteNumber || 'quote'}.pdf`, doc);
     } catch (err) {
       showMsg('Could not generate PDF: ' + err.message, 'error');

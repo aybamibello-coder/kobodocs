@@ -140,8 +140,10 @@ function showMsg(text, type) {
 // ---------- PDF building ----------
 const PAGE_W = 595.28, PAGE_H = 841.89, MARGIN = 50;
 
-function newDoc() {
-  return new window.jspdf.jsPDF({ unit: 'pt', format: 'a4' });
+async function newDoc() {
+  const doc = new window.jspdf.jsPDF({ unit: 'pt', format: 'a4' });
+  await window.KoboExport._registerFonts(doc);
+  return doc;
 }
 function checkPageBreak(doc, y, needed = 60) {
   if (y > PAGE_H - MARGIN - needed) {
@@ -151,20 +153,20 @@ function checkPageBreak(doc, y, needed = 60) {
   return y;
 }
 function addTitle(doc, title, subtitle) {
-  doc.setFont('times', 'bold'); doc.setFontSize(16);
+  doc.setFont('Fraunces', 'bold'); doc.setFontSize(16);
   doc.text(title, PAGE_W / 2, MARGIN, { align: 'center' });
-  doc.setFont('times', 'normal'); doc.setFontSize(11);
+  doc.setFont('WorkSans', 'normal'); doc.setFontSize(11);
   doc.text(subtitle, PAGE_W / 2, MARGIN + 20, { align: 'center' });
   return MARGIN + 50;
 }
 function addHeading(doc, text, y) {
   y = checkPageBreak(doc, y, 40);
-  doc.setFont('times', 'bold'); doc.setFontSize(12);
+  doc.setFont('Fraunces', 'bold'); doc.setFontSize(12);
   doc.text(text, MARGIN, y);
   return y + 18;
 }
 function addParagraph(doc, text, y) {
-  doc.setFont('times', 'normal'); doc.setFontSize(10);
+  doc.setFont('WorkSans', 'normal'); doc.setFontSize(10);
   const lines = doc.splitTextToSize(text || '—', PAGE_W - MARGIN * 2);
   for (const line of lines) {
     y = checkPageBreak(doc, y, 20);
@@ -177,13 +179,13 @@ function addTable(doc, headers, rows, y, colWidths) {
   const totalW = PAGE_W - MARGIN * 2;
   const widths = colWidths || headers.map(() => totalW / headers.length);
   y = checkPageBreak(doc, y, 40);
-  doc.setFont('times', 'bold'); doc.setFontSize(9);
+  doc.setFont('Fraunces', 'bold'); doc.setFontSize(9);
   let x = MARGIN;
   headers.forEach((h, i) => { doc.text(h, i === 0 ? x : x + widths[i] - 4, y, { align: i === 0 ? 'left' : 'right' }); x += widths[i]; });
   y += 6;
   doc.line(MARGIN, y, MARGIN + totalW, y);
   y += 14;
-  doc.setFont('times', 'normal');
+  doc.setFont('WorkSans', 'normal');
   rows.forEach(row => {
     y = checkPageBreak(doc, y, 20);
     x = MARGIN;
@@ -195,14 +197,14 @@ function addTable(doc, headers, rows, y, colWidths) {
 function addLogframeTable(doc, rows, y) {
   if (!rows.length) return y;
   y = checkPageBreak(doc, y, 60);
-  doc.setFont('times', 'bold'); doc.setFontSize(9);
+  doc.setFont('Fraunces', 'bold'); doc.setFontSize(9);
   const widths = [160, 145, 145];
   let x = MARGIN;
   ['Objective', 'Indicator', 'Means of Verification'].forEach((h, i) => { doc.text(h, x, y); x += widths[i]; });
   y += 6;
   doc.line(MARGIN, y, PAGE_W - MARGIN, y);
   y += 14;
-  doc.setFont('times', 'normal'); doc.setFontSize(8.5);
+  doc.setFont('WorkSans', 'normal'); doc.setFontSize(8.5);
   rows.forEach(r => {
     const objLines = doc.splitTextToSize(r.objective || '—', widths[0] - 6);
     const indLines = doc.splitTextToSize(r.indicator || '—', widths[1] - 6);
@@ -218,10 +220,10 @@ function addLogframeTable(doc, rows, y) {
   return y + 10;
 }
 
-function buildProposalPdf() {
+async function buildProposalPdf() {
   const grantType = currentGrantType();
   const labels = GRANT_TYPE_LABELS[grantType];
-  const doc = newDoc();
+  const doc = await newDoc();
   const orgName = val('orgName') || '[Organization / business name]';
   const budgetItems = getBudgetItems();
   const budgetTotal = totalBudget();
@@ -270,8 +272,8 @@ function buildProposalPdf() {
   return doc;
 }
 
-function buildBudgetPdf() {
-  const doc = newDoc();
+async function buildBudgetPdf() {
+  const doc = await newDoc();
   const orgName = val('orgName') || '[Organization / business name]';
   const budgetItems = getBudgetItems();
   const budgetTotal = totalBudget();
@@ -285,19 +287,21 @@ function buildBudgetPdf() {
   return doc;
 }
 
-document.getElementById('downloadProposalBtn').addEventListener('click', () => {
+document.getElementById('downloadProposalBtn').addEventListener('click', async () => {
   if (!hasAccess) { showMsg('Unlock this tool first — see the card on the right.', 'error'); return; }
   try {
-    buildProposalPdf().save('grant-application.pdf');
+    const doc = await buildProposalPdf();
+    doc.save('grant-application.pdf');
   } catch (err) {
     showMsg('Could not generate PDF: ' + err.message, 'error');
   }
 });
 
-document.getElementById('downloadBudgetBtn').addEventListener('click', () => {
+document.getElementById('downloadBudgetBtn').addEventListener('click', async () => {
   if (!hasAccess) { showMsg('Unlock this tool first — see the card on the right.', 'error'); return; }
   try {
-    buildBudgetPdf().save('grant-budget.pdf');
+    const doc = await buildBudgetPdf();
+    doc.save('grant-budget.pdf');
   } catch (err) {
     showMsg('Could not generate PDF: ' + err.message, 'error');
   }
@@ -306,7 +310,7 @@ document.getElementById('downloadBudgetBtn').addEventListener('click', () => {
 document.getElementById('waBtn').addEventListener('click', async () => {
   if (!hasAccess) { showMsg('Unlock this tool first — see the card on the right.', 'error'); return; }
   try {
-    const doc = buildProposalPdf();
+    const doc = await buildProposalPdf();
     const blob = doc.output('blob');
     const file = new File([blob], 'grant-application.pdf', { type: 'application/pdf' });
     if (navigator.canShare && navigator.canShare({ files: [file] })) {

@@ -87,9 +87,9 @@ function buildContractPdf() {
   });
 }
 
-document.getElementById('downloadPdfBtn').addEventListener('click', () => {
+document.getElementById('downloadPdfBtn').addEventListener('click', async () => {
   try {
-    const doc = buildContractPdf();
+    const doc = await buildContractPdf();
     KoboExport.download('freelancer-contract.pdf', doc);
   } catch (err) {
     showMsg('Could not generate PDF: ' + err.message, 'error');
@@ -100,7 +100,7 @@ document.getElementById('waBtn').addEventListener('click', async () => {
   const btn = document.getElementById('waBtn');
   const original = btn.textContent;
   try {
-    const doc = buildContractPdf();
+    const doc = await buildContractPdf();
     await KoboExport.shareWhatsApp('freelancer-contract.pdf', 'Freelance contract, made with KoboDocs.', doc);
   } catch (err) {
     if (err.name !== 'AbortError') showMsg('Could not prepare the PDF: ' + err.message, 'error');

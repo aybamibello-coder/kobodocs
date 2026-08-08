@@ -148,6 +148,7 @@ function buildPayslipPdf(d) {
   rows.push(['PAYE tax', naira(d.payeMonthly)]);
 
   return KoboExport.buildTablePdf({
+    style: 'branded',
     docLabel: 'Payslip',
     businessName: d.empName,
     metaLines: [d.period],
@@ -164,10 +165,10 @@ function buildPayslipPdf(d) {
   });
 }
 
-document.getElementById('downloadBtn').addEventListener('click', () => {
+document.getElementById('downloadBtn').addEventListener('click', async () => {
   const d = renderPreview();
   try {
-    const doc = buildPayslipPdf(d);
+    const doc = await buildPayslipPdf(d);
     KoboExport.download(`payslip-${(d.staffName || 'employee').replace(/\s+/g, '-')}.pdf`, doc);
   } catch (err) {
     alert('Could not generate PDF: ' + err.message);
@@ -189,7 +190,7 @@ document.getElementById('waBtn').addEventListener('click', async () => {
   ].join('\n');
 
   try {
-    const doc = buildPayslipPdf(d);
+    const doc = await buildPayslipPdf(d);
     const result = await KoboExport.shareWhatsApp(`payslip-${(d.staffName || 'employee').replace(/\s+/g, '-')}.pdf`, caption, doc);
   } catch (err) {
     if (err.name !== 'AbortError') alert('Could not prepare the PDF: ' + err.message);

@@ -135,6 +135,7 @@ function buildAjoPdf(d) {
   ]);
 
   return KoboExport.buildTablePdf({
+    style: 'branded',
     docLabel: 'Ajo Circle',
     businessName: d.circleName,
     businessSub: `${d.frequency} · ${d.members.length} member${d.members.length === 1 ? '' : 's'}`,
@@ -146,10 +147,10 @@ function buildAjoPdf(d) {
   });
 }
 
-document.getElementById('downloadBtn').addEventListener('click', () => {
+document.getElementById('downloadBtn').addEventListener('click', async () => {
   const d = renderPreview();
   try {
-    const doc = buildAjoPdf(d);
+    const doc = await buildAjoPdf(d);
     KoboExport.download(`ajo-${(d.circleName || 'circle').replace(/\s+/g, '-')}.pdf`, doc);
   } catch (err) {
     alert('Could not generate PDF: ' + err.message);
@@ -168,7 +169,7 @@ document.getElementById('waBtn').addEventListener('click', async () => {
   ].join('\n');
 
   try {
-    const doc = buildAjoPdf(d);
+    const doc = await buildAjoPdf(d);
     const result = await KoboExport.shareWhatsApp(
       `ajo-${(d.circleName || 'circle').replace(/\s+/g, '-')}.pdf`,
       caption,

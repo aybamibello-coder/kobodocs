@@ -180,9 +180,10 @@ function buildResolutionPdf() {
   });
 }
 
-function buildCertificatePdf() {
+async function buildCertificatePdf() {
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF({ unit: 'pt', format: 'a4' });
+  await window.KoboExport._registerFonts(doc);
   const pw = doc.internal.pageSize.getWidth();
   const ph = doc.internal.pageSize.getHeight();
   const m = 50;
@@ -194,20 +195,20 @@ function buildCertificatePdf() {
   doc.rect(m + 8, m + 8, pw - m * 2 - 16, ph - m * 2 - 16);
 
   let y = m + 60;
-  doc.setFont('times', 'bold');
+  doc.setFont('Fraunces', 'bold');
   doc.setFontSize(20);
   doc.text((val('companyName') || 'COMPANY NAME').toUpperCase(), pw / 2, y, { align: 'center' });
   y += 20;
   doc.setFontSize(10);
-  doc.setFont('times', 'normal');
+  doc.setFont('WorkSans', 'normal');
   doc.text(`RC ${val('rcNumber') || '[RC number]'}`, pw / 2, y, { align: 'center' });
   y += 40;
 
-  doc.setFont('times', 'bold');
+  doc.setFont('Fraunces', 'bold');
   doc.setFontSize(16);
   doc.text('SHARE CERTIFICATE', pw / 2, y, { align: 'center' });
   y += 16;
-  doc.setFont('times', 'normal');
+  doc.setFont('WorkSans', 'normal');
   doc.setFontSize(10);
   doc.text(`Certificate No. ${val('certNumber') || '—'}`, pw / 2, y, { align: 'center' });
   y += 50;
@@ -271,10 +272,10 @@ function filenameForActive() {
   return `${slug}-${currentType}.pdf`;
 }
 
-document.getElementById('downloadPdfBtn').addEventListener('click', () => {
+document.getElementById('downloadPdfBtn').addEventListener('click', async () => {
   if (!hasAccess) { showMsg('Unlock this tool first — see the card on the right.', 'error'); return; }
   try {
-    const doc = buildActivePdf();
+    const doc = await buildActivePdf();
     KoboExport.download(filenameForActive(), doc);
   } catch (err) {
     showMsg('Could not generate PDF: ' + err.message, 'error');
@@ -286,7 +287,7 @@ document.getElementById('waBtn').addEventListener('click', async () => {
   const btn = document.getElementById('waBtn');
   const original = btn.textContent;
   try {
-    const doc = buildActivePdf();
+    const doc = await buildActivePdf();
     await KoboExport.shareWhatsApp(filenameForActive(), 'Company document, made with KoboDocs.', doc);
   } catch (err) {
     if (err.name !== 'AbortError') showMsg('Could not prepare the PDF: ' + err.message, 'error');

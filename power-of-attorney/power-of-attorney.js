@@ -105,10 +105,10 @@ function buildPoaPdf() {
   });
 }
 
-document.getElementById('downloadPdfBtn').addEventListener('click', () => {
+document.getElementById('downloadPdfBtn').addEventListener('click', async () => {
   if (!hasAccess) { showMsg('Unlock this tool first — see the card on the right.', 'error'); return; }
   try {
-    const doc = buildPoaPdf();
+    const doc = await buildPoaPdf();
     KoboExport.download('power-of-attorney.pdf', doc);
   } catch (err) {
     showMsg('Could not generate PDF: ' + err.message, 'error');
@@ -120,7 +120,7 @@ document.getElementById('waBtn').addEventListener('click', async () => {
   const btn = document.getElementById('waBtn');
   const original = btn.textContent;
   try {
-    const doc = buildPoaPdf();
+    const doc = await buildPoaPdf();
     await KoboExport.shareWhatsApp('power-of-attorney.pdf', 'Power of Attorney draft, made with KoboDocs.', doc);
   } catch (err) {
     if (err.name !== 'AbortError') showMsg('Could not prepare the PDF: ' + err.message, 'error');

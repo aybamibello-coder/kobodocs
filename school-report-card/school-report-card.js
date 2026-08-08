@@ -165,11 +165,11 @@ function buildReportPdf(d) {
   });
 }
 
-document.getElementById('downloadPdfBtn').addEventListener('click', () => {
+document.getElementById('downloadPdfBtn').addEventListener('click', async () => {
   if (!hasAccess) { showMsg('Unlock this tool first — see the card on the right.', 'error'); return; }
   const d = renderReport();
   try {
-    const doc = buildReportPdf(d);
+    const doc = await buildReportPdf(d);
     KoboExport.download(`report-card-${(d.studentName || 'student').replace(/\s+/g, '-')}.pdf`, doc);
   } catch (err) {
     showMsg('Could not generate PDF: ' + err.message, 'error');
@@ -182,7 +182,7 @@ document.getElementById('waBtn').addEventListener('click', async () => {
   const btn = document.getElementById('waBtn');
   const original = btn.textContent;
   try {
-    const doc = buildReportPdf(d);
+    const doc = await buildReportPdf(d);
     await KoboExport.shareWhatsApp(`report-card-${(d.studentName || 'student').replace(/\s+/g, '-')}.pdf`, `Report card for ${d.studentName}, made with KoboDocs.`, doc);
   } catch (err) {
     if (err.name !== 'AbortError') showMsg('Could not prepare the PDF: ' + err.message, 'error');

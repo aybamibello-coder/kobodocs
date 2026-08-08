@@ -94,6 +94,7 @@ function buildWaybillPdf() {
   const rows = getItems().map(it => [it.desc, it.qty]);
 
   return KoboExport.buildTablePdf({
+    style: 'branded',
     docLabel: 'Waybill',
     businessName: bizName,
     businessSub: bizPhone,
@@ -110,10 +111,10 @@ function buildWaybillPdf() {
   });
 }
 
-document.getElementById('downloadPdfBtn').addEventListener('click', () => {
+document.getElementById('downloadPdfBtn').addEventListener('click', async () => {
   renderPreview();
   try {
-    const doc = buildWaybillPdf();
+    const doc = await buildWaybillPdf();
     KoboExport.download(`${document.getElementById('wbNumber').value || 'waybill'}.pdf`, doc);
   } catch (err) {
     alert('Could not generate PDF: ' + err.message);
@@ -125,7 +126,7 @@ document.getElementById('waBtn').addEventListener('click', async () => {
   const btn = document.getElementById('waBtn');
   const originalText = btn.textContent;
   try {
-    const doc = buildWaybillPdf();
+    const doc = await buildWaybillPdf();
     const result = await KoboExport.shareWhatsApp(`${document.getElementById('wbNumber').value || 'waybill'}.pdf`, 'Waybill made with KoboDocs.', doc);
   } catch (err) {
     if (err.name !== 'AbortError') alert('Could not prepare the PDF: ' + err.message);

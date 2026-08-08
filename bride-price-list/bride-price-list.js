@@ -113,6 +113,7 @@ function showMsg(text, type) {
 function buildListPdf(data) {
   const rows = data.items.map(it => [it.name, it.value]);
   return KoboExport.buildTablePdf({
+    style: 'branded',
     docLabel: 'Wedding List',
     businessName: `${data.groomName} & ${data.brideName}`,
     businessSub: [data.groomFamily, data.brideFamily].filter(Boolean).join(' · '),
@@ -123,10 +124,10 @@ function buildListPdf(data) {
   });
 }
 
-document.getElementById('downloadPdfBtn').addEventListener('click', () => {
+document.getElementById('downloadPdfBtn').addEventListener('click', async () => {
   const data = renderPreview();
   try {
-    const doc = buildListPdf(data);
+    const doc = await buildListPdf(data);
     KoboExport.download(`wedding-list-${data.groomName.replace(/\s+/g, '-')}.pdf`, doc);
   } catch (err) {
     showMsg('Could not generate PDF: ' + err.message, 'error');
@@ -138,7 +139,7 @@ document.getElementById('waBtn').addEventListener('click', async () => {
   const btn = document.getElementById('waBtn');
   const original = btn.textContent;
   try {
-    const doc = buildListPdf(data);
+    const doc = await buildListPdf(data);
     await KoboExport.shareWhatsApp(`wedding-list-${data.groomName.replace(/\s+/g, '-')}.pdf`, `Traditional wedding list for ${data.groomName} & ${data.brideName}, made with KoboDocs.`, doc);
   } catch (err) {
     if (err.name !== 'AbortError') showMsg('Could not prepare the PDF: ' + err.message, 'error');

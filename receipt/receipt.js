@@ -123,6 +123,7 @@ renderPreview();
 function buildReceiptPdf(data) {
   const rows = data.items.map(it => [it.desc, it.qty, naira(it.qty * it.price)]);
   return KoboExport.buildTablePdf({
+    style: 'branded',
     docLabel: 'Receipt',
     businessName: data.bizName,
     businessSub: data.bizPhone,
@@ -141,10 +142,10 @@ function buildReceiptPdf(data) {
   });
 }
 
-document.getElementById('downloadBtn').addEventListener('click', () => {
+document.getElementById('downloadBtn').addEventListener('click', async () => {
   const data = renderPreview();
   try {
-    const doc = buildReceiptPdf(data);
+    const doc = await buildReceiptPdf(data);
     KoboExport.download(`${data.recNumber || 'receipt'}.pdf`, doc);
   } catch (err) {
     alert('Could not generate PDF: ' + err.message);
@@ -166,7 +167,7 @@ document.getElementById('waBtn').addEventListener('click', async () => {
   ].filter(Boolean).join('\n');
 
   try {
-    const doc = buildReceiptPdf(data);
+    const doc = await buildReceiptPdf(data);
     const result = await KoboExport.shareWhatsApp(`${data.recNumber || 'receipt'}.pdf`, caption, doc);
   } catch (err) {
     if (err.name !== 'AbortError') alert('Could not prepare the PDF: ' + err.message);

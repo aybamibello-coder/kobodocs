@@ -104,9 +104,9 @@ function buildNyscPdf() {
   });
 }
 
-document.getElementById('downloadPdfBtn').addEventListener('click', () => {
+document.getElementById('downloadPdfBtn').addEventListener('click', async () => {
   try {
-    const doc = buildNyscPdf();
+    const doc = await buildNyscPdf();
     KoboExport.download(`nysc-${currentType}-letter.pdf`, doc);
   } catch (err) {
     showMsg('Could not generate PDF: ' + err.message, 'error');
@@ -117,7 +117,7 @@ document.getElementById('waBtn').addEventListener('click', async () => {
   const btn = document.getElementById('waBtn');
   const original = btn.textContent;
   try {
-    const doc = buildNyscPdf();
+    const doc = await buildNyscPdf();
     await KoboExport.shareWhatsApp(`nysc-${currentType}-letter.pdf`, `${titleFor(currentType)}, made with KoboDocs.`, doc);
   } catch (err) {
     if (err.name !== 'AbortError') showMsg('Could not prepare the PDF: ' + err.message, 'error');

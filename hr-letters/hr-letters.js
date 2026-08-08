@@ -100,9 +100,9 @@ function buildHrLetterPdf() {
   });
 }
 
-document.getElementById('downloadPdfBtn').addEventListener('click', () => {
+document.getElementById('downloadPdfBtn').addEventListener('click', async () => {
   try {
-    const doc = buildHrLetterPdf();
+    const doc = await buildHrLetterPdf();
     KoboExport.download(`${currentType}-letter.pdf`, doc);
   } catch (err) {
     showMsg('Could not generate PDF: ' + err.message, 'error');
@@ -113,7 +113,7 @@ document.getElementById('waBtn').addEventListener('click', async () => {
   const btn = document.getElementById('waBtn');
   const original = btn.textContent;
   try {
-    const doc = buildHrLetterPdf();
+    const doc = await buildHrLetterPdf();
     const caption = `${currentType.charAt(0).toUpperCase() + currentType.slice(1)} letter for ${val('empName') || 'employee'}, made with KoboDocs.`;
     const result = await KoboExport.shareWhatsApp(`${currentType}-letter.pdf`, caption, doc);
     if (result === 'downloaded') {

@@ -95,10 +95,10 @@ function buildVisaLetterPdf() {
   });
 }
 
-document.getElementById('downloadPdfBtn').addEventListener('click', () => {
+document.getElementById('downloadPdfBtn').addEventListener('click', async () => {
   if (!hasAccess) { showMsg('Unlock this tool first — see the card on the right.', 'error'); return; }
   try {
-    const doc = buildVisaLetterPdf();
+    const doc = await buildVisaLetterPdf();
     KoboExport.download(`visa-cover-letter-${currentType}.pdf`, doc);
   } catch (err) {
     showMsg('Could not generate PDF: ' + err.message, 'error');
@@ -110,7 +110,7 @@ document.getElementById('waBtn').addEventListener('click', async () => {
   const btn = document.getElementById('waBtn');
   const original = btn.textContent;
   try {
-    const doc = buildVisaLetterPdf();
+    const doc = await buildVisaLetterPdf();
     await KoboExport.shareWhatsApp(`visa-cover-letter-${currentType}.pdf`, `Visa cover letter (${currentType}), made with KoboDocs.`, doc);
   } catch (err) {
     if (err.name !== 'AbortError') showMsg('Could not prepare the PDF: ' + err.message, 'error');

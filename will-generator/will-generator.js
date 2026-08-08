@@ -85,10 +85,10 @@ function buildWillPdf() {
   });
 }
 
-document.getElementById('downloadPdfBtn').addEventListener('click', () => {
+document.getElementById('downloadPdfBtn').addEventListener('click', async () => {
   if (!hasAccess) { showMsg('Unlock this tool first — see the card on the right.', 'error'); return; }
   try {
-    const doc = buildWillPdf();
+    const doc = await buildWillPdf();
     KoboExport.download('last-will-and-testament.pdf', doc);
   } catch (err) {
     showMsg('Could not generate PDF: ' + err.message, 'error');
@@ -100,7 +100,7 @@ document.getElementById('waBtn').addEventListener('click', async () => {
   const btn = document.getElementById('waBtn');
   const original = btn.textContent;
   try {
-    const doc = buildWillPdf();
+    const doc = await buildWillPdf();
     await KoboExport.shareWhatsApp('last-will-and-testament.pdf', 'My Will draft, made with KoboDocs.', doc);
   } catch (err) {
     if (err.name !== 'AbortError') showMsg('Could not prepare the PDF: ' + err.message, 'error');

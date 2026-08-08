@@ -125,10 +125,11 @@ addBudgetRow('Venue');
 addBudgetRow('Aso-ebi (family)');
 renderBudget();
 
-document.getElementById('downloadBudgetBtn').addEventListener('click', () => {
+document.getElementById('downloadBudgetBtn').addEventListener('click', async () => {
   const { items, total } = renderBudget();
   try {
-    const doc = KoboExport.buildTablePdf({
+    const doc = await KoboExport.buildTablePdf({
+      style: 'branded',
       docLabel: 'Wedding Budget',
       businessName: 'Wedding / Party Budget Plan',
       columns: ['Category', 'Amount'],
@@ -146,7 +147,8 @@ document.getElementById('downloadBudgetBtn').addEventListener('click', () => {
 document.getElementById('waBudgetBtn').addEventListener('click', async () => {
   const { items, total } = renderBudget();
   try {
-    const doc = KoboExport.buildTablePdf({
+    const doc = await KoboExport.buildTablePdf({
+      style: 'branded',
       docLabel: 'Wedding Budget',
       businessName: 'Wedding / Party Budget Plan',
       columns: ['Category', 'Amount'],
@@ -208,10 +210,11 @@ addAsoebiRow();
 addAsoebiRow();
 renderAsoebi();
 
-document.getElementById('downloadAsoebiBtn').addEventListener('click', () => {
+document.getElementById('downloadAsoebiBtn').addEventListener('click', async () => {
   const { contributors, collected, outstanding } = renderAsoebi();
   try {
-    const doc = KoboExport.buildTablePdf({
+    const doc = await KoboExport.buildTablePdf({
+      style: 'branded',
       docLabel: 'Aso-Ebi Tracker',
       businessName: 'Aso-Ebi Contribution List',
       columns: ['Contributor', 'Amount', 'Status'],
@@ -232,7 +235,8 @@ document.getElementById('downloadAsoebiBtn').addEventListener('click', () => {
 document.getElementById('waAsoebiBtn').addEventListener('click', async () => {
   const { contributors, collected, outstanding } = renderAsoebi();
   try {
-    const doc = KoboExport.buildTablePdf({
+    const doc = await KoboExport.buildTablePdf({
+      style: 'branded',
       docLabel: 'Aso-Ebi Tracker',
       businessName: 'Aso-Ebi Contribution List',
       columns: ['Contributor', 'Amount', 'Status'],

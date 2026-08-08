@@ -217,7 +217,7 @@ function toast(text) {
 
     const remindBtn = detail.querySelector(`[data-remind="${cid}"]`);
     if (remindBtn) {
-      remindBtn.addEventListener('click', () => {
+      remindBtn.addEventListener('click', async () => {
         const balance = naira(row.balance);
         const message = `Hello ${client.name}, this is a reminder that your outstanding balance with ${business.name} is ${balance}. Please let us know when we can expect payment. Thank you.`;
         window.open(`https://wa.me/${client.phone.replace(/[^\d+]/g, '')}?text=${encodeURIComponent(message)}`, '_blank');
@@ -296,7 +296,8 @@ function toast(text) {
       naira(d.balance)
     ]);
 
-    const doc = window.KoboExport.buildTablePdf({
+    const doc = await window.KoboExport.buildTablePdf({
+      style: 'branded',
       docLabel: 'Statement',
       businessName: business.name,
       metaLines: [`Statement date: ${fmtDate(new Date().toISOString())}`],

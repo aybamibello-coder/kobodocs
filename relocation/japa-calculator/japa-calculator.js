@@ -140,7 +140,7 @@ document.getElementById('visaRoute').addEventListener('change', () => {
   document.getElementById(id).addEventListener('input', renderPreview);
 });
 
-document.getElementById('clearFormBtn').addEventListener('click', () => {
+document.getElementById('clearFormBtn').addEventListener('click', async () => {
   if (!confirm('Clear this form? This only affects this device.')) return;
   KoboStorage.clear('japa-calculator');
   applyFormState({});
@@ -191,7 +191,7 @@ document.getElementById('downloadBtn').addEventListener('click', async () => {
 
   const data = renderPreview();
   try {
-    const doc = buildJapaPdf(data);
+    const doc = await buildJapaPdf(data);
     KoboExport.download(`japa-cost-${data.dest.label.replace(/\s+/g, '-')}.pdf`, doc);
   } catch (err) {
     alert('Could not generate PDF: ' + err.message);
@@ -227,7 +227,7 @@ document.getElementById('waBtn').addEventListener('click', async () => {
   ].join('\n');
 
   try {
-    const doc = buildJapaPdf(data);
+    const doc = await buildJapaPdf(data);
     const result = await KoboExport.shareWhatsApp(`japa-cost-${dest.label.replace(/\s+/g, '-')}.pdf`, caption, doc);
   } catch (err) {
     if (err.name !== 'AbortError') alert('Could not prepare the PDF: ' + err.message);

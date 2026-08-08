@@ -115,6 +115,7 @@ function buildLoanPdf(d) {
   ]);
 
   return KoboExport.buildTablePdf({
+    style: 'branded',
     docLabel: 'Loan Schedule',
     businessName: d.lenderName,
     businessSub: `Loan to ${d.borrowerName}`,
@@ -131,10 +132,10 @@ function buildLoanPdf(d) {
   });
 }
 
-document.getElementById('downloadBtn').addEventListener('click', () => {
+document.getElementById('downloadBtn').addEventListener('click', async () => {
   const d = renderPreview();
   try {
-    const doc = buildLoanPdf(d);
+    const doc = await buildLoanPdf(d);
     KoboExport.download(`loan-schedule-${(d.borrowerName || 'borrower').replace(/\s+/g, '-')}.pdf`, doc);
   } catch (err) {
     alert('Could not generate PDF: ' + err.message);
@@ -155,7 +156,7 @@ document.getElementById('waBtn').addEventListener('click', async () => {
   ].join('\n');
 
   try {
-    const doc = buildLoanPdf(d);
+    const doc = await buildLoanPdf(d);
     const result = await KoboExport.shareWhatsApp(`loan-schedule-${(d.borrowerName || 'borrower').replace(/\s+/g, '-')}.pdf`, caption, doc);
   } catch (err) {
     if (err.name !== 'AbortError') alert('Could not prepare the PDF: ' + err.message);
