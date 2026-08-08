@@ -96,6 +96,28 @@ function renderPlanPicker(ctx) {
       <div class="aging-grid" id="agingGrid" style="display:grid; grid-template-columns:repeat(auto-fit,minmax(110px,1fr)); gap:10px; margin-top:12px;"></div>
     </div>
     <div class="bs-panel">
+      <strong style="font-size:0.9rem;">Analytics</strong>
+      <div id="analyticsEmpty" class="empty-note" style="display:none;">Add a few outstanding balances to see your analytics.</div>
+      <div id="analyticsGrid" style="display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:20px; margin-top:14px;">
+        <div style="position:relative; height:220px;">
+          <div style="font-size:0.78rem; opacity:0.65; margin-bottom:6px;">Aging distribution</div>
+          <canvas id="chartAging"></canvas>
+        </div>
+        <div style="position:relative; height:220px;">
+          <div style="font-size:0.78rem; opacity:0.65; margin-bottom:6px;">Top 5 outstanding balances</div>
+          <canvas id="chartTopDebtors"></canvas>
+        </div>
+        <div style="position:relative; height:220px;">
+          <div style="font-size:0.78rem; opacity:0.65; margin-bottom:6px;">Collected vs. new balances (6 months)</div>
+          <canvas id="chartMonthly"></canvas>
+        </div>
+        <div style="position:relative; height:220px;">
+          <div style="font-size:0.78rem; opacity:0.65; margin-bottom:6px;">DSO trend (6 months)</div>
+          <canvas id="chartDSOTrend"></canvas>
+        </div>
+      </div>
+    </div>
+    <div class="bs-panel">
       <strong style="font-size:0.9rem;">Add an outstanding balance</strong>
       <div id="entryForm" style="margin-top:12px;"></div>
     </div>
@@ -124,20 +146,24 @@ function renderPlanPicker(ctx) {
   let notes = [];
   let activity = [];
   let byClient = {};
+  let paymentEvents = [];
+  const charts = {};
 
   async function loadAll() {
-    const [c, r, p, n, a] = await Promise.all([
+    const [c, r, p, n, a, pe] = await Promise.all([
       supabase.from('clients').select('id, name, phone, email, credit_limit, address').eq('business_id', business.id).order('name', { ascending: true }),
       supabase.from('receivables').select('id, client_id, description, amount, amount_paid, due_date, payment_status, source, created_at').eq('business_id', business.id).order('due_date', { ascending: true }),
       supabase.from('promise_to_pay').select('id, client_id, promised_date, promised_amount, note, status, created_at').eq('business_id', business.id).order('promised_date', { ascending: true }),
       supabase.from('collection_notes').select('id, client_id, note, created_at').eq('business_id', business.id).order('created_at', { ascending: false }),
-      supabase.from('credit_audit_log').select('id, client_id, action, details, created_at, clients(name)').eq('business_id', business.id).order('created_at', { ascending: false }).limit(30)
+      supabase.from('credit_audit_log').select('id, client_id, action, details, created_at, clients(name)').eq('business_id', business.id).order('created_at', { ascending: false }).limit(30),
+      supabase.from('receivable_payments').select('id, amount, paid_at').eq('business_id', business.id).order('paid_at', { ascending: true })
     ]);
     clients = c.data || [];
     receivables = r.data || [];
     promises = p.data || [];
     notes = n.data || [];
     activity = a.data || [];
+    paymentEvents = pe.data || [];
   }
 
   function clientById(id) { return clients.find(c => c.id === id) || { name: 'Unknown client' }; }
@@ -335,12 +361,22 @@ function renderPlanPicker(ctx) {
           .eq('id', id);
         if (error) { toast('Could not log payment: ' + error.message); return; }
 
+        // Log this as its own event (not just a running-total mutation) so
+        // "collected this month" and DSO trend can be computed accurately.
+        await supabase.from('receivable_payments').insert({
+          receivable_id: id,
+          business_id: business.id,
+          amount: amountNum,
+          created_by: session.user.id
+        });
+
         await logActivity('payment_logged', { amount: amountNum }, cid);
         toast('Payment logged.');
         await loadAll();
         renderAging();
         renderLedger();
         computeDSO();
+        renderAnalytics();
       });
     });
 
@@ -565,6 +601,7 @@ function renderPlanPicker(ctx) {
       renderLedger();
       renderEntryForm();
       computeDSO();
+      renderAnalytics();
     });
   }
 
@@ -606,6 +643,141 @@ function renderPlanPicker(ctx) {
     });
   }
 
+  // ---------- Analytics ----------
+  const CHART_COLORS = {
+    inkGreenDeep: '#0D2620', gold: '#C79A3C', red: '#A8342A',
+    lineGrey: 'rgba(35,39,34,0.12)', textGrey: '#5c625b'
+  };
+
+  function lastNMonths(n) {
+    const months = [];
+    const now = new Date();
+    for (let i = n - 1; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      months.push({ label: d.toLocaleDateString('en-GB', { month: 'short' }), year: d.getFullYear(), month: d.getMonth() });
+    }
+    return months;
+  }
+  function monthEnd(year, month) { return new Date(year, month + 1, 0, 23, 59, 59); }
+  function monthStart(year, month) { return new Date(year, month, 1, 0, 0, 0); }
+
+  function drawChart(canvasId, config) {
+    const canvas = document.getElementById(canvasId);
+    if (!canvas || typeof Chart === 'undefined') return;
+    if (charts[canvasId]) charts[canvasId].destroy();
+    charts[canvasId] = new Chart(canvas.getContext('2d'), config);
+  }
+
+  function renderAnalytics() {
+    const hasData = receivables.length > 0;
+    document.getElementById('analyticsEmpty').style.display = hasData ? 'none' : 'block';
+    document.getElementById('analyticsGrid').style.display = hasData ? 'grid' : 'none';
+    if (!hasData) return;
+
+    // --- Aging distribution ---
+    const outstanding = receivables
+      .filter(rv => rv.payment_status !== 'paid')
+      .map(rv => ({ ...rv, overdueDays: daysOverdue(rv.due_date), balance: Number(rv.amount) - Number(rv.amount_paid || 0) }));
+    const buckets = { current: 0, b1: 0, b2: 0, b3: 0, b4: 0 };
+    outstanding.forEach(rv => { buckets[agingBucket(rv.overdueDays)] += rv.balance; });
+
+    drawChart('chartAging', {
+      type: 'bar',
+      data: {
+        labels: Object.values(BUCKET_LABEL),
+        datasets: [{ data: Object.keys(BUCKET_LABEL).map(k => buckets[k]), backgroundColor: CHART_COLORS.inkGreenDeep, borderRadius: 4 }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false }, tooltip: { callbacks: { label: (ctx) => naira(ctx.raw) } } },
+        scales: { y: { ticks: { callback: (v) => '\u20a6' + Number(v).toLocaleString('en-NG') } } }
+      }
+    });
+
+    // --- Top 5 debtors ---
+    const topDebtors = Object.values(byClient).sort((a, b) => b.balance - a.balance).slice(0, 5);
+    drawChart('chartTopDebtors', {
+      type: 'bar',
+      data: {
+        labels: topDebtors.map(d => d.client.name),
+        datasets: [{ data: topDebtors.map(d => d.balance), backgroundColor: CHART_COLORS.gold, borderRadius: 4 }]
+      },
+      options: {
+        indexAxis: 'y',
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false }, tooltip: { callbacks: { label: (ctx) => naira(ctx.raw) } } },
+        scales: { x: { ticks: { callback: (v) => '\u20a6' + Number(v).toLocaleString('en-NG') } } }
+      }
+    });
+
+    // --- Collected vs new balances, last 6 months ---
+    const months = lastNMonths(6);
+    const collectedByMonth = months.map(({ year, month }) => {
+      const start = monthStart(year, month), end = monthEnd(year, month);
+      return paymentEvents
+        .filter(p => { const d = new Date(p.paid_at); return d >= start && d <= end; })
+        .reduce((s, p) => s + Number(p.amount), 0);
+    });
+    const newByMonth = months.map(({ year, month }) => {
+      const start = monthStart(year, month), end = monthEnd(year, month);
+      return receivables
+        .filter(rv => { const d = new Date(rv.created_at); return d >= start && d <= end; })
+        .reduce((s, rv) => s + Number(rv.amount), 0);
+    });
+
+    drawChart('chartMonthly', {
+      type: 'bar',
+      data: {
+        labels: months.map(m => m.label),
+        datasets: [
+          { label: 'New balances', data: newByMonth, backgroundColor: '#d8d4c8' },
+          { label: 'Collected', data: collectedByMonth, backgroundColor: CHART_COLORS.inkGreenDeep }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { tooltip: { callbacks: { label: (ctx) => `${ctx.dataset.label}: ${naira(ctx.raw)}` } } },
+        scales: { y: { ticks: { callback: (v) => '\u20a6' + Number(v).toLocaleString('en-NG') } } }
+      }
+    });
+
+    // --- DSO trend, last 6 months ---
+    // Same formula as computeDSO(), evaluated as-of each month-end instead
+    // of "now": outstanding as of that date, divided by the trailing
+    // 90-day volume of new balances ending at that date.
+    const dsoByMonth = months.map(({ year, month }) => {
+      const asOf = monthEnd(year, month);
+      const createdByThen = receivables.filter(rv => new Date(rv.created_at) <= asOf);
+      const totalCreated = createdByThen.reduce((s, rv) => s + Number(rv.amount), 0);
+      const paidByThen = paymentEvents.filter(p => new Date(p.paid_at) <= asOf).reduce((s, p) => s + Number(p.amount), 0);
+      const outstandingAsOf = totalCreated - paidByThen;
+
+      const since = new Date(asOf); since.setDate(since.getDate() - 90);
+      const recentTotal = createdByThen
+        .filter(rv => new Date(rv.created_at) >= since)
+        .reduce((s, rv) => s + Number(rv.amount), 0);
+
+      return recentTotal > 0 ? Math.round((outstandingAsOf / recentTotal) * 90) : null;
+    });
+
+    drawChart('chartDSOTrend', {
+      type: 'line',
+      data: {
+        labels: months.map(m => m.label),
+        datasets: [{ data: dsoByMonth, borderColor: CHART_COLORS.gold, backgroundColor: CHART_COLORS.gold, tension: 0.3, spanGaps: true }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false }, tooltip: { callbacks: { label: (ctx) => `${ctx.raw ?? '—'} days` } } },
+        scales: { y: { ticks: { callback: (v) => v + 'd' } } }
+      }
+    });
+  }
+
   await loadAll();
   computeDSO();
   renderAging();
@@ -613,5 +785,6 @@ function renderPlanPicker(ctx) {
   renderEntryForm();
   renderPromiseList();
   renderActivity();
+  renderAnalytics();
   loadAndRenderReminderSettings();
 })();
