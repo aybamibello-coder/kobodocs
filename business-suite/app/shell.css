@@ -8,6 +8,36 @@
    .suite-card so it never touches the public marketing-page nav. */
 
 /* ---- Nav: ledger-tab treatment for the module list ---- */
+/* Business Suite nav has far more flat items (11+: Dashboard, Who Owes
+   You, Credit & Collections, Quotes, Expenses, Inventory, Clients,
+   Compliance Tracker, CAC Compliance, My Businesses, sign-in) than the
+   public nav was designed for (which keeps ~6 top-level items by
+   grouping tools into dropdowns). At desktop width that overflowed the
+   viewport with no way to reach the rest — .nav-links is itself a flex
+   container with no min-width:0, so nested flex children don't shrink
+   below their content size unless overflow is something other than
+   visible. Making it horizontally scrollable fixes both the visual
+   overflow and the "can't reach later items" problem in one change,
+   without touching the public-site nav's dropdown-based layout. */
+.suite-nav .nav-links {
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  scrollbar-color: var(--line) transparent;
+  padding-bottom: 4px;
+}
+.suite-nav .nav-links::-webkit-scrollbar { height: 5px; }
+.suite-nav .nav-links::-webkit-scrollbar-track { background: transparent; }
+.suite-nav .nav-links::-webkit-scrollbar-thumb { background: var(--line); border-radius: 4px; }
+
+.suite-nav .logo,
+.suite-nav .search-btn,
+.suite-nav .menu-btn {
+  flex-shrink: 0;
+}
+
 .suite-nav .nav-links a:not(.nav-cta) {
   font-family: 'Space Mono', monospace;
   font-size: 0.76rem;
