@@ -56,6 +56,10 @@
   }
   .business-list-row:last-child{ border-bottom:none; }
   .small-btn{ padding:8px 16px; font-size:0.85rem; }
+  .pw-strength-note{ font-size:0.78rem; margin-top:5px; min-height:16px; }
+  .pw-strength-note.weak{ color:var(--stamp-red); }
+  .pw-strength-note.ok{ color:#8a6a1f; }
+  .pw-strength-note.strong{ color:var(--ink-green-deep); }
 </style>
 </head>
 <body>
@@ -161,7 +165,8 @@
       <p class="auth-note">You've followed a password reset link — choose a new password below.</p>
       <div class="field-group">
         <label for="newPasswordInput">New password</label>
-        <input type="password" id="newPasswordInput" placeholder="At least 6 characters" autocomplete="new-password" minlength="6">
+        <input type="password" id="newPasswordInput" placeholder="At least 8 characters" autocomplete="new-password" minlength="8">
+        <div class="pw-strength-note" id="newPasswordNote"></div>
       </div>
       <button type="button" class="btn btn-primary auth-submit" id="setNewPasswordBtn">Set new password</button>
       <p class="auth-msg" id="recoveryMsg"></p>
@@ -203,7 +208,8 @@
           </div>
           <div class="field-group">
             <label for="signupPassword">Password</label>
-            <input type="password" id="signupPassword" placeholder="At least 6 characters" autocomplete="new-password" required minlength="6">
+            <input type="password" id="signupPassword" placeholder="At least 8 characters" autocomplete="new-password" required minlength="8">
+            <div class="pw-strength-note" id="signupPasswordNote"></div>
           </div>
           <button type="submit" class="btn btn-primary auth-submit">Create account</button>
         </form>
@@ -284,6 +290,66 @@
     el.textContent = text;
     el.className = 'auth-msg ' + type;
   }
+
+  // ---------- Password strength + leak check ----------
+  function passwordStrength(pw) {
+    if (!pw) return { score: 0, label: '' };
+    let score = 0;
+    if (pw.length >= 8) score++;
+    if (pw.length >= 12) score++;
+    if (/[a-z]/.test(pw) && /[A-Z]/.test(pw)) score++;
+    if (/\d/.test(pw)) score++;
+    if (/[^A-Za-z0-9]/.test(pw)) score++;
+    if (score <= 1) return { score, label: 'Weak — add length or mix letters, numbers, symbols', cls: 'weak' };
+    if (score <= 3) return { score, label: 'Okay — a bit longer or more varied is stronger', cls: 'ok' };
+    return { score, label: 'Strong', cls: 'strong' };
+  }
+
+  // Checks the password against known breach data via the HaveIBeenPwned
+  // Pwned Passwords API, using k-anonymity: only the first 5 characters of
+  // the SHA-1 hash are ever sent, never the password or the full hash, so
+  // the API never sees enough to reconstruct or identify the password.
+  async function isPasswordPwned(pw) {
+    try {
+      const enc = new TextEncoder().encode(pw);
+      const hashBuffer = await crypto.subtle.digest('SHA-1', enc);
+      const hashHex = Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, '0')).join('').toUpperCase();
+      const prefix = hashHex.slice(0, 5);
+      const suffix = hashHex.slice(5);
+      const res = await fetch(`https://api.pwnedpasswords.com/range/${prefix}`);
+      if (!res.ok) return false; // fail open — don't block signup if the API is unreachable
+      const text = await res.text();
+      return text.split('\n').some(line => line.split(':')[0] === suffix);
+    } catch {
+      return false; // fail open on any error (offline, blocked, etc.)
+    }
+  }
+
+  function wirePasswordField(inputId, noteId) {
+    const input = document.getElementById(inputId);
+    const note = document.getElementById(noteId);
+    if (!input || !note) return;
+    let pwnedCheckTimer = null;
+    input.addEventListener('input', () => {
+      const { label, cls } = passwordStrength(input.value);
+      note.textContent = label;
+      note.className = 'pw-strength-note' + (cls ? ' ' + cls : '');
+      clearTimeout(pwnedCheckTimer);
+      if (input.value.length >= 8) {
+        pwnedCheckTimer = setTimeout(async () => {
+          if (await isPasswordPwned(input.value)) {
+            note.textContent = 'This password has appeared in a known data breach — please choose a different one.';
+            note.className = 'pw-strength-note weak';
+            input.dataset.pwned = 'true';
+          } else {
+            delete input.dataset.pwned;
+          }
+        }, 500);
+      }
+    });
+  }
+  wirePasswordField('signupPassword', 'signupPasswordNote');
+  wirePasswordField('newPasswordInput', 'newPasswordNote');
 
   async function refreshView() {
     await new Promise(r => {
@@ -379,9 +445,18 @@
     document.getElementById('setNewPasswordBtn').addEventListener('click', async () => {
       const btn = document.getElementById('setNewPasswordBtn');
       const msg = document.getElementById('recoveryMsg');
-      const newPassword = document.getElementById('newPasswordInput').value;
-      if (!newPassword || newPassword.length < 6) {
-        showMsg(msg, 'Password must be at least 6 characters.', 'error');
+      const pwField = document.getElementById('newPasswordInput');
+      const newPassword = pwField.value;
+      if (!newPassword || newPassword.length < 8) {
+        showMsg(msg, 'Password must be at least 8 characters.', 'error');
+        return;
+      }
+      if (pwField.dataset.pwned === 'true') {
+        showMsg(msg, 'That password has appeared in a known data breach — please choose a different one.', 'error');
+        return;
+      }
+      if (passwordStrength(newPassword).score <= 1) {
+        showMsg(msg, 'Please choose a stronger password — mixing letters, numbers or symbols.', 'error');
         return;
       }
       const originalText = btn.textContent;
@@ -418,6 +493,16 @@
       const email = document.getElementById('signupEmail').value.trim();
       const password = document.getElementById('signupPassword').value;
       const msg = document.getElementById('signupMsg');
+
+      const pwField = document.getElementById('signupPassword');
+      if (pwField.dataset.pwned === 'true') {
+        showMsg(msg, 'That password has appeared in a known data breach — please choose a different one.', 'error');
+        return;
+      }
+      if (passwordStrength(password).score <= 1) {
+        showMsg(msg, 'Please choose a stronger password — at least 8 characters, mixing letters, numbers or symbols.', 'error');
+        return;
+      }
 
       const { data, error } = await window.KoboAuth.signUp(email, password, { business_name: bizName || null });
       if (error) { showMsg(msg, error.message, 'error'); return; }
