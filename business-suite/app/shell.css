@@ -138,6 +138,22 @@
   body.suite-body {
     padding-left: 220px;
   }
+
+  /* Without this, the sidebar overlaps the dashboard instead of sitting
+     beside it. Cause: <header> has backdrop-filter:blur() in style.css,
+     which makes it the containing block for any position:fixed
+     descendant (same effect as transform/filter/perspective/will-change).
+     .nav-links is fixed inside <header>, so its "left:0" was resolving
+     against header's own edge instead of the real viewport edge — and
+     header, being a normal in-flow child of <body>, was itself already
+     pushed right by the padding-left:220px above. Result: the rail and
+     the page content both started at the same x position and overlapped.
+     Dropping the filter here (only on suite pages, only at this
+     breakpoint) lets the fixed rail fall back to the true viewport edge,
+     where it belongs. Public marketing pages keep the blur untouched. */
+  body.suite-body header {
+    backdrop-filter: none;
+  }
 }
 
 /* ---- Cards: subtle elevation + gold accent edge instead of a flat line ---- */
