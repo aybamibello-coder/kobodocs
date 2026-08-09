@@ -48,34 +48,95 @@ function escapeHtml(str) {
 }
 
 // ---------- Paywall / plan picker ----------
+const STARTER_FEATURES = [
+  'AR aging dashboard & client ledger',
+  'WhatsApp payment reminders',
+  'Promise-to-pay tracking',
+  'Bank/payment statement reconciliation',
+  'Payment date prediction',
+  'Customer collection score',
+  'PDF client statements'
+];
+const GROWTH_FEATURES = [
+  'Everything in Starter, plus:',
+  'AI-generated daily collection priorities',
+  'AI collections agent (negotiation drafting)',
+  'Dispute & missing-document tracking',
+  'Cash-flow forecasting',
+  'DSO driver breakdown',
+  'Escalation engine (formal notices, referrals)',
+  'Team assignment & workload analytics',
+  'Full analytics charts & graphs'
+];
+
 function renderPlanPicker(ctx) {
   const area = document.getElementById('mainArea');
+  const featureList = (items) => items.map(f => `<li style="font-size:0.8rem; padding:3px 0;">${escapeHtml(f)}</li>`).join('');
   area.innerHTML = `
     <div class="bs-panel">
       <p style="margin-bottom:16px; text-align:center;">No active Receivable Manager plan for <strong>${escapeHtml(ctx.business.name)}</strong> yet. Track outstanding balances, chase overdue payments, and see your DSO at a glance — no invoicing software required.</p>
-      <div class="plans-grid" style="max-width:420px; margin:0 auto;">
-        <div class="plan-card">
-          <h3>Monthly</h3>
-          <div class="plan-price">₦20,000<span style="font-size:0.7rem;">/mo</span></div>
-          <button class="btn primary" data-cycle="monthly">Subscribe monthly</button>
+      <div style="display:flex; justify-content:center; margin-bottom:16px;">
+        <div style="display:inline-flex; border:1px solid var(--line); border-radius:8px; overflow:hidden;">
+          <button id="cycleMonthlyBtn" class="btn small" style="border-radius:0;">Monthly</button>
+          <button id="cycleYearlyBtn" class="btn small" style="border-radius:0;">Yearly (2 months free)</button>
         </div>
+      </div>
+      <div class="plans-grid" style="display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:16px; max-width:640px; margin:0 auto;">
         <div class="plan-card">
-          <h3>Yearly</h3>
-          <div class="plan-price">₦200,000<span style="font-size:0.7rem;">/yr</span></div>
-          <p style="font-size:0.78rem; opacity:0.7; margin-bottom:14px;">2 months free</p>
-          <button class="btn primary" data-cycle="yearly">Subscribe yearly</button>
+          <h3>Starter</h3>
+          <div class="plan-price" data-price-starter>₦20,000<span style="font-size:0.7rem;">/mo</span></div>
+          <ul style="text-align:left; list-style:none; padding:0; margin:10px 0 14px;">${featureList(STARTER_FEATURES)}</ul>
+          <button class="btn primary" data-plan="starter">Subscribe to Starter</button>
+        </div>
+        <div class="plan-card" style="border-color:var(--accent, #2f8a4e);">
+          <h3>Growth</h3>
+          <div class="plan-price" data-price-growth>₦30,000<span style="font-size:0.7rem;">/mo</span></div>
+          <p style="font-size:0.72rem; opacity:0.7; margin-top:-6px; margin-bottom:6px;">21-day free trial included</p>
+          <ul style="text-align:left; list-style:none; padding:0; margin:10px 0 14px;">${featureList(GROWTH_FEATURES)}</ul>
+          <button class="btn primary" data-plan="growth">Subscribe to Growth</button>
         </div>
       </div>
     </div>
   `;
-  area.querySelectorAll('[data-cycle]').forEach(btn => {
+
+  let cycle = 'monthly';
+  const prices = { starter: { monthly: '₦20,000/mo', yearly: '₦200,000/yr' }, growth: { monthly: '₦30,000/mo', yearly: '₦300,000/yr' } };
+  function applyCycle() {
+    document.querySelector('[data-price-starter]').innerHTML = prices.starter[cycle].replace(/\/(mo|yr)/, m => `<span style="font-size:0.7rem;">${m}</span>`);
+    document.querySelector('[data-price-growth]').innerHTML = prices.growth[cycle].replace(/\/(mo|yr)/, m => `<span style="font-size:0.7rem;">${m}</span>`);
+    document.getElementById('cycleMonthlyBtn').classList.toggle('primary', cycle === 'monthly');
+    document.getElementById('cycleYearlyBtn').classList.toggle('primary', cycle === 'yearly');
+  }
+  document.getElementById('cycleMonthlyBtn').addEventListener('click', () => { cycle = 'monthly'; applyCycle(); });
+  document.getElementById('cycleYearlyBtn').addEventListener('click', () => { cycle = 'yearly'; applyCycle(); });
+  applyCycle();
+
+  area.querySelectorAll('[data-plan]').forEach(btn => {
     btn.addEventListener('click', () => {
       window.KoboSubscribe.start('init-receivable-payment', {
         business_id: ctx.business.id,
-        billing_cycle: btn.dataset.cycle
+        billing_cycle: cycle,
+        plan: btn.dataset.plan
       });
     });
   });
+}
+
+function renderTrialBanner(ctx) {
+  if (!ctx.isTrialing) return '';
+  return `
+    <div class="bs-panel" style="border-color:var(--accent, #2f8a4e); display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+      <div style="font-size:0.85rem;">You're on a free 21-day trial of <strong>Growth</strong> — ${ctx.trialDaysLeft} day${ctx.trialDaysLeft === 1 ? '' : 's'} left.</div>
+      <button id="trialUpgradeBtn" class="btn primary small">Choose a plan</button>
+    </div>
+  `;
+}
+
+function growthUpsellHtml(featureName) {
+  return `<div class="empty-note" style="padding:14px; text-align:center;">
+    <div style="margin-bottom:8px;">${escapeHtml(featureName)} is part of the <strong>Growth</strong> plan.</div>
+    <button id="upsellBtn-${featureName.replace(/[^a-zA-Z0-9]/g, '')}" class="btn primary small" data-upsell>Upgrade to Growth</button>
+  </div>`;
 }
 
 (async function init() {
@@ -88,6 +149,7 @@ function renderPlanPicker(ctx) {
   }
 
   const { business, supabase, session } = ctx;
+  const isGrowth = ctx.effectivePlan === 'growth';
 
   async function logActivity(action, details = {}, clientId = null) {
     await supabase.from('credit_audit_log').insert({
@@ -101,6 +163,7 @@ function renderPlanPicker(ctx) {
 
   const area = document.getElementById('mainArea');
   area.innerHTML = `
+    ${renderTrialBanner(ctx)}
     <div class="bs-panel" id="dsoPanel"></div>
     <div class="bs-panel">
       <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
@@ -108,10 +171,10 @@ function renderPlanPicker(ctx) {
           <strong style="font-size:0.9rem;">Today's priorities</strong>
           <p style="font-size:0.78rem; opacity:0.65; margin-top:2px;">Who to chase today, ranked by amount owed, how overdue, and broken promises.</p>
         </div>
-        <button id="priorityRefreshBtn" class="btn small">Refresh</button>
+        ${isGrowth ? '<button id="priorityRefreshBtn" class="btn small">Refresh</button>' : ''}
       </div>
       <div id="priorityMeta" style="font-size:0.72rem; opacity:0.55; margin-top:6px;"></div>
-      <div id="priorityWrap" style="margin-top:14px;"></div>
+      <div id="priorityWrap" style="margin-top:14px;">${isGrowth ? '' : growthUpsellHtml("Today's priorities")}</div>
     </div>
     <div class="bs-panel">
       <div>
@@ -130,16 +193,18 @@ function renderPlanPicker(ctx) {
         <strong style="font-size:0.9rem;">Cash-flow forecast</strong>
         <p style="font-size:0.78rem; opacity:0.65; margin-top:2px;">When your outstanding balances are actually expected to land, based on each client's payment history — not just when they're due.</p>
       </div>
+      ${isGrowth ? `
       <div id="forecastStats" style="display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:10px; margin-top:12px;"></div>
       <div style="position:relative; height:220px; margin-top:14px;"><canvas id="chartCashFlow"></canvas></div>
       <div id="forecastNote" style="font-size:0.72rem; opacity:0.55; margin-top:8px;"></div>
+      ` : `<div style="margin-top:12px;">${growthUpsellHtml('Cash-flow forecasting')}</div>`}
     </div>
     <div class="bs-panel">
       <div>
         <strong style="font-size:0.9rem;">Team workload</strong>
         <p style="font-size:0.78rem; opacity:0.65; margin-top:2px;">Who's carrying what across your team, and how they're recovering.</p>
       </div>
-      <div id="workforceWrap" style="margin-top:12px;"></div>
+      <div id="workforceWrap" style="margin-top:12px;">${isGrowth ? '' : growthUpsellHtml('Team workload')}</div>
     </div>
     <div class="bs-panel">
       <strong style="font-size:0.9rem;">Aging summary</strong>
@@ -147,6 +212,7 @@ function renderPlanPicker(ctx) {
     </div>
     <div class="bs-panel">
       <strong style="font-size:0.9rem;">Analytics</strong>
+      ${isGrowth ? `
       <div id="analyticsEmpty" class="empty-note" style="display:none;">Add a few outstanding balances to see your analytics.</div>
       <div id="analyticsGrid" style="display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:20px; margin-top:14px;">
         <div style="position:relative; height:220px;">
@@ -166,6 +232,7 @@ function renderPlanPicker(ctx) {
           <canvas id="chartDSOTrend"></canvas>
         </div>
       </div>
+      ` : `<div style="margin-top:12px;">${growthUpsellHtml('Analytics charts & graphs')}</div>`}
     </div>
     <div class="bs-panel">
       <strong style="font-size:0.9rem;">Add an outstanding balance</strong>
@@ -174,7 +241,7 @@ function renderPlanPicker(ctx) {
     <div class="bs-panel">
       <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
         <strong style="font-size:0.9rem;">Outstanding by client</strong>
-        <select id="assigneeFilter" style="font-size:0.78rem;">
+        <select id="assigneeFilter" style="font-size:0.78rem; ${isGrowth ? '' : 'display:none;'}">
           <option value="">All accounts</option>
           <option value="__unassigned">Unassigned</option>
         </select>
@@ -195,6 +262,12 @@ function renderPlanPicker(ctx) {
       <div id="reminderSettings" style="margin-top:12px;"></div>
     </div>
   `;
+
+  area.addEventListener('click', (e) => {
+    if (e.target.id === 'trialUpgradeBtn' || e.target.dataset.upsell !== undefined) {
+      renderPlanPicker(ctx);
+    }
+  });
 
   let clients = [];
   let receivables = [];
@@ -400,6 +473,7 @@ function renderPlanPicker(ctx) {
   }
 
   function renderTeamWorkload() {
+    if (!isGrowth) return;
     const wrap = document.getElementById('workforceWrap');
     if (!teamMembers.length) {
       wrap.innerHTML = '<div class="empty-note">No team members yet — invite staff from your business settings to assign accounts.</div>';
@@ -484,6 +558,7 @@ function renderPlanPicker(ctx) {
   }
 
   function renderCashFlowForecast() {
+    if (!isGrowth) return;
     const { buckets, blockedTotal, noDateTotal } = computeCashFlowForecast();
     const within7 = buckets['0-7'];
     const within30 = within7 + buckets['8-30'];
@@ -683,7 +758,7 @@ function renderPlanPicker(ctx) {
           <div style="margin-top:2px;">${deltaLabel}</div>
         </div>
       </div>
-      ${(worsened.length || improved.length) ? `
+      ${isGrowth && (worsened.length || improved.length) ? `
       <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:16px; margin-top:14px; padding-top:12px; border-top:1px dashed var(--line);">
         <div>
           <div style="font-size:0.72rem; opacity:0.65; margin-bottom:4px;">Pushing DSO up (new/growing balances, last 30 days)</div>
@@ -693,7 +768,7 @@ function renderPlanPicker(ctx) {
           <div style="font-size:0.72rem; opacity:0.65; margin-bottom:4px;">Helping DSO (paid down, last 30 days)</div>
           ${driverList(improved, '#2f8a4e')}
         </div>
-      </div>` : ''}
+      </div>` : !isGrowth ? `<div style="margin-top:12px;">${growthUpsellHtml('DSO driver breakdown')}</div>` : ''}
     `;
   }
 
@@ -786,6 +861,7 @@ function renderPlanPicker(ctx) {
   }
 
   async function generatePriorities() {
+    if (!isGrowth) return;
     const btn = document.getElementById('priorityRefreshBtn');
     const wrap = document.getElementById('priorityWrap');
     btn.disabled = true;
@@ -812,6 +888,7 @@ function renderPlanPicker(ctx) {
   }
 
   async function loadAndRenderPriorities() {
+    if (!isGrowth) return;
     const { data: lastRun } = await supabase
       .from('collection_priority_runs')
       .select('priorities, provider, created_at')
@@ -827,7 +904,7 @@ function renderPlanPicker(ctx) {
     }
   }
 
-  document.getElementById('priorityRefreshBtn').addEventListener('click', generatePriorities);
+  if (isGrowth) document.getElementById('priorityRefreshBtn').addEventListener('click', generatePriorities);
 
   // ---------- Bank/payment reconciliation (deterministic matching, no AI) ----------
   let reconRows = [];              // parsed + matched transactions from the uploaded CSV
@@ -1095,8 +1172,8 @@ function renderPlanPicker(ctx) {
                 ${overLimit ? `<span style="color:#b3402e; font-size:0.68rem; margin-left:6px;">Over ${naira(client.credit_limit)} limit</span>` : ''}
                 ${row.hasOpenDispute ? `<span style="color:#8a5a00; font-size:0.68rem; margin-left:6px;">⚠ Dispute open</span>` : ''}
                 ${row.hasOpenDocRequest ? `<span style="color:#2f5f8a; font-size:0.68rem; margin-left:6px;">📄 Doc pending</span>` : ''}
-                ${escalation && escalation.stage >= 3 ? `<span style="color:${ESCALATION_COLOR[escalation.stage]}; font-size:0.68rem; margin-left:6px;">${escalation.label}</span>` : ''}
-                ${assignment ? `<span style="opacity:0.6; font-size:0.68rem; margin-left:6px;">→ ${escapeHtml(memberLabel(memberByUserId(assignment.assigned_to)))}</span>` : ''}
+                ${escalation && escalation.stage >= 3 && isGrowth ? `<span style="color:${ESCALATION_COLOR[escalation.stage]}; font-size:0.68rem; margin-left:6px;">${escalation.label}</span>` : ''}
+                ${assignment && isGrowth ? `<span style="opacity:0.6; font-size:0.68rem; margin-left:6px;">→ ${escapeHtml(memberLabel(memberByUserId(assignment.assigned_to)))}</span>` : ''}
               </div>
               <div class="pr-meta">${row.items.length} open item${row.items.length > 1 ? 's' : ''}${(() => {
                 const preds = row.items.map(predictedPaymentDate).filter(Boolean);
@@ -1151,9 +1228,10 @@ function renderPlanPicker(ctx) {
            <button data-received-doc="${docRequest.id}" class="btn small" style="margin-left:6px;">Received</button>
            ${row.client.phone ? `<button data-chase-doc="${docRequest.id}" data-receivable="${rv.id}" class="btn small" style="margin-left:6px;">WhatsApp</button>` : ''}`;
       } else {
-        actionCell = `<button data-pay="${rv.id}" class="btn small">Log payment</button>
+        actionCell = `<button data-pay="${rv.id}" class="btn small">Log payment</button>` +
+          (isGrowth ? `
            <button data-flag-dispute="${rv.id}" class="btn small">Flag dispute</button>
-           <button data-request-doc="${rv.id}" class="btn small">Request document</button>`;
+           <button data-request-doc="${rv.id}" class="btn small">Request document</button>` : '');
       }
       return `
       <tr>
@@ -1190,7 +1268,7 @@ function renderPlanPicker(ctx) {
           <div style="opacity:0.65; margin-top:2px;">${scoreInfo.reasons.length ? scoreInfo.reasons.join(', ') : 'No negative factors on record.'}${scoreInfo.limitedHistory ? ' · limited history' : ''}</div>
         </div>
       </div>` : ''}
-      ${escalation ? `
+      ${escalation && isGrowth ? `
       <div style="margin-bottom:10px; padding:8px 10px; border:1px solid var(--line); border-radius:8px;">
         <div style="font-size:0.78rem;">
           <strong style="color:${ESCALATION_COLOR[escalation.stage]};">Escalation stage ${escalation.stage} — ${escalation.label}</strong>
@@ -1201,7 +1279,7 @@ function renderPlanPicker(ctx) {
           ${escalationHistory.slice(0, 3).map(e => `${e.action_type === 'formal_notice' ? 'Formal notice' : 'Referred to collections'} — ${fmtDate(e.created_at)}`).join(' · ')}
         </div>` : ''}
       </div>` : ''}
-      ${teamMembers.length ? `
+      ${teamMembers.length && isGrowth ? `
       <div style="margin-bottom:10px; padding:8px 10px; border:1px solid var(--line); border-radius:8px; display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
         <span style="font-size:0.78rem; opacity:0.65;">Assigned to</span>
         <select id="assignSelect-${cid}" style="font-size:0.78rem;">
@@ -1221,10 +1299,11 @@ function renderPlanPicker(ctx) {
       <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:10px;">
         <button data-statement="${cid}" class="btn small">Download statement (PDF)</button>
         ${client.phone ? `<button data-remind="${cid}" class="btn small">WhatsApp reminder</button>` : ''}
-        <button data-draft-negotiation="${cid}" class="btn small">Draft AI negotiation message</button>
-        ${escalation && escalation.stage >= 3 ? `<button data-formal-notice="${cid}" class="btn small">Generate formal notice (PDF)</button>` : ''}
-        ${escalation && escalation.stage >= 4 ? `<button data-collections-referral="${cid}" class="btn small">Flag for collections/legal referral</button>` : ''}
+        ${isGrowth ? `<button data-draft-negotiation="${cid}" class="btn small">Draft AI negotiation message</button>` : ''}
+        ${isGrowth && escalation && escalation.stage >= 3 ? `<button data-formal-notice="${cid}" class="btn small">Generate formal notice (PDF)</button>` : ''}
+        ${isGrowth && escalation && escalation.stage >= 4 ? `<button data-collections-referral="${cid}" class="btn small">Flag for collections/legal referral</button>` : ''}
       </div>
+      ${!isGrowth ? growthUpsellHtml('AI negotiation drafting & escalation tools') : ''}
       <div id="negotiationDraft-${cid}" style="margin-bottom:14px;"></div>
       <div id="collectionsReferralForm-${cid}" style="display:none; margin-bottom:14px;"></div>
 
@@ -1316,7 +1395,7 @@ function renderPlanPicker(ctx) {
         draftBtn.textContent = 'Draft AI negotiation message';
       }
     }
-    draftBtn.addEventListener('click', generateDraft);
+    draftBtn?.addEventListener('click', generateDraft);
 
     const formalNoticeBtn = detail.querySelector(`[data-formal-notice="${cid}"]`);
     if (formalNoticeBtn) {
@@ -1865,6 +1944,7 @@ function renderPlanPicker(ctx) {
   }
 
   function renderAnalytics() {
+    if (!isGrowth) return;
     const hasData = receivables.length > 0;
     document.getElementById('analyticsEmpty').style.display = hasData ? 'none' : 'block';
     document.getElementById('analyticsGrid').style.display = hasData ? 'grid' : 'none';
