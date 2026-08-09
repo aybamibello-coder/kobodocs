@@ -122,16 +122,6 @@ function renderPlanPicker(ctx) {
   });
 }
 
-function renderTrialBanner(ctx) {
-  if (!ctx.isTrialing) return '';
-  return `
-    <div class="bs-panel" style="border-color:var(--accent, #2f8a4e); display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
-      <div style="font-size:0.85rem;">You're on a free 21-day trial of <strong>Growth</strong> — ${ctx.trialDaysLeft} day${ctx.trialDaysLeft === 1 ? '' : 's'} left.</div>
-      <button id="trialUpgradeBtn" class="btn primary small">Choose a plan</button>
-    </div>
-  `;
-}
-
 function growthUpsellHtml(featureName) {
   return `<div class="empty-note" style="padding:14px; text-align:center;">
     <div style="margin-bottom:8px;">${escapeHtml(featureName)} is part of the <strong>Growth</strong> plan.</div>
@@ -139,9 +129,31 @@ function growthUpsellHtml(featureName) {
   </div>`;
 }
 
+function renderPageHeader(ctx) {
+  const header = document.getElementById('pageHeader');
+  if (!header) return;
+  const badge = ctx.isTrialing
+    ? `<span class="trial-badge">Free trial — ${ctx.trialDaysLeft} day${ctx.trialDaysLeft === 1 ? '' : 's'} left</span>`
+    : ctx.subActive
+    ? `<span class="trial-badge" style="background:rgba(47,138,78,0.12); color:#2f8a4e; border-color:rgba(47,138,78,0.3);">${ctx.effectivePlan === 'growth' ? 'Growth' : 'Starter'} plan</span>`
+    : '';
+  header.innerHTML = `
+    <div>
+      <h1 style="font-size:1.4rem;">${escapeHtml(ctx.business.name)}</h1>
+      <p style="font-size:0.88rem; opacity:0.7; margin-top:4px;">Receivable Manager — outstanding balances, overdue payments, and DSO at a glance.</p>
+      <div>${badge}</div>
+    </div>
+    ${ctx.subActive ? `<button id="headerPlanBtn" class="btn small">${ctx.isTrialing ? 'Choose a plan' : 'Manage plan'}</button>` : ''}
+  `;
+  const planBtn = document.getElementById('headerPlanBtn');
+  if (planBtn) planBtn.addEventListener('click', () => renderPlanPicker(ctx, true));
+}
+
 (async function init() {
   const ctx = await window.ReceivableGuard.requireAccess();
   if (!ctx) return;
+
+  renderPageHeader(ctx);
 
   if (!ctx.subActive) {
     renderPlanPicker(ctx);
@@ -150,13 +162,6 @@ function growthUpsellHtml(featureName) {
 
   const { business, supabase, session } = ctx;
   const isGrowth = ctx.effectivePlan === 'growth';
-
-  document.getElementById('importBtn').addEventListener('click', () => {
-    window.KoboImport.open({
-      supabase, business,
-      onComplete: () => window.location.reload(),
-    });
-  });
 
   async function logActivity(action, details = {}, clientId = null) {
     await supabase.from('credit_audit_log').insert({
@@ -170,9 +175,10 @@ function growthUpsellHtml(featureName) {
 
   const area = document.getElementById('mainArea');
   area.innerHTML = `
-    ${renderTrialBanner(ctx)}
-    <div class="bs-panel" id="dsoPanel"></div>
-    <div class="bs-panel">
+    <div class="bs-panel" id="panel-overview">
+      <div id="dsoPanel"></div>
+    </div>
+    <div class="bs-panel" id="panel-priorities">
       <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
         <div>
           <strong style="font-size:0.9rem;">Today's priorities</strong>
@@ -183,7 +189,7 @@ function growthUpsellHtml(featureName) {
       <div id="priorityMeta" style="font-size:0.72rem; opacity:0.55; margin-top:6px;"></div>
       <div id="priorityWrap" style="margin-top:14px;">${isGrowth ? '' : growthUpsellHtml("Today's priorities")}</div>
     </div>
-    <div class="bs-panel">
+    <div class="bs-panel" id="panel-recon">
       <div>
         <strong style="font-size:0.9rem;">Reconcile bank statement</strong>
         <p style="font-size:0.78rem; opacity:0.65; margin-top:2px;">Upload a CSV export from your business bank account. We match incoming payments to outstanding balances so you don't have to log them one by one.</p>
@@ -195,7 +201,7 @@ function growthUpsellHtml(featureName) {
       <div id="reconSummary" style="font-size:0.78rem; opacity:0.65; margin-top:8px;"></div>
       <div id="reconWrap" style="margin-top:14px;"></div>
     </div>
-    <div class="bs-panel">
+    <div class="bs-panel" id="panel-cashflow">
       <div>
         <strong style="font-size:0.9rem;">Cash-flow forecast</strong>
         <p style="font-size:0.78rem; opacity:0.65; margin-top:2px;">When your outstanding balances are actually expected to land, based on each client's payment history — not just when they're due.</p>
@@ -206,18 +212,18 @@ function growthUpsellHtml(featureName) {
       <div id="forecastNote" style="font-size:0.72rem; opacity:0.55; margin-top:8px;"></div>
       ` : `<div style="margin-top:12px;">${growthUpsellHtml('Cash-flow forecasting')}</div>`}
     </div>
-    <div class="bs-panel">
+    <div class="bs-panel" id="panel-team">
       <div>
         <strong style="font-size:0.9rem;">Team workload</strong>
         <p style="font-size:0.78rem; opacity:0.65; margin-top:2px;">Who's carrying what across your team, and how they're recovering.</p>
       </div>
       <div id="workforceWrap" style="margin-top:12px;">${isGrowth ? '' : growthUpsellHtml('Team workload')}</div>
     </div>
-    <div class="bs-panel">
+    <div class="bs-panel" id="panel-aging">
       <strong style="font-size:0.9rem;">Aging summary</strong>
       <div class="aging-grid" id="agingGrid" style="display:grid; grid-template-columns:repeat(auto-fit,minmax(110px,1fr)); gap:10px; margin-top:12px;"></div>
     </div>
-    <div class="bs-panel">
+    <div class="bs-panel" id="panel-analytics">
       <strong style="font-size:0.9rem;">Analytics</strong>
       ${isGrowth ? `
       <div id="analyticsEmpty" class="empty-note" style="display:none;">Add a few outstanding balances to see your analytics.</div>
@@ -241,11 +247,11 @@ function growthUpsellHtml(featureName) {
       </div>
       ` : `<div style="margin-top:12px;">${growthUpsellHtml('Analytics charts & graphs')}</div>`}
     </div>
-    <div class="bs-panel">
+    <div class="bs-panel" id="panel-addbalance">
       <strong style="font-size:0.9rem;">Add an outstanding balance</strong>
       <div id="entryForm" style="margin-top:12px;"></div>
     </div>
-    <div class="bs-panel">
+    <div class="bs-panel" id="panel-ledger">
       <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
         <strong style="font-size:0.9rem;">Outstanding by client</strong>
         <select id="assigneeFilter" style="font-size:0.78rem; ${isGrowth ? '' : 'display:none;'}">
@@ -255,15 +261,15 @@ function growthUpsellHtml(featureName) {
       </div>
       <div id="ledgerWrap" style="margin-top:10px;"></div>
     </div>
-    <div class="bs-panel">
+    <div class="bs-panel" id="panel-promises">
       <strong style="font-size:0.9rem;">Upcoming promises to pay</strong>
       <div id="promiseWrap" style="margin-top:10px;"></div>
     </div>
-    <div class="bs-panel">
+    <div class="bs-panel" id="panel-activity">
       <strong style="font-size:0.9rem;">Recent activity</strong>
       <div id="activityWrap" style="margin-top:10px;"></div>
     </div>
-    <div class="bs-panel">
+    <div class="bs-panel" id="panel-reminders">
       <strong style="font-size:0.9rem;">Automated reminders</strong>
       <p style="font-size:0.8rem; opacity:0.65; margin-top:4px;">Sends an email automatically to any client with an email on file once their balance crosses a day threshold below. Checked once daily.</p>
       <div id="reminderSettings" style="margin-top:12px;"></div>
