@@ -143,7 +143,7 @@
         <canvas id="chartInvoiceStatus"></canvas>
       </div>
     </div>
-    <p style="font-size:0.78rem; opacity:0.55; margin-top:14px;">Revenue reflects invoices marked "paid," grouped by when they were created — a close approximation, not a payment-date ledger.</p>
+    <p style="font-size:0.78rem; opacity:0.55; margin-top:14px;">Revenue reflects actual payment dates — recorded manually or via Squad checkout.</p>
   </div>
 
   <div class="bs-panel">
@@ -192,11 +192,13 @@
   sixMonthsAgo.setDate(1);
   sixMonthsAgo.setHours(0, 0, 0, 0);
 
-  const [{ data: unpaidAllTime }, { data: recentWindowDocs }] = await Promise.all([
+  const [{ data: unpaidAllTime }, { data: recentWindowDocs }, { data: recentPayments }] = await Promise.all([
     supabase.from('documents').select('amount, amount_paid')
       .eq('business_id', business.id).eq('doc_type', 'invoice').neq('payment_status', 'paid'),
     supabase.from('documents').select('amount, payment_status, created_at')
       .eq('business_id', business.id).eq('doc_type', 'invoice').gte('created_at', sixMonthsAgo.toISOString()),
+    supabase.from('document_payments').select('amount, paid_at')
+      .eq('business_id', business.id).gte('paid_at', sixMonthsAgo.toISOString()),
   ]);
 
   const outstanding = (unpaidAllTime || [])
@@ -207,10 +209,14 @@
   startOfMonth.setHours(0, 0, 0, 0);
 
   const recentDocs = recentWindowDocs || [];
+  const payments = recentPayments || [];
+  // Income by actual payment date — fixes the same bug the Expenses page
+  // had: an invoice created last month but paid this month now correctly
+  // counts as this month's income, not last month's (or nowhere at all).
+  const monthIncome = payments
+    .filter(p => new Date(p.paid_at) >= startOfMonth)
+    .reduce((s, p) => s + Number(p.amount || 0), 0);
   const thisMonthDocs = recentDocs.filter(d => new Date(d.created_at) >= startOfMonth);
-  const monthIncome = thisMonthDocs
-    .filter(d => d.payment_status === 'paid')
-    .reduce((s, d) => s + Number(d.amount || 0), 0);
 
   document.getElementById('statOutstanding').textContent = naira(outstanding);
   document.getElementById('statMonthIncome').textContent = naira(monthIncome);
@@ -257,9 +263,9 @@
     const revenueByMonth = months.map(({ year, month }) => {
       const start = new Date(year, month, 1);
       const end = new Date(year, month + 1, 0, 23, 59, 59);
-      return recentDocs
-        .filter(d => d.payment_status === 'paid' && new Date(d.created_at) >= start && new Date(d.created_at) <= end)
-        .reduce((s, d) => s + Number(d.amount || 0), 0);
+      return payments
+        .filter(p => { const d = new Date(p.paid_at); return d >= start && d <= end; })
+        .reduce((s, p) => s + Number(p.amount || 0), 0);
     });
 
     new Chart(document.getElementById('chartRevenue').getContext('2d'), {

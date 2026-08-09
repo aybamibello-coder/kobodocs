@@ -67,13 +67,15 @@ function showMsg(text, type) {
   async function renderSnapshot() {
     const start = periodStart(currentPeriod).toISOString();
 
-    const { data: paidInvoices } = await supabase
-      .from('documents')
-      .select('amount, created_at')
+    // Income by actual payment date, not invoice creation date — this also
+    // fixes a subtler bug the old approximation had: an invoice created
+    // last month but paid this month never counted as this month's income
+    // at all, since it filtered on documents.created_at, not payment date.
+    const { data: payments } = await supabase
+      .from('document_payments')
+      .select('amount, paid_at')
       .eq('business_id', business.id)
-      .eq('doc_type', 'invoice')
-      .eq('payment_status', 'paid')
-      .gte('created_at', start);
+      .gte('paid_at', start);
 
     const { data: expenses } = await supabase
       .from('expenses')
@@ -81,7 +83,7 @@ function showMsg(text, type) {
       .eq('business_id', business.id)
       .gte('expense_date', start.split('T')[0]);
 
-    const income = (paidInvoices || []).reduce((s, d) => s + Number(d.amount || 0), 0);
+    const income = (payments || []).reduce((s, p) => s + Number(p.amount || 0), 0);
     const expenseTotal = (expenses || []).reduce((s, e) => s + Number(e.amount || 0), 0);
     const profit = income - expenseTotal;
 
