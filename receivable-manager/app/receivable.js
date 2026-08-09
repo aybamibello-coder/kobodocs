@@ -126,6 +126,15 @@ function renderPlanPicker(ctx) {
       <div id="reconWrap" style="margin-top:14px;"></div>
     </div>
     <div class="bs-panel">
+      <div>
+        <strong style="font-size:0.9rem;">Cash-flow forecast</strong>
+        <p style="font-size:0.78rem; opacity:0.65; margin-top:2px;">When your outstanding balances are actually expected to land, based on each client's payment history — not just when they're due.</p>
+      </div>
+      <div id="forecastStats" style="display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:10px; margin-top:12px;"></div>
+      <div style="position:relative; height:220px; margin-top:14px;"><canvas id="chartCashFlow"></canvas></div>
+      <div id="forecastNote" style="font-size:0.72rem; opacity:0.55; margin-top:8px;"></div>
+    </div>
+    <div class="bs-panel">
       <strong style="font-size:0.9rem;">Aging summary</strong>
       <div class="aging-grid" id="agingGrid" style="display:grid; grid-template-columns:repeat(auto-fit,minmax(110px,1fr)); gap:10px; margin-top:12px;"></div>
     </div>
@@ -180,6 +189,7 @@ function renderPlanPicker(ctx) {
   let notes = [];
   let activity = [];
   let disputes = [];
+  let docRequests = [];
   let byClient = {};
   let paymentEvents = [];
   let paymentBehaviour = {}; // client_id -> { avgDelay, count }
@@ -264,6 +274,77 @@ function renderPlanPicker(ctx) {
     Excellent: '#2f8a4e', Good: '#4a8f3c', Fair: '#b3902e', Watch: '#c46a1f', Poor: '#b3402e'
   };
 
+  // ---------- Cash-flow forecast (deterministic, from expected payment dates) ----------
+  function forecastBucket(days) {
+    if (days <= 7) return '0-7';
+    if (days <= 30) return '8-30';
+    if (days <= 90) return '31-90';
+    return '90+';
+  }
+
+  function computeCashFlowForecast() {
+    const todayStr = new Date().toISOString().slice(0, 10);
+    const buckets = { '0-7': 0, '8-30': 0, '31-90': 0, '90+': 0 };
+    let blockedTotal = 0;
+    let noDateTotal = 0;
+
+    receivables.filter(rv => rv.payment_status !== 'paid').forEach(rv => {
+      const balance = Number(rv.amount) - Number(rv.amount_paid || 0);
+      if (balance <= 0) return;
+      if (openDisputeFor(rv.id) || openDocRequestFor(rv.id)) { blockedTotal += balance; return; }
+
+      const predicted = predictedPaymentDate(rv);
+      const expectedDateStr = predicted ? predicted.date : rv.due_date;
+      if (!expectedDateStr) { noDateTotal += balance; return; }
+
+      const days = Math.max(0, daysBetween(todayStr, expectedDateStr));
+      buckets[forecastBucket(days)] += balance;
+    });
+
+    return { buckets, blockedTotal, noDateTotal };
+  }
+
+  function renderCashFlowForecast() {
+    const { buckets, blockedTotal, noDateTotal } = computeCashFlowForecast();
+    const within7 = buckets['0-7'];
+    const within30 = within7 + buckets['8-30'];
+    const within90 = within30 + buckets['31-90'];
+
+    document.getElementById('forecastStats').innerHTML = `
+      <div style="border:1px solid var(--line); border-radius:8px; padding:10px; text-align:center;">
+        <div style="font-size:0.72rem; opacity:0.65;">Next 7 days</div>
+        <div class="pr-amount" style="margin-top:4px;">${naira(within7)}</div>
+      </div>
+      <div style="border:1px solid var(--line); border-radius:8px; padding:10px; text-align:center;">
+        <div style="font-size:0.72rem; opacity:0.65;">Next 30 days</div>
+        <div class="pr-amount" style="margin-top:4px;">${naira(within30)}</div>
+      </div>
+      <div style="border:1px solid var(--line); border-radius:8px; padding:10px; text-align:center;">
+        <div style="font-size:0.72rem; opacity:0.65;">Next 90 days</div>
+        <div class="pr-amount" style="margin-top:4px;">${naira(within90)}</div>
+      </div>
+    `;
+
+    drawChart('chartCashFlow', {
+      type: 'bar',
+      data: {
+        labels: ['0-7 days', '8-30 days', '31-90 days', '90+ days'],
+        datasets: [{ data: [buckets['0-7'], buckets['8-30'], buckets['31-90'], buckets['90+']], backgroundColor: CHART_COLORS.inkGreenDeep, borderRadius: 4 }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false }, tooltip: { callbacks: { label: (ctx) => naira(ctx.raw) } } },
+        scales: { y: { ticks: { callback: (v) => '\u20a6' + Number(v).toLocaleString('en-NG') } } }
+      }
+    });
+
+    const notes = [];
+    if (blockedTotal > 0) notes.push(`${naira(blockedTotal)} excluded \u2014 dispute or missing document pending`);
+    if (noDateTotal > 0) notes.push(`${naira(noDateTotal)} has no due date on file, so it isn't placed on the timeline`);
+    document.getElementById('forecastNote').textContent = notes.join(' \u00b7 ') || 'Every outstanding balance is accounted for above.';
+  }
+
   async function logPaymentForReceivable(receivableId, amountNum, clientId, paidAtIso) {
     const item = receivables.find(i => i.id === receivableId);
     if (!item) return { error: 'Receivable not found' };
@@ -285,14 +366,15 @@ function renderPlanPicker(ctx) {
   }
 
   async function loadAll() {
-    const [c, r, p, n, a, pe, d] = await Promise.all([
+    const [c, r, p, n, a, pe, d, dr] = await Promise.all([
       supabase.from('clients').select('id, name, phone, email, credit_limit, address').eq('business_id', business.id).order('name', { ascending: true }),
       supabase.from('receivables').select('id, client_id, description, amount, amount_paid, due_date, payment_status, source, created_at').eq('business_id', business.id).order('due_date', { ascending: true }),
       supabase.from('promise_to_pay').select('id, client_id, promised_date, promised_amount, note, status, created_at').eq('business_id', business.id).order('promised_date', { ascending: true }),
       supabase.from('collection_notes').select('id, client_id, note, created_at').eq('business_id', business.id).order('created_at', { ascending: false }),
       supabase.from('credit_audit_log').select('id, client_id, action, details, created_at, clients(name)').eq('business_id', business.id).order('created_at', { ascending: false }).limit(30),
       supabase.from('receivable_payments').select('id, receivable_id, amount, paid_at').eq('business_id', business.id).order('paid_at', { ascending: true }),
-      supabase.from('receivable_disputes').select('id, receivable_id, client_id, reason, description, status, resolution_note, created_at, resolved_at').eq('business_id', business.id).order('created_at', { ascending: false })
+      supabase.from('receivable_disputes').select('id, receivable_id, client_id, reason, description, status, resolution_note, created_at, resolved_at').eq('business_id', business.id).order('created_at', { ascending: false }),
+      supabase.from('receivable_document_requests').select('id, receivable_id, client_id, doc_type, description, status, requested_at, received_at').eq('business_id', business.id).order('requested_at', { ascending: false })
     ]);
     clients = c.data || [];
     receivables = r.data || [];
@@ -301,6 +383,7 @@ function renderPlanPicker(ctx) {
     activity = a.data || [];
     paymentEvents = pe.data || [];
     disputes = d.data || [];
+    docRequests = dr.data || [];
   }
 
   const DISPUTE_REASON_LABEL = {
@@ -313,22 +396,83 @@ function renderPlanPicker(ctx) {
     other: 'Other'
   };
 
+  const DOC_TYPE_LABEL = {
+    purchase_order: 'Purchase order',
+    delivery_note: 'Delivery note',
+    tax_invoice: 'Tax invoice',
+    goods_received_note: 'Goods received note',
+    contract: 'Signed contract',
+    other: 'Other document'
+  };
+
   function openDisputeFor(receivableId) {
     return disputes.find(d => d.receivable_id === receivableId && d.status === 'open') || null;
   }
 
+  function openDocRequestFor(receivableId) {
+    return docRequests.find(d => d.receivable_id === receivableId && d.status === 'pending') || null;
+  }
+
   function clientById(id) { return clients.find(c => c.id === id) || { name: 'Unknown client' }; }
 
+  function outstandingAsOf(asOfDate, clientId) {
+    const created = receivables.filter(rv => new Date(rv.created_at) <= asOfDate && (!clientId || rv.client_id === clientId));
+    const totalCreated = created.reduce((s, rv) => s + Number(rv.amount), 0);
+    const createdIds = new Set(created.map(rv => rv.id));
+    const paid = paymentEvents
+      .filter(p => new Date(p.paid_at) <= asOfDate && createdIds.has(p.receivable_id))
+      .reduce((s, p) => s + Number(p.amount), 0);
+    return totalCreated - paid;
+  }
+
+  function recentSalesAsOf(asOfDate) {
+    const since = new Date(asOfDate); since.setDate(since.getDate() - 90);
+    return receivables
+      .filter(rv => new Date(rv.created_at) <= asOfDate && new Date(rv.created_at) >= since)
+      .reduce((s, rv) => s + Number(rv.amount), 0);
+  }
+
+  // ---------- DSO intelligence: what's driving the DSO number, not just the number ----------
+  function computeDSOIntelligence() {
+    const now = new Date();
+    const ago30 = new Date(now); ago30.setDate(ago30.getDate() - 30);
+
+    const outstandingNow = outstandingAsOf(now);
+    const outstanding30 = outstandingAsOf(ago30);
+    const salesNow = recentSalesAsOf(now);
+    const sales30 = recentSalesAsOf(ago30);
+    const dsoNow = salesNow > 0 ? Math.round((outstandingNow / salesNow) * 90) : null;
+    const dso30 = sales30 > 0 ? Math.round((outstanding30 / sales30) * 90) : null;
+    const delta = (dsoNow !== null && dso30 !== null) ? dsoNow - dso30 : null;
+
+    const clientIds = new Set(receivables.map(rv => rv.client_id).filter(Boolean));
+    const clientDeltas = [...clientIds].map(cid => {
+      const nowBal = outstandingAsOf(now, cid);
+      const agoBal = outstandingAsOf(ago30, cid);
+      return { clientId: cid, name: clientById(cid).name, delta: nowBal - agoBal, now: nowBal };
+    }).filter(c => Math.abs(c.delta) >= 1);
+
+    const worsened = clientDeltas.filter(c => c.delta > 0).sort((a, b) => b.delta - a.delta).slice(0, 5);
+    const improved = clientDeltas.filter(c => c.delta < 0).sort((a, b) => a.delta - b.delta).slice(0, 5);
+
+    return { dsoNow, dso30, delta, worsened, improved };
+  }
+
   function computeDSO() {
-    const outstanding = receivables.filter(rv => rv.payment_status !== 'paid');
-    const totalOutstanding = outstanding.reduce((s, rv) => s + (Number(rv.amount) - Number(rv.amount_paid || 0)), 0);
+    const intel = computeDSOIntelligence();
+    const { dsoNow, dso30, delta, worsened, improved } = intel;
 
-    const since = new Date();
-    since.setDate(since.getDate() - 90);
-    const recent = receivables.filter(rv => new Date(rv.created_at) >= since);
-    const recentTotal = recent.reduce((s, rv) => s + Number(rv.amount), 0);
+    const deltaLabel = delta === null ? ''
+      : delta === 0 ? '<span style="opacity:0.6; font-size:0.78rem;">no change vs 30 days ago</span>'
+      : delta > 0 ? `<span style="color:#b3402e; font-size:0.78rem;">▲ ${delta}d worse vs 30 days ago</span>`
+      : `<span style="color:#2f8a4e; font-size:0.78rem;">▼ ${Math.abs(delta)}d better vs 30 days ago</span>`;
 
-    const dso = recentTotal > 0 ? Math.round((totalOutstanding / recentTotal) * 90) : null;
+    const driverList = (items, tone) => items.map(c =>
+      `<div style="display:flex; justify-content:space-between; font-size:0.78rem; padding:4px 0;">
+        <span>${escapeHtml(c.name)}</span>
+        <span style="color:${tone};">${c.delta > 0 ? '+' : ''}${naira(c.delta)}</span>
+      </div>`
+    ).join('') || '<div class="empty-note" style="font-size:0.75rem;">None</div>';
 
     document.getElementById('dsoPanel').innerHTML = `
       <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
@@ -336,8 +480,22 @@ function renderPlanPicker(ctx) {
           <strong style="font-size:0.9rem;">Days Sales Outstanding</strong>
           <p style="font-size:0.78rem; opacity:0.65; margin-top:2px;">Based on the last 90 days of activity.</p>
         </div>
-        <div class="pr-amount" style="font-size:1.4rem;">${dso === null ? '—' : dso + ' days'}</div>
+        <div style="text-align:right;">
+          <div class="pr-amount" style="font-size:1.4rem;">${dsoNow === null ? '—' : dsoNow + ' days'}</div>
+          <div style="margin-top:2px;">${deltaLabel}</div>
+        </div>
       </div>
+      ${(worsened.length || improved.length) ? `
+      <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:16px; margin-top:14px; padding-top:12px; border-top:1px dashed var(--line);">
+        <div>
+          <div style="font-size:0.72rem; opacity:0.65; margin-bottom:4px;">Pushing DSO up (new/growing balances, last 30 days)</div>
+          ${driverList(worsened, '#b3402e')}
+        </div>
+        <div>
+          <div style="font-size:0.72rem; opacity:0.65; margin-bottom:4px;">Helping DSO (paid down, last 30 days)</div>
+          ${driverList(improved, '#2f8a4e')}
+        </div>
+      </div>` : ''}
     `;
   }
 
@@ -361,14 +519,15 @@ function renderPlanPicker(ctx) {
     outstanding.forEach(rv => {
       if (!rv.client_id) return;
       const dispute = openDisputeFor(rv.id);
+      const docRequest = openDocRequestFor(rv.id);
       rv.dispute = dispute;
-      if (!byClient[rv.client_id]) byClient[rv.client_id] = { client: clientById(rv.client_id), items: [], balance: 0, worstBucket: 'current', hasOpenDispute: false };
+      rv.docRequest = docRequest;
+      if (!byClient[rv.client_id]) byClient[rv.client_id] = { client: clientById(rv.client_id), items: [], balance: 0, worstBucket: 'current', hasOpenDispute: false, hasOpenDocRequest: false };
       byClient[rv.client_id].items.push(rv);
       byClient[rv.client_id].balance += rv.balance;
-      if (dispute) {
-        byClient[rv.client_id].hasOpenDispute = true;
-        return; // disputed items don't count toward "how bad is this client's aging" severity
-      }
+      if (dispute) byClient[rv.client_id].hasOpenDispute = true;
+      if (docRequest) byClient[rv.client_id].hasOpenDocRequest = true;
+      if (dispute || docRequest) return; // blocked items (dispute or missing document) don't count toward "how bad is this client's aging" severity
       const order = ['current', 'b1', 'b2', 'b3', 'b4'];
       const bucket = agingBucket(rv.overdueDays);
       if (order.indexOf(bucket) > order.indexOf(byClient[rv.client_id].worstBucket)) {
@@ -649,6 +808,7 @@ function renderPlanPicker(ctx) {
     renderLedger();
     computeDSO();
     renderAnalytics();
+    renderCashFlowForecast();
     renderRecon();
     toast('Payment matched and logged.');
   }
@@ -727,6 +887,7 @@ function renderPlanPicker(ctx) {
                 ${scoreInfo ? `<span style="font-size:0.68rem; margin-left:6px; color:${SCORE_TIER_COLOR[scoreInfo.tier]};">${scoreInfo.tier} (${scoreInfo.score})</span>` : ''}
                 ${overLimit ? `<span style="color:#b3402e; font-size:0.68rem; margin-left:6px;">Over ${naira(client.credit_limit)} limit</span>` : ''}
                 ${row.hasOpenDispute ? `<span style="color:#8a5a00; font-size:0.68rem; margin-left:6px;">⚠ Dispute open</span>` : ''}
+                ${row.hasOpenDocRequest ? `<span style="color:#2f5f8a; font-size:0.68rem; margin-left:6px;">📄 Doc pending</span>` : ''}
               </div>
               <div class="pr-meta">${row.items.length} open item${row.items.length > 1 ? 's' : ''}${(() => {
                 const preds = row.items.map(predictedPaymentDate).filter(Boolean);
@@ -771,11 +932,20 @@ function renderPlanPicker(ctx) {
         ? `${fmtDate(predicted.date)} <span style="opacity:0.55;">(${predicted.count} past pmt${predicted.count > 1 ? 's' : ''})</span>`
         : '<span style="opacity:0.5;">—</span>';
       const dispute = rv.dispute;
-      const actionCell = dispute
-        ? `<span style="color:#8a5a00; font-size:0.75rem;">⚠ ${escapeHtml(DISPUTE_REASON_LABEL[dispute.reason] || 'Disputed')}</span>
-           <button data-resolve-dispute="${dispute.id}" data-receivable="${rv.id}" class="btn small" style="margin-left:6px;">Resolve</button>`
-        : `<button data-pay="${rv.id}" class="btn small">Log payment</button>
-           <button data-flag-dispute="${rv.id}" class="btn small">Flag dispute</button>`;
+      const docRequest = rv.docRequest;
+      let actionCell;
+      if (dispute) {
+        actionCell = `<span style="color:#8a5a00; font-size:0.75rem;">⚠ ${escapeHtml(DISPUTE_REASON_LABEL[dispute.reason] || 'Disputed')}</span>
+           <button data-resolve-dispute="${dispute.id}" data-receivable="${rv.id}" class="btn small" style="margin-left:6px;">Resolve</button>`;
+      } else if (docRequest) {
+        actionCell = `<span style="color:#2f5f8a; font-size:0.75rem;">📄 Awaiting ${escapeHtml(DOC_TYPE_LABEL[docRequest.doc_type] || 'document')}</span>
+           <button data-received-doc="${docRequest.id}" class="btn small" style="margin-left:6px;">Received</button>
+           ${row.client.phone ? `<button data-chase-doc="${docRequest.id}" data-receivable="${rv.id}" class="btn small" style="margin-left:6px;">WhatsApp</button>` : ''}`;
+      } else {
+        actionCell = `<button data-pay="${rv.id}" class="btn small">Log payment</button>
+           <button data-flag-dispute="${rv.id}" class="btn small">Flag dispute</button>
+           <button data-request-doc="${rv.id}" class="btn small">Request document</button>`;
+      }
       return `
       <tr>
         <td>${escapeHtml(rv.description || 'Balance')}</td>
@@ -815,6 +985,7 @@ function renderPlanPicker(ctx) {
         <tbody>${itemRows}</tbody>
       </table>
       <div id="disputeForm-${cid}" style="display:none; margin-bottom:12px;"></div>
+      <div id="docRequestForm-${cid}" style="display:none; margin-bottom:12px;"></div>
 
       <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:10px;">
         <button data-statement="${cid}" class="btn small">Download statement (PDF)</button>
@@ -932,6 +1103,7 @@ function renderPlanPicker(ctx) {
         renderLedger();
         computeDSO();
         renderAnalytics();
+        renderCashFlowForecast();
       });
     });
 
@@ -977,6 +1149,7 @@ function renderPlanPicker(ctx) {
           renderAging();
           renderLedger();
           renderActivity();
+          renderCashFlowForecast();
         });
       });
     });
@@ -999,6 +1172,85 @@ function renderPlanPicker(ctx) {
         renderAging();
         renderLedger();
         renderActivity();
+        renderCashFlowForecast();
+      });
+    });
+
+    // ---------- Document chasing ----------
+    const docFormEl = detail.querySelector(`#docRequestForm-${cid}`);
+    detail.querySelectorAll('[data-request-doc]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const rvId = btn.dataset.requestDoc;
+        const item = row.items.find(i => i.id === rvId);
+        docFormEl.innerHTML = `
+          <div class="pr-form" style="display:flex; gap:8px; flex-wrap:wrap; align-items:flex-end; border:1px solid var(--line); border-radius:8px; padding:10px;">
+            <div>
+              <label>Missing document — "${escapeHtml(item.description || 'this balance')}"</label>
+              <select id="docType-${cid}">
+                ${Object.keys(DOC_TYPE_LABEL).map(k => `<option value="${k}">${DOC_TYPE_LABEL[k]}</option>`).join('')}
+              </select>
+            </div>
+            <div style="flex:1; min-width:180px;"><label>Details (optional)</label><input type="text" id="docDesc-${cid}" placeholder="e.g. need signed PO before payment can be raised"></div>
+            <button data-save-doc="${rvId}" class="btn primary small">Save</button>
+            <button data-cancel-doc class="btn small">Cancel</button>
+          </div>
+        `;
+        docFormEl.style.display = 'block';
+
+        docFormEl.querySelector('[data-cancel-doc]').addEventListener('click', () => {
+          docFormEl.style.display = 'none';
+          docFormEl.innerHTML = '';
+        });
+
+        docFormEl.querySelector(`[data-save-doc="${rvId}"]`).addEventListener('click', async () => {
+          const docType = document.getElementById(`docType-${cid}`).value;
+          const description = document.getElementById(`docDesc-${cid}`).value.trim() || null;
+
+          const { error } = await supabase.from('receivable_document_requests').insert({
+            business_id: business.id, receivable_id: rvId, client_id: cid,
+            doc_type: docType, description, requested_by: session.user.id
+          });
+          if (error) { toast('Could not save document request: ' + error.message); return; }
+
+          await logActivity('document_requested', { doc_type: docType }, cid);
+          toast('Document request logged.');
+          await loadAll();
+          computePaymentBehaviour();
+          renderAging();
+          renderLedger();
+          renderActivity();
+          renderCashFlowForecast();
+        });
+      });
+    });
+
+    detail.querySelectorAll('[data-received-doc]').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const reqId = btn.dataset.receivedDoc;
+        const { error } = await supabase.from('receivable_document_requests')
+          .update({ status: 'received', received_at: new Date().toISOString() })
+          .eq('id', reqId);
+        if (error) { toast('Could not update document request: ' + error.message); return; }
+
+        await logActivity('document_received', {}, cid);
+        toast('Marked as received.');
+        await loadAll();
+        computePaymentBehaviour();
+        renderAging();
+        renderLedger();
+        renderActivity();
+        renderCashFlowForecast();
+      });
+    });
+
+    detail.querySelectorAll('[data-chase-doc]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const reqId = btn.dataset.chaseDoc;
+        const req = docRequests.find(d => d.id === reqId);
+        const docLabel = DOC_TYPE_LABEL[req.doc_type] || 'document';
+        const message = `Hello ${client.name}, we're still waiting on the ${docLabel.toLowerCase()} for your order with ${business.name} before we can process payment/next steps. Please could you send this over when you get a chance? Thank you.`;
+        window.open(`https://wa.me/${client.phone.replace(/[^\d+]/g, '')}?text=${encodeURIComponent(message)}`, '_blank');
+        logActivity('document_chased', { channel: 'whatsapp', doc_type: req.doc_type }, cid);
       });
     });
 
@@ -1368,21 +1620,12 @@ function renderPlanPicker(ctx) {
 
     // --- DSO trend, last 6 months ---
     // Same formula as computeDSO(), evaluated as-of each month-end instead
-    // of "now": outstanding as of that date, divided by the trailing
-    // 90-day volume of new balances ending at that date.
+    // of "now".
     const dsoByMonth = months.map(({ year, month }) => {
       const asOf = monthEnd(year, month);
-      const createdByThen = receivables.filter(rv => new Date(rv.created_at) <= asOf);
-      const totalCreated = createdByThen.reduce((s, rv) => s + Number(rv.amount), 0);
-      const paidByThen = paymentEvents.filter(p => new Date(p.paid_at) <= asOf).reduce((s, p) => s + Number(p.amount), 0);
-      const outstandingAsOf = totalCreated - paidByThen;
-
-      const since = new Date(asOf); since.setDate(since.getDate() - 90);
-      const recentTotal = createdByThen
-        .filter(rv => new Date(rv.created_at) >= since)
-        .reduce((s, rv) => s + Number(rv.amount), 0);
-
-      return recentTotal > 0 ? Math.round((outstandingAsOf / recentTotal) * 90) : null;
+      const outstandingAsOfMonth = outstandingAsOf(asOf);
+      const recentTotal = recentSalesAsOf(asOf);
+      return recentTotal > 0 ? Math.round((outstandingAsOfMonth / recentTotal) * 90) : null;
     });
 
     drawChart('chartDSOTrend', {
@@ -1409,6 +1652,7 @@ function renderPlanPicker(ctx) {
   renderPromiseList();
   renderActivity();
   renderAnalytics();
+  renderCashFlowForecast();
   loadAndRenderReminderSettings();
   loadAndRenderPriorities();
 })();
