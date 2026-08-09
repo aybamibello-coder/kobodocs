@@ -415,16 +415,64 @@ function renderPlanPicker(ctx) {
 
   function clientById(id) { return clients.find(c => c.id === id) || { name: 'Unknown client' }; }
 
+  function outstandingAsOf(asOfDate, clientId) {
+    const created = receivables.filter(rv => new Date(rv.created_at) <= asOfDate && (!clientId || rv.client_id === clientId));
+    const totalCreated = created.reduce((s, rv) => s + Number(rv.amount), 0);
+    const createdIds = new Set(created.map(rv => rv.id));
+    const paid = paymentEvents
+      .filter(p => new Date(p.paid_at) <= asOfDate && createdIds.has(p.receivable_id))
+      .reduce((s, p) => s + Number(p.amount), 0);
+    return totalCreated - paid;
+  }
+
+  function recentSalesAsOf(asOfDate) {
+    const since = new Date(asOfDate); since.setDate(since.getDate() - 90);
+    return receivables
+      .filter(rv => new Date(rv.created_at) <= asOfDate && new Date(rv.created_at) >= since)
+      .reduce((s, rv) => s + Number(rv.amount), 0);
+  }
+
+  // ---------- DSO intelligence: what's driving the DSO number, not just the number ----------
+  function computeDSOIntelligence() {
+    const now = new Date();
+    const ago30 = new Date(now); ago30.setDate(ago30.getDate() - 30);
+
+    const outstandingNow = outstandingAsOf(now);
+    const outstanding30 = outstandingAsOf(ago30);
+    const salesNow = recentSalesAsOf(now);
+    const sales30 = recentSalesAsOf(ago30);
+    const dsoNow = salesNow > 0 ? Math.round((outstandingNow / salesNow) * 90) : null;
+    const dso30 = sales30 > 0 ? Math.round((outstanding30 / sales30) * 90) : null;
+    const delta = (dsoNow !== null && dso30 !== null) ? dsoNow - dso30 : null;
+
+    const clientIds = new Set(receivables.map(rv => rv.client_id).filter(Boolean));
+    const clientDeltas = [...clientIds].map(cid => {
+      const nowBal = outstandingAsOf(now, cid);
+      const agoBal = outstandingAsOf(ago30, cid);
+      return { clientId: cid, name: clientById(cid).name, delta: nowBal - agoBal, now: nowBal };
+    }).filter(c => Math.abs(c.delta) >= 1);
+
+    const worsened = clientDeltas.filter(c => c.delta > 0).sort((a, b) => b.delta - a.delta).slice(0, 5);
+    const improved = clientDeltas.filter(c => c.delta < 0).sort((a, b) => a.delta - b.delta).slice(0, 5);
+
+    return { dsoNow, dso30, delta, worsened, improved };
+  }
+
   function computeDSO() {
-    const outstanding = receivables.filter(rv => rv.payment_status !== 'paid');
-    const totalOutstanding = outstanding.reduce((s, rv) => s + (Number(rv.amount) - Number(rv.amount_paid || 0)), 0);
+    const intel = computeDSOIntelligence();
+    const { dsoNow, dso30, delta, worsened, improved } = intel;
 
-    const since = new Date();
-    since.setDate(since.getDate() - 90);
-    const recent = receivables.filter(rv => new Date(rv.created_at) >= since);
-    const recentTotal = recent.reduce((s, rv) => s + Number(rv.amount), 0);
+    const deltaLabel = delta === null ? ''
+      : delta === 0 ? '<span style="opacity:0.6; font-size:0.78rem;">no change vs 30 days ago</span>'
+      : delta > 0 ? `<span style="color:#b3402e; font-size:0.78rem;">▲ ${delta}d worse vs 30 days ago</span>`
+      : `<span style="color:#2f8a4e; font-size:0.78rem;">▼ ${Math.abs(delta)}d better vs 30 days ago</span>`;
 
-    const dso = recentTotal > 0 ? Math.round((totalOutstanding / recentTotal) * 90) : null;
+    const driverList = (items, tone) => items.map(c =>
+      `<div style="display:flex; justify-content:space-between; font-size:0.78rem; padding:4px 0;">
+        <span>${escapeHtml(c.name)}</span>
+        <span style="color:${tone};">${c.delta > 0 ? '+' : ''}${naira(c.delta)}</span>
+      </div>`
+    ).join('') || '<div class="empty-note" style="font-size:0.75rem;">None</div>';
 
     document.getElementById('dsoPanel').innerHTML = `
       <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
@@ -432,8 +480,22 @@ function renderPlanPicker(ctx) {
           <strong style="font-size:0.9rem;">Days Sales Outstanding</strong>
           <p style="font-size:0.78rem; opacity:0.65; margin-top:2px;">Based on the last 90 days of activity.</p>
         </div>
-        <div class="pr-amount" style="font-size:1.4rem;">${dso === null ? '—' : dso + ' days'}</div>
+        <div style="text-align:right;">
+          <div class="pr-amount" style="font-size:1.4rem;">${dsoNow === null ? '—' : dsoNow + ' days'}</div>
+          <div style="margin-top:2px;">${deltaLabel}</div>
+        </div>
       </div>
+      ${(worsened.length || improved.length) ? `
+      <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:16px; margin-top:14px; padding-top:12px; border-top:1px dashed var(--line);">
+        <div>
+          <div style="font-size:0.72rem; opacity:0.65; margin-bottom:4px;">Pushing DSO up (new/growing balances, last 30 days)</div>
+          ${driverList(worsened, '#b3402e')}
+        </div>
+        <div>
+          <div style="font-size:0.72rem; opacity:0.65; margin-bottom:4px;">Helping DSO (paid down, last 30 days)</div>
+          ${driverList(improved, '#2f8a4e')}
+        </div>
+      </div>` : ''}
     `;
   }
 
@@ -1558,21 +1620,12 @@ function renderPlanPicker(ctx) {
 
     // --- DSO trend, last 6 months ---
     // Same formula as computeDSO(), evaluated as-of each month-end instead
-    // of "now": outstanding as of that date, divided by the trailing
-    // 90-day volume of new balances ending at that date.
+    // of "now".
     const dsoByMonth = months.map(({ year, month }) => {
       const asOf = monthEnd(year, month);
-      const createdByThen = receivables.filter(rv => new Date(rv.created_at) <= asOf);
-      const totalCreated = createdByThen.reduce((s, rv) => s + Number(rv.amount), 0);
-      const paidByThen = paymentEvents.filter(p => new Date(p.paid_at) <= asOf).reduce((s, p) => s + Number(p.amount), 0);
-      const outstandingAsOf = totalCreated - paidByThen;
-
-      const since = new Date(asOf); since.setDate(since.getDate() - 90);
-      const recentTotal = createdByThen
-        .filter(rv => new Date(rv.created_at) >= since)
-        .reduce((s, rv) => s + Number(rv.amount), 0);
-
-      return recentTotal > 0 ? Math.round((outstandingAsOf / recentTotal) * 90) : null;
+      const outstandingAsOfMonth = outstandingAsOf(asOf);
+      const recentTotal = recentSalesAsOf(asOf);
+      return recentTotal > 0 ? Math.round((outstandingAsOfMonth / recentTotal) * 90) : null;
     });
 
     drawChart('chartDSOTrend', {
