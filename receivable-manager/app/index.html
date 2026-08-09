@@ -8,10 +8,11 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Work+Sans:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/assets/style.css">
+<link rel="stylesheet" href="/business-suite/app/shell.css">
 <style>
   .pr-wrap{ max-width:980px; margin:0 auto; padding:36px 20px 100px; }
   .pr-top{ display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:14px; margin-bottom:24px; }
-  .bs-panel{ background:var(--paper); border:1px solid var(--line); border-radius:8px; padding:22px 20px; margin-bottom:20px; }
+  .bs-panel{ background:var(--paper); border:1px solid var(--line); border-radius:8px; padding:22px 20px; margin-bottom:20px; scroll-margin-top:80px; }
   .pr-row{ display:flex; justify-content:space-between; align-items:center; gap:14px; padding:14px 0; border-bottom:1px dashed var(--line); flex-wrap:wrap; }
   .pr-row:last-child{ border-bottom:none; }
   .pr-name{ font-weight:600; }
@@ -31,12 +32,17 @@
   .plan-price{ font-size:1.3rem; margin-bottom:12px; }
   .plans-grid{ display:grid; grid-template-columns:repeat(auto-fit, minmax(180px,1fr)); gap:14px; }
   #toast{ position:fixed; bottom:20px; left:50%; transform:translateX(-50%); background:var(--ink-green-deep); color:var(--paper); padding:10px 20px; border-radius:6px; font-size:0.85rem; display:none; z-index:50; }
+  .trial-badge{
+    font-family:'Space Mono', monospace; font-size:0.7rem; text-transform:uppercase; letter-spacing:0.03em;
+    display:inline-block; padding:4px 12px; border-radius:20px; margin-top:6px;
+    background:rgba(199,154,60,0.15); color:#8a6a1f; border:1px solid rgba(199,154,60,0.3);
+  }
 </style>
 </head>
-<body>
+<body class="suite-body">
 
 <header>
-  <nav class="nav">
+  <nav class="nav suite-nav">
     <a href="/" class="logo">
       <svg class="mark" viewBox="0 0 32 32" fill="none">
         <circle cx="16" cy="16" r="14" stroke="#C79A3C" stroke-width="2.5"/>
@@ -50,9 +56,18 @@
     <button class="menu-btn" aria-label="Toggle menu" id="menuBtn"><span></span><span></span><span></span></button>
     <div class="nav-links" id="navLinks">
       <a href="/" class="mobile-only-link">Home</a>
+      <a href="#panel-overview" class="rm-anchor">Overview</a>
+      <a href="#panel-priorities" class="rm-anchor">Today's priorities</a>
+      <a href="#panel-recon" class="rm-anchor">Reconcile</a>
+      <a href="#panel-cashflow" class="rm-anchor">Cash-flow forecast</a>
+      <a href="#panel-team" class="rm-anchor">Team workload</a>
+      <a href="#panel-aging" class="rm-anchor">Aging summary</a>
+      <a href="#panel-analytics" class="rm-anchor">Analytics</a>
+      <a href="#panel-ledger" class="rm-anchor">Outstanding by client</a>
+      <a href="#panel-promises" class="rm-anchor">Promises to pay</a>
+      <a href="#panel-activity" class="rm-anchor">Activity</a>
+      <a href="#panel-reminders" class="rm-anchor">Reminders</a>
       <a href="/business-suite/app/">Business Suite</a>
-      <a href="/payroll/app/">Payroll</a>
-      <a href="/esign/app/">e-Signature</a>
       <a href="/blog/" class="mobile-only-link">Blog</a>
       <a href="/about/" class="mobile-only-link">About</a>
       <a href="/account/" id="navAccountLink">Sign in</a>
@@ -73,12 +88,11 @@
 </div>
 
 <div class="pr-wrap">
-  <div class="pr-top">
+  <div class="pr-top" id="pageHeader">
     <div>
       <h1 style="font-size:1.4rem;">Receivable Manager</h1>
       <p style="font-size:0.88rem; opacity:0.7; margin-top:4px;">Track outstanding balances, chase overdue payments, and see your DSO at a glance.</p>
     </div>
-    <button class="btn small" id="importBtn" style="font-size:0.85rem; border:1px solid var(--line); background:none; border-radius:20px; padding:8px 18px; cursor:pointer;">Import from spreadsheet</button>
   </div>
 
   <div id="mainArea"><div class="empty-note">Loading…</div></div>
@@ -86,12 +100,22 @@
 
 <div id="toast"></div>
 
+<script>
+  // Highlights whichever section anchor was last clicked — a lightweight
+  // stand-in for shell.js's path-based matching, since this is a single
+  // page with in-page anchors rather than separate routes per module.
+  document.querySelectorAll('.suite-nav .rm-anchor').forEach(link => {
+    link.addEventListener('click', () => {
+      document.querySelectorAll('.suite-nav .rm-anchor').forEach(a => a.classList.remove('suite-nav-active'));
+      link.classList.add('suite-nav-active');
+    });
+  });
+</script>
 <script type="module" src="/assets/auth.js"></script>
 <script src="/assets/nav-auth.js" defer></script>
 <script src="/assets/subscribe.js"></script>
 <script src="/assets/export.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.1/dist/chart.umd.min.js"></script>
-<script src="/assets/kobo-import.js"></script>
 <script src="/receivable-manager/app/guard.js"></script>
 <script src="/receivable-manager/app/receivable.js"></script>
 <script src="/assets/tools-index.js" defer></script>
