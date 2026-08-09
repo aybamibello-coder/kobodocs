@@ -1,6 +1,17 @@
 // ---------- My Businesses (multi-client dashboard) ----------
 const ROLE_LABELS = { owner: 'Owner', staff: 'Staff', accountant: 'Accountant', lawyer: 'Lawyer', hr: 'HR', finance: 'Finance' };
 
+// SECURITY: business.name is free text a user can set — escape before
+// interpolating into innerHTML so it can't be used to inject markup/scripts
+// that would run in the browser of anyone else with visibility into it
+// (e.g. an invited accountant browsing their client list).
+function escapeHtml(str) {
+  if (str === null || str === undefined) return '';
+  const div = document.createElement('div');
+  div.textContent = String(str);
+  return div.innerHTML;
+}
+
 function daysUntil(dateStr) {
   if (!dateStr) return null;
   const ms = new Date(dateStr).setHours(0,0,0,0) - new Date().setHours(0,0,0,0);
@@ -52,7 +63,7 @@ function daysUntil(dateStr) {
     card.className = 'biz-card suite-card';
     card.href = `/business-suite/app/compliance-tracker/?business_id=${biz.id}`;
     card.innerHTML = `
-      <div class="name">${biz.name}</div>
+      <div class="name">${escapeHtml(biz.name)}</div>
       <div class="role">${ROLE_LABELS[biz.myRole] || biz.myRole}</div>
       <div class="row"><span>Compliance score</span><span class="num ${scoreClass}">${score === null ? 'Set up' : score + '%'}</span></div>
       <div class="row"><span>Overdue</span><span class="num ${overdue > 0 ? 'bad' : ''}">${overdue}</span></div>

@@ -180,7 +180,6 @@ Deno.serve(async (req) => {
           .eq("id", business.id);
       }
     } else if (metadata?.product === "tool_pass") {
-      // estate_bundle is a fan-out pass: grant both Will and PoA from one purchase.
       if (metadata.tool_key === "estate_bundle") {
         await supabase.from("tool_access_passes").insert([
           { user_id: metadata.user_id, tool_key: "will_generator", purchased_at: new Date().toISOString(), expires_at: null, paystack_reference: reference },
@@ -219,6 +218,36 @@ Deno.serve(async (req) => {
         await supabase.from("tool_access_passes").insert({
           user_id: metadata.user_id,
           tool_key: "siwes_report",
+          purchased_at: new Date().toISOString(),
+          expires_at: newExpiry.toISOString(),
+          paystack_reference: reference,
+        });
+      }
+    } else if (metadata?.product === "grant_application_generator") {
+      // ---- Grant Application Generator: time-limited pass, ₦10,000 / 3 months (init-grant-payment) ----
+      const grantDays = 90;
+
+      const { data: existing } = await supabase
+        .from("tool_access_passes")
+        .select("id, expires_at")
+        .eq("user_id", metadata.user_id)
+        .eq("tool_key", "grant_application_generator")
+        .maybeSingle();
+
+      const currentExpiry = existing?.expires_at ? new Date(existing.expires_at) : null;
+      const base = currentExpiry && currentExpiry > new Date() ? currentExpiry : new Date();
+      const newExpiry = new Date(base);
+      newExpiry.setDate(newExpiry.getDate() + grantDays);
+
+      if (existing) {
+        await supabase
+          .from("tool_access_passes")
+          .update({ expires_at: newExpiry.toISOString(), paystack_reference: reference })
+          .eq("id", existing.id);
+      } else {
+        await supabase.from("tool_access_passes").insert({
+          user_id: metadata.user_id,
+          tool_key: "grant_application_generator",
           purchased_at: new Date().toISOString(),
           expires_at: newExpiry.toISOString(),
           paystack_reference: reference,
@@ -270,6 +299,80 @@ Deno.serve(async (req) => {
           paystack_reference: reference,
         })
         .eq("id", metadata.event_id);
+    } else if (metadata?.product === "payroll") {
+      const currentExpiry0 = await supabase
+        .from("payroll_subscriptions")
+        .select("expires_at")
+        .eq("business_id", metadata.business_id)
+        .maybeSingle();
+
+      const existingExpiry = currentExpiry0.data?.expires_at ? new Date(currentExpiry0.data.expires_at) : null;
+      const base = existingExpiry && existingExpiry > new Date() ? existingExpiry : new Date();
+      const newExpiry = new Date(base);
+      newExpiry.setDate(newExpiry.getDate() + cycleDays);
+
+      await supabase.from("payroll_subscriptions").upsert({
+        business_id: metadata.business_id,
+        plan: metadata.plan,
+        employee_limit: metadata.employee_limit,
+        status: "active",
+        billing_cycle: metadata.billing_cycle === "yearly" ? "yearly" : "monthly",
+        expires_at: newExpiry.toISOString(),
+        updated_at: new Date().toISOString(),
+      }, { onConflict: "business_id" });
+    } else if (metadata?.product === "receivable_manager") {
+      const currentExpiry0 = await supabase
+        .from("receivable_subscriptions")
+        .select("expires_at")
+        .eq("business_id", metadata.business_id)
+        .maybeSingle();
+
+      const existingExpiry = currentExpiry0.data?.expires_at ? new Date(currentExpiry0.data.expires_at) : null;
+      const base = existingExpiry && existingExpiry > new Date() ? existingExpiry : new Date();
+      const newExpiry = new Date(base);
+      newExpiry.setDate(newExpiry.getDate() + cycleDays);
+
+      await supabase.from("receivable_subscriptions").upsert({
+        business_id: metadata.business_id,
+        plan: metadata.plan === "growth" ? "growth" : "starter",
+        status: "active",
+        billing_cycle: metadata.billing_cycle === "yearly" ? "yearly" : "monthly",
+        expires_at: newExpiry.toISOString(),
+        updated_at: new Date().toISOString(),
+      }, { onConflict: "business_id" });
+    } else if (metadata?.product === "esign") {
+      if (metadata.mode === "payg") {
+        const { data: existing } = await supabase
+          .from("esign_subscriptions")
+          .select("credits_balance")
+          .eq("user_id", metadata.user_id)
+          .maybeSingle();
+
+        if (existing) {
+          await supabase
+            .from("esign_subscriptions")
+            .update({ credits_balance: Number(existing.credits_balance || 0) + Number(metadata.credit_count || 0), updated_at: new Date().toISOString() })
+            .eq("user_id", metadata.user_id);
+        } else {
+          await supabase.from("esign_subscriptions").insert({
+            user_id: metadata.user_id,
+            plan: "payg",
+            credits_balance: Number(metadata.credit_count || 0),
+          });
+        }
+      } else if (metadata.mode === "subscription") {
+        await supabase.from("esign_subscriptions").upsert({
+          user_id: metadata.user_id,
+          plan: metadata.plan,
+          envelope_allowance: metadata.allowance,
+          envelopes_used_this_period: 0,
+          period_reset_at: addDays(30),
+          status: "active",
+          billing_cycle: "monthly",
+          expires_at: addDays(30),
+          updated_at: new Date().toISOString(),
+        }, { onConflict: "user_id" });
+      }
     }
 
     await supabase.from("payment_intents").delete().eq("order_reference", reference);
