@@ -190,6 +190,7 @@ function renderPlanPicker(ctx) {
   let activity = [];
   let disputes = [];
   let docRequests = [];
+  let escalationActions = [];
   let byClient = {};
   let paymentEvents = [];
   let paymentBehaviour = {}; // client_id -> { avgDelay, count }
@@ -273,6 +274,78 @@ function renderPlanPicker(ctx) {
   const SCORE_TIER_COLOR = {
     Excellent: '#2f8a4e', Good: '#4a8f3c', Fair: '#b3902e', Watch: '#c46a1f', Poor: '#b3402e'
   };
+
+  // ---------- Escalation engine (deterministic ladder: reminder -> firm reminder -> formal notice -> collections/legal) ----------
+  const ESCALATION_LABEL = {
+    1: 'Friendly reminder',
+    2: 'Firm reminder',
+    3: 'Formal notice',
+    4: 'Collections / legal referral'
+  };
+  const ESCALATION_COLOR = { 1: '#4a8f3c', 2: '#b3902e', 3: '#c46a1f', 4: '#b3402e' };
+
+  function computeEscalationStage(cid) {
+    const row = byClient[cid];
+    if (!row) return null;
+
+    const activeItems = row.items.filter(i => !i.dispute && !i.docRequest);
+    if (!activeItems.length) return null; // nothing actionable — fully blocked by dispute/missing document, or nothing outstanding
+
+    const days = activeItems.reduce((max, i) => (i.overdueDays !== null && (max === null || i.overdueDays > max)) ? i.overdueDays : max, null);
+    const brokenCount = clientPromises(cid).filter(p => p.status === 'broken').length;
+
+    let stage, reason;
+    if ((days !== null && days > 90) || brokenCount >= 2) {
+      stage = 4;
+      reason = brokenCount >= 2 ? `${brokenCount} broken promises to pay on record` : `${days} days overdue with no resolution`;
+    } else if ((days !== null && days > 45) || brokenCount >= 1) {
+      stage = 3;
+      reason = brokenCount >= 1 ? 'broke a promise to pay' : `${days} days overdue`;
+    } else if (days !== null && days > 14) {
+      stage = 2;
+      reason = `${days} days overdue`;
+    } else {
+      stage = 1;
+      reason = days === null ? 'not yet due' : `${days} day${days === 1 ? '' : 's'} overdue`;
+    }
+
+    return { stage, label: ESCALATION_LABEL[stage], reason, days, brokenCount };
+  }
+
+  function clientEscalationHistory(cid) {
+    return escalationActions.filter(e => e.client_id === cid);
+  }
+
+  async function generateFormalNotice(cid) {
+    const row = byClient[cid];
+    const client = row.client;
+    const escalation = computeEscalationStage(cid);
+
+    const rows = row.items.filter(i => !i.dispute && !i.docRequest).map(rv => [
+      rv.description || 'Balance',
+      fmtDate(rv.due_date),
+      naira(rv.balance)
+    ]);
+    const totalDue = row.items.filter(i => !i.dispute && !i.docRequest).reduce((s, i) => s + i.balance, 0);
+
+    const bodyIntro = `This letter serves as formal notice that the amount of ${naira(totalDue)} remains outstanding on your account with ${business.name}${escalation && escalation.days !== null ? `, now ${escalation.days} days past the agreed due date` : ''}. A breakdown of the outstanding balance is set out below.\n\nWe request that this balance be settled within 7 days of the date of this notice. If payment has already been made, please disregard this notice and share proof of payment so we can update our records.\n\nShould the balance remain unpaid after this period, we may have no option but to refer this matter to a third party for further collection action.`;
+
+    const doc = await window.KoboExport.buildLetterPdf({
+      letterhead: business.name,
+      dateLine: `${fmtDate(new Date().toISOString())}\n\nTo: ${client.name}${client.address ? '\n' + client.address : ''}`,
+      bodyText: `FORMAL NOTICE OF OUTSTANDING BALANCE\n\n${bodyIntro}\n\n` +
+        rows.map(r => `${r[0]} — due ${r[1]} — ${r[2]}`).join('\n') +
+        `\n\nTotal outstanding: ${naira(totalDue)}\n\nRegards,\n${business.name}`
+    });
+
+    window.KoboExport.download(`Formal-Notice-${(client.name || 'customer').replace(/\s+/g, '-')}.pdf`, doc);
+
+    await supabase.from('escalation_actions').insert({
+      business_id: business.id, client_id: cid, stage: 3, action_type: 'formal_notice',
+      created_by: session.user.id
+    });
+    await logActivity('formal_notice_generated', { balance: totalDue }, cid);
+  }
 
   // ---------- Cash-flow forecast (deterministic, from expected payment dates) ----------
   function forecastBucket(days) {
@@ -366,7 +439,7 @@ function renderPlanPicker(ctx) {
   }
 
   async function loadAll() {
-    const [c, r, p, n, a, pe, d, dr] = await Promise.all([
+    const [c, r, p, n, a, pe, d, dr, ea] = await Promise.all([
       supabase.from('clients').select('id, name, phone, email, credit_limit, address').eq('business_id', business.id).order('name', { ascending: true }),
       supabase.from('receivables').select('id, client_id, description, amount, amount_paid, due_date, payment_status, source, created_at').eq('business_id', business.id).order('due_date', { ascending: true }),
       supabase.from('promise_to_pay').select('id, client_id, promised_date, promised_amount, note, status, created_at').eq('business_id', business.id).order('promised_date', { ascending: true }),
@@ -374,7 +447,8 @@ function renderPlanPicker(ctx) {
       supabase.from('credit_audit_log').select('id, client_id, action, details, created_at, clients(name)').eq('business_id', business.id).order('created_at', { ascending: false }).limit(30),
       supabase.from('receivable_payments').select('id, receivable_id, amount, paid_at').eq('business_id', business.id).order('paid_at', { ascending: true }),
       supabase.from('receivable_disputes').select('id, receivable_id, client_id, reason, description, status, resolution_note, created_at, resolved_at').eq('business_id', business.id).order('created_at', { ascending: false }),
-      supabase.from('receivable_document_requests').select('id, receivable_id, client_id, doc_type, description, status, requested_at, received_at').eq('business_id', business.id).order('requested_at', { ascending: false })
+      supabase.from('receivable_document_requests').select('id, receivable_id, client_id, doc_type, description, status, requested_at, received_at').eq('business_id', business.id).order('requested_at', { ascending: false }),
+      supabase.from('escalation_actions').select('id, client_id, stage, action_type, note, created_at').eq('business_id', business.id).order('created_at', { ascending: false })
     ]);
     clients = c.data || [];
     receivables = r.data || [];
@@ -384,6 +458,7 @@ function renderPlanPicker(ctx) {
     paymentEvents = pe.data || [];
     disputes = d.data || [];
     docRequests = dr.data || [];
+    escalationActions = ea.data || [];
   }
 
   const DISPUTE_REASON_LABEL = {
@@ -878,6 +953,7 @@ function renderPlanPicker(ctx) {
       const client = row.client;
       const overLimit = client.credit_limit && row.balance > Number(client.credit_limit);
       const scoreInfo = computeCollectionScore(cid);
+      const escalation = computeEscalationStage(cid);
       return `
         <div class="pr-row" data-toggle="${cid}" style="cursor:pointer; display:block;">
           <div style="display:flex; justify-content:space-between; align-items:center;">
@@ -888,6 +964,7 @@ function renderPlanPicker(ctx) {
                 ${overLimit ? `<span style="color:#b3402e; font-size:0.68rem; margin-left:6px;">Over ${naira(client.credit_limit)} limit</span>` : ''}
                 ${row.hasOpenDispute ? `<span style="color:#8a5a00; font-size:0.68rem; margin-left:6px;">⚠ Dispute open</span>` : ''}
                 ${row.hasOpenDocRequest ? `<span style="color:#2f5f8a; font-size:0.68rem; margin-left:6px;">📄 Doc pending</span>` : ''}
+                ${escalation && escalation.stage >= 3 ? `<span style="color:${ESCALATION_COLOR[escalation.stage]}; font-size:0.68rem; margin-left:6px;">${escalation.label}</span>` : ''}
               </div>
               <div class="pr-meta">${row.items.length} open item${row.items.length > 1 ? 's' : ''}${(() => {
                 const preds = row.items.map(predictedPaymentDate).filter(Boolean);
@@ -969,6 +1046,8 @@ function renderPlanPicker(ctx) {
     const pList = clientPromises(cid);
     const nList = clientNotes(cid);
     const scoreInfo = computeCollectionScore(cid);
+    const escalation = computeEscalationStage(cid);
+    const escalationHistory = clientEscalationHistory(cid);
 
     detail.innerHTML = `
       ${scoreInfo ? `
@@ -978,6 +1057,17 @@ function renderPlanPicker(ctx) {
           <strong style="color:${SCORE_TIER_COLOR[scoreInfo.tier]};">${scoreInfo.tier} collection score</strong>
           <div style="opacity:0.65; margin-top:2px;">${scoreInfo.reasons.length ? scoreInfo.reasons.join(', ') : 'No negative factors on record.'}${scoreInfo.limitedHistory ? ' · limited history' : ''}</div>
         </div>
+      </div>` : ''}
+      ${escalation ? `
+      <div style="margin-bottom:10px; padding:8px 10px; border:1px solid var(--line); border-radius:8px;">
+        <div style="font-size:0.78rem;">
+          <strong style="color:${ESCALATION_COLOR[escalation.stage]};">Escalation stage ${escalation.stage} — ${escalation.label}</strong>
+          <div style="opacity:0.65; margin-top:2px;">${escalation.reason}</div>
+        </div>
+        ${escalationHistory.length ? `
+        <div style="margin-top:6px; font-size:0.72rem; opacity:0.55;">
+          ${escalationHistory.slice(0, 3).map(e => `${e.action_type === 'formal_notice' ? 'Formal notice' : 'Referred to collections'} — ${fmtDate(e.created_at)}`).join(' · ')}
+        </div>` : ''}
       </div>` : ''}
       <p style="font-size:0.78rem; opacity:0.65; margin-bottom:10px;">${behaviourNote}</p>
       <table style="width:100%; font-size:0.85rem; margin-bottom:8px;">
@@ -991,8 +1081,11 @@ function renderPlanPicker(ctx) {
         <button data-statement="${cid}" class="btn small">Download statement (PDF)</button>
         ${client.phone ? `<button data-remind="${cid}" class="btn small">WhatsApp reminder</button>` : ''}
         <button data-draft-negotiation="${cid}" class="btn small">Draft AI negotiation message</button>
+        ${escalation && escalation.stage >= 3 ? `<button data-formal-notice="${cid}" class="btn small">Generate formal notice (PDF)</button>` : ''}
+        ${escalation && escalation.stage >= 4 ? `<button data-collections-referral="${cid}" class="btn small">Flag for collections/legal referral</button>` : ''}
       </div>
       <div id="negotiationDraft-${cid}" style="margin-bottom:14px;"></div>
+      <div id="collectionsReferralForm-${cid}" style="display:none; margin-bottom:14px;"></div>
 
       <strong style="font-size:0.82rem;">Promises to pay</strong>
       <div style="margin:6px 0 10px;">
@@ -1083,6 +1176,60 @@ function renderPlanPicker(ctx) {
       }
     }
     draftBtn.addEventListener('click', generateDraft);
+
+    const formalNoticeBtn = detail.querySelector(`[data-formal-notice="${cid}"]`);
+    if (formalNoticeBtn) {
+      formalNoticeBtn.addEventListener('click', async () => {
+        formalNoticeBtn.disabled = true;
+        formalNoticeBtn.textContent = 'Generating…';
+        try {
+          await generateFormalNotice(cid);
+          toast('Formal notice downloaded and logged.');
+          await loadAll();
+          renderActivity();
+        } catch (err) {
+          toast('Could not generate formal notice: ' + err.message);
+        } finally {
+          formalNoticeBtn.disabled = false;
+          formalNoticeBtn.textContent = 'Generate formal notice (PDF)';
+        }
+      });
+    }
+
+    const referralBtn = detail.querySelector(`[data-collections-referral="${cid}"]`);
+    const referralFormEl = detail.querySelector(`#collectionsReferralForm-${cid}`);
+    if (referralBtn) {
+      referralBtn.addEventListener('click', () => {
+        referralFormEl.innerHTML = `
+          <div class="pr-form" style="display:flex; gap:8px; flex-wrap:wrap; align-items:flex-end; border:1px solid var(--line); border-radius:8px; padding:10px;">
+            <div style="flex:1; min-width:220px;"><label>Note (optional) — who/where this is being referred to</label><input type="text" id="referralNote-${cid}" placeholder="e.g. handed to ABC Collections Agency"></div>
+            <button data-save-referral class="btn primary small">Log referral</button>
+            <button data-cancel-referral class="btn small">Cancel</button>
+          </div>
+        `;
+        referralFormEl.style.display = 'block';
+
+        referralFormEl.querySelector('[data-cancel-referral]').addEventListener('click', () => {
+          referralFormEl.style.display = 'none';
+          referralFormEl.innerHTML = '';
+        });
+
+        referralFormEl.querySelector('[data-save-referral]').addEventListener('click', async () => {
+          const note = document.getElementById(`referralNote-${cid}`).value.trim() || null;
+          const { error } = await supabase.from('escalation_actions').insert({
+            business_id: business.id, client_id: cid, stage: 4, action_type: 'collections_referral',
+            note, created_by: session.user.id
+          });
+          if (error) { toast('Could not log referral: ' + error.message); return; }
+
+          await logActivity('collections_referral', { note }, cid);
+          toast('Referral logged.');
+          await loadAll();
+          renderActivity();
+          renderLedger();
+        });
+      });
+    }
 
     detail.querySelectorAll('[data-pay]').forEach(btn => {
       btn.addEventListener('click', async () => {
@@ -1374,7 +1521,14 @@ function renderPlanPicker(ctx) {
       reminder_sent: 'Reminder sent',
       statement_generated: 'Statement generated',
       payment_logged: 'Payment logged',
-      receivable_added: 'Outstanding balance added'
+      receivable_added: 'Outstanding balance added',
+      dispute_flagged: 'Dispute flagged',
+      dispute_resolved: 'Dispute resolved',
+      document_requested: 'Document requested',
+      document_received: 'Document received',
+      document_chased: 'Document chase sent',
+      formal_notice_generated: 'Formal notice generated',
+      collections_referral: 'Referred to collections/legal'
     };
     wrap.innerHTML = activity.map(a => `
       <div style="font-size:0.82rem; padding:6px 0; border-bottom:1px dashed var(--line);">
