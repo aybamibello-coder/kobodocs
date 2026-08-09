@@ -97,7 +97,7 @@ Deno.serve(async (req) => {
 
       const { data: doc } = await supabase
         .from("documents")
-        .select("amount, amount_paid")
+        .select("amount, amount_paid, business_id")
         .eq("id", metadata.document_id)
         .single();
 
@@ -108,6 +108,16 @@ Deno.serve(async (req) => {
           .from("documents")
           .update({ amount_paid: newAmountPaid, payment_status: newStatus })
           .eq("id", metadata.document_id);
+
+        // Log the event too (not just the running total) — this is the
+        // source of truth for revenue analytics, alongside manual
+        // payments recorded from the Business Suite debt/collections page.
+        await supabase.from("document_payments").insert({
+          document_id: metadata.document_id,
+          business_id: doc.business_id,
+          amount: amountNaira,
+          method: "squad",
+        });
       }
     } else if (metadata?.plan === "pro") {
       await supabase
@@ -224,7 +234,6 @@ Deno.serve(async (req) => {
         });
       }
     } else if (metadata?.product === "grant_application_generator") {
-      // ---- Grant Application Generator: time-limited pass, ₦10,000 / 3 months (init-grant-payment) ----
       const grantDays = 90;
 
       const { data: existing } = await supabase
