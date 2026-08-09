@@ -32,6 +32,38 @@ function showMsg(text, type) {
 
   let currentPeriod = 'week';
 
+  const CHART_COLORS = ['#0D2620', '#C79A3C', '#A8342A', '#5c625b', '#8a6a1f', '#14342B', '#d8d4c8', '#7a9187'];
+  let categoryChart = null;
+
+  function renderCategoryChart(byCategory) {
+    const canvas = document.getElementById('chartExpenseCategories');
+    if (!canvas || typeof Chart === 'undefined') return;
+    if (categoryChart) categoryChart.destroy();
+
+    const entries = Object.entries(byCategory).sort((a, b) => b[1] - a[1]);
+    if (!entries.length) {
+      const ctx = canvas.getContext('2d');
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      return;
+    }
+
+    categoryChart = new Chart(canvas.getContext('2d'), {
+      type: 'doughnut',
+      data: {
+        labels: entries.map(([cat]) => cat.charAt(0).toUpperCase() + cat.slice(1)),
+        datasets: [{ data: entries.map(([, amt]) => amt), backgroundColor: CHART_COLORS, borderWidth: 0 }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { position: 'bottom', labels: { font: { size: 10 }, boxWidth: 10 } },
+          tooltip: { callbacks: { label: (ctx) => `${ctx.label}: ${naira(ctx.raw)}` } }
+        }
+      }
+    });
+  }
+
   async function renderSnapshot() {
     const start = periodStart(currentPeriod).toISOString();
 
@@ -68,6 +100,7 @@ function showMsg(text, type) {
     catEl.innerHTML = cats.length
       ? cats.map(([cat, amt]) => `<div class="cat-row"><span style="text-transform:capitalize;">${cat}</span><span>${naira(amt)}</span></div>`).join('')
       : '<div class="empty-note" style="padding:8px 0;">No expenses logged in this period.</div>';
+    renderCategoryChart(byCategory);
   }
 
   document.querySelectorAll('#periodToggle button').forEach(btn => {
