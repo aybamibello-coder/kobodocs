@@ -48,6 +48,43 @@ async function signOut() {
   return supabase.auth.signOut();
 }
 
+// ---------- MFA (TOTP) ----------
+async function mfaListFactors() {
+  const { data, error } = await supabase.auth.mfa.listFactors();
+  return { factors: data?.totp || [], error };
+}
+
+async function mfaEnroll() {
+  return supabase.auth.mfa.enroll({ factorType: 'totp' });
+}
+
+async function mfaVerifyEnrollment(factorId, code) {
+  const { data: challenge, error: challengeError } = await supabase.auth.mfa.challenge({ factorId });
+  if (challengeError) return { error: challengeError };
+  return supabase.auth.mfa.verify({ factorId, challengeId: challenge.id, code });
+}
+
+async function mfaUnenroll(factorId) {
+  return supabase.auth.mfa.unenroll({ factorId });
+}
+
+// Called right after a password sign-in succeeds. If the account has a
+// verified MFA factor, the session is only at aal1 (password only) until
+// a TOTP code is also verified — currentLevel !== nextLevel means a
+// second-factor challenge is still required before the session is fully
+// trusted.
+async function mfaNeedsChallenge() {
+  const { data, error } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+  if (error) return false;
+  return data.nextLevel === 'aal2' && data.currentLevel !== data.nextLevel;
+}
+
+async function mfaChallengeAndVerify(factorId, code) {
+  const { data: challenge, error: challengeError } = await supabase.auth.mfa.challenge({ factorId });
+  if (challengeError) return { error: challengeError };
+  return supabase.auth.mfa.verify({ factorId, challengeId: challenge.id, code });
+}
+
 async function getSession() {
   const { data } = await supabase.auth.getSession();
   return data.session;
@@ -101,7 +138,13 @@ window.KoboAuth = {
   getProfile,
   onAuthStateChange,
   requireAuth,
-  requirePro
+  requirePro,
+  mfaListFactors,
+  mfaEnroll,
+  mfaVerifyEnrollment,
+  mfaUnenroll,
+  mfaNeedsChallenge,
+  mfaChallengeAndVerify
 };
 
 // Let the page know the module has finished loading and wiring window.KoboAuth

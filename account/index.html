@@ -196,6 +196,18 @@
         <p class="auth-alt-link"><a href="#" id="forgotLink">Forgot password? Reset it</a></p>
       </div>
 
+      <div class="auth-panel" id="panel-mfa-challenge">
+        <p style="font-size:0.88rem; opacity:0.75; margin-bottom:14px;">Enter the 6-digit code from your authenticator app.</p>
+        <form id="mfaChallengeForm">
+          <div class="field-group">
+            <label for="mfaChallengeCode">Authentication code</label>
+            <input type="text" id="mfaChallengeCode" inputmode="numeric" pattern="[0-9]*" maxlength="6" placeholder="123456" autocomplete="one-time-code" required>
+          </div>
+          <button type="submit" class="btn btn-primary auth-submit">Verify</button>
+        </form>
+        <div class="auth-msg" id="mfaChallengeMsg"></div>
+      </div>
+
       <div class="auth-panel" id="panel-signup">
         <form id="signupForm">
           <div class="field-group">
@@ -247,6 +259,12 @@
 
       <button type="button" class="btn btn-primary" id="saveBrandingBtn">Save branding</button>
       <p class="auth-msg" id="brandingMsg"></p>
+    </div>
+
+    <div class="auth-card branding-card auth-hidden" id="securityCard">
+      <h4>Two-factor authentication</h4>
+      <p class="auth-note">Add an authenticator app (Google Authenticator, Authy, 1Password, etc.) as a second step when signing in — even if someone gets your password, they can't get in without it too.</p>
+      <div id="mfaStatusWrap"><p class="auth-note">Checking…</p></div>
     </div>
 
     <div class="auth-card branding-card auth-hidden" id="businessesCard">
@@ -390,10 +408,60 @@
       } else {
         businessesCard.classList.add('auth-hidden');
       }
+
+      document.getElementById('securityCard').classList.remove('auth-hidden');
+      await renderMfaStatus();
     } else {
       document.getElementById('loggedOutView').style.display = 'block';
       document.getElementById('loggedInView').style.display = 'none';
     }
+  }
+
+  async function renderMfaStatus() {
+    const wrap = document.getElementById('mfaStatusWrap');
+    const { factors, error } = await window.KoboAuth.mfaListFactors();
+    if (error) { wrap.innerHTML = `<p class="auth-msg error">Could not load 2FA status.</p>`; return; }
+
+    const verified = factors.find(f => f.status === 'verified');
+
+    if (verified) {
+      wrap.innerHTML = `
+        <p class="auth-msg success" style="margin-bottom:10px;">Two-factor authentication is on.</p>
+        <button type="button" class="btn small-btn" id="mfaRemoveBtn">Turn off 2FA</button>
+      `;
+      document.getElementById('mfaRemoveBtn').addEventListener('click', async () => {
+        if (!confirm('Turn off two-factor authentication? Your account will only be protected by your password.')) return;
+        const { error } = await window.KoboAuth.mfaUnenroll(verified.id);
+        if (error) { wrap.innerHTML += `<p class="auth-msg error">${error.message}</p>`; return; }
+        renderMfaStatus();
+      });
+      return;
+    }
+
+    wrap.innerHTML = `<button type="button" class="btn btn-primary small-btn" id="mfaStartBtn">Set up two-factor authentication</button>`;
+    document.getElementById('mfaStartBtn').addEventListener('click', async () => {
+      const { data, error } = await window.KoboAuth.mfaEnroll();
+      if (error) { wrap.innerHTML += `<p class="auth-msg error">${error.message}</p>`; return; }
+
+      wrap.innerHTML = `
+        <p class="auth-note" style="margin-bottom:10px;">Scan this with your authenticator app, then enter the 6-digit code it shows.</p>
+        <div style="max-width:200px; margin-bottom:12px;">${data.totp.qr_code}</div>
+        <p class="mono auth-note" style="word-break:break-all; margin-bottom:12px;">Can't scan? Enter this key manually: ${data.totp.secret}</p>
+        <div class="field-group">
+          <label for="mfaEnrollCode">6-digit code</label>
+          <input type="text" id="mfaEnrollCode" inputmode="numeric" pattern="[0-9]*" maxlength="6" placeholder="123456">
+        </div>
+        <button type="button" class="btn btn-primary small-btn" id="mfaEnrollVerifyBtn">Confirm and turn on 2FA</button>
+        <p class="auth-msg" id="mfaEnrollMsg"></p>
+      `;
+      document.getElementById('mfaEnrollVerifyBtn').addEventListener('click', async () => {
+        const code = document.getElementById('mfaEnrollCode').value.trim();
+        const msg = document.getElementById('mfaEnrollMsg');
+        const { error: verifyError } = await window.KoboAuth.mfaVerifyEnrollment(data.id, code);
+        if (verifyError) { showMsg(msg, verifyError.message, 'error'); return; }
+        renderMfaStatus();
+      });
+    });
   }
 
   async function loadBusinesses() {
@@ -483,7 +551,32 @@
       const msg = document.getElementById('signinMsg');
       const { error } = await window.KoboAuth.signIn(email, password);
       if (error) { showMsg(msg, error.message, 'error'); return; }
+
+      if (await window.KoboAuth.mfaNeedsChallenge()) {
+        const { factors } = await window.KoboAuth.mfaListFactors();
+        const verified = factors.find(f => f.status === 'verified');
+        if (verified) {
+          document.querySelectorAll('.auth-panel').forEach(p => p.classList.remove('active'));
+          document.getElementById('panel-mfa-challenge').classList.add('active');
+          document.getElementById('panel-mfa-challenge').dataset.factorId = verified.id;
+          document.getElementById('mfaChallengeCode').focus();
+          return;
+        }
+      }
+
       showMsg(msg, 'Signed in — redirecting…', 'success');
+      resumeRedirectOrRefresh();
+    });
+
+    document.getElementById('mfaChallengeForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const panel = document.getElementById('panel-mfa-challenge');
+      const factorId = panel.dataset.factorId;
+      const code = document.getElementById('mfaChallengeCode').value.trim();
+      const msg = document.getElementById('mfaChallengeMsg');
+      const { error } = await window.KoboAuth.mfaChallengeAndVerify(factorId, code);
+      if (error) { showMsg(msg, error.message, 'error'); return; }
+      showMsg(msg, 'Verified — redirecting…', 'success');
       resumeRedirectOrRefresh();
     });
 
