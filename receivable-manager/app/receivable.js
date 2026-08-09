@@ -126,6 +126,15 @@ function renderPlanPicker(ctx) {
       <div id="reconWrap" style="margin-top:14px;"></div>
     </div>
     <div class="bs-panel">
+      <div>
+        <strong style="font-size:0.9rem;">Cash-flow forecast</strong>
+        <p style="font-size:0.78rem; opacity:0.65; margin-top:2px;">When your outstanding balances are actually expected to land, based on each client's payment history — not just when they're due.</p>
+      </div>
+      <div id="forecastStats" style="display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:10px; margin-top:12px;"></div>
+      <div style="position:relative; height:220px; margin-top:14px;"><canvas id="chartCashFlow"></canvas></div>
+      <div id="forecastNote" style="font-size:0.72rem; opacity:0.55; margin-top:8px;"></div>
+    </div>
+    <div class="bs-panel">
       <strong style="font-size:0.9rem;">Aging summary</strong>
       <div class="aging-grid" id="agingGrid" style="display:grid; grid-template-columns:repeat(auto-fit,minmax(110px,1fr)); gap:10px; margin-top:12px;"></div>
     </div>
@@ -264,6 +273,77 @@ function renderPlanPicker(ctx) {
   const SCORE_TIER_COLOR = {
     Excellent: '#2f8a4e', Good: '#4a8f3c', Fair: '#b3902e', Watch: '#c46a1f', Poor: '#b3402e'
   };
+
+  // ---------- Cash-flow forecast (deterministic, from expected payment dates) ----------
+  function forecastBucket(days) {
+    if (days <= 7) return '0-7';
+    if (days <= 30) return '8-30';
+    if (days <= 90) return '31-90';
+    return '90+';
+  }
+
+  function computeCashFlowForecast() {
+    const todayStr = new Date().toISOString().slice(0, 10);
+    const buckets = { '0-7': 0, '8-30': 0, '31-90': 0, '90+': 0 };
+    let blockedTotal = 0;
+    let noDateTotal = 0;
+
+    receivables.filter(rv => rv.payment_status !== 'paid').forEach(rv => {
+      const balance = Number(rv.amount) - Number(rv.amount_paid || 0);
+      if (balance <= 0) return;
+      if (openDisputeFor(rv.id) || openDocRequestFor(rv.id)) { blockedTotal += balance; return; }
+
+      const predicted = predictedPaymentDate(rv);
+      const expectedDateStr = predicted ? predicted.date : rv.due_date;
+      if (!expectedDateStr) { noDateTotal += balance; return; }
+
+      const days = Math.max(0, daysBetween(todayStr, expectedDateStr));
+      buckets[forecastBucket(days)] += balance;
+    });
+
+    return { buckets, blockedTotal, noDateTotal };
+  }
+
+  function renderCashFlowForecast() {
+    const { buckets, blockedTotal, noDateTotal } = computeCashFlowForecast();
+    const within7 = buckets['0-7'];
+    const within30 = within7 + buckets['8-30'];
+    const within90 = within30 + buckets['31-90'];
+
+    document.getElementById('forecastStats').innerHTML = `
+      <div style="border:1px solid var(--line); border-radius:8px; padding:10px; text-align:center;">
+        <div style="font-size:0.72rem; opacity:0.65;">Next 7 days</div>
+        <div class="pr-amount" style="margin-top:4px;">${naira(within7)}</div>
+      </div>
+      <div style="border:1px solid var(--line); border-radius:8px; padding:10px; text-align:center;">
+        <div style="font-size:0.72rem; opacity:0.65;">Next 30 days</div>
+        <div class="pr-amount" style="margin-top:4px;">${naira(within30)}</div>
+      </div>
+      <div style="border:1px solid var(--line); border-radius:8px; padding:10px; text-align:center;">
+        <div style="font-size:0.72rem; opacity:0.65;">Next 90 days</div>
+        <div class="pr-amount" style="margin-top:4px;">${naira(within90)}</div>
+      </div>
+    `;
+
+    drawChart('chartCashFlow', {
+      type: 'bar',
+      data: {
+        labels: ['0-7 days', '8-30 days', '31-90 days', '90+ days'],
+        datasets: [{ data: [buckets['0-7'], buckets['8-30'], buckets['31-90'], buckets['90+']], backgroundColor: CHART_COLORS.inkGreenDeep, borderRadius: 4 }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false }, tooltip: { callbacks: { label: (ctx) => naira(ctx.raw) } } },
+        scales: { y: { ticks: { callback: (v) => '\u20a6' + Number(v).toLocaleString('en-NG') } } }
+      }
+    });
+
+    const notes = [];
+    if (blockedTotal > 0) notes.push(`${naira(blockedTotal)} excluded \u2014 dispute or missing document pending`);
+    if (noDateTotal > 0) notes.push(`${naira(noDateTotal)} has no due date on file, so it isn't placed on the timeline`);
+    document.getElementById('forecastNote').textContent = notes.join(' \u00b7 ') || 'Every outstanding balance is accounted for above.';
+  }
 
   async function logPaymentForReceivable(receivableId, amountNum, clientId, paidAtIso) {
     const item = receivables.find(i => i.id === receivableId);
@@ -666,6 +746,7 @@ function renderPlanPicker(ctx) {
     renderLedger();
     computeDSO();
     renderAnalytics();
+    renderCashFlowForecast();
     renderRecon();
     toast('Payment matched and logged.');
   }
@@ -960,6 +1041,7 @@ function renderPlanPicker(ctx) {
         renderLedger();
         computeDSO();
         renderAnalytics();
+        renderCashFlowForecast();
       });
     });
 
@@ -1005,6 +1087,7 @@ function renderPlanPicker(ctx) {
           renderAging();
           renderLedger();
           renderActivity();
+          renderCashFlowForecast();
         });
       });
     });
@@ -1027,6 +1110,7 @@ function renderPlanPicker(ctx) {
         renderAging();
         renderLedger();
         renderActivity();
+        renderCashFlowForecast();
       });
     });
 
@@ -1073,6 +1157,7 @@ function renderPlanPicker(ctx) {
           renderAging();
           renderLedger();
           renderActivity();
+          renderCashFlowForecast();
         });
       });
     });
@@ -1092,6 +1177,7 @@ function renderPlanPicker(ctx) {
         renderAging();
         renderLedger();
         renderActivity();
+        renderCashFlowForecast();
       });
     });
 
@@ -1513,6 +1599,7 @@ function renderPlanPicker(ctx) {
   renderPromiseList();
   renderActivity();
   renderAnalytics();
+  renderCashFlowForecast();
   loadAndRenderReminderSettings();
   loadAndRenderPriorities();
 })();
