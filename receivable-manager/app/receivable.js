@@ -135,6 +135,13 @@ function renderPlanPicker(ctx) {
       <div id="forecastNote" style="font-size:0.72rem; opacity:0.55; margin-top:8px;"></div>
     </div>
     <div class="bs-panel">
+      <div>
+        <strong style="font-size:0.9rem;">Team workload</strong>
+        <p style="font-size:0.78rem; opacity:0.65; margin-top:2px;">Who's carrying what across your team, and how they're recovering.</p>
+      </div>
+      <div id="workforceWrap" style="margin-top:12px;"></div>
+    </div>
+    <div class="bs-panel">
       <strong style="font-size:0.9rem;">Aging summary</strong>
       <div class="aging-grid" id="agingGrid" style="display:grid; grid-template-columns:repeat(auto-fit,minmax(110px,1fr)); gap:10px; margin-top:12px;"></div>
     </div>
@@ -165,7 +172,13 @@ function renderPlanPicker(ctx) {
       <div id="entryForm" style="margin-top:12px;"></div>
     </div>
     <div class="bs-panel">
-      <strong style="font-size:0.9rem;">Outstanding by client</strong>
+      <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+        <strong style="font-size:0.9rem;">Outstanding by client</strong>
+        <select id="assigneeFilter" style="font-size:0.78rem;">
+          <option value="">All accounts</option>
+          <option value="__unassigned">Unassigned</option>
+        </select>
+      </div>
       <div id="ledgerWrap" style="margin-top:10px;"></div>
     </div>
     <div class="bs-panel">
@@ -191,6 +204,8 @@ function renderPlanPicker(ctx) {
   let disputes = [];
   let docRequests = [];
   let escalationActions = [];
+  let teamMembers = [];
+  let assignments = [];
   let byClient = {};
   let paymentEvents = [];
   let paymentBehaviour = {}; // client_id -> { avgDelay, count }
@@ -347,6 +362,97 @@ function renderPlanPicker(ctx) {
     await logActivity('formal_notice_generated', { balance: totalDue }, cid);
   }
 
+  // ---------- Workforce management (assign accounts, track recovery per team member) ----------
+  function computeTeamWorkload() {
+    const since30 = new Date(); since30.setDate(since30.getDate() - 30);
+
+    const byMember = {}; // user_id -> { member, accountCount, outstanding, collected30, scores: [] }
+    let unassignedOutstanding = 0, unassignedCount = 0;
+
+    Object.keys(byClient).forEach(cid => {
+      const row = byClient[cid];
+      const assignment = assignmentFor(cid);
+      if (!assignment) {
+        unassignedOutstanding += row.balance;
+        unassignedCount++;
+        return;
+      }
+      const uid = assignment.assigned_to;
+      if (!byMember[uid]) byMember[uid] = { member: memberByUserId(uid), userId: uid, accountCount: 0, outstanding: 0, collected30: 0, scores: [] };
+      byMember[uid].accountCount++;
+      byMember[uid].outstanding += row.balance;
+      const scoreInfo = computeCollectionScore(cid);
+      if (scoreInfo) byMember[uid].scores.push(scoreInfo.score);
+
+      const clientReceivableIds = new Set(receivables.filter(rv => rv.client_id === cid).map(rv => rv.id));
+      const collected30 = paymentEvents
+        .filter(p => clientReceivableIds.has(p.receivable_id) && new Date(p.paid_at) >= since30)
+        .reduce((s, p) => s + Number(p.amount), 0);
+      byMember[uid].collected30 += collected30;
+    });
+
+    const rows = Object.values(byMember).map(m => ({
+      ...m,
+      avgScore: m.scores.length ? Math.round(m.scores.reduce((s, v) => s + v, 0) / m.scores.length) : null
+    })).sort((a, b) => b.outstanding - a.outstanding);
+
+    return { rows, unassignedOutstanding, unassignedCount };
+  }
+
+  function renderTeamWorkload() {
+    const wrap = document.getElementById('workforceWrap');
+    if (!teamMembers.length) {
+      wrap.innerHTML = '<div class="empty-note">No team members yet — invite staff from your business settings to assign accounts.</div>';
+      return;
+    }
+
+    const { rows, unassignedOutstanding, unassignedCount } = computeTeamWorkload();
+
+    if (!rows.length) {
+      wrap.innerHTML = `<div class="empty-note">No accounts assigned yet. Open a client and use "Assign to" to split up the book.${unassignedCount ? ` ${unassignedCount} account${unassignedCount > 1 ? 's' : ''} (${naira(unassignedOutstanding)}) unassigned.` : ''}</div>`;
+      return;
+    }
+
+    wrap.innerHTML = `
+      <table style="width:100%; font-size:0.85rem;">
+        <thead><tr>
+          <th style="text-align:left;">Team member</th>
+          <th style="text-align:left;">Accounts</th>
+          <th style="text-align:left;">Outstanding</th>
+          <th style="text-align:left;">Collected (30d)</th>
+          <th style="text-align:left;">Avg. book score</th>
+        </tr></thead>
+        <tbody>
+          ${rows.map(r => `
+            <tr>
+              <td>${escapeHtml(memberLabel(r.member))}</td>
+              <td>${r.accountCount}</td>
+              <td>${naira(r.outstanding)}</td>
+              <td style="color:#2f8a4e;">${naira(r.collected30)}</td>
+              <td>${r.avgScore === null ? '—' : `<span style="color:${SCORE_TIER_COLOR[r.avgScore >= 85 ? 'Excellent' : r.avgScore >= 70 ? 'Good' : r.avgScore >= 50 ? 'Fair' : r.avgScore >= 30 ? 'Watch' : 'Poor']};">${r.avgScore}</span>`}</td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+      ${unassignedCount ? `<div style="font-size:0.78rem; opacity:0.65; margin-top:10px;">${unassignedCount} account${unassignedCount > 1 ? 's' : ''} unassigned — ${naira(unassignedOutstanding)} outstanding.</div>` : ''}
+    `;
+  }
+
+  function populateAssigneeFilter() {
+    const select = document.getElementById('assigneeFilter');
+    const current = select.value;
+    const existingOptions = new Set(['', '__unassigned']);
+    teamMembers.forEach(m => {
+      if (existingOptions.has(m.user_id)) return;
+      existingOptions.add(m.user_id);
+      const opt = document.createElement('option');
+      opt.value = m.user_id;
+      opt.textContent = memberLabel(m);
+      select.appendChild(opt);
+    });
+    select.value = current;
+  }
+
   // ---------- Cash-flow forecast (deterministic, from expected payment dates) ----------
   function forecastBucket(days) {
     if (days <= 7) return '0-7';
@@ -439,7 +545,7 @@ function renderPlanPicker(ctx) {
   }
 
   async function loadAll() {
-    const [c, r, p, n, a, pe, d, dr, ea] = await Promise.all([
+    const [c, r, p, n, a, pe, d, dr, ea, tm, asg] = await Promise.all([
       supabase.from('clients').select('id, name, phone, email, credit_limit, address').eq('business_id', business.id).order('name', { ascending: true }),
       supabase.from('receivables').select('id, client_id, description, amount, amount_paid, due_date, payment_status, source, created_at').eq('business_id', business.id).order('due_date', { ascending: true }),
       supabase.from('promise_to_pay').select('id, client_id, promised_date, promised_amount, note, status, created_at').eq('business_id', business.id).order('promised_date', { ascending: true }),
@@ -448,7 +554,9 @@ function renderPlanPicker(ctx) {
       supabase.from('receivable_payments').select('id, receivable_id, amount, paid_at').eq('business_id', business.id).order('paid_at', { ascending: true }),
       supabase.from('receivable_disputes').select('id, receivable_id, client_id, reason, description, status, resolution_note, created_at, resolved_at').eq('business_id', business.id).order('created_at', { ascending: false }),
       supabase.from('receivable_document_requests').select('id, receivable_id, client_id, doc_type, description, status, requested_at, received_at').eq('business_id', business.id).order('requested_at', { ascending: false }),
-      supabase.from('escalation_actions').select('id, client_id, stage, action_type, note, created_at').eq('business_id', business.id).order('created_at', { ascending: false })
+      supabase.from('escalation_actions').select('id, client_id, stage, action_type, note, created_at').eq('business_id', business.id).order('created_at', { ascending: false }),
+      supabase.from('business_members').select('id, user_id, role, member_name, member_email').eq('business_id', business.id),
+      supabase.from('receivable_assignments').select('id, client_id, assigned_to, created_at').eq('business_id', business.id)
     ]);
     clients = c.data || [];
     receivables = r.data || [];
@@ -459,6 +567,21 @@ function renderPlanPicker(ctx) {
     disputes = d.data || [];
     docRequests = dr.data || [];
     escalationActions = ea.data || [];
+    teamMembers = tm.data || [];
+    assignments = asg.data || [];
+  }
+
+  function memberLabel(member) {
+    if (!member) return 'Unknown';
+    return member.member_name || member.member_email || 'Team member';
+  }
+
+  function memberByUserId(userId) {
+    return teamMembers.find(m => m.user_id === userId) || null;
+  }
+
+  function assignmentFor(cid) {
+    return assignments.find(a => a.client_id === cid) || null;
   }
 
   const DISPUTE_REASON_LABEL = {
@@ -884,6 +1007,7 @@ function renderPlanPicker(ctx) {
     computeDSO();
     renderAnalytics();
     renderCashFlowForecast();
+    renderTeamWorkload();
     renderRecon();
     toast('Payment matched and logged.');
   }
@@ -941,10 +1065,16 @@ function renderPlanPicker(ctx) {
 
   function renderLedger() {
     const wrap = document.getElementById('ledgerWrap');
-    const clientIds = Object.keys(byClient).sort((a, b) => byClient[b].balance - byClient[a].balance);
+    const filterVal = document.getElementById('assigneeFilter').value;
+    let clientIds = Object.keys(byClient).sort((a, b) => byClient[b].balance - byClient[a].balance);
+    if (filterVal === '__unassigned') {
+      clientIds = clientIds.filter(cid => !assignmentFor(cid));
+    } else if (filterVal) {
+      clientIds = clientIds.filter(cid => assignmentFor(cid)?.assigned_to === filterVal);
+    }
 
     if (!clientIds.length) {
-      wrap.innerHTML = '<div class="empty-note">Nothing outstanding — every account is settled.</div>';
+      wrap.innerHTML = '<div class="empty-note">Nothing outstanding here.</div>';
       return;
     }
 
@@ -954,6 +1084,7 @@ function renderPlanPicker(ctx) {
       const overLimit = client.credit_limit && row.balance > Number(client.credit_limit);
       const scoreInfo = computeCollectionScore(cid);
       const escalation = computeEscalationStage(cid);
+      const assignment = assignmentFor(cid);
       return `
         <div class="pr-row" data-toggle="${cid}" style="cursor:pointer; display:block;">
           <div style="display:flex; justify-content:space-between; align-items:center;">
@@ -965,6 +1096,7 @@ function renderPlanPicker(ctx) {
                 ${row.hasOpenDispute ? `<span style="color:#8a5a00; font-size:0.68rem; margin-left:6px;">⚠ Dispute open</span>` : ''}
                 ${row.hasOpenDocRequest ? `<span style="color:#2f5f8a; font-size:0.68rem; margin-left:6px;">📄 Doc pending</span>` : ''}
                 ${escalation && escalation.stage >= 3 ? `<span style="color:${ESCALATION_COLOR[escalation.stage]}; font-size:0.68rem; margin-left:6px;">${escalation.label}</span>` : ''}
+                ${assignment ? `<span style="opacity:0.6; font-size:0.68rem; margin-left:6px;">→ ${escapeHtml(memberLabel(memberByUserId(assignment.assigned_to)))}</span>` : ''}
               </div>
               <div class="pr-meta">${row.items.length} open item${row.items.length > 1 ? 's' : ''}${(() => {
                 const preds = row.items.map(predictedPaymentDate).filter(Boolean);
@@ -1068,6 +1200,15 @@ function renderPlanPicker(ctx) {
         <div style="margin-top:6px; font-size:0.72rem; opacity:0.55;">
           ${escalationHistory.slice(0, 3).map(e => `${e.action_type === 'formal_notice' ? 'Formal notice' : 'Referred to collections'} — ${fmtDate(e.created_at)}`).join(' · ')}
         </div>` : ''}
+      </div>` : ''}
+      ${teamMembers.length ? `
+      <div style="margin-bottom:10px; padding:8px 10px; border:1px solid var(--line); border-radius:8px; display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+        <span style="font-size:0.78rem; opacity:0.65;">Assigned to</span>
+        <select id="assignSelect-${cid}" style="font-size:0.78rem;">
+          <option value="">— unassigned —</option>
+          ${teamMembers.map(m => `<option value="${m.user_id}" ${assignmentFor(cid)?.assigned_to === m.user_id ? 'selected' : ''}>${escapeHtml(memberLabel(m))}</option>`).join('')}
+        </select>
+        <button data-save-assignment="${cid}" class="btn small">Save</button>
       </div>` : ''}
       <p style="font-size:0.78rem; opacity:0.65; margin-bottom:10px;">${behaviourNote}</p>
       <table style="width:100%; font-size:0.85rem; margin-bottom:8px;">
@@ -1231,6 +1372,28 @@ function renderPlanPicker(ctx) {
       });
     }
 
+    const saveAssignmentBtn = detail.querySelector(`[data-save-assignment="${cid}"]`);
+    if (saveAssignmentBtn) {
+      saveAssignmentBtn.addEventListener('click', async () => {
+        const uid = document.getElementById(`assignSelect-${cid}`).value;
+
+        if (!uid) {
+          const existing = assignmentFor(cid);
+          if (existing) await supabase.from('receivable_assignments').delete().eq('id', existing.id);
+          toast('Unassigned.');
+        } else {
+          const { error } = await supabase.from('receivable_assignments')
+            .upsert({ business_id: business.id, client_id: cid, assigned_to: uid, assigned_by: session.user.id, updated_at: new Date().toISOString() }, { onConflict: 'business_id,client_id' });
+          if (error) { toast('Could not save assignment: ' + error.message); return; }
+          toast('Assigned.');
+        }
+
+        await loadAll();
+        renderLedger();
+        renderTeamWorkload();
+      });
+    }
+
     detail.querySelectorAll('[data-pay]').forEach(btn => {
       btn.addEventListener('click', async () => {
         const id = btn.dataset.pay;
@@ -1251,6 +1414,7 @@ function renderPlanPicker(ctx) {
         computeDSO();
         renderAnalytics();
         renderCashFlowForecast();
+        renderTeamWorkload();
       });
     });
 
@@ -1297,6 +1461,7 @@ function renderPlanPicker(ctx) {
           renderLedger();
           renderActivity();
           renderCashFlowForecast();
+          renderTeamWorkload();
         });
       });
     });
@@ -1320,6 +1485,7 @@ function renderPlanPicker(ctx) {
         renderLedger();
         renderActivity();
         renderCashFlowForecast();
+        renderTeamWorkload();
       });
     });
 
@@ -1367,6 +1533,7 @@ function renderPlanPicker(ctx) {
           renderLedger();
           renderActivity();
           renderCashFlowForecast();
+          renderTeamWorkload();
         });
       });
     });
@@ -1387,6 +1554,7 @@ function renderPlanPicker(ctx) {
         renderLedger();
         renderActivity();
         renderCashFlowForecast();
+        renderTeamWorkload();
       });
     });
 
@@ -1801,12 +1969,15 @@ function renderPlanPicker(ctx) {
   computePaymentBehaviour();
   computeDSO();
   renderAging();
+  populateAssigneeFilter();
+  document.getElementById('assigneeFilter').addEventListener('change', renderLedger);
   renderLedger();
   renderEntryForm();
   renderPromiseList();
   renderActivity();
   renderAnalytics();
   renderCashFlowForecast();
+  renderTeamWorkload();
   loadAndRenderReminderSettings();
   loadAndRenderPriorities();
 })();
