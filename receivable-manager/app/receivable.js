@@ -151,6 +151,13 @@ function growthUpsellHtml(featureName) {
   const { business, supabase, session } = ctx;
   const isGrowth = ctx.effectivePlan === 'growth';
 
+  document.getElementById('importBtn').addEventListener('click', () => {
+    window.KoboImport.open({
+      supabase, business,
+      onComplete: () => window.location.reload(),
+    });
+  });
+
   async function logActivity(action, details = {}, clientId = null) {
     await supabase.from('credit_audit_log').insert({
       business_id: business.id,
