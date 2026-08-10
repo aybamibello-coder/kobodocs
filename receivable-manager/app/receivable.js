@@ -33,6 +33,10 @@ function agingBucket(days) {
 }
 
 const BUCKET_LABEL = { current: 'Current', b1: '1–30d overdue', b2: '31–60d overdue', b3: '61–90d overdue', b4: '90+ days overdue' };
+const BUCKET_TONE = { current: 'good', b1: 'watch', b2: 'watch', b3: 'bad', b4: 'bad' };
+function rmPill(label, tone) {
+  return `<span class="rm-pill ${tone}">${label}</span>`;
+}
 
 function toast(text) {
   const el = document.getElementById('toast');
@@ -416,6 +420,7 @@ function renderPageHeader(ctx) {
   const SCORE_TIER_COLOR = {
     Excellent: '#2f8a4e', Good: '#4a8f3c', Fair: '#b3902e', Watch: '#c46a1f', Poor: '#b3402e'
   };
+  const SCORE_TIER_TONE = { Excellent: 'good', Good: 'good', Fair: 'watch', Watch: 'watch', Poor: 'bad' };
 
   // ---------- Escalation engine (deterministic ladder: reminder -> firm reminder -> formal notice -> collections/legal) ----------
   const ESCALATION_LABEL = {
@@ -425,6 +430,7 @@ function renderPageHeader(ctx) {
     4: 'Collections / legal referral'
   };
   const ESCALATION_COLOR = { 1: '#4a8f3c', 2: '#b3902e', 3: '#c46a1f', 4: '#b3402e' };
+  const ESCALATION_TONE = { 1: 'good', 2: 'watch', 3: 'watch', 4: 'bad' };
 
   function computeEscalationStage(cid) {
     const row = byClient[cid];
@@ -542,13 +548,13 @@ function renderPageHeader(ctx) {
     }
 
     wrap.innerHTML = `
-      <table style="width:100%; font-size:0.85rem;">
+      <table class="rm-table">
         <thead><tr>
-          <th style="text-align:left;">Team member</th>
-          <th style="text-align:left;">Accounts</th>
-          <th style="text-align:left;">Outstanding</th>
-          <th style="text-align:left;">Collected (30d)</th>
-          <th style="text-align:left;">Avg. book score</th>
+          <th>Team member</th>
+          <th>Accounts</th>
+          <th>Outstanding</th>
+          <th>Collected (30d)</th>
+          <th>Avg. book score</th>
         </tr></thead>
         <tbody>
           ${rows.map(r => `
@@ -619,17 +625,17 @@ function renderPageHeader(ctx) {
     const within90 = within30 + buckets['31-90'];
 
     document.getElementById('forecastStats').innerHTML = `
-      <div style="border:1px solid var(--line); border-radius:8px; padding:10px; text-align:center;">
-        <div style="font-size:0.72rem; opacity:0.65;">Next 7 days</div>
-        <div class="pr-amount" style="margin-top:4px;">${naira(within7)}</div>
+      <div class="rm-stat" style="text-align:center;">
+        <div class="rm-stat-label">Next 7 days</div>
+        <div class="rm-stat-value">${naira(within7)}</div>
       </div>
-      <div style="border:1px solid var(--line); border-radius:8px; padding:10px; text-align:center;">
-        <div style="font-size:0.72rem; opacity:0.65;">Next 30 days</div>
-        <div class="pr-amount" style="margin-top:4px;">${naira(within30)}</div>
+      <div class="rm-stat" style="text-align:center;">
+        <div class="rm-stat-label">Next 30 days</div>
+        <div class="rm-stat-value">${naira(within30)}</div>
       </div>
-      <div style="border:1px solid var(--line); border-radius:8px; padding:10px; text-align:center;">
-        <div style="font-size:0.72rem; opacity:0.65;">Next 90 days</div>
-        <div class="pr-amount" style="margin-top:4px;">${naira(within90)}</div>
+      <div class="rm-stat" style="text-align:center;">
+        <div class="rm-stat-label">Next 90 days</div>
+        <div class="rm-stat-value">${naira(within90)}</div>
       </div>
     `;
 
@@ -665,17 +671,6 @@ function renderPageHeader(ctx) {
       .eq('id', receivableId);
     if (error) return { error: error.message };
 
-    // Best-effort: if this receivable came from a Business Suite invoice
-    // (document_id set), keep the invoice's own amount_paid/payment_status
-    // in sync too — so the invoice list and this dashboard never disagree.
-    if (item.document_id) {
-      try {
-        await supabase.from('documents')
-          .update({ amount_paid: newAmountPaid, payment_status: newStatus })
-          .eq('id', item.document_id);
-      } catch (e) { /* invoice may have been deleted — fine, receivable still updated */ }
-    }
-
     const paymentRow = { receivable_id: receivableId, business_id: business.id, amount: amountNum, created_by: session.user.id };
     if (paidAtIso) paymentRow.paid_at = paidAtIso;
     await supabase.from('receivable_payments').insert(paymentRow);
@@ -687,7 +682,7 @@ function renderPageHeader(ctx) {
   async function loadAll() {
     const [c, r, p, n, a, pe, d, dr, ea, tm, asg] = await Promise.all([
       supabase.from('clients').select('id, name, phone, email, credit_limit, address').eq('business_id', business.id).order('name', { ascending: true }),
-      supabase.from('receivables').select('id, client_id, description, amount, amount_paid, due_date, payment_status, source, document_id, created_at').eq('business_id', business.id).order('due_date', { ascending: true }),
+      supabase.from('receivables').select('id, client_id, description, amount, amount_paid, due_date, payment_status, source, created_at').eq('business_id', business.id).order('due_date', { ascending: true }),
       supabase.from('promise_to_pay').select('id, client_id, promised_date, promised_amount, note, status, created_at').eq('business_id', business.id).order('promised_date', { ascending: true }),
       supabase.from('collection_notes').select('id, client_id, note, created_at').eq('business_id', business.id).order('created_at', { ascending: false }),
       supabase.from('credit_audit_log').select('id, client_id, action, details, created_at, clients(name)').eq('business_id', business.id).order('created_at', { ascending: false }).limit(30),
@@ -802,8 +797,8 @@ function renderPageHeader(ctx) {
 
     const deltaLabel = delta === null ? ''
       : delta === 0 ? '<span style="opacity:0.6; font-size:0.78rem;">no change vs 30 days ago</span>'
-      : delta > 0 ? `<span style="color:#b3402e; font-size:0.78rem;">▲ ${delta}d worse vs 30 days ago</span>`
-      : `<span style="color:#2f8a4e; font-size:0.78rem;">▼ ${Math.abs(delta)}d better vs 30 days ago</span>`;
+      : delta > 0 ? `<span style="color:var(--stamp-red); font-size:0.78rem;">▲ ${delta}d worse vs 30 days ago</span>`
+      : `<span style="color:var(--ink-green-deep); font-size:0.78rem;">▼ ${Math.abs(delta)}d better vs 30 days ago</span>`;
 
     const driverList = (items, tone) => items.map(c =>
       `<div style="display:flex; justify-content:space-between; font-size:0.78rem; padding:4px 0;">
@@ -815,23 +810,23 @@ function renderPageHeader(ctx) {
     document.getElementById('dsoPanel').innerHTML = `
       <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
         <div>
-          <strong style="font-size:0.9rem;">Days Sales Outstanding</strong>
-          <p style="font-size:0.78rem; opacity:0.65; margin-top:2px;">Based on the last 90 days of activity.</p>
+          <div class="rm-stat-label" style="margin-bottom:4px;">Days Sales Outstanding</div>
+          <p style="font-size:0.78rem; opacity:0.65;">Based on the last 90 days of activity.</p>
         </div>
         <div style="text-align:right;">
-          <div class="pr-amount" style="font-size:1.4rem;">${dsoNow === null ? '—' : dsoNow + ' days'}</div>
+          <div class="rm-stat-value" style="font-size:2rem;">${dsoNow === null ? '—' : dsoNow + ' days'}</div>
           <div style="margin-top:2px;">${deltaLabel}</div>
         </div>
       </div>
       ${isGrowth && (worsened.length || improved.length) ? `
-      <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:16px; margin-top:14px; padding-top:12px; border-top:1px dashed var(--line);">
+      <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:16px; margin-top:14px; padding-top:14px; border-top:1px dashed var(--line);">
         <div>
-          <div style="font-size:0.72rem; opacity:0.65; margin-bottom:4px;">Pushing DSO up (new/growing balances, last 30 days)</div>
-          ${driverList(worsened, '#b3402e')}
+          <div class="rm-stat-label" style="margin-bottom:6px;">Pushing DSO up (last 30 days)</div>
+          ${driverList(worsened, 'var(--stamp-red)')}
         </div>
         <div>
-          <div style="font-size:0.72rem; opacity:0.65; margin-bottom:4px;">Helping DSO (paid down, last 30 days)</div>
-          ${driverList(improved, '#2f8a4e')}
+          <div class="rm-stat-label" style="margin-bottom:6px;">Helping DSO (last 30 days)</div>
+          ${driverList(improved, 'var(--ink-green-deep)')}
         </div>
       </div>` : !isGrowth ? `<div style="margin-top:12px;">${growthUpsellHtml('DSO driver breakdown')}</div>` : ''}
     `;
@@ -847,9 +842,9 @@ function renderPageHeader(ctx) {
 
     const grid = document.getElementById('agingGrid');
     grid.innerHTML = Object.keys(BUCKET_LABEL).map(key => `
-      <div style="border:1px solid var(--line); border-radius:8px; padding:10px; text-align:center;">
-        <div style="font-size:0.72rem; opacity:0.65;">${BUCKET_LABEL[key]}</div>
-        <div class="pr-amount" style="margin-top:4px;">${naira(buckets[key])}</div>
+      <div class="rm-stat ${BUCKET_TONE[key] === 'bad' ? 'bad' : BUCKET_TONE[key] === 'watch' ? 'warn' : ''}" style="text-align:center;">
+        <div class="rm-stat-label">${BUCKET_LABEL[key]}</div>
+        <div class="rm-stat-value" style="font-size:1.25rem;">${naira(buckets[key])}</div>
       </div>
     `).join('');
 
@@ -1228,19 +1223,20 @@ function renderPageHeader(ctx) {
       const escalation = computeEscalationStage(cid);
       const assignment = assignmentFor(cid);
       return `
-        <div class="pr-row" data-toggle="${cid}" style="cursor:pointer; display:block;">
-          <div style="display:flex; justify-content:space-between; align-items:center;">
+        <div class="pr-row" data-toggle="${cid}" data-bucket="${row.worstBucket}" style="cursor:pointer; display:block;">
+          <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
             <div>
-              <div class="pr-name">${escapeHtml(client.name)}
-                <span class="bucket-tag ${row.worstBucket}" style="font-size:0.68rem; margin-left:6px; opacity:0.75;">${BUCKET_LABEL[row.worstBucket]}</span>
-                ${scoreInfo ? `<span style="font-size:0.68rem; margin-left:6px; color:${SCORE_TIER_COLOR[scoreInfo.tier]};">${scoreInfo.tier} (${scoreInfo.score})</span>` : ''}
-                ${overLimit ? `<span style="color:#b3402e; font-size:0.68rem; margin-left:6px;">Over ${naira(client.credit_limit)} limit</span>` : ''}
-                ${row.hasOpenDispute ? `<span style="color:#8a5a00; font-size:0.68rem; margin-left:6px;">⚠ Dispute open</span>` : ''}
-                ${row.hasOpenDocRequest ? `<span style="color:#2f5f8a; font-size:0.68rem; margin-left:6px;">📄 Doc pending</span>` : ''}
-                ${escalation && escalation.stage >= 3 && isGrowth ? `<span style="color:${ESCALATION_COLOR[escalation.stage]}; font-size:0.68rem; margin-left:6px;">${escalation.label}</span>` : ''}
-                ${assignment && isGrowth ? `<span style="opacity:0.6; font-size:0.68rem; margin-left:6px;">→ ${escapeHtml(memberLabel(memberByUserId(assignment.assigned_to)))}</span>` : ''}
+              <div class="pr-name">${escapeHtml(client.name)}</div>
+              <div style="display:flex; flex-wrap:wrap; gap:6px; margin-top:6px;">
+                ${rmPill(BUCKET_LABEL[row.worstBucket], BUCKET_TONE[row.worstBucket])}
+                ${scoreInfo ? rmPill(`${scoreInfo.tier} (${scoreInfo.score})`, SCORE_TIER_TONE[scoreInfo.tier]) : ''}
+                ${overLimit ? rmPill(`Over ${naira(client.credit_limit)} limit`, 'bad') : ''}
+                ${row.hasOpenDispute ? rmPill('⚠ Dispute open', 'watch') : ''}
+                ${row.hasOpenDocRequest ? rmPill('📄 Doc pending', 'neutral') : ''}
+                ${escalation && escalation.stage >= 3 && isGrowth ? rmPill(escalation.label, ESCALATION_TONE[escalation.stage]) : ''}
+                ${assignment && isGrowth ? rmPill(`→ ${escapeHtml(memberLabel(memberByUserId(assignment.assigned_to)))}`, 'neutral') : ''}
               </div>
-              <div class="pr-meta">${row.items.length} open item${row.items.length > 1 ? 's' : ''}${(() => {
+              <div class="pr-meta" style="margin-top:6px;">${row.items.length} open item${row.items.length > 1 ? 's' : ''}${(() => {
                 const preds = row.items.map(predictedPaymentDate).filter(Boolean);
                 if (!preds.length) return '';
                 const earliest = preds.reduce((a, b) => (a.date < b.date ? a : b));
@@ -1354,8 +1350,8 @@ function renderPageHeader(ctx) {
         <button data-save-assignment="${cid}" class="btn small">Save</button>
       </div>` : ''}
       <p style="font-size:0.78rem; opacity:0.65; margin-bottom:10px;">${behaviourNote}</p>
-      <table style="width:100%; font-size:0.85rem; margin-bottom:8px;">
-        <thead><tr><th style="text-align:left;">Item</th><th style="text-align:left;">Due</th><th style="text-align:left;">Expected</th><th style="text-align:left;">Balance</th><th></th></tr></thead>
+      <table class="rm-table" style="margin-bottom:8px;">
+        <thead><tr><th>Item</th><th>Due</th><th>Expected</th><th>Balance</th><th></th></tr></thead>
         <tbody>${itemRows}</tbody>
       </table>
       <div id="disputeForm-${cid}" style="display:none; margin-bottom:12px;"></div>
