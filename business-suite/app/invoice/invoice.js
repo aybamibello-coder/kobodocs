@@ -266,6 +266,10 @@ function showMsg(text, type) {
     if (data.whtOn) totals.push({ label: `WHT (${data.whtPercent}%)`, value: '-' + naira(data.wht) });
     totals.push({ label: 'Total due', value: naira(data.total), emphasis: true });
 
+    const bankDetails = (business.bank_name && business.bank_account_number)
+      ? `Pay by bank transfer to: ${business.bank_name}, ${business.bank_account_number}${business.bank_account_name ? ' (' + business.bank_account_name + ')' : ''}`
+      : '';
+
     return KoboExport.buildTablePdf({
       style: 'branded',
       docLabel: 'Invoice',
@@ -277,7 +281,7 @@ function showMsg(text, type) {
       rightAlignCols: [1, 2],
       rows,
       totals,
-      note: data.note,
+      note: [data.note, bankDetails].filter(Boolean).join('\n\n'),
       watermark: false
     });
   }
@@ -304,7 +308,10 @@ function showMsg(text, type) {
       `To: ${currentClient.name}`,
       '',
       `Total due: *${naira(data.total)}*`,
-      data.dueDateRaw ? `Due: ${fmtDate(data.dueDateRaw)}` : ''
+      data.dueDateRaw ? `Due: ${fmtDate(data.dueDateRaw)}` : '',
+      (business.bank_name && business.bank_account_number)
+        ? `\nPay by transfer: ${business.bank_name}, ${business.bank_account_number}${business.bank_account_name ? ' (' + business.bank_account_name + ')' : ''}`
+        : ''
     ].filter(Boolean).join('\n');
 
     try {
