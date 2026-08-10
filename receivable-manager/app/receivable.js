@@ -175,6 +175,12 @@ function renderPageHeader(ctx) {
 
   const area = document.getElementById('mainArea');
   area.innerHTML = `
+    <div class="bs-panel" id="panel-daily-summary">
+      <strong style="font-size:0.9rem;">How things are going</strong>
+      <div id="dailySummaryWrap" style="margin-top:10px;">
+        <div class="empty-note">Loading…</div>
+      </div>
+    </div>
     <div class="bs-panel" id="panel-overview">
       <div id="dsoPanel"></div>
     </div>
@@ -2073,4 +2079,66 @@ function renderPageHeader(ctx) {
   renderTeamWorkload();
   loadAndRenderReminderSettings();
   loadAndRenderPriorities();
+  renderDailySummary();
 })();
+
+async function renderDailySummary() {
+  const wrap = document.getElementById('dailySummaryWrap');
+  if (!wrap) return;
+
+  const now = new Date();
+  const startOfToday = new Date(now); startOfToday.setHours(0, 0, 0, 0);
+  const startOfYesterday = new Date(startOfToday); startOfYesterday.setDate(startOfYesterday.getDate() - 1);
+
+  async function periodStats(fromDate, toDate) {
+    const from = fromDate.toISOString();
+    const to = toDate.toISOString();
+
+    const [{ data: added }, { data: payments }, { data: promises }] = await Promise.all([
+      supabase.from('receivables').select('amount')
+        .eq('business_id', business.id).gte('created_at', from).lt('created_at', to),
+      supabase.from('receivable_payments').select('amount')
+        .eq('business_id', business.id).gte('paid_at', from).lt('paid_at', to),
+      supabase.from('promise_to_pay').select('promised_amount')
+        .eq('business_id', business.id).gte('created_at', from).lt('created_at', to),
+    ]);
+
+    return {
+      addedCount: (added || []).length,
+      addedTotal: (added || []).reduce((s, r) => s + Number(r.amount || 0), 0),
+      paymentCount: (payments || []).length,
+      paymentTotal: (payments || []).reduce((s, p) => s + Number(p.amount || 0), 0),
+      promiseCount: (promises || []).length,
+      promiseTotal: (promises || []).reduce((s, p) => s + Number(p.promised_amount || 0), 0),
+    };
+  }
+
+  function describe(stats, label) {
+    const parts = [];
+    if (stats.addedCount > 0) {
+      parts.push(`added ${stats.addedCount} new outstanding balance${stats.addedCount === 1 ? '' : 's'} worth ${naira(stats.addedTotal)}`);
+    }
+    if (stats.paymentCount > 0) {
+      parts.push(`collected ${naira(stats.paymentTotal)} in payment${stats.paymentCount === 1 ? '' : 's'}`);
+    }
+    if (stats.promiseCount > 0) {
+      parts.push(`got ${stats.promiseCount} new promise${stats.promiseCount === 1 ? '' : 's'} to pay worth ${naira(stats.promiseTotal)}`);
+    }
+    if (!parts.length) {
+      return `<p>${label}, there was no recorded activity — no new balances, payments, or promises to pay.</p>`;
+    }
+    const sentence = parts.length === 1 ? parts[0]
+      : parts.slice(0, -1).join(', ') + (parts.length > 2 ? ', and ' : ' and ') + parts[parts.length - 1];
+    return `<p>${label}, you ${sentence}.</p>`;
+  }
+
+  try {
+    const [todayStats, yesterdayStats] = await Promise.all([
+      periodStats(startOfToday, now),
+      periodStats(startOfYesterday, startOfToday),
+    ]);
+    wrap.innerHTML = describe(yesterdayStats, 'Yesterday') + describe(todayStats, 'So far today');
+  } catch (err) {
+    wrap.innerHTML = '<p class="empty-note">Could not load activity summary.</p>';
+  }
+}
