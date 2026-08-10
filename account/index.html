@@ -56,10 +56,14 @@
   }
   .business-list-row:last-child{ border-bottom:none; }
   .small-btn{ padding:8px 16px; font-size:0.85rem; }
-  .pw-strength-note{ font-size:0.78rem; margin-top:5px; min-height:16px; }
-  .pw-strength-note.weak{ color:var(--stamp-red); }
-  .pw-strength-note.ok{ color:#8a6a1f; }
-  .pw-strength-note.strong{ color:var(--ink-green-deep); }
+  .sub-business-block{ padding:12px 0; border-bottom:1px dashed var(--line); }
+  .sub-business-block:last-child{ border-bottom:none; }
+  .sub-business-name{ font-weight:600; font-size:0.9rem; margin-bottom:6px; }
+  .sub-row{ display:flex; justify-content:space-between; align-items:center; gap:10px; font-size:0.82rem; padding:3px 0; }
+  .sub-row > span:first-child{ opacity:0.65; }
+  .sub-active{ color:var(--ink-green-deep); font-weight:600; }
+  .sub-trial{ color:#8a6a1f; font-weight:600; }
+  .sub-none{ opacity:0.5; }
 </style>
 </head>
 <body>
@@ -165,8 +169,7 @@
       <p class="auth-note">You've followed a password reset link — choose a new password below.</p>
       <div class="field-group">
         <label for="newPasswordInput">New password</label>
-        <input type="password" id="newPasswordInput" placeholder="At least 8 characters" autocomplete="new-password" minlength="8">
-        <div class="pw-strength-note" id="newPasswordNote"></div>
+        <input type="password" id="newPasswordInput" placeholder="At least 6 characters" autocomplete="new-password" minlength="6">
       </div>
       <button type="button" class="btn btn-primary auth-submit" id="setNewPasswordBtn">Set new password</button>
       <p class="auth-msg" id="recoveryMsg"></p>
@@ -196,18 +199,6 @@
         <p class="auth-alt-link"><a href="#" id="forgotLink">Forgot password? Reset it</a></p>
       </div>
 
-      <div class="auth-panel" id="panel-mfa-challenge">
-        <p style="font-size:0.88rem; opacity:0.75; margin-bottom:14px;">Enter the 6-digit code from your authenticator app.</p>
-        <form id="mfaChallengeForm">
-          <div class="field-group">
-            <label for="mfaChallengeCode">Authentication code</label>
-            <input type="text" id="mfaChallengeCode" inputmode="numeric" pattern="[0-9]*" maxlength="6" placeholder="123456" autocomplete="one-time-code" required>
-          </div>
-          <button type="submit" class="btn btn-primary auth-submit">Verify</button>
-        </form>
-        <div class="auth-msg" id="mfaChallengeMsg"></div>
-      </div>
-
       <div class="auth-panel" id="panel-signup">
         <form id="signupForm">
           <div class="field-group">
@@ -220,8 +211,7 @@
           </div>
           <div class="field-group">
             <label for="signupPassword">Password</label>
-            <input type="password" id="signupPassword" placeholder="At least 8 characters" autocomplete="new-password" required minlength="8">
-            <div class="pw-strength-note" id="signupPasswordNote"></div>
+            <input type="password" id="signupPassword" placeholder="At least 6 characters" autocomplete="new-password" required minlength="6">
           </div>
           <button type="submit" class="btn btn-primary auth-submit">Create account</button>
         </form>
@@ -261,12 +251,6 @@
       <p class="auth-msg" id="brandingMsg"></p>
     </div>
 
-    <div class="auth-card branding-card auth-hidden" id="securityCard">
-      <h4>Two-factor authentication</h4>
-      <p class="auth-note">Add an authenticator app (Google Authenticator, Authy, 1Password, etc.) as a second step when signing in — even if someone gets your password, they can't get in without it too.</p>
-      <div id="mfaStatusWrap"><p class="auth-note">Checking…</p></div>
-    </div>
-
     <div class="auth-card branding-card auth-hidden" id="businessesCard">
       <h4>Your businesses</h4>
       <p class="auth-note">Manage multiple ventures under one account, and invite staff to work in any of them.</p>
@@ -277,6 +261,12 @@
       </div>
       <button type="button" class="btn btn-primary" id="createBusinessBtn">+ Create business</button>
       <p class="auth-msg" id="businessMsg"></p>
+    </div>
+
+    <div class="auth-card branding-card auth-hidden" id="subscriptionsCard">
+      <h4>Your subscriptions</h4>
+      <p class="auth-note">Business Suite and Receivable Manager are billed separately, per business.</p>
+      <div id="subscriptionsList"></div>
     </div>
   </div>
 
@@ -308,66 +298,6 @@
     el.textContent = text;
     el.className = 'auth-msg ' + type;
   }
-
-  // ---------- Password strength + leak check ----------
-  function passwordStrength(pw) {
-    if (!pw) return { score: 0, label: '' };
-    let score = 0;
-    if (pw.length >= 8) score++;
-    if (pw.length >= 12) score++;
-    if (/[a-z]/.test(pw) && /[A-Z]/.test(pw)) score++;
-    if (/\d/.test(pw)) score++;
-    if (/[^A-Za-z0-9]/.test(pw)) score++;
-    if (score <= 1) return { score, label: 'Weak — add length or mix letters, numbers, symbols', cls: 'weak' };
-    if (score <= 3) return { score, label: 'Okay — a bit longer or more varied is stronger', cls: 'ok' };
-    return { score, label: 'Strong', cls: 'strong' };
-  }
-
-  // Checks the password against known breach data via the HaveIBeenPwned
-  // Pwned Passwords API, using k-anonymity: only the first 5 characters of
-  // the SHA-1 hash are ever sent, never the password or the full hash, so
-  // the API never sees enough to reconstruct or identify the password.
-  async function isPasswordPwned(pw) {
-    try {
-      const enc = new TextEncoder().encode(pw);
-      const hashBuffer = await crypto.subtle.digest('SHA-1', enc);
-      const hashHex = Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, '0')).join('').toUpperCase();
-      const prefix = hashHex.slice(0, 5);
-      const suffix = hashHex.slice(5);
-      const res = await fetch(`https://api.pwnedpasswords.com/range/${prefix}`);
-      if (!res.ok) return false; // fail open — don't block signup if the API is unreachable
-      const text = await res.text();
-      return text.split('\n').some(line => line.split(':')[0] === suffix);
-    } catch {
-      return false; // fail open on any error (offline, blocked, etc.)
-    }
-  }
-
-  function wirePasswordField(inputId, noteId) {
-    const input = document.getElementById(inputId);
-    const note = document.getElementById(noteId);
-    if (!input || !note) return;
-    let pwnedCheckTimer = null;
-    input.addEventListener('input', () => {
-      const { label, cls } = passwordStrength(input.value);
-      note.textContent = label;
-      note.className = 'pw-strength-note' + (cls ? ' ' + cls : '');
-      clearTimeout(pwnedCheckTimer);
-      if (input.value.length >= 8) {
-        pwnedCheckTimer = setTimeout(async () => {
-          if (await isPasswordPwned(input.value)) {
-            note.textContent = 'This password has appeared in a known data breach — please choose a different one.';
-            note.className = 'pw-strength-note weak';
-            input.dataset.pwned = 'true';
-          } else {
-            delete input.dataset.pwned;
-          }
-        }, 500);
-      }
-    });
-  }
-  wirePasswordField('signupPassword', 'signupPasswordNote');
-  wirePasswordField('newPasswordInput', 'newPasswordNote');
 
   async function refreshView() {
     await new Promise(r => {
@@ -409,59 +339,13 @@
         businessesCard.classList.add('auth-hidden');
       }
 
-      document.getElementById('securityCard').classList.remove('auth-hidden');
-      await renderMfaStatus();
+      const subscriptionsCard = document.getElementById('subscriptionsCard');
+      subscriptionsCard.classList.remove('auth-hidden');
+      await loadSubscriptions();
     } else {
       document.getElementById('loggedOutView').style.display = 'block';
       document.getElementById('loggedInView').style.display = 'none';
     }
-  }
-
-  async function renderMfaStatus() {
-    const wrap = document.getElementById('mfaStatusWrap');
-    const { factors, error } = await window.KoboAuth.mfaListFactors();
-    if (error) { wrap.innerHTML = `<p class="auth-msg error">Could not load 2FA status.</p>`; return; }
-
-    const verified = factors.find(f => f.status === 'verified');
-
-    if (verified) {
-      wrap.innerHTML = `
-        <p class="auth-msg success" style="margin-bottom:10px;">Two-factor authentication is on.</p>
-        <button type="button" class="btn small-btn" id="mfaRemoveBtn">Turn off 2FA</button>
-      `;
-      document.getElementById('mfaRemoveBtn').addEventListener('click', async () => {
-        if (!confirm('Turn off two-factor authentication? Your account will only be protected by your password.')) return;
-        const { error } = await window.KoboAuth.mfaUnenroll(verified.id);
-        if (error) { wrap.innerHTML += `<p class="auth-msg error">${error.message}</p>`; return; }
-        renderMfaStatus();
-      });
-      return;
-    }
-
-    wrap.innerHTML = `<button type="button" class="btn btn-primary small-btn" id="mfaStartBtn">Set up two-factor authentication</button>`;
-    document.getElementById('mfaStartBtn').addEventListener('click', async () => {
-      const { data, error } = await window.KoboAuth.mfaEnroll();
-      if (error) { wrap.innerHTML += `<p class="auth-msg error">${error.message}</p>`; return; }
-
-      wrap.innerHTML = `
-        <p class="auth-note" style="margin-bottom:10px;">Scan this with your authenticator app, then enter the 6-digit code it shows.</p>
-        <div style="max-width:200px; margin-bottom:12px;">${data.totp.qr_code}</div>
-        <p class="mono auth-note" style="word-break:break-all; margin-bottom:12px;">Can't scan? Enter this key manually: ${data.totp.secret}</p>
-        <div class="field-group">
-          <label for="mfaEnrollCode">6-digit code</label>
-          <input type="text" id="mfaEnrollCode" inputmode="numeric" pattern="[0-9]*" maxlength="6" placeholder="123456">
-        </div>
-        <button type="button" class="btn btn-primary small-btn" id="mfaEnrollVerifyBtn">Confirm and turn on 2FA</button>
-        <p class="auth-msg" id="mfaEnrollMsg"></p>
-      `;
-      document.getElementById('mfaEnrollVerifyBtn').addEventListener('click', async () => {
-        const code = document.getElementById('mfaEnrollCode').value.trim();
-        const msg = document.getElementById('mfaEnrollMsg');
-        const { error: verifyError } = await window.KoboAuth.mfaVerifyEnrollment(data.id, code);
-        if (verifyError) { showMsg(msg, verifyError.message, 'error'); return; }
-        renderMfaStatus();
-      });
-    });
   }
 
   async function loadBusinesses() {
@@ -485,6 +369,62 @@
         <a href="/business/?id=${b.id}" class="btn btn-primary small-btn">Manage</a>
       </div>
     `).join('');
+  }
+
+  async function loadSubscriptions() {
+    const listEl = document.getElementById('subscriptionsList');
+    const { data: businesses, error } = await window.KoboAuth.supabase
+      .from('businesses')
+      .select('id, name, suite_status, suite_tier, suite_expires_at')
+      .order('created_at', { ascending: true });
+
+    if (error) {
+      listEl.innerHTML = `<p class="auth-msg error">Could not load subscriptions: ${error.message}</p>`;
+      return;
+    }
+    if (!businesses || !businesses.length) {
+      listEl.innerHTML = '<p class="auth-note">No businesses yet.</p>';
+      return;
+    }
+
+    const businessIds = businesses.map(b => b.id);
+    const { data: rmSubs } = await window.KoboAuth.supabase
+      .from('receivable_subscriptions')
+      .select('business_id, plan, status, expires_at')
+      .in('business_id', businessIds);
+    const rmByBusiness = {};
+    (rmSubs || []).forEach(s => { rmByBusiness[s.business_id] = s; });
+
+    function suiteLabel(b) {
+      const active = b.suite_expires_at && new Date(b.suite_expires_at) > new Date();
+      if (!active || !b.suite_status || b.suite_status === 'inactive') return { text: 'No active plan', cls: 'sub-none' };
+      const tierLabel = b.suite_tier === 'growth' ? 'Growth' : 'Standard';
+      return { text: `${tierLabel} — renews ${new Date(b.suite_expires_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}`, cls: 'sub-active' };
+    }
+
+    function rmLabel(sub) {
+      if (!sub) return { text: 'No active plan', cls: 'sub-none' };
+      const active = sub.expires_at && new Date(sub.expires_at) > new Date();
+      if (!active) return { text: 'Expired', cls: 'sub-none' };
+      if (sub.status === 'trialing') {
+        const daysLeft = Math.max(0, Math.ceil((new Date(sub.expires_at) - new Date()) / (1000 * 60 * 60 * 24)));
+        return { text: `Growth trial — ${daysLeft} day${daysLeft === 1 ? '' : 's'} left`, cls: 'sub-trial' };
+      }
+      const planLabel = sub.plan === 'growth' ? 'Growth' : 'Starter';
+      return { text: `${planLabel} — renews ${new Date(sub.expires_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}`, cls: 'sub-active' };
+    }
+
+    listEl.innerHTML = businesses.map(b => {
+      const suite = suiteLabel(b);
+      const rm = rmLabel(rmByBusiness[b.id]);
+      return `
+        <div class="sub-business-block">
+          <div class="sub-business-name">${b.name}</div>
+          <div class="sub-row"><span>Business Suite</span><span class="${suite.cls}">${suite.text}</span></div>
+          <div class="sub-row"><span>Receivable Manager</span><span class="${rm.cls}">${rm.text}</span></div>
+        </div>
+      `;
+    }).join('');
   }
 
   async function resumeRedirectOrRefresh() {
@@ -513,18 +453,9 @@
     document.getElementById('setNewPasswordBtn').addEventListener('click', async () => {
       const btn = document.getElementById('setNewPasswordBtn');
       const msg = document.getElementById('recoveryMsg');
-      const pwField = document.getElementById('newPasswordInput');
-      const newPassword = pwField.value;
-      if (!newPassword || newPassword.length < 8) {
-        showMsg(msg, 'Password must be at least 8 characters.', 'error');
-        return;
-      }
-      if (pwField.dataset.pwned === 'true') {
-        showMsg(msg, 'That password has appeared in a known data breach — please choose a different one.', 'error');
-        return;
-      }
-      if (passwordStrength(newPassword).score <= 1) {
-        showMsg(msg, 'Please choose a stronger password — mixing letters, numbers or symbols.', 'error');
+      const newPassword = document.getElementById('newPasswordInput').value;
+      if (!newPassword || newPassword.length < 6) {
+        showMsg(msg, 'Password must be at least 6 characters.', 'error');
         return;
       }
       const originalText = btn.textContent;
@@ -551,32 +482,7 @@
       const msg = document.getElementById('signinMsg');
       const { error } = await window.KoboAuth.signIn(email, password);
       if (error) { showMsg(msg, error.message, 'error'); return; }
-
-      if (await window.KoboAuth.mfaNeedsChallenge()) {
-        const { factors } = await window.KoboAuth.mfaListFactors();
-        const verified = factors.find(f => f.status === 'verified');
-        if (verified) {
-          document.querySelectorAll('.auth-panel').forEach(p => p.classList.remove('active'));
-          document.getElementById('panel-mfa-challenge').classList.add('active');
-          document.getElementById('panel-mfa-challenge').dataset.factorId = verified.id;
-          document.getElementById('mfaChallengeCode').focus();
-          return;
-        }
-      }
-
       showMsg(msg, 'Signed in — redirecting…', 'success');
-      resumeRedirectOrRefresh();
-    });
-
-    document.getElementById('mfaChallengeForm').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const panel = document.getElementById('panel-mfa-challenge');
-      const factorId = panel.dataset.factorId;
-      const code = document.getElementById('mfaChallengeCode').value.trim();
-      const msg = document.getElementById('mfaChallengeMsg');
-      const { error } = await window.KoboAuth.mfaChallengeAndVerify(factorId, code);
-      if (error) { showMsg(msg, error.message, 'error'); return; }
-      showMsg(msg, 'Verified — redirecting…', 'success');
       resumeRedirectOrRefresh();
     });
 
@@ -586,16 +492,6 @@
       const email = document.getElementById('signupEmail').value.trim();
       const password = document.getElementById('signupPassword').value;
       const msg = document.getElementById('signupMsg');
-
-      const pwField = document.getElementById('signupPassword');
-      if (pwField.dataset.pwned === 'true') {
-        showMsg(msg, 'That password has appeared in a known data breach — please choose a different one.', 'error');
-        return;
-      }
-      if (passwordStrength(password).score <= 1) {
-        showMsg(msg, 'Please choose a stronger password — at least 8 characters, mixing letters, numbers or symbols.', 'error');
-        return;
-      }
 
       const { data, error } = await window.KoboAuth.signUp(email, password, { business_name: bizName || null });
       if (error) { showMsg(msg, error.message, 'error'); return; }
