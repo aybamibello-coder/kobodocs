@@ -175,112 +175,147 @@ function renderPageHeader(ctx) {
 
   const area = document.getElementById('mainArea');
   area.innerHTML = `
-    <div class="bs-panel" id="panel-daily-summary">
-      <strong style="font-size:0.9rem;">How things are going</strong>
-      <div id="dailySummaryWrap" style="margin-top:10px;">
-        <div class="empty-note">Loading…</div>
-      </div>
-    </div>
-    <div class="bs-panel" id="panel-overview">
-      <div id="dsoPanel"></div>
-    </div>
-    <div class="bs-panel" id="panel-priorities">
-      <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
-        <div>
-          <strong style="font-size:0.9rem;">Today's priorities</strong>
-          <p style="font-size:0.78rem; opacity:0.65; margin-top:2px;">Who to chase today, ranked by amount owed, how overdue, and broken promises.</p>
-        </div>
-        ${isGrowth ? '<button id="priorityRefreshBtn" class="btn small">Refresh</button>' : ''}
-      </div>
-      <div id="priorityMeta" style="font-size:0.72rem; opacity:0.55; margin-top:6px;"></div>
-      <div id="priorityWrap" style="margin-top:14px;">${isGrowth ? '' : growthUpsellHtml("Today's priorities")}</div>
-    </div>
-    <div class="bs-panel" id="panel-recon">
-      <div>
-        <strong style="font-size:0.9rem;">Reconcile bank statement</strong>
-        <p style="font-size:0.78rem; opacity:0.65; margin-top:2px;">Upload a CSV export from your business bank account. We match incoming payments to outstanding balances so you don't have to log them one by one.</p>
-      </div>
-      <div style="display:flex; align-items:center; gap:10px; margin-top:12px; flex-wrap:wrap;">
-        <input type="file" id="reconFileInput" accept=".csv" />
-        <button id="reconConfirmAllBtn" class="btn small" style="display:none;">Confirm all strong matches</button>
-      </div>
-      <div id="reconSummary" style="font-size:0.78rem; opacity:0.65; margin-top:8px;"></div>
-      <div id="reconWrap" style="margin-top:14px;"></div>
-    </div>
-    <div class="bs-panel" id="panel-cashflow">
-      <div>
-        <strong style="font-size:0.9rem;">Cash-flow forecast</strong>
-        <p style="font-size:0.78rem; opacity:0.65; margin-top:2px;">When your outstanding balances are actually expected to land, based on each client's payment history — not just when they're due.</p>
-      </div>
-      ${isGrowth ? `
-      <div id="forecastStats" style="display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:10px; margin-top:12px;"></div>
-      <div style="position:relative; height:220px; margin-top:14px;"><canvas id="chartCashFlow"></canvas></div>
-      <div id="forecastNote" style="font-size:0.72rem; opacity:0.55; margin-top:8px;"></div>
-      ` : `<div style="margin-top:12px;">${growthUpsellHtml('Cash-flow forecasting')}</div>`}
-    </div>
-    <div class="bs-panel" id="panel-team">
-      <div>
-        <strong style="font-size:0.9rem;">Team workload</strong>
-        <p style="font-size:0.78rem; opacity:0.65; margin-top:2px;">Who's carrying what across your team, and how they're recovering.</p>
-      </div>
-      <div id="workforceWrap" style="margin-top:12px;">${isGrowth ? '' : growthUpsellHtml('Team workload')}</div>
-    </div>
-    <div class="bs-panel" id="panel-aging">
-      <strong style="font-size:0.9rem;">Aging summary</strong>
-      <div class="aging-grid" id="agingGrid" style="display:grid; grid-template-columns:repeat(auto-fit,minmax(110px,1fr)); gap:10px; margin-top:12px;"></div>
-    </div>
-    <div class="bs-panel" id="panel-analytics">
-      <strong style="font-size:0.9rem;">Analytics</strong>
-      ${isGrowth ? `
-      <div id="analyticsEmpty" class="empty-note" style="display:none;">Add a few outstanding balances to see your analytics.</div>
-      <div id="analyticsGrid" style="display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:20px; margin-top:14px;">
-        <div style="position:relative; height:220px;">
-          <div style="font-size:0.78rem; opacity:0.65; margin-bottom:6px;">Aging distribution</div>
-          <canvas id="chartAging"></canvas>
-        </div>
-        <div style="position:relative; height:220px;">
-          <div style="font-size:0.78rem; opacity:0.65; margin-bottom:6px;">Top 5 outstanding balances</div>
-          <canvas id="chartTopDebtors"></canvas>
-        </div>
-        <div style="position:relative; height:220px;">
-          <div style="font-size:0.78rem; opacity:0.65; margin-bottom:6px;">Collected vs. new balances (6 months)</div>
-          <canvas id="chartMonthly"></canvas>
-        </div>
-        <div style="position:relative; height:220px;">
-          <div style="font-size:0.78rem; opacity:0.65; margin-bottom:6px;">DSO trend (6 months)</div>
-          <canvas id="chartDSOTrend"></canvas>
+    <div class="rm-view" id="view-overview" data-view="overview">
+      <div class="rm-view-header"><h2>Overview</h2><p>Your Days Sales Outstanding, what's driving it, and a quick daily summary.</p></div>
+      <div class="bs-panel" id="panel-daily-summary">
+        <strong style="font-size:0.9rem;">How things are going</strong>
+        <div id="dailySummaryWrap" style="margin-top:10px;">
+          <div class="empty-note">Loading…</div>
         </div>
       </div>
-      ` : `<div style="margin-top:12px;">${growthUpsellHtml('Analytics charts & graphs')}</div>`}
-    </div>
-    <div class="bs-panel" id="panel-addbalance">
-      <strong style="font-size:0.9rem;">Add an outstanding balance</strong>
-      <div id="entryForm" style="margin-top:12px;"></div>
-    </div>
-    <div class="bs-panel" id="panel-ledger">
-      <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
-        <strong style="font-size:0.9rem;">Outstanding by client</strong>
-        <select id="assigneeFilter" style="font-size:0.78rem; ${isGrowth ? '' : 'display:none;'}">
-          <option value="">All accounts</option>
-          <option value="__unassigned">Unassigned</option>
-        </select>
+      <div class="bs-panel" id="panel-overview">
+        <div id="dsoPanel"></div>
       </div>
-      <div id="ledgerWrap" style="margin-top:10px;"></div>
     </div>
-    <div class="bs-panel" id="panel-promises">
-      <strong style="font-size:0.9rem;">Upcoming promises to pay</strong>
-      <div id="promiseWrap" style="margin-top:10px;"></div>
+    <div class="rm-view" id="view-priorities" data-view="priorities">
+      <div class="rm-view-header"><h2>Today's priorities</h2><p>Who to chase today, ranked by amount owed, how overdue, and broken promises.</p></div>
+      <div class="bs-panel" id="panel-priorities">
+        <div style="display:flex; justify-content:flex-end;">
+          ${isGrowth ? '<button id="priorityRefreshBtn" class="btn small">Refresh</button>' : ''}
+        </div>
+        <div id="priorityMeta" style="font-size:0.72rem; opacity:0.55; margin-top:6px;"></div>
+        <div id="priorityWrap" style="margin-top:14px;">${isGrowth ? '' : growthUpsellHtml("Today's priorities")}</div>
+      </div>
     </div>
-    <div class="bs-panel" id="panel-activity">
-      <strong style="font-size:0.9rem;">Recent activity</strong>
-      <div id="activityWrap" style="margin-top:10px;"></div>
+    <div class="rm-view" id="view-recon" data-view="recon">
+      <div class="rm-view-header"><h2>Reconcile bank statement</h2><p>Upload a CSV export from your business bank account. We match incoming payments to outstanding balances so you don't have to log them one by one.</p></div>
+      <div class="bs-panel" id="panel-recon">
+        <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+          <input type="file" id="reconFileInput" accept=".csv" />
+          <button id="reconConfirmAllBtn" class="btn small" style="display:none;">Confirm all strong matches</button>
+        </div>
+        <div id="reconSummary" style="font-size:0.78rem; opacity:0.65; margin-top:8px;"></div>
+        <div id="reconWrap" style="margin-top:14px;"></div>
+      </div>
     </div>
-    <div class="bs-panel" id="panel-reminders">
-      <strong style="font-size:0.9rem;">Automated reminders</strong>
-      <p style="font-size:0.8rem; opacity:0.65; margin-top:4px;">Sends an email automatically to any client with an email on file once their balance crosses a day threshold below. Checked once daily.</p>
-      <div id="reminderSettings" style="margin-top:12px;"></div>
+    <div class="rm-view" id="view-cashflow" data-view="cashflow">
+      <div class="rm-view-header"><h2>Cash-flow forecast</h2><p>When your outstanding balances are actually expected to land, based on each client's payment history — not just when they're due.</p></div>
+      <div class="bs-panel" id="panel-cashflow">
+        ${isGrowth ? `
+        <div id="forecastStats" style="display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:10px;"></div>
+        <div style="position:relative; height:220px; margin-top:14px;"><canvas id="chartCashFlow"></canvas></div>
+        <div id="forecastNote" style="font-size:0.72rem; opacity:0.55; margin-top:8px;"></div>
+        ` : growthUpsellHtml('Cash-flow forecasting')}
+      </div>
+    </div>
+    <div class="rm-view" id="view-team" data-view="team">
+      <div class="rm-view-header"><h2>Team workload</h2><p>Who's carrying what across your team, and how they're recovering.</p></div>
+      <div class="bs-panel" id="panel-team">
+        <div id="workforceWrap">${isGrowth ? '' : growthUpsellHtml('Team workload')}</div>
+      </div>
+    </div>
+    <div class="rm-view" id="view-aging" data-view="aging">
+      <div class="rm-view-header"><h2>Aging summary</h2><p>Your outstanding balance broken down by how overdue it is.</p></div>
+      <div class="bs-panel" id="panel-aging">
+        <div class="aging-grid" id="agingGrid" style="display:grid; grid-template-columns:repeat(auto-fit,minmax(110px,1fr)); gap:10px;"></div>
+      </div>
+    </div>
+    <div class="rm-view" id="view-analytics" data-view="analytics">
+      <div class="rm-view-header"><h2>Analytics</h2><p>Charts on aging, top debtors, collections, and DSO trend.</p></div>
+      <div class="bs-panel" id="panel-analytics">
+        ${isGrowth ? `
+        <div id="analyticsEmpty" class="empty-note" style="display:none;">Add a few outstanding balances to see your analytics.</div>
+        <div id="analyticsGrid" style="display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:20px;">
+          <div style="position:relative; height:220px;">
+            <div style="font-size:0.78rem; opacity:0.65; margin-bottom:6px;">Aging distribution</div>
+            <canvas id="chartAging"></canvas>
+          </div>
+          <div style="position:relative; height:220px;">
+            <div style="font-size:0.78rem; opacity:0.65; margin-bottom:6px;">Top 5 outstanding balances</div>
+            <canvas id="chartTopDebtors"></canvas>
+          </div>
+          <div style="position:relative; height:220px;">
+            <div style="font-size:0.78rem; opacity:0.65; margin-bottom:6px;">Collected vs. new balances (6 months)</div>
+            <canvas id="chartMonthly"></canvas>
+          </div>
+          <div style="position:relative; height:220px;">
+            <div style="font-size:0.78rem; opacity:0.65; margin-bottom:6px;">DSO trend (6 months)</div>
+            <canvas id="chartDSOTrend"></canvas>
+          </div>
+        </div>
+        ` : growthUpsellHtml('Analytics charts & graphs')}
+      </div>
+    </div>
+    <div class="rm-view" id="view-ledger" data-view="ledger">
+      <div class="rm-view-header"><h2>Outstanding by client</h2><p>Every client with a balance owed, plus a form to add a new one.</p></div>
+      <div class="bs-panel" id="panel-addbalance">
+        <strong style="font-size:0.9rem;">Add an outstanding balance</strong>
+        <div id="entryForm" style="margin-top:12px;"></div>
+      </div>
+      <div class="bs-panel" id="panel-ledger">
+        <div style="display:flex; justify-content:flex-end;">
+          <select id="assigneeFilter" style="font-size:0.78rem; ${isGrowth ? '' : 'display:none;'}">
+            <option value="">All accounts</option>
+            <option value="__unassigned">Unassigned</option>
+          </select>
+        </div>
+        <div id="ledgerWrap" style="margin-top:10px;"></div>
+      </div>
+    </div>
+    <div class="rm-view" id="view-promises" data-view="promises">
+      <div class="rm-view-header"><h2>Promises to pay</h2><p>Commitments clients have made, and whether they were kept.</p></div>
+      <div class="bs-panel" id="panel-promises">
+        <div id="promiseWrap"></div>
+      </div>
+    </div>
+    <div class="rm-view" id="view-activity" data-view="activity">
+      <div class="rm-view-header"><h2>Recent activity</h2><p>A running log of everything logged against your receivables.</p></div>
+      <div class="bs-panel" id="panel-activity">
+        <div id="activityWrap"></div>
+      </div>
+    </div>
+    <div class="rm-view" id="view-reminders" data-view="reminders">
+      <div class="rm-view-header"><h2>Automated reminders</h2><p>Sends an email automatically to any client with an email on file once their balance crosses a day threshold below. Checked once daily.</p></div>
+      <div class="bs-panel" id="panel-reminders">
+        <div id="reminderSettings"></div>
+      </div>
     </div>
   `;
+
+  const RM_VIEWS = ['overview', 'priorities', 'recon', 'cashflow', 'team', 'aging', 'analytics', 'ledger', 'promises', 'activity', 'reminders'];
+  let rmDataLoaded = false; // becomes true once the initial data load completes — guards against
+  // re-rendering Chart.js canvases before there's data, while still fixing
+  // the zero-size-canvas issue when a chart's tab was hidden at draw time.
+  function showRmView(key) {
+    if (!RM_VIEWS.includes(key)) key = 'overview';
+    RM_VIEWS.forEach(v => {
+      const el = document.getElementById('view-' + v);
+      if (el) el.classList.toggle('active', v === key);
+    });
+    document.querySelectorAll('.suite-nav .rm-anchor').forEach(a => {
+      a.classList.toggle('suite-nav-active', a.dataset.view === key);
+    });
+    if (rmDataLoaded) {
+      if (key === 'analytics') renderAnalytics();
+      if (key === 'cashflow') renderCashFlowForecast();
+    }
+    window.scrollTo(0, 0);
+  }
+  function routeRmFromHash() {
+    showRmView((window.location.hash || '#/overview').replace('#/', ''));
+  }
+  window.addEventListener('hashchange', routeRmFromHash);
+  routeRmFromHash();
 
   area.addEventListener('click', (e) => {
     if (e.target.id === 'trialUpgradeBtn' || e.target.dataset.upsell !== undefined) {
@@ -630,6 +665,17 @@ function renderPageHeader(ctx) {
       .eq('id', receivableId);
     if (error) return { error: error.message };
 
+    // Best-effort: if this receivable came from a Business Suite invoice
+    // (document_id set), keep the invoice's own amount_paid/payment_status
+    // in sync too — so the invoice list and this dashboard never disagree.
+    if (item.document_id) {
+      try {
+        await supabase.from('documents')
+          .update({ amount_paid: newAmountPaid, payment_status: newStatus })
+          .eq('id', item.document_id);
+      } catch (e) { /* invoice may have been deleted — fine, receivable still updated */ }
+    }
+
     const paymentRow = { receivable_id: receivableId, business_id: business.id, amount: amountNum, created_by: session.user.id };
     if (paidAtIso) paymentRow.paid_at = paidAtIso;
     await supabase.from('receivable_payments').insert(paymentRow);
@@ -641,7 +687,7 @@ function renderPageHeader(ctx) {
   async function loadAll() {
     const [c, r, p, n, a, pe, d, dr, ea, tm, asg] = await Promise.all([
       supabase.from('clients').select('id, name, phone, email, credit_limit, address').eq('business_id', business.id).order('name', { ascending: true }),
-      supabase.from('receivables').select('id, client_id, description, amount, amount_paid, due_date, payment_status, source, created_at').eq('business_id', business.id).order('due_date', { ascending: true }),
+      supabase.from('receivables').select('id, client_id, description, amount, amount_paid, due_date, payment_status, source, document_id, created_at').eq('business_id', business.id).order('due_date', { ascending: true }),
       supabase.from('promise_to_pay').select('id, client_id, promised_date, promised_amount, note, status, created_at').eq('business_id', business.id).order('promised_date', { ascending: true }),
       supabase.from('collection_notes').select('id, client_id, note, created_at').eq('business_id', business.id).order('created_at', { ascending: false }),
       supabase.from('credit_audit_log').select('id, client_id, action, details, created_at, clients(name)').eq('business_id', business.id).order('created_at', { ascending: false }).limit(30),
@@ -2080,6 +2126,7 @@ function renderPageHeader(ctx) {
   loadAndRenderReminderSettings();
   loadAndRenderPriorities();
   renderDailySummary();
+  rmDataLoaded = true;
 })();
 
 async function renderDailySummary() {

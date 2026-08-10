@@ -124,6 +124,22 @@ function reminderMessage(business, invoice, client, tone) {
             if (eventErr) { toast('Payment recorded, but the event log entry failed: ' + eventErr.message); }
             else { toast('Payment recorded.'); }
 
+            // Best-effort: keep the linked receivable (if this business has
+            // receivable access) in sync, so Receivable Manager's aging/DSO
+            // reflect the same payment without double-entry.
+            try {
+              const { data: linkedRecv } = await supabase
+                .from('receivables')
+                .select('id')
+                .eq('document_id', doc.id)
+                .maybeSingle();
+              if (linkedRecv) {
+                await supabase.from('receivables')
+                  .update({ amount_paid: newAmountPaid, payment_status: newStatus, updated_at: new Date().toISOString() })
+                  .eq('id', linkedRecv.id);
+              }
+            } catch (e) { /* no receivable access for this business — fine */ }
+
             await loadAndRender();
             return;
           }

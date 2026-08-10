@@ -232,6 +232,26 @@ function showMsg(text, type) {
       return;
     }
 
+    // Best-effort: mirror this invoice into a linked receivable so it's
+    // trackable in Receivable Manager (aging, DSO, payment history) for
+    // businesses with receivable access (Growth tier or a Receivable
+    // Manager subscription). Silently skipped otherwise — RLS blocks the
+    // insert for businesses without that access, which is expected and
+    // not an error; the invoice itself still saved fine either way.
+    try {
+      await supabase.from('receivables').insert({
+        business_id: business.id,
+        client_id: currentClient.id,
+        document_id: newDoc.id,
+        description: `Invoice ${data.invNumber}`,
+        amount: data.total,
+        amount_paid: 0,
+        due_date: data.dueDateRaw || null,
+        payment_status: 'unpaid',
+        source: 'invoice',
+      });
+    } catch (e) { /* no receivable access for this business — fine */ }
+
     // Deduct stock for any inventory-linked items and log the movement
     let wentNegative = false;
     for (const item of linkedItems) {
@@ -266,6 +286,10 @@ function showMsg(text, type) {
     if (data.whtOn) totals.push({ label: `WHT (${data.whtPercent}%)`, value: '-' + naira(data.wht) });
     totals.push({ label: 'Total due', value: naira(data.total), emphasis: true });
 
+    const bankDetails = (business.bank_name && business.bank_account_number)
+      ? `Pay by bank transfer to: ${business.bank_name}, ${business.bank_account_number}${business.bank_account_name ? ' (' + business.bank_account_name + ')' : ''}`
+      : '';
+
     return KoboExport.buildTablePdf({
       style: 'branded',
       docLabel: 'Invoice',
@@ -277,7 +301,7 @@ function showMsg(text, type) {
       rightAlignCols: [1, 2],
       rows,
       totals,
-      note: data.note,
+      note: [data.note, bankDetails].filter(Boolean).join('\n\n'),
       watermark: false
     });
   }
@@ -304,7 +328,10 @@ function showMsg(text, type) {
       `To: ${currentClient.name}`,
       '',
       `Total due: *${naira(data.total)}*`,
-      data.dueDateRaw ? `Due: ${fmtDate(data.dueDateRaw)}` : ''
+      data.dueDateRaw ? `Due: ${fmtDate(data.dueDateRaw)}` : '',
+      (business.bank_name && business.bank_account_number)
+        ? `\nPay by transfer: ${business.bank_name}, ${business.bank_account_number}${business.bank_account_name ? ' (' + business.bank_account_name + ')' : ''}`
+        : ''
     ].filter(Boolean).join('\n');
 
     try {
