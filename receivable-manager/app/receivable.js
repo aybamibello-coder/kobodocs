@@ -665,6 +665,17 @@ function renderPageHeader(ctx) {
       .eq('id', receivableId);
     if (error) return { error: error.message };
 
+    // Best-effort: if this receivable came from a Business Suite invoice
+    // (document_id set), keep the invoice's own amount_paid/payment_status
+    // in sync too — so the invoice list and this dashboard never disagree.
+    if (item.document_id) {
+      try {
+        await supabase.from('documents')
+          .update({ amount_paid: newAmountPaid, payment_status: newStatus })
+          .eq('id', item.document_id);
+      } catch (e) { /* invoice may have been deleted — fine, receivable still updated */ }
+    }
+
     const paymentRow = { receivable_id: receivableId, business_id: business.id, amount: amountNum, created_by: session.user.id };
     if (paidAtIso) paymentRow.paid_at = paidAtIso;
     await supabase.from('receivable_payments').insert(paymentRow);
@@ -676,7 +687,7 @@ function renderPageHeader(ctx) {
   async function loadAll() {
     const [c, r, p, n, a, pe, d, dr, ea, tm, asg] = await Promise.all([
       supabase.from('clients').select('id, name, phone, email, credit_limit, address').eq('business_id', business.id).order('name', { ascending: true }),
-      supabase.from('receivables').select('id, client_id, description, amount, amount_paid, due_date, payment_status, source, created_at').eq('business_id', business.id).order('due_date', { ascending: true }),
+      supabase.from('receivables').select('id, client_id, description, amount, amount_paid, due_date, payment_status, source, document_id, created_at').eq('business_id', business.id).order('due_date', { ascending: true }),
       supabase.from('promise_to_pay').select('id, client_id, promised_date, promised_amount, note, status, created_at').eq('business_id', business.id).order('promised_date', { ascending: true }),
       supabase.from('collection_notes').select('id, client_id, note, created_at').eq('business_id', business.id).order('created_at', { ascending: false }),
       supabase.from('credit_audit_log').select('id, client_id, action, details, created_at, clients(name)').eq('business_id', business.id).order('created_at', { ascending: false }).limit(30),

@@ -232,6 +232,26 @@ function showMsg(text, type) {
       return;
     }
 
+    // Best-effort: mirror this invoice into a linked receivable so it's
+    // trackable in Receivable Manager (aging, DSO, payment history) for
+    // businesses with receivable access (Growth tier or a Receivable
+    // Manager subscription). Silently skipped otherwise — RLS blocks the
+    // insert for businesses without that access, which is expected and
+    // not an error; the invoice itself still saved fine either way.
+    try {
+      await supabase.from('receivables').insert({
+        business_id: business.id,
+        client_id: currentClient.id,
+        document_id: newDoc.id,
+        description: `Invoice ${data.invNumber}`,
+        amount: data.total,
+        amount_paid: 0,
+        due_date: data.dueDateRaw || null,
+        payment_status: 'unpaid',
+        source: 'invoice',
+      });
+    } catch (e) { /* no receivable access for this business — fine */ }
+
     // Deduct stock for any inventory-linked items and log the movement
     let wentNegative = false;
     for (const item of linkedItems) {
