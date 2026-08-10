@@ -37,6 +37,16 @@
     display:inline-block; padding:4px 12px; border-radius:20px; margin-top:6px;
     background:rgba(199,154,60,0.15); color:#8a6a1f; border:1px solid rgba(199,154,60,0.3);
   }
+  .rm-view{ display:none; }
+  .rm-view.active{ display:block; }
+  .rm-view-header{ margin-bottom:24px; }
+  .rm-view-header h2{
+    font-family:'Fraunces', serif; font-size:1.35rem; display:flex; align-items:center; gap:10px;
+  }
+  .rm-view-header h2::before{
+    content:''; width:13px; height:13px; border-radius:50%; border:2px solid #C79A3C; flex-shrink:0;
+  }
+  .rm-view-header p{ font-size:0.85rem; opacity:0.68; margin-top:4px; max-width:640px; }
 </style>
 </head>
 <body class="suite-body">
@@ -56,17 +66,17 @@
     <button class="menu-btn" aria-label="Toggle menu" id="menuBtn"><span></span><span></span><span></span></button>
     <div class="nav-links" id="navLinks">
       <a href="/" class="mobile-only-link">Home</a>
-      <a href="#panel-overview" class="rm-anchor">Overview</a>
-      <a href="#panel-priorities" class="rm-anchor">Today's priorities</a>
-      <a href="#panel-recon" class="rm-anchor">Reconcile</a>
-      <a href="#panel-cashflow" class="rm-anchor">Cash-flow forecast</a>
-      <a href="#panel-team" class="rm-anchor">Team workload</a>
-      <a href="#panel-aging" class="rm-anchor">Aging summary</a>
-      <a href="#panel-analytics" class="rm-anchor">Analytics</a>
-      <a href="#panel-ledger" class="rm-anchor">Outstanding by client</a>
-      <a href="#panel-promises" class="rm-anchor">Promises to pay</a>
-      <a href="#panel-activity" class="rm-anchor">Activity</a>
-      <a href="#panel-reminders" class="rm-anchor">Reminders</a>
+      <a href="#/overview" class="rm-anchor" data-view="overview">Overview</a>
+      <a href="#/priorities" class="rm-anchor" data-view="priorities">Today's priorities</a>
+      <a href="#/recon" class="rm-anchor" data-view="recon">Reconcile</a>
+      <a href="#/cashflow" class="rm-anchor" data-view="cashflow">Cash-flow forecast</a>
+      <a href="#/team" class="rm-anchor" data-view="team">Team workload</a>
+      <a href="#/aging" class="rm-anchor" data-view="aging">Aging summary</a>
+      <a href="#/analytics" class="rm-anchor" data-view="analytics">Analytics</a>
+      <a href="#/ledger" class="rm-anchor" data-view="ledger">Outstanding by client</a>
+      <a href="#/promises" class="rm-anchor" data-view="promises">Promises to pay</a>
+      <a href="#/activity" class="rm-anchor" data-view="activity">Activity</a>
+      <a href="#/reminders" class="rm-anchor" data-view="reminders">Reminders</a>
       <a href="/business-suite/app/">Business Suite</a>
       <a href="/blog/" class="mobile-only-link">Blog</a>
       <a href="/about/" class="mobile-only-link">About</a>
@@ -100,17 +110,6 @@
 
 <div id="toast"></div>
 
-<script>
-  // Highlights whichever section anchor was last clicked — a lightweight
-  // stand-in for shell.js's path-based matching, since this is a single
-  // page with in-page anchors rather than separate routes per module.
-  document.querySelectorAll('.suite-nav .rm-anchor').forEach(link => {
-    link.addEventListener('click', () => {
-      document.querySelectorAll('.suite-nav .rm-anchor').forEach(a => a.classList.remove('suite-nav-active'));
-      link.classList.add('suite-nav-active');
-    });
-  });
-</script>
 <script type="module" src="/assets/auth.js"></script>
 <script src="/assets/nav-auth.js" defer></script>
 <script src="/assets/subscribe.js"></script>
