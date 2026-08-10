@@ -130,6 +130,13 @@
     </a>
   </div>
 
+  <div class="bs-panel" style="margin-bottom:24px;" id="activitySummaryPanel">
+    <h2>How business is going</h2>
+    <div id="activitySummaryWrap">
+      <div class="empty-note">Loading…</div>
+    </div>
+  </div>
+
   <div class="bs-panel" style="margin-bottom:24px;">
     <h2>Analytics</h2>
     <div id="dashAnalyticsEmpty" class="empty-note" style="display:none;">Create a few invoices to see your analytics.</div>
@@ -221,6 +228,8 @@
   document.getElementById('statOutstanding').textContent = naira(outstanding);
   document.getElementById('statMonthIncome').textContent = naira(monthIncome);
   document.getElementById('statInvoiceCount').textContent = thisMonthDocs.length;
+
+  renderActivitySummary(supabase, business.id, naira);
 
   const { data: lowStockItems } = await supabase
     .from('inventory_items')
@@ -325,6 +334,70 @@
     </table>
   `;
 })();
+
+async function renderActivitySummary(supabase, businessId, naira) {
+  const wrap = document.getElementById('activitySummaryWrap');
+
+  const now = new Date();
+  const startOfToday = new Date(now); startOfToday.setHours(0, 0, 0, 0);
+  const startOfYesterday = new Date(startOfToday); startOfYesterday.setDate(startOfYesterday.getDate() - 1);
+
+  async function periodStats(fromDate, toDate) {
+    const from = fromDate.toISOString();
+    const to = toDate.toISOString();
+    const fromDateOnly = from.split('T')[0];
+    const toDateOnly = to.split('T')[0];
+
+    const [{ data: invoices }, { data: payments }, { data: expenses }] = await Promise.all([
+      supabase.from('documents').select('amount')
+        .eq('business_id', businessId).eq('doc_type', 'invoice')
+        .gte('created_at', from).lt('created_at', to),
+      supabase.from('document_payments').select('amount')
+        .eq('business_id', businessId).gte('paid_at', from).lt('paid_at', to),
+      supabase.from('expenses').select('amount')
+        .eq('business_id', businessId).gte('expense_date', fromDateOnly).lt('expense_date', toDateOnly),
+    ]);
+
+    return {
+      invoiceCount: (invoices || []).length,
+      invoiceTotal: (invoices || []).reduce((s, d) => s + Number(d.amount || 0), 0),
+      paymentCount: (payments || []).length,
+      paymentTotal: (payments || []).reduce((s, p) => s + Number(p.amount || 0), 0),
+      expenseCount: (expenses || []).length,
+      expenseTotal: (expenses || []).reduce((s, e) => s + Number(e.amount || 0), 0),
+    };
+  }
+
+  function describe(stats, label) {
+    const parts = [];
+    if (stats.invoiceCount > 0) {
+      parts.push(`created ${stats.invoiceCount} invoice${stats.invoiceCount === 1 ? '' : 's'} worth ${naira(stats.invoiceTotal)}`);
+    }
+    if (stats.paymentCount > 0) {
+      parts.push(`collected ${naira(stats.paymentTotal)} in payment${stats.paymentCount === 1 ? '' : 's'}`);
+    }
+    if (stats.expenseCount > 0) {
+      parts.push(`logged ${stats.expenseCount} expense${stats.expenseCount === 1 ? '' : 's'} worth ${naira(stats.expenseTotal)}`);
+    }
+    if (!parts.length) {
+      return `<p>${label}, there was no recorded activity — no invoices, payments, or expenses.</p>`;
+    }
+    // Join as a natural sentence: "You created 2 invoices, collected ₦50,000, and logged 1 expense."
+    const sentence = parts.length === 1 ? parts[0]
+      : parts.slice(0, -1).join(', ') + (parts.length > 2 ? ', and ' : ' and ') + parts[parts.length - 1];
+    return `<p>${label}, you ${sentence}.</p>`;
+  }
+
+  try {
+    const [todayStats, yesterdayStats] = await Promise.all([
+      periodStats(startOfToday, now),
+      periodStats(startOfYesterday, startOfToday),
+    ]);
+    wrap.innerHTML = describe(yesterdayStats, 'Yesterday') + describe(todayStats, 'So far today');
+  } catch (err) {
+    wrap.innerHTML = '<p class="empty-note">Could not load activity summary.</p>';
+  }
+}
 </script>
 <script src="/assets/tools-index.js" defer></script>
 <script src="/assets/search.js" defer></script>
