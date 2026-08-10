@@ -10,43 +10,127 @@
 <link rel="stylesheet" href="/assets/style.css">
 <link rel="stylesheet" href="/business-suite/app/shell.css">
 <style>
-  .pr-wrap{ max-width:980px; margin:0 auto; padding:36px 20px 100px; }
-  .pr-top{ display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:14px; margin-bottom:24px; }
-  .bs-panel{ background:var(--paper); border:1px solid var(--line); border-radius:8px; padding:22px 20px; margin-bottom:20px; scroll-margin-top:80px; }
-  .pr-row{ display:flex; justify-content:space-between; align-items:center; gap:14px; padding:14px 0; border-bottom:1px dashed var(--line); flex-wrap:wrap; }
+  .pr-wrap{ max-width:1040px; margin:0 auto; padding:36px 20px 100px; }
+  .pr-top{ display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:14px; margin-bottom:28px; }
+
+  /* ---- Cards: same elevated "ledger" treatment as Business Suite's
+     .suite-card (gold left edge + soft shadow), so Receivable Manager
+     doesn't read as a lesser, flatter sibling product. ---- */
+  .bs-panel{
+    background:var(--paper); border:1px solid var(--line); border-left:3px solid var(--stamp-gold);
+    border-radius:6px; padding:24px 22px; margin-bottom:20px; scroll-margin-top:80px;
+    box-shadow:0 1px 2px rgba(35,39,34,0.04), 0 8px 20px rgba(35,39,34,0.03);
+  }
+
+  /* ---- Ledger rows: each client gets a "seal" ring before their name —
+     the same concentric-ring device as the KoboDocs logomark and the nav's
+     status dots — colored by aging severity. One consistent marker used
+     for wayfinding (nav), section headers, and now per-row status. ---- */
+  .pr-row{
+    display:flex; justify-content:space-between; align-items:center; gap:14px;
+    padding:15px 4px; margin:0 -4px; border-bottom:1px dashed var(--line); flex-wrap:wrap;
+    border-radius:6px; transition:background .12s;
+  }
+  .pr-row:hover{ background:var(--bone); }
   .pr-row:last-child{ border-bottom:none; }
-  .pr-name{ font-weight:600; }
+  .pr-name{ font-weight:600; display:inline-flex; align-items:center; gap:9px; }
+  .pr-name::before{
+    content:''; width:9px; height:9px; border-radius:50%; flex-shrink:0;
+    border:2px solid var(--ink-green-deep); box-sizing:border-box;
+  }
+  .pr-row[data-bucket="b1"] .pr-name::before,
+  .pr-row[data-bucket="b2"] .pr-name::before{ border-color:var(--stamp-gold); }
+  .pr-row[data-bucket="b3"] .pr-name::before,
+  .pr-row[data-bucket="b4"] .pr-name::before{ border-color:var(--stamp-red); }
   .pr-meta{ font-size:0.82rem; opacity:0.65; }
-  .pr-amount{ font-family:'Fraunces', serif; font-size:1.05rem; }
-  .btn{ font-size:0.85rem; border:1px solid var(--line); background:none; border-radius:20px; padding:7px 16px; cursor:pointer; }
-  .btn.primary{ background:var(--ink-green-deep); color:var(--paper); border-color:var(--ink-green-deep); }
+  .pr-amount{ font-family:'Fraunces', serif; font-size:1.1rem; font-weight:600; color:var(--ink-green-deep); }
+
+  /* ---- Status pills: replaces plain colored text with a proper ring+label
+     badge, using the same 3-color semantic system everywhere (ink-green =
+     good, gold = watch, red = at-risk). ---- */
+  .rm-pill{
+    display:inline-flex; align-items:center; gap:5px; font-family:'Space Mono', monospace;
+    font-size:0.66rem; text-transform:uppercase; letter-spacing:0.03em;
+    padding:3px 10px 3px 7px; border-radius:20px; white-space:nowrap;
+  }
+  .rm-pill::before{ content:''; width:6px; height:6px; border-radius:50%; flex-shrink:0; }
+  .rm-pill.good{ background:rgba(13,38,32,0.07); color:var(--ink-green-deep); }
+  .rm-pill.good::before{ background:var(--ink-green-deep); }
+  .rm-pill.watch{ background:rgba(199,154,60,0.14); color:#8a6a1f; }
+  .rm-pill.watch::before{ background:var(--stamp-gold); }
+  .rm-pill.bad{ background:rgba(168,52,42,0.09); color:var(--stamp-red); }
+  .rm-pill.bad::before{ background:var(--stamp-red); }
+  .rm-pill.neutral{ background:var(--bone); color:var(--charcoal); opacity:0.75; }
+  .rm-pill.neutral::before{ background:var(--charcoal); opacity:0.5; }
+
+  /* ---- Stat tiles: Fraunces numeral + Space Mono caption, matching
+     Business Suite's .suite-stat so headline numbers carry real weight
+     instead of sitting flat in a grid of plain text. ---- */
+  .rm-stat{ background:var(--bone); border-radius:6px; padding:16px 14px; }
+  .rm-stat-label{
+    font-family:'Space Mono', monospace; font-size:0.66rem; text-transform:uppercase;
+    letter-spacing:0.04em; opacity:0.6; margin-bottom:6px;
+  }
+  .rm-stat-value{ font-family:'Fraunces', serif; font-size:1.6rem; color:var(--ink-green-deep); }
+  .rm-stat.warn .rm-stat-value{ color:#8a6a1f; }
+  .rm-stat.bad .rm-stat-value{ color:var(--stamp-red); }
+
+  .btn{ font-size:0.85rem; border:1px solid var(--line); background:none; border-radius:20px; padding:7px 16px; cursor:pointer; transition:transform .12s, background .12s; }
+  .btn:hover{ transform:translateY(-1px); }
+  .btn.primary{ background:var(--stamp-gold); color:var(--ink-green-deep); border-color:var(--stamp-gold); font-weight:600; }
+  .btn.primary:hover{ background:#dcae4d; }
   .btn.small{ padding:5px 12px; font-size:0.78rem; }
-  .empty-note{ font-size:0.88rem; opacity:0.6; padding:20px 0; text-align:center; }
+
+  .empty-note{ font-size:0.88rem; opacity:0.6; padding:20px 10px; text-align:center; }
+
   .pr-form input, .pr-form select, .pr-form textarea{ width:100%; padding:8px 10px; border:1px solid var(--line); border-radius:6px; font-family:inherit; font-size:0.9rem; margin-bottom:10px; }
   .pr-form label{ font-size:0.78rem; opacity:0.7; display:block; margin-bottom:3px; }
   #entryForm input, #entryForm select{ width:100%; padding:8px 10px; border:1px solid var(--line); border-radius:6px; font-family:inherit; font-size:0.9rem; margin-bottom:10px; }
   #entryForm label{ font-size:0.78rem; opacity:0.7; display:block; margin-bottom:3px; }
   .form-grid{ display:grid; grid-template-columns:1fr 1fr; gap:0 14px; }
-  .plan-card{ border:1px solid var(--line); border-radius:8px; padding:18px; text-align:center; }
-  .plan-card h3{ font-family:'Fraunces', serif; font-size:1.1rem; margin-bottom:6px; }
-  .plan-price{ font-size:1.3rem; margin-bottom:12px; }
-  .plans-grid{ display:grid; grid-template-columns:repeat(auto-fit, minmax(180px,1fr)); gap:14px; }
-  #toast{ position:fixed; bottom:20px; left:50%; transform:translateX(-50%); background:var(--ink-green-deep); color:var(--paper); padding:10px 20px; border-radius:6px; font-size:0.85rem; display:none; z-index:50; }
+
+  .plan-card{
+    border:1px solid var(--line); border-radius:8px; padding:22px 18px; text-align:center;
+    box-shadow:0 1px 2px rgba(35,39,34,0.04), 0 8px 20px rgba(35,39,34,0.03);
+  }
+  .plan-card h3{ font-family:'Fraunces', serif; font-size:1.15rem; margin-bottom:6px; }
+  .plan-price{ font-family:'Fraunces', serif; font-size:1.5rem; margin-bottom:12px; color:var(--ink-green-deep); }
+  .plans-grid{ display:grid; grid-template-columns:repeat(auto-fit, minmax(180px,1fr)); gap:16px; }
+
+  #toast{ position:fixed; bottom:20px; left:50%; transform:translateX(-50%); background:var(--ink-green-deep); color:var(--paper); padding:10px 20px; border-radius:6px; font-size:0.85rem; display:none; z-index:50; box-shadow:0 8px 24px rgba(13,38,32,0.25); }
+
   .trial-badge{
     font-family:'Space Mono', monospace; font-size:0.7rem; text-transform:uppercase; letter-spacing:0.03em;
     display:inline-block; padding:4px 12px; border-radius:20px; margin-top:6px;
     background:rgba(199,154,60,0.15); color:#8a6a1f; border:1px solid rgba(199,154,60,0.3);
   }
+
   .rm-view{ display:none; }
-  .rm-view.active{ display:block; }
+  .rm-view.active{ display:block; animation:rmFadeIn .2s ease; }
+  @keyframes rmFadeIn{ from{ opacity:0; transform:translateY(4px);} to{ opacity:1; transform:none; } }
   .rm-view-header{ margin-bottom:24px; }
   .rm-view-header h2{
-    font-family:'Fraunces', serif; font-size:1.35rem; display:flex; align-items:center; gap:10px;
+    font-family:'Fraunces', serif; font-size:1.4rem; display:flex; align-items:center; gap:11px;
   }
   .rm-view-header h2::before{
-    content:''; width:13px; height:13px; border-radius:50%; border:2px solid #C79A3C; flex-shrink:0;
+    content:''; width:14px; height:14px; border-radius:50%; border:2px solid var(--stamp-gold); flex-shrink:0;
   }
   .rm-view-header p{ font-size:0.85rem; opacity:0.68; margin-top:4px; max-width:640px; }
+
+  /* ---- Tables (client detail item lists): quiet zebra + hover, header
+     in the Space Mono ledger-label register instead of plain bold text. ---- */
+  .rm-table{ width:100%; font-size:0.85rem; border-collapse:collapse; }
+  .rm-table thead th{
+    text-align:left; font-family:'Space Mono', monospace; font-size:0.66rem; text-transform:uppercase;
+    letter-spacing:0.03em; opacity:0.55; font-weight:400; padding-bottom:8px; border-bottom:1px solid var(--line);
+  }
+  .rm-table tbody td{ padding:10px 0; border-bottom:1px dashed var(--line); }
+  .rm-table tbody tr:last-child td{ border-bottom:none; }
+  .rm-table tbody tr:hover td{ background:var(--bone); }
+
+  @media (prefers-reduced-motion: reduce){
+    .rm-view.active{ animation:none; }
+  }
 </style>
 </head>
 <body class="suite-body">
