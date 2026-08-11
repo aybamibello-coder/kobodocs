@@ -3,6 +3,19 @@ const fmtDate = (isoDate) => isoDate
   ? new Date(isoDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
   : '—';
 
+// SECURITY: escapes user-controlled text before it's interpolated into
+// innerHTML. Obligation titles, document names, business names, and team
+// member names/emails are all free text a user can type — without this,
+// someone could put e.g. <img src=x onerror="..."> in an obligation title
+// and it would execute in the browser of anyone who views it (an invited
+// team member, an accountant, etc).
+function escapeHtml(str) {
+  if (str === null || str === undefined) return '';
+  const div = document.createElement('div');
+  div.textContent = String(str);
+  return div.innerHTML;
+}
+
 function daysUntil(dateStr) {
   if (!dateStr) return null;
   const ms = new Date(dateStr).setHours(0,0,0,0) - new Date().setHours(0,0,0,0);
@@ -144,7 +157,7 @@ function standardObligations() {
       wrap.innerHTML = upcomingItems.map(item => `
         <div class="ob-row">
           <div>
-            <div class="ob-title">${item.title}${item.kind === 'document' ? ' <span style="opacity:.5; font-weight:400;">(renewal)</span>' : ''}</div>
+            <div class="ob-title">${escapeHtml(item.title)}${item.kind === 'document' ? ' <span style="opacity:.5; font-weight:400;">(renewal)</span>' : ''}</div>
             <div class="ob-meta">${item.label} · Due ${fmtDate(item.date)}</div>
           </div>
           <span class="status-tag ${item.status}">${item.status}</span>
@@ -194,7 +207,7 @@ function standardObligations() {
       row.className = 'ob-row';
       row.innerHTML = `
         <div>
-          <div class="ob-title">${ob.title}<span class="status-tag ${status}">${status}</span></div>
+          <div class="ob-title">${escapeHtml(ob.title)}<span class="status-tag ${status}">${status}</span></div>
           <div class="ob-meta">${OBLIGATION_LABELS[ob.obligation_type] || ob.obligation_type} · Due ${fmtDate(ob.due_date)}${ob.recurrence !== 'none' ? ' · ' + ob.recurrence : ''}</div>
         </div>
         <div class="ob-actions">
@@ -264,7 +277,7 @@ function standardObligations() {
       row.className = 'vault-row';
       row.innerHTML = `
         <div>
-          <div class="vault-name">${doc.name}</div>
+          <div class="vault-name">${escapeHtml(doc.name)}</div>
           <div class="vault-meta ${metaClass}">${DOC_LABELS[doc.doc_type] || doc.doc_type}${doc.expiry_date ? ' · Expires ' + fmtDate(doc.expiry_date) : ' · No expiry'}</div>
         </div>
         <div class="ob-actions">
@@ -354,8 +367,8 @@ function wireTeam(supabase, business, myRole) {
       const label = m.isOwnerRow ? (business.name + ' (you, business owner)') : (m.member_name || m.member_email || 'Team member');
       row.innerHTML = `
         <div>
-          <div class="vault-name">${label}</div>
-          <div class="vault-meta">${ROLE_LABELS[m.role] || m.role}${m.member_email && !m.isOwnerRow ? ' · ' + m.member_email : ''}</div>
+          <div class="vault-name">${escapeHtml(label)}</div>
+          <div class="vault-meta">${ROLE_LABELS[m.role] || m.role}${m.member_email && !m.isOwnerRow ? ' · ' + escapeHtml(m.member_email) : ''}</div>
         </div>
         ${(isOwner && !m.isOwnerRow) ? '<div class="ob-actions"><button data-action="remove">Remove</button></div>' : ''}
       `;

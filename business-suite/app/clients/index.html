@@ -87,6 +87,7 @@
       <a href="/business-suite/app/">&larr; Dashboard</a>
       <h1 style="font-size:1.4rem; margin-top:6px;">Clients</h1>
     </div>
+    <button class="btn small" id="importBtn" style="font-size:0.85rem; border:1px solid var(--line); background:none; border-radius:20px; padding:8px 18px; cursor:pointer;">Import from spreadsheet</button>
   </div>
 
   <div class="cl-panel">
@@ -139,6 +140,7 @@
 
 <script type="module" src="/assets/auth.js"></script>
 <script src="/assets/nav-auth.js" defer></script>
+<script src="/assets/kobo-import.js"></script>
 <script src="/business-suite/app/guard.js"></script>
 <script src="/business-suite/app/shell.js?v=3" defer></script>
 <script>
@@ -152,6 +154,13 @@
   const editingIdEl = document.getElementById('editingId');
   const formHeading = document.getElementById('formHeading');
   const cancelBtn = document.getElementById('cancelEditBtn');
+
+  document.getElementById('importBtn').addEventListener('click', () => {
+    window.KoboImport.open({
+      supabase, business,
+      onComplete: () => loadClients(),
+    });
+  });
 
   function showMsg(text, type) {
     msgEl.textContent = text;

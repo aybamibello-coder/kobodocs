@@ -33,6 +33,10 @@ function agingBucket(days) {
 }
 
 const BUCKET_LABEL = { current: 'Current', b1: '1–30d overdue', b2: '31–60d overdue', b3: '61–90d overdue', b4: '90+ days overdue' };
+const BUCKET_TONE = { current: 'good', b1: 'watch', b2: 'watch', b3: 'bad', b4: 'bad' };
+function rmPill(label, tone) {
+  return `<span class="rm-pill ${tone}">${label}</span>`;
+}
 
 function toast(text) {
   const el = document.getElementById('toast');
@@ -48,39 +52,112 @@ function escapeHtml(str) {
 }
 
 // ---------- Paywall / plan picker ----------
+const STARTER_FEATURES = [
+  'AR aging dashboard & client ledger',
+  'WhatsApp payment reminders',
+  'Promise-to-pay tracking',
+  'Bank/payment statement reconciliation',
+  'Payment date prediction',
+  'Customer collection score',
+  'PDF client statements'
+];
+const GROWTH_FEATURES = [
+  'Everything in Starter, plus:',
+  'AI-generated daily collection priorities',
+  'AI collections agent (negotiation drafting)',
+  'Dispute & missing-document tracking',
+  'Cash-flow forecasting',
+  'DSO driver breakdown',
+  'Escalation engine (formal notices, referrals)',
+  'Team assignment & workload analytics',
+  'Full analytics charts & graphs'
+];
+
 function renderPlanPicker(ctx) {
   const area = document.getElementById('mainArea');
+  const featureList = (items) => items.map(f => `<li style="font-size:0.8rem; padding:3px 0;">${escapeHtml(f)}</li>`).join('');
   area.innerHTML = `
     <div class="bs-panel">
       <p style="margin-bottom:16px; text-align:center;">No active Receivable Manager plan for <strong>${escapeHtml(ctx.business.name)}</strong> yet. Track outstanding balances, chase overdue payments, and see your DSO at a glance — no invoicing software required.</p>
-      <div class="plans-grid" style="max-width:420px; margin:0 auto;">
-        <div class="plan-card">
-          <h3>Monthly</h3>
-          <div class="plan-price">₦20,000<span style="font-size:0.7rem;">/mo</span></div>
-          <button class="btn primary" data-cycle="monthly">Subscribe monthly</button>
+      <div style="display:flex; justify-content:center; margin-bottom:16px;">
+        <div style="display:inline-flex; border:1px solid var(--line); border-radius:8px; overflow:hidden;">
+          <button id="cycleMonthlyBtn" class="btn small" style="border-radius:0;">Monthly</button>
+          <button id="cycleYearlyBtn" class="btn small" style="border-radius:0;">Yearly (2 months free)</button>
         </div>
+      </div>
+      <div class="plans-grid" style="display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:16px; max-width:640px; margin:0 auto;">
         <div class="plan-card">
-          <h3>Yearly</h3>
-          <div class="plan-price">₦200,000<span style="font-size:0.7rem;">/yr</span></div>
-          <p style="font-size:0.78rem; opacity:0.7; margin-bottom:14px;">2 months free</p>
-          <button class="btn primary" data-cycle="yearly">Subscribe yearly</button>
+          <h3>Starter</h3>
+          <div class="plan-price" data-price-starter>₦20,000<span style="font-size:0.7rem;">/mo</span></div>
+          <ul style="text-align:left; list-style:none; padding:0; margin:10px 0 14px;">${featureList(STARTER_FEATURES)}</ul>
+          <button class="btn primary" data-plan="starter">Subscribe to Starter</button>
+        </div>
+        <div class="plan-card" style="border-color:var(--accent, #2f8a4e);">
+          <h3>Growth</h3>
+          <div class="plan-price" data-price-growth>₦30,000<span style="font-size:0.7rem;">/mo</span></div>
+          <p style="font-size:0.72rem; opacity:0.7; margin-top:-6px; margin-bottom:6px;">21-day free trial included</p>
+          <ul style="text-align:left; list-style:none; padding:0; margin:10px 0 14px;">${featureList(GROWTH_FEATURES)}</ul>
+          <button class="btn primary" data-plan="growth">Subscribe to Growth</button>
         </div>
       </div>
     </div>
   `;
-  area.querySelectorAll('[data-cycle]').forEach(btn => {
+
+  let cycle = 'monthly';
+  const prices = { starter: { monthly: '₦20,000/mo', yearly: '₦200,000/yr' }, growth: { monthly: '₦30,000/mo', yearly: '₦300,000/yr' } };
+  function applyCycle() {
+    document.querySelector('[data-price-starter]').innerHTML = prices.starter[cycle].replace(/\/(mo|yr)/, m => `<span style="font-size:0.7rem;">${m}</span>`);
+    document.querySelector('[data-price-growth]').innerHTML = prices.growth[cycle].replace(/\/(mo|yr)/, m => `<span style="font-size:0.7rem;">${m}</span>`);
+    document.getElementById('cycleMonthlyBtn').classList.toggle('primary', cycle === 'monthly');
+    document.getElementById('cycleYearlyBtn').classList.toggle('primary', cycle === 'yearly');
+  }
+  document.getElementById('cycleMonthlyBtn').addEventListener('click', () => { cycle = 'monthly'; applyCycle(); });
+  document.getElementById('cycleYearlyBtn').addEventListener('click', () => { cycle = 'yearly'; applyCycle(); });
+  applyCycle();
+
+  area.querySelectorAll('[data-plan]').forEach(btn => {
     btn.addEventListener('click', () => {
       window.KoboSubscribe.start('init-receivable-payment', {
         business_id: ctx.business.id,
-        billing_cycle: btn.dataset.cycle
+        billing_cycle: cycle,
+        plan: btn.dataset.plan
       });
     });
   });
 }
 
+function growthUpsellHtml(featureName) {
+  return `<div class="empty-note" style="padding:14px; text-align:center;">
+    <div style="margin-bottom:8px;">${escapeHtml(featureName)} is part of the <strong>Growth</strong> plan.</div>
+    <button id="upsellBtn-${featureName.replace(/[^a-zA-Z0-9]/g, '')}" class="btn primary small" data-upsell>Upgrade to Growth</button>
+  </div>`;
+}
+
+function renderPageHeader(ctx) {
+  const header = document.getElementById('pageHeader');
+  if (!header) return;
+  const badge = ctx.isTrialing
+    ? `<span class="trial-badge">Free trial — ${ctx.trialDaysLeft} day${ctx.trialDaysLeft === 1 ? '' : 's'} left</span>`
+    : ctx.subActive
+    ? `<span class="trial-badge" style="background:rgba(47,138,78,0.12); color:#2f8a4e; border-color:rgba(47,138,78,0.3);">${ctx.effectivePlan === 'growth' ? 'Growth' : 'Starter'} plan</span>`
+    : '';
+  header.innerHTML = `
+    <div>
+      <h1 style="font-size:1.4rem;">${escapeHtml(ctx.business.name)}</h1>
+      <p style="font-size:0.88rem; opacity:0.7; margin-top:4px;">Receivable Manager — outstanding balances, overdue payments, and DSO at a glance.</p>
+      <div>${badge}</div>
+    </div>
+    ${ctx.subActive ? `<button id="headerPlanBtn" class="btn small">${ctx.isTrialing ? 'Choose a plan' : 'Manage plan'}</button>` : ''}
+  `;
+  const planBtn = document.getElementById('headerPlanBtn');
+  if (planBtn) planBtn.addEventListener('click', () => renderPlanPicker(ctx, true));
+}
+
 (async function init() {
   const ctx = await window.ReceivableGuard.requireAccess();
   if (!ctx) return;
+
+  renderPageHeader(ctx);
 
   if (!ctx.subActive) {
     renderPlanPicker(ctx);
@@ -88,6 +165,7 @@ function renderPlanPicker(ctx) {
   }
 
   const { business, supabase, session } = ctx;
+  const isGrowth = ctx.effectivePlan === 'growth';
 
   async function logActivity(action, details = {}, clientId = null) {
     await supabase.from('credit_audit_log').insert({
@@ -101,87 +179,153 @@ function renderPlanPicker(ctx) {
 
   const area = document.getElementById('mainArea');
   area.innerHTML = `
-    <div class="bs-panel" id="dsoPanel"></div>
-    <div class="bs-panel">
-      <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
-        <div>
-          <strong style="font-size:0.9rem;">Today's priorities</strong>
-          <p style="font-size:0.78rem; opacity:0.65; margin-top:2px;">Who to chase today, ranked by amount owed, how overdue, and broken promises.</p>
-        </div>
-        <button id="priorityRefreshBtn" class="btn small">Refresh</button>
-      </div>
-      <div id="priorityMeta" style="font-size:0.72rem; opacity:0.55; margin-top:6px;"></div>
-      <div id="priorityWrap" style="margin-top:14px;"></div>
-    </div>
-    <div class="bs-panel">
-      <div>
-        <strong style="font-size:0.9rem;">Reconcile bank statement</strong>
-        <p style="font-size:0.78rem; opacity:0.65; margin-top:2px;">Upload a CSV export from your business bank account. We match incoming payments to outstanding balances so you don't have to log them one by one.</p>
-      </div>
-      <div style="display:flex; align-items:center; gap:10px; margin-top:12px; flex-wrap:wrap;">
-        <input type="file" id="reconFileInput" accept=".csv" />
-        <button id="reconConfirmAllBtn" class="btn small" style="display:none;">Confirm all strong matches</button>
-      </div>
-      <div id="reconSummary" style="font-size:0.78rem; opacity:0.65; margin-top:8px;"></div>
-      <div id="reconWrap" style="margin-top:14px;"></div>
-    </div>
-    <div class="bs-panel">
-      <div>
-        <strong style="font-size:0.9rem;">Cash-flow forecast</strong>
-        <p style="font-size:0.78rem; opacity:0.65; margin-top:2px;">When your outstanding balances are actually expected to land, based on each client's payment history — not just when they're due.</p>
-      </div>
-      <div id="forecastStats" style="display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:10px; margin-top:12px;"></div>
-      <div style="position:relative; height:220px; margin-top:14px;"><canvas id="chartCashFlow"></canvas></div>
-      <div id="forecastNote" style="font-size:0.72rem; opacity:0.55; margin-top:8px;"></div>
-    </div>
-    <div class="bs-panel">
-      <strong style="font-size:0.9rem;">Aging summary</strong>
-      <div class="aging-grid" id="agingGrid" style="display:grid; grid-template-columns:repeat(auto-fit,minmax(110px,1fr)); gap:10px; margin-top:12px;"></div>
-    </div>
-    <div class="bs-panel">
-      <strong style="font-size:0.9rem;">Analytics</strong>
-      <div id="analyticsEmpty" class="empty-note" style="display:none;">Add a few outstanding balances to see your analytics.</div>
-      <div id="analyticsGrid" style="display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:20px; margin-top:14px;">
-        <div style="position:relative; height:220px;">
-          <div style="font-size:0.78rem; opacity:0.65; margin-bottom:6px;">Aging distribution</div>
-          <canvas id="chartAging"></canvas>
-        </div>
-        <div style="position:relative; height:220px;">
-          <div style="font-size:0.78rem; opacity:0.65; margin-bottom:6px;">Top 5 outstanding balances</div>
-          <canvas id="chartTopDebtors"></canvas>
-        </div>
-        <div style="position:relative; height:220px;">
-          <div style="font-size:0.78rem; opacity:0.65; margin-bottom:6px;">Collected vs. new balances (6 months)</div>
-          <canvas id="chartMonthly"></canvas>
-        </div>
-        <div style="position:relative; height:220px;">
-          <div style="font-size:0.78rem; opacity:0.65; margin-bottom:6px;">DSO trend (6 months)</div>
-          <canvas id="chartDSOTrend"></canvas>
+    <div class="rm-view" id="view-overview" data-view="overview">
+      <div class="rm-view-header"><h2>Overview</h2><p>Your Days Sales Outstanding, what's driving it, and a quick daily summary.</p></div>
+      <div class="bs-panel" id="panel-daily-summary">
+        <strong style="font-size:0.9rem;">How things are going</strong>
+        <div id="dailySummaryWrap" style="margin-top:10px;">
+          <div class="empty-note">Loading…</div>
         </div>
       </div>
+      <div class="bs-panel" id="panel-overview">
+        <div id="dsoPanel"></div>
+      </div>
     </div>
-    <div class="bs-panel">
-      <strong style="font-size:0.9rem;">Add an outstanding balance</strong>
-      <div id="entryForm" style="margin-top:12px;"></div>
+    <div class="rm-view" id="view-priorities" data-view="priorities">
+      <div class="rm-view-header"><h2>Today's priorities</h2><p>Who to chase today, ranked by amount owed, how overdue, and broken promises.</p></div>
+      <div class="bs-panel" id="panel-priorities">
+        <div style="display:flex; justify-content:flex-end;">
+          ${isGrowth ? '<button id="priorityRefreshBtn" class="btn small">Refresh</button>' : ''}
+        </div>
+        <div id="priorityMeta" style="font-size:0.72rem; opacity:0.55; margin-top:6px;"></div>
+        <div id="priorityWrap" style="margin-top:14px;">${isGrowth ? '' : growthUpsellHtml("Today's priorities")}</div>
+      </div>
     </div>
-    <div class="bs-panel">
-      <strong style="font-size:0.9rem;">Outstanding by client</strong>
-      <div id="ledgerWrap" style="margin-top:10px;"></div>
+    <div class="rm-view" id="view-recon" data-view="recon">
+      <div class="rm-view-header"><h2>Reconcile bank statement</h2><p>Upload a CSV export from your business bank account. We match incoming payments to outstanding balances so you don't have to log them one by one.</p></div>
+      <div class="bs-panel" id="panel-recon">
+        <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+          <input type="file" id="reconFileInput" accept=".csv" />
+          <button id="reconConfirmAllBtn" class="btn small" style="display:none;">Confirm all strong matches</button>
+        </div>
+        <div id="reconSummary" style="font-size:0.78rem; opacity:0.65; margin-top:8px;"></div>
+        <div id="reconWrap" style="margin-top:14px;"></div>
+      </div>
     </div>
-    <div class="bs-panel">
-      <strong style="font-size:0.9rem;">Upcoming promises to pay</strong>
-      <div id="promiseWrap" style="margin-top:10px;"></div>
+    <div class="rm-view" id="view-cashflow" data-view="cashflow">
+      <div class="rm-view-header"><h2>Cash-flow forecast</h2><p>When your outstanding balances are actually expected to land, based on each client's payment history — not just when they're due.</p></div>
+      <div class="bs-panel" id="panel-cashflow">
+        ${isGrowth ? `
+        <div id="forecastStats" style="display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:10px;"></div>
+        <div style="position:relative; height:220px; margin-top:14px;"><canvas id="chartCashFlow"></canvas></div>
+        <div id="forecastNote" style="font-size:0.72rem; opacity:0.55; margin-top:8px;"></div>
+        ` : growthUpsellHtml('Cash-flow forecasting')}
+      </div>
     </div>
-    <div class="bs-panel">
-      <strong style="font-size:0.9rem;">Recent activity</strong>
-      <div id="activityWrap" style="margin-top:10px;"></div>
+    <div class="rm-view" id="view-team" data-view="team">
+      <div class="rm-view-header"><h2>Team workload</h2><p>Who's carrying what across your team, and how they're recovering.</p></div>
+      <div class="bs-panel" id="panel-team">
+        <div id="workforceWrap">${isGrowth ? '' : growthUpsellHtml('Team workload')}</div>
+      </div>
     </div>
-    <div class="bs-panel">
-      <strong style="font-size:0.9rem;">Automated reminders</strong>
-      <p style="font-size:0.8rem; opacity:0.65; margin-top:4px;">Sends an email automatically to any client with an email on file once their balance crosses a day threshold below. Checked once daily.</p>
-      <div id="reminderSettings" style="margin-top:12px;"></div>
+    <div class="rm-view" id="view-aging" data-view="aging">
+      <div class="rm-view-header"><h2>Aging summary</h2><p>Your outstanding balance broken down by how overdue it is.</p></div>
+      <div class="bs-panel" id="panel-aging">
+        <div class="aging-grid" id="agingGrid" style="display:grid; grid-template-columns:repeat(auto-fit,minmax(110px,1fr)); gap:10px;"></div>
+      </div>
+    </div>
+    <div class="rm-view" id="view-analytics" data-view="analytics">
+      <div class="rm-view-header"><h2>Analytics</h2><p>Charts on aging, top debtors, collections, and DSO trend.</p></div>
+      <div class="bs-panel" id="panel-analytics">
+        ${isGrowth ? `
+        <div id="analyticsEmpty" class="empty-note" style="display:none;">Add a few outstanding balances to see your analytics.</div>
+        <div id="analyticsGrid" style="display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:20px;">
+          <div style="position:relative; height:220px;">
+            <div style="font-size:0.78rem; opacity:0.65; margin-bottom:6px;">Aging distribution</div>
+            <canvas id="chartAging"></canvas>
+          </div>
+          <div style="position:relative; height:220px;">
+            <div style="font-size:0.78rem; opacity:0.65; margin-bottom:6px;">Top 5 outstanding balances</div>
+            <canvas id="chartTopDebtors"></canvas>
+          </div>
+          <div style="position:relative; height:220px;">
+            <div style="font-size:0.78rem; opacity:0.65; margin-bottom:6px;">Collected vs. new balances (6 months)</div>
+            <canvas id="chartMonthly"></canvas>
+          </div>
+          <div style="position:relative; height:220px;">
+            <div style="font-size:0.78rem; opacity:0.65; margin-bottom:6px;">DSO trend (6 months)</div>
+            <canvas id="chartDSOTrend"></canvas>
+          </div>
+        </div>
+        ` : growthUpsellHtml('Analytics charts & graphs')}
+      </div>
+    </div>
+    <div class="rm-view" id="view-ledger" data-view="ledger">
+      <div class="rm-view-header"><h2>Outstanding by client</h2><p>Every client with a balance owed, plus a form to add a new one.</p></div>
+      <div class="bs-panel" id="panel-addbalance">
+        <strong style="font-size:0.9rem;">Add an outstanding balance</strong>
+        <div id="entryForm" style="margin-top:12px;"></div>
+      </div>
+      <div class="bs-panel" id="panel-ledger">
+        <div style="display:flex; justify-content:flex-end;">
+          <select id="assigneeFilter" style="font-size:0.78rem; ${isGrowth ? '' : 'display:none;'}">
+            <option value="">All accounts</option>
+            <option value="__unassigned">Unassigned</option>
+          </select>
+        </div>
+        <div id="ledgerWrap" style="margin-top:10px;"></div>
+      </div>
+    </div>
+    <div class="rm-view" id="view-promises" data-view="promises">
+      <div class="rm-view-header"><h2>Promises to pay</h2><p>Commitments clients have made, and whether they were kept.</p></div>
+      <div class="bs-panel" id="panel-promises">
+        <div id="promiseWrap"></div>
+      </div>
+    </div>
+    <div class="rm-view" id="view-activity" data-view="activity">
+      <div class="rm-view-header"><h2>Recent activity</h2><p>A running log of everything logged against your receivables.</p></div>
+      <div class="bs-panel" id="panel-activity">
+        <div id="activityWrap"></div>
+      </div>
+    </div>
+    <div class="rm-view" id="view-reminders" data-view="reminders">
+      <div class="rm-view-header"><h2>Automated reminders</h2><p>Sends an email automatically to any client with an email on file once their balance crosses a day threshold below. Checked once daily.</p></div>
+      <div class="bs-panel" id="panel-reminders">
+        <div id="reminderSettings"></div>
+      </div>
     </div>
   `;
+
+  const RM_VIEWS = ['overview', 'priorities', 'recon', 'cashflow', 'team', 'aging', 'analytics', 'ledger', 'promises', 'activity', 'reminders'];
+  let rmDataLoaded = false; // becomes true once the initial data load completes — guards against
+  // re-rendering Chart.js canvases before there's data, while still fixing
+  // the zero-size-canvas issue when a chart's tab was hidden at draw time.
+  function showRmView(key) {
+    if (!RM_VIEWS.includes(key)) key = 'overview';
+    RM_VIEWS.forEach(v => {
+      const el = document.getElementById('view-' + v);
+      if (el) el.classList.toggle('active', v === key);
+    });
+    document.querySelectorAll('.suite-nav .rm-anchor').forEach(a => {
+      a.classList.toggle('suite-nav-active', a.dataset.view === key);
+    });
+    if (rmDataLoaded) {
+      if (key === 'analytics') renderAnalytics();
+      if (key === 'cashflow') renderCashFlowForecast();
+    }
+    window.scrollTo(0, 0);
+  }
+  function routeRmFromHash() {
+    showRmView((window.location.hash || '#/overview').replace('#/', ''));
+  }
+  window.addEventListener('hashchange', routeRmFromHash);
+  routeRmFromHash();
+
+  area.addEventListener('click', (e) => {
+    if (e.target.id === 'trialUpgradeBtn' || e.target.dataset.upsell !== undefined) {
+      renderPlanPicker(ctx);
+    }
+  });
 
   let clients = [];
   let receivables = [];
@@ -190,6 +334,9 @@ function renderPlanPicker(ctx) {
   let activity = [];
   let disputes = [];
   let docRequests = [];
+  let escalationActions = [];
+  let teamMembers = [];
+  let assignments = [];
   let byClient = {};
   let paymentEvents = [];
   let paymentBehaviour = {}; // client_id -> { avgDelay, count }
@@ -273,6 +420,172 @@ function renderPlanPicker(ctx) {
   const SCORE_TIER_COLOR = {
     Excellent: '#2f8a4e', Good: '#4a8f3c', Fair: '#b3902e', Watch: '#c46a1f', Poor: '#b3402e'
   };
+  const SCORE_TIER_TONE = { Excellent: 'good', Good: 'good', Fair: 'watch', Watch: 'watch', Poor: 'bad' };
+
+  // ---------- Escalation engine (deterministic ladder: reminder -> firm reminder -> formal notice -> collections/legal) ----------
+  const ESCALATION_LABEL = {
+    1: 'Friendly reminder',
+    2: 'Firm reminder',
+    3: 'Formal notice',
+    4: 'Collections / legal referral'
+  };
+  const ESCALATION_COLOR = { 1: '#4a8f3c', 2: '#b3902e', 3: '#c46a1f', 4: '#b3402e' };
+  const ESCALATION_TONE = { 1: 'good', 2: 'watch', 3: 'watch', 4: 'bad' };
+
+  function computeEscalationStage(cid) {
+    const row = byClient[cid];
+    if (!row) return null;
+
+    const activeItems = row.items.filter(i => !i.dispute && !i.docRequest);
+    if (!activeItems.length) return null; // nothing actionable — fully blocked by dispute/missing document, or nothing outstanding
+
+    const days = activeItems.reduce((max, i) => (i.overdueDays !== null && (max === null || i.overdueDays > max)) ? i.overdueDays : max, null);
+    const brokenCount = clientPromises(cid).filter(p => p.status === 'broken').length;
+
+    let stage, reason;
+    if ((days !== null && days > 90) || brokenCount >= 2) {
+      stage = 4;
+      reason = brokenCount >= 2 ? `${brokenCount} broken promises to pay on record` : `${days} days overdue with no resolution`;
+    } else if ((days !== null && days > 45) || brokenCount >= 1) {
+      stage = 3;
+      reason = brokenCount >= 1 ? 'broke a promise to pay' : `${days} days overdue`;
+    } else if (days !== null && days > 14) {
+      stage = 2;
+      reason = `${days} days overdue`;
+    } else {
+      stage = 1;
+      reason = days === null ? 'not yet due' : `${days} day${days === 1 ? '' : 's'} overdue`;
+    }
+
+    return { stage, label: ESCALATION_LABEL[stage], reason, days, brokenCount };
+  }
+
+  function clientEscalationHistory(cid) {
+    return escalationActions.filter(e => e.client_id === cid);
+  }
+
+  async function generateFormalNotice(cid) {
+    const row = byClient[cid];
+    const client = row.client;
+    const escalation = computeEscalationStage(cid);
+
+    const rows = row.items.filter(i => !i.dispute && !i.docRequest).map(rv => [
+      rv.description || 'Balance',
+      fmtDate(rv.due_date),
+      naira(rv.balance)
+    ]);
+    const totalDue = row.items.filter(i => !i.dispute && !i.docRequest).reduce((s, i) => s + i.balance, 0);
+
+    const bodyIntro = `This letter serves as formal notice that the amount of ${naira(totalDue)} remains outstanding on your account with ${business.name}${escalation && escalation.days !== null ? `, now ${escalation.days} days past the agreed due date` : ''}. A breakdown of the outstanding balance is set out below.\n\nWe request that this balance be settled within 7 days of the date of this notice. If payment has already been made, please disregard this notice and share proof of payment so we can update our records.\n\nShould the balance remain unpaid after this period, we may have no option but to refer this matter to a third party for further collection action.`;
+
+    const doc = await window.KoboExport.buildLetterPdf({
+      letterhead: business.name,
+      dateLine: `${fmtDate(new Date().toISOString())}\n\nTo: ${client.name}${client.address ? '\n' + client.address : ''}`,
+      bodyText: `FORMAL NOTICE OF OUTSTANDING BALANCE\n\n${bodyIntro}\n\n` +
+        rows.map(r => `${r[0]} — due ${r[1]} — ${r[2]}`).join('\n') +
+        `\n\nTotal outstanding: ${naira(totalDue)}\n\nRegards,\n${business.name}`
+    });
+
+    window.KoboExport.download(`Formal-Notice-${(client.name || 'customer').replace(/\s+/g, '-')}.pdf`, doc);
+
+    await supabase.from('escalation_actions').insert({
+      business_id: business.id, client_id: cid, stage: 3, action_type: 'formal_notice',
+      created_by: session.user.id
+    });
+    await logActivity('formal_notice_generated', { balance: totalDue }, cid);
+  }
+
+  // ---------- Workforce management (assign accounts, track recovery per team member) ----------
+  function computeTeamWorkload() {
+    const since30 = new Date(); since30.setDate(since30.getDate() - 30);
+
+    const byMember = {}; // user_id -> { member, accountCount, outstanding, collected30, scores: [] }
+    let unassignedOutstanding = 0, unassignedCount = 0;
+
+    Object.keys(byClient).forEach(cid => {
+      const row = byClient[cid];
+      const assignment = assignmentFor(cid);
+      if (!assignment) {
+        unassignedOutstanding += row.balance;
+        unassignedCount++;
+        return;
+      }
+      const uid = assignment.assigned_to;
+      if (!byMember[uid]) byMember[uid] = { member: memberByUserId(uid), userId: uid, accountCount: 0, outstanding: 0, collected30: 0, scores: [] };
+      byMember[uid].accountCount++;
+      byMember[uid].outstanding += row.balance;
+      const scoreInfo = computeCollectionScore(cid);
+      if (scoreInfo) byMember[uid].scores.push(scoreInfo.score);
+
+      const clientReceivableIds = new Set(receivables.filter(rv => rv.client_id === cid).map(rv => rv.id));
+      const collected30 = paymentEvents
+        .filter(p => clientReceivableIds.has(p.receivable_id) && new Date(p.paid_at) >= since30)
+        .reduce((s, p) => s + Number(p.amount), 0);
+      byMember[uid].collected30 += collected30;
+    });
+
+    const rows = Object.values(byMember).map(m => ({
+      ...m,
+      avgScore: m.scores.length ? Math.round(m.scores.reduce((s, v) => s + v, 0) / m.scores.length) : null
+    })).sort((a, b) => b.outstanding - a.outstanding);
+
+    return { rows, unassignedOutstanding, unassignedCount };
+  }
+
+  function renderTeamWorkload() {
+    if (!isGrowth) return;
+    const wrap = document.getElementById('workforceWrap');
+    if (!teamMembers.length) {
+      wrap.innerHTML = '<div class="empty-note">No team members yet — invite staff from your business settings to assign accounts.</div>';
+      return;
+    }
+
+    const { rows, unassignedOutstanding, unassignedCount } = computeTeamWorkload();
+
+    if (!rows.length) {
+      wrap.innerHTML = `<div class="empty-note">No accounts assigned yet. Open a client and use "Assign to" to split up the book.${unassignedCount ? ` ${unassignedCount} account${unassignedCount > 1 ? 's' : ''} (${naira(unassignedOutstanding)}) unassigned.` : ''}</div>`;
+      return;
+    }
+
+    wrap.innerHTML = `
+      <table class="rm-table">
+        <thead><tr>
+          <th>Team member</th>
+          <th>Accounts</th>
+          <th>Outstanding</th>
+          <th>Collected (30d)</th>
+          <th>Avg. book score</th>
+        </tr></thead>
+        <tbody>
+          ${rows.map(r => `
+            <tr>
+              <td>${escapeHtml(memberLabel(r.member))}</td>
+              <td>${r.accountCount}</td>
+              <td>${naira(r.outstanding)}</td>
+              <td style="color:#2f8a4e;">${naira(r.collected30)}</td>
+              <td>${r.avgScore === null ? '—' : `<span style="color:${SCORE_TIER_COLOR[r.avgScore >= 85 ? 'Excellent' : r.avgScore >= 70 ? 'Good' : r.avgScore >= 50 ? 'Fair' : r.avgScore >= 30 ? 'Watch' : 'Poor']};">${r.avgScore}</span>`}</td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+      ${unassignedCount ? `<div style="font-size:0.78rem; opacity:0.65; margin-top:10px;">${unassignedCount} account${unassignedCount > 1 ? 's' : ''} unassigned — ${naira(unassignedOutstanding)} outstanding.</div>` : ''}
+    `;
+  }
+
+  function populateAssigneeFilter() {
+    const select = document.getElementById('assigneeFilter');
+    const current = select.value;
+    const existingOptions = new Set(['', '__unassigned']);
+    teamMembers.forEach(m => {
+      if (existingOptions.has(m.user_id)) return;
+      existingOptions.add(m.user_id);
+      const opt = document.createElement('option');
+      opt.value = m.user_id;
+      opt.textContent = memberLabel(m);
+      select.appendChild(opt);
+    });
+    select.value = current;
+  }
 
   // ---------- Cash-flow forecast (deterministic, from expected payment dates) ----------
   function forecastBucket(days) {
@@ -305,23 +618,24 @@ function renderPlanPicker(ctx) {
   }
 
   function renderCashFlowForecast() {
+    if (!isGrowth) return;
     const { buckets, blockedTotal, noDateTotal } = computeCashFlowForecast();
     const within7 = buckets['0-7'];
     const within30 = within7 + buckets['8-30'];
     const within90 = within30 + buckets['31-90'];
 
     document.getElementById('forecastStats').innerHTML = `
-      <div style="border:1px solid var(--line); border-radius:8px; padding:10px; text-align:center;">
-        <div style="font-size:0.72rem; opacity:0.65;">Next 7 days</div>
-        <div class="pr-amount" style="margin-top:4px;">${naira(within7)}</div>
+      <div class="rm-stat" style="text-align:center;">
+        <div class="rm-stat-label">Next 7 days</div>
+        <div class="rm-stat-value">${naira(within7)}</div>
       </div>
-      <div style="border:1px solid var(--line); border-radius:8px; padding:10px; text-align:center;">
-        <div style="font-size:0.72rem; opacity:0.65;">Next 30 days</div>
-        <div class="pr-amount" style="margin-top:4px;">${naira(within30)}</div>
+      <div class="rm-stat" style="text-align:center;">
+        <div class="rm-stat-label">Next 30 days</div>
+        <div class="rm-stat-value">${naira(within30)}</div>
       </div>
-      <div style="border:1px solid var(--line); border-radius:8px; padding:10px; text-align:center;">
-        <div style="font-size:0.72rem; opacity:0.65;">Next 90 days</div>
-        <div class="pr-amount" style="margin-top:4px;">${naira(within90)}</div>
+      <div class="rm-stat" style="text-align:center;">
+        <div class="rm-stat-label">Next 90 days</div>
+        <div class="rm-stat-value">${naira(within90)}</div>
       </div>
     `;
 
@@ -366,7 +680,7 @@ function renderPlanPicker(ctx) {
   }
 
   async function loadAll() {
-    const [c, r, p, n, a, pe, d, dr] = await Promise.all([
+    const [c, r, p, n, a, pe, d, dr, ea, tm, asg] = await Promise.all([
       supabase.from('clients').select('id, name, phone, email, credit_limit, address').eq('business_id', business.id).order('name', { ascending: true }),
       supabase.from('receivables').select('id, client_id, description, amount, amount_paid, due_date, payment_status, source, created_at').eq('business_id', business.id).order('due_date', { ascending: true }),
       supabase.from('promise_to_pay').select('id, client_id, promised_date, promised_amount, note, status, created_at').eq('business_id', business.id).order('promised_date', { ascending: true }),
@@ -374,7 +688,10 @@ function renderPlanPicker(ctx) {
       supabase.from('credit_audit_log').select('id, client_id, action, details, created_at, clients(name)').eq('business_id', business.id).order('created_at', { ascending: false }).limit(30),
       supabase.from('receivable_payments').select('id, receivable_id, amount, paid_at').eq('business_id', business.id).order('paid_at', { ascending: true }),
       supabase.from('receivable_disputes').select('id, receivable_id, client_id, reason, description, status, resolution_note, created_at, resolved_at').eq('business_id', business.id).order('created_at', { ascending: false }),
-      supabase.from('receivable_document_requests').select('id, receivable_id, client_id, doc_type, description, status, requested_at, received_at').eq('business_id', business.id).order('requested_at', { ascending: false })
+      supabase.from('receivable_document_requests').select('id, receivable_id, client_id, doc_type, description, status, requested_at, received_at').eq('business_id', business.id).order('requested_at', { ascending: false }),
+      supabase.from('escalation_actions').select('id, client_id, stage, action_type, note, created_at').eq('business_id', business.id).order('created_at', { ascending: false }),
+      supabase.from('business_members').select('id, user_id, role, member_name, member_email').eq('business_id', business.id),
+      supabase.from('receivable_assignments').select('id, client_id, assigned_to, created_at').eq('business_id', business.id)
     ]);
     clients = c.data || [];
     receivables = r.data || [];
@@ -384,6 +701,22 @@ function renderPlanPicker(ctx) {
     paymentEvents = pe.data || [];
     disputes = d.data || [];
     docRequests = dr.data || [];
+    escalationActions = ea.data || [];
+    teamMembers = tm.data || [];
+    assignments = asg.data || [];
+  }
+
+  function memberLabel(member) {
+    if (!member) return 'Unknown';
+    return member.member_name || member.member_email || 'Team member';
+  }
+
+  function memberByUserId(userId) {
+    return teamMembers.find(m => m.user_id === userId) || null;
+  }
+
+  function assignmentFor(cid) {
+    return assignments.find(a => a.client_id === cid) || null;
   }
 
   const DISPUTE_REASON_LABEL = {
@@ -464,8 +797,8 @@ function renderPlanPicker(ctx) {
 
     const deltaLabel = delta === null ? ''
       : delta === 0 ? '<span style="opacity:0.6; font-size:0.78rem;">no change vs 30 days ago</span>'
-      : delta > 0 ? `<span style="color:#b3402e; font-size:0.78rem;">▲ ${delta}d worse vs 30 days ago</span>`
-      : `<span style="color:#2f8a4e; font-size:0.78rem;">▼ ${Math.abs(delta)}d better vs 30 days ago</span>`;
+      : delta > 0 ? `<span style="color:var(--stamp-red); font-size:0.78rem;">▲ ${delta}d worse vs 30 days ago</span>`
+      : `<span style="color:var(--ink-green-deep); font-size:0.78rem;">▼ ${Math.abs(delta)}d better vs 30 days ago</span>`;
 
     const driverList = (items, tone) => items.map(c =>
       `<div style="display:flex; justify-content:space-between; font-size:0.78rem; padding:4px 0;">
@@ -477,25 +810,25 @@ function renderPlanPicker(ctx) {
     document.getElementById('dsoPanel').innerHTML = `
       <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
         <div>
-          <strong style="font-size:0.9rem;">Days Sales Outstanding</strong>
-          <p style="font-size:0.78rem; opacity:0.65; margin-top:2px;">Based on the last 90 days of activity.</p>
+          <div class="rm-stat-label" style="margin-bottom:4px;">Days Sales Outstanding</div>
+          <p style="font-size:0.78rem; opacity:0.65;">Based on the last 90 days of activity.</p>
         </div>
         <div style="text-align:right;">
-          <div class="pr-amount" style="font-size:1.4rem;">${dsoNow === null ? '—' : dsoNow + ' days'}</div>
+          <div class="rm-stat-value" style="font-size:2rem;">${dsoNow === null ? '—' : dsoNow + ' days'}</div>
           <div style="margin-top:2px;">${deltaLabel}</div>
         </div>
       </div>
-      ${(worsened.length || improved.length) ? `
-      <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:16px; margin-top:14px; padding-top:12px; border-top:1px dashed var(--line);">
+      ${isGrowth && (worsened.length || improved.length) ? `
+      <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:16px; margin-top:14px; padding-top:14px; border-top:1px dashed var(--line);">
         <div>
-          <div style="font-size:0.72rem; opacity:0.65; margin-bottom:4px;">Pushing DSO up (new/growing balances, last 30 days)</div>
-          ${driverList(worsened, '#b3402e')}
+          <div class="rm-stat-label" style="margin-bottom:6px;">Pushing DSO up (last 30 days)</div>
+          ${driverList(worsened, 'var(--stamp-red)')}
         </div>
         <div>
-          <div style="font-size:0.72rem; opacity:0.65; margin-bottom:4px;">Helping DSO (paid down, last 30 days)</div>
-          ${driverList(improved, '#2f8a4e')}
+          <div class="rm-stat-label" style="margin-bottom:6px;">Helping DSO (last 30 days)</div>
+          ${driverList(improved, 'var(--ink-green-deep)')}
         </div>
-      </div>` : ''}
+      </div>` : !isGrowth ? `<div style="margin-top:12px;">${growthUpsellHtml('DSO driver breakdown')}</div>` : ''}
     `;
   }
 
@@ -509,9 +842,9 @@ function renderPlanPicker(ctx) {
 
     const grid = document.getElementById('agingGrid');
     grid.innerHTML = Object.keys(BUCKET_LABEL).map(key => `
-      <div style="border:1px solid var(--line); border-radius:8px; padding:10px; text-align:center;">
-        <div style="font-size:0.72rem; opacity:0.65;">${BUCKET_LABEL[key]}</div>
-        <div class="pr-amount" style="margin-top:4px;">${naira(buckets[key])}</div>
+      <div class="rm-stat ${BUCKET_TONE[key] === 'bad' ? 'bad' : BUCKET_TONE[key] === 'watch' ? 'warn' : ''}" style="text-align:center;">
+        <div class="rm-stat-label">${BUCKET_LABEL[key]}</div>
+        <div class="rm-stat-value" style="font-size:1.25rem;">${naira(buckets[key])}</div>
       </div>
     `).join('');
 
@@ -588,6 +921,7 @@ function renderPlanPicker(ctx) {
   }
 
   async function generatePriorities() {
+    if (!isGrowth) return;
     const btn = document.getElementById('priorityRefreshBtn');
     const wrap = document.getElementById('priorityWrap');
     btn.disabled = true;
@@ -614,6 +948,7 @@ function renderPlanPicker(ctx) {
   }
 
   async function loadAndRenderPriorities() {
+    if (!isGrowth) return;
     const { data: lastRun } = await supabase
       .from('collection_priority_runs')
       .select('priorities, provider, created_at')
@@ -629,7 +964,7 @@ function renderPlanPicker(ctx) {
     }
   }
 
-  document.getElementById('priorityRefreshBtn').addEventListener('click', generatePriorities);
+  if (isGrowth) document.getElementById('priorityRefreshBtn').addEventListener('click', generatePriorities);
 
   // ---------- Bank/payment reconciliation (deterministic matching, no AI) ----------
   let reconRows = [];              // parsed + matched transactions from the uploaded CSV
@@ -809,6 +1144,7 @@ function renderPlanPicker(ctx) {
     computeDSO();
     renderAnalytics();
     renderCashFlowForecast();
+    renderTeamWorkload();
     renderRecon();
     toast('Payment matched and logged.');
   }
@@ -866,10 +1202,16 @@ function renderPlanPicker(ctx) {
 
   function renderLedger() {
     const wrap = document.getElementById('ledgerWrap');
-    const clientIds = Object.keys(byClient).sort((a, b) => byClient[b].balance - byClient[a].balance);
+    const filterVal = document.getElementById('assigneeFilter').value;
+    let clientIds = Object.keys(byClient).sort((a, b) => byClient[b].balance - byClient[a].balance);
+    if (filterVal === '__unassigned') {
+      clientIds = clientIds.filter(cid => !assignmentFor(cid));
+    } else if (filterVal) {
+      clientIds = clientIds.filter(cid => assignmentFor(cid)?.assigned_to === filterVal);
+    }
 
     if (!clientIds.length) {
-      wrap.innerHTML = '<div class="empty-note">Nothing outstanding — every account is settled.</div>';
+      wrap.innerHTML = '<div class="empty-note">Nothing outstanding here.</div>';
       return;
     }
 
@@ -878,18 +1220,23 @@ function renderPlanPicker(ctx) {
       const client = row.client;
       const overLimit = client.credit_limit && row.balance > Number(client.credit_limit);
       const scoreInfo = computeCollectionScore(cid);
+      const escalation = computeEscalationStage(cid);
+      const assignment = assignmentFor(cid);
       return `
-        <div class="pr-row" data-toggle="${cid}" style="cursor:pointer; display:block;">
-          <div style="display:flex; justify-content:space-between; align-items:center;">
+        <div class="pr-row" data-toggle="${cid}" data-bucket="${row.worstBucket}" style="cursor:pointer; display:block;">
+          <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
             <div>
-              <div class="pr-name">${escapeHtml(client.name)}
-                <span class="bucket-tag ${row.worstBucket}" style="font-size:0.68rem; margin-left:6px; opacity:0.75;">${BUCKET_LABEL[row.worstBucket]}</span>
-                ${scoreInfo ? `<span style="font-size:0.68rem; margin-left:6px; color:${SCORE_TIER_COLOR[scoreInfo.tier]};">${scoreInfo.tier} (${scoreInfo.score})</span>` : ''}
-                ${overLimit ? `<span style="color:#b3402e; font-size:0.68rem; margin-left:6px;">Over ${naira(client.credit_limit)} limit</span>` : ''}
-                ${row.hasOpenDispute ? `<span style="color:#8a5a00; font-size:0.68rem; margin-left:6px;">⚠ Dispute open</span>` : ''}
-                ${row.hasOpenDocRequest ? `<span style="color:#2f5f8a; font-size:0.68rem; margin-left:6px;">📄 Doc pending</span>` : ''}
+              <div class="pr-name">${escapeHtml(client.name)}</div>
+              <div style="display:flex; flex-wrap:wrap; gap:6px; margin-top:6px;">
+                ${rmPill(BUCKET_LABEL[row.worstBucket], BUCKET_TONE[row.worstBucket])}
+                ${scoreInfo ? rmPill(`${scoreInfo.tier} (${scoreInfo.score})`, SCORE_TIER_TONE[scoreInfo.tier]) : ''}
+                ${overLimit ? rmPill(`Over ${naira(client.credit_limit)} limit`, 'bad') : ''}
+                ${row.hasOpenDispute ? rmPill('⚠ Dispute open', 'watch') : ''}
+                ${row.hasOpenDocRequest ? rmPill('📄 Doc pending', 'neutral') : ''}
+                ${escalation && escalation.stage >= 3 && isGrowth ? rmPill(escalation.label, ESCALATION_TONE[escalation.stage]) : ''}
+                ${assignment && isGrowth ? rmPill(`→ ${escapeHtml(memberLabel(memberByUserId(assignment.assigned_to)))}`, 'neutral') : ''}
               </div>
-              <div class="pr-meta">${row.items.length} open item${row.items.length > 1 ? 's' : ''}${(() => {
+              <div class="pr-meta" style="margin-top:6px;">${row.items.length} open item${row.items.length > 1 ? 's' : ''}${(() => {
                 const preds = row.items.map(predictedPaymentDate).filter(Boolean);
                 if (!preds.length) return '';
                 const earliest = preds.reduce((a, b) => (a.date < b.date ? a : b));
@@ -942,9 +1289,10 @@ function renderPlanPicker(ctx) {
            <button data-received-doc="${docRequest.id}" class="btn small" style="margin-left:6px;">Received</button>
            ${row.client.phone ? `<button data-chase-doc="${docRequest.id}" data-receivable="${rv.id}" class="btn small" style="margin-left:6px;">WhatsApp</button>` : ''}`;
       } else {
-        actionCell = `<button data-pay="${rv.id}" class="btn small">Log payment</button>
+        actionCell = `<button data-pay="${rv.id}" class="btn small">Log payment</button>` +
+          (isGrowth ? `
            <button data-flag-dispute="${rv.id}" class="btn small">Flag dispute</button>
-           <button data-request-doc="${rv.id}" class="btn small">Request document</button>`;
+           <button data-request-doc="${rv.id}" class="btn small">Request document</button>` : '');
       }
       return `
       <tr>
@@ -969,6 +1317,8 @@ function renderPlanPicker(ctx) {
     const pList = clientPromises(cid);
     const nList = clientNotes(cid);
     const scoreInfo = computeCollectionScore(cid);
+    const escalation = computeEscalationStage(cid);
+    const escalationHistory = clientEscalationHistory(cid);
 
     detail.innerHTML = `
       ${scoreInfo ? `
@@ -979,9 +1329,29 @@ function renderPlanPicker(ctx) {
           <div style="opacity:0.65; margin-top:2px;">${scoreInfo.reasons.length ? scoreInfo.reasons.join(', ') : 'No negative factors on record.'}${scoreInfo.limitedHistory ? ' · limited history' : ''}</div>
         </div>
       </div>` : ''}
+      ${escalation && isGrowth ? `
+      <div style="margin-bottom:10px; padding:8px 10px; border:1px solid var(--line); border-radius:8px;">
+        <div style="font-size:0.78rem;">
+          <strong style="color:${ESCALATION_COLOR[escalation.stage]};">Escalation stage ${escalation.stage} — ${escalation.label}</strong>
+          <div style="opacity:0.65; margin-top:2px;">${escalation.reason}</div>
+        </div>
+        ${escalationHistory.length ? `
+        <div style="margin-top:6px; font-size:0.72rem; opacity:0.55;">
+          ${escalationHistory.slice(0, 3).map(e => `${e.action_type === 'formal_notice' ? 'Formal notice' : 'Referred to collections'} — ${fmtDate(e.created_at)}`).join(' · ')}
+        </div>` : ''}
+      </div>` : ''}
+      ${teamMembers.length && isGrowth ? `
+      <div style="margin-bottom:10px; padding:8px 10px; border:1px solid var(--line); border-radius:8px; display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+        <span style="font-size:0.78rem; opacity:0.65;">Assigned to</span>
+        <select id="assignSelect-${cid}" style="font-size:0.78rem;">
+          <option value="">— unassigned —</option>
+          ${teamMembers.map(m => `<option value="${m.user_id}" ${assignmentFor(cid)?.assigned_to === m.user_id ? 'selected' : ''}>${escapeHtml(memberLabel(m))}</option>`).join('')}
+        </select>
+        <button data-save-assignment="${cid}" class="btn small">Save</button>
+      </div>` : ''}
       <p style="font-size:0.78rem; opacity:0.65; margin-bottom:10px;">${behaviourNote}</p>
-      <table style="width:100%; font-size:0.85rem; margin-bottom:8px;">
-        <thead><tr><th style="text-align:left;">Item</th><th style="text-align:left;">Due</th><th style="text-align:left;">Expected</th><th style="text-align:left;">Balance</th><th></th></tr></thead>
+      <table class="rm-table" style="margin-bottom:8px;">
+        <thead><tr><th>Item</th><th>Due</th><th>Expected</th><th>Balance</th><th></th></tr></thead>
         <tbody>${itemRows}</tbody>
       </table>
       <div id="disputeForm-${cid}" style="display:none; margin-bottom:12px;"></div>
@@ -990,9 +1360,13 @@ function renderPlanPicker(ctx) {
       <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:10px;">
         <button data-statement="${cid}" class="btn small">Download statement (PDF)</button>
         ${client.phone ? `<button data-remind="${cid}" class="btn small">WhatsApp reminder</button>` : ''}
-        <button data-draft-negotiation="${cid}" class="btn small">Draft AI negotiation message</button>
+        ${isGrowth ? `<button data-draft-negotiation="${cid}" class="btn small">Draft AI negotiation message</button>` : ''}
+        ${isGrowth && escalation && escalation.stage >= 3 ? `<button data-formal-notice="${cid}" class="btn small">Generate formal notice (PDF)</button>` : ''}
+        ${isGrowth && escalation && escalation.stage >= 4 ? `<button data-collections-referral="${cid}" class="btn small">Flag for collections/legal referral</button>` : ''}
       </div>
+      ${!isGrowth ? growthUpsellHtml('AI negotiation drafting & escalation tools') : ''}
       <div id="negotiationDraft-${cid}" style="margin-bottom:14px;"></div>
+      <div id="collectionsReferralForm-${cid}" style="display:none; margin-bottom:14px;"></div>
 
       <strong style="font-size:0.82rem;">Promises to pay</strong>
       <div style="margin:6px 0 10px;">
@@ -1082,7 +1456,83 @@ function renderPlanPicker(ctx) {
         draftBtn.textContent = 'Draft AI negotiation message';
       }
     }
-    draftBtn.addEventListener('click', generateDraft);
+    draftBtn?.addEventListener('click', generateDraft);
+
+    const formalNoticeBtn = detail.querySelector(`[data-formal-notice="${cid}"]`);
+    if (formalNoticeBtn) {
+      formalNoticeBtn.addEventListener('click', async () => {
+        formalNoticeBtn.disabled = true;
+        formalNoticeBtn.textContent = 'Generating…';
+        try {
+          await generateFormalNotice(cid);
+          toast('Formal notice downloaded and logged.');
+          await loadAll();
+          renderActivity();
+        } catch (err) {
+          toast('Could not generate formal notice: ' + err.message);
+        } finally {
+          formalNoticeBtn.disabled = false;
+          formalNoticeBtn.textContent = 'Generate formal notice (PDF)';
+        }
+      });
+    }
+
+    const referralBtn = detail.querySelector(`[data-collections-referral="${cid}"]`);
+    const referralFormEl = detail.querySelector(`#collectionsReferralForm-${cid}`);
+    if (referralBtn) {
+      referralBtn.addEventListener('click', () => {
+        referralFormEl.innerHTML = `
+          <div class="pr-form" style="display:flex; gap:8px; flex-wrap:wrap; align-items:flex-end; border:1px solid var(--line); border-radius:8px; padding:10px;">
+            <div style="flex:1; min-width:220px;"><label>Note (optional) — who/where this is being referred to</label><input type="text" id="referralNote-${cid}" placeholder="e.g. handed to ABC Collections Agency"></div>
+            <button data-save-referral class="btn primary small">Log referral</button>
+            <button data-cancel-referral class="btn small">Cancel</button>
+          </div>
+        `;
+        referralFormEl.style.display = 'block';
+
+        referralFormEl.querySelector('[data-cancel-referral]').addEventListener('click', () => {
+          referralFormEl.style.display = 'none';
+          referralFormEl.innerHTML = '';
+        });
+
+        referralFormEl.querySelector('[data-save-referral]').addEventListener('click', async () => {
+          const note = document.getElementById(`referralNote-${cid}`).value.trim() || null;
+          const { error } = await supabase.from('escalation_actions').insert({
+            business_id: business.id, client_id: cid, stage: 4, action_type: 'collections_referral',
+            note, created_by: session.user.id
+          });
+          if (error) { toast('Could not log referral: ' + error.message); return; }
+
+          await logActivity('collections_referral', { note }, cid);
+          toast('Referral logged.');
+          await loadAll();
+          renderActivity();
+          renderLedger();
+        });
+      });
+    }
+
+    const saveAssignmentBtn = detail.querySelector(`[data-save-assignment="${cid}"]`);
+    if (saveAssignmentBtn) {
+      saveAssignmentBtn.addEventListener('click', async () => {
+        const uid = document.getElementById(`assignSelect-${cid}`).value;
+
+        if (!uid) {
+          const existing = assignmentFor(cid);
+          if (existing) await supabase.from('receivable_assignments').delete().eq('id', existing.id);
+          toast('Unassigned.');
+        } else {
+          const { error } = await supabase.from('receivable_assignments')
+            .upsert({ business_id: business.id, client_id: cid, assigned_to: uid, assigned_by: session.user.id, updated_at: new Date().toISOString() }, { onConflict: 'business_id,client_id' });
+          if (error) { toast('Could not save assignment: ' + error.message); return; }
+          toast('Assigned.');
+        }
+
+        await loadAll();
+        renderLedger();
+        renderTeamWorkload();
+      });
+    }
 
     detail.querySelectorAll('[data-pay]').forEach(btn => {
       btn.addEventListener('click', async () => {
@@ -1104,6 +1554,7 @@ function renderPlanPicker(ctx) {
         computeDSO();
         renderAnalytics();
         renderCashFlowForecast();
+        renderTeamWorkload();
       });
     });
 
@@ -1150,6 +1601,7 @@ function renderPlanPicker(ctx) {
           renderLedger();
           renderActivity();
           renderCashFlowForecast();
+          renderTeamWorkload();
         });
       });
     });
@@ -1173,6 +1625,7 @@ function renderPlanPicker(ctx) {
         renderLedger();
         renderActivity();
         renderCashFlowForecast();
+        renderTeamWorkload();
       });
     });
 
@@ -1220,6 +1673,7 @@ function renderPlanPicker(ctx) {
           renderLedger();
           renderActivity();
           renderCashFlowForecast();
+          renderTeamWorkload();
         });
       });
     });
@@ -1240,6 +1694,7 @@ function renderPlanPicker(ctx) {
         renderLedger();
         renderActivity();
         renderCashFlowForecast();
+        renderTeamWorkload();
       });
     });
 
@@ -1374,7 +1829,14 @@ function renderPlanPicker(ctx) {
       reminder_sent: 'Reminder sent',
       statement_generated: 'Statement generated',
       payment_logged: 'Payment logged',
-      receivable_added: 'Outstanding balance added'
+      receivable_added: 'Outstanding balance added',
+      dispute_flagged: 'Dispute flagged',
+      dispute_resolved: 'Dispute resolved',
+      document_requested: 'Document requested',
+      document_received: 'Document received',
+      document_chased: 'Document chase sent',
+      formal_notice_generated: 'Formal notice generated',
+      collections_referral: 'Referred to collections/legal'
     };
     wrap.innerHTML = activity.map(a => `
       <div style="font-size:0.82rem; padding:6px 0; border-bottom:1px dashed var(--line);">
@@ -1543,6 +2005,7 @@ function renderPlanPicker(ctx) {
   }
 
   function renderAnalytics() {
+    if (!isGrowth) return;
     const hasData = receivables.length > 0;
     document.getElementById('analyticsEmpty').style.display = hasData ? 'none' : 'block';
     document.getElementById('analyticsGrid').style.display = hasData ? 'grid' : 'none';
@@ -1647,12 +2110,78 @@ function renderPlanPicker(ctx) {
   computePaymentBehaviour();
   computeDSO();
   renderAging();
+  populateAssigneeFilter();
+  document.getElementById('assigneeFilter').addEventListener('change', renderLedger);
   renderLedger();
   renderEntryForm();
   renderPromiseList();
   renderActivity();
   renderAnalytics();
   renderCashFlowForecast();
+  renderTeamWorkload();
   loadAndRenderReminderSettings();
   loadAndRenderPriorities();
+  renderDailySummary();
+  rmDataLoaded = true;
 })();
+
+async function renderDailySummary() {
+  const wrap = document.getElementById('dailySummaryWrap');
+  if (!wrap) return;
+
+  const now = new Date();
+  const startOfToday = new Date(now); startOfToday.setHours(0, 0, 0, 0);
+  const startOfYesterday = new Date(startOfToday); startOfYesterday.setDate(startOfYesterday.getDate() - 1);
+
+  async function periodStats(fromDate, toDate) {
+    const from = fromDate.toISOString();
+    const to = toDate.toISOString();
+
+    const [{ data: added }, { data: payments }, { data: promises }] = await Promise.all([
+      supabase.from('receivables').select('amount')
+        .eq('business_id', business.id).gte('created_at', from).lt('created_at', to),
+      supabase.from('receivable_payments').select('amount')
+        .eq('business_id', business.id).gte('paid_at', from).lt('paid_at', to),
+      supabase.from('promise_to_pay').select('promised_amount')
+        .eq('business_id', business.id).gte('created_at', from).lt('created_at', to),
+    ]);
+
+    return {
+      addedCount: (added || []).length,
+      addedTotal: (added || []).reduce((s, r) => s + Number(r.amount || 0), 0),
+      paymentCount: (payments || []).length,
+      paymentTotal: (payments || []).reduce((s, p) => s + Number(p.amount || 0), 0),
+      promiseCount: (promises || []).length,
+      promiseTotal: (promises || []).reduce((s, p) => s + Number(p.promised_amount || 0), 0),
+    };
+  }
+
+  function describe(stats, label) {
+    const parts = [];
+    if (stats.addedCount > 0) {
+      parts.push(`added ${stats.addedCount} new outstanding balance${stats.addedCount === 1 ? '' : 's'} worth ${naira(stats.addedTotal)}`);
+    }
+    if (stats.paymentCount > 0) {
+      parts.push(`collected ${naira(stats.paymentTotal)} in payment${stats.paymentCount === 1 ? '' : 's'}`);
+    }
+    if (stats.promiseCount > 0) {
+      parts.push(`got ${stats.promiseCount} new promise${stats.promiseCount === 1 ? '' : 's'} to pay worth ${naira(stats.promiseTotal)}`);
+    }
+    if (!parts.length) {
+      return `<p>${label}, there was no recorded activity — no new balances, payments, or promises to pay.</p>`;
+    }
+    const sentence = parts.length === 1 ? parts[0]
+      : parts.slice(0, -1).join(', ') + (parts.length > 2 ? ', and ' : ' and ') + parts[parts.length - 1];
+    return `<p>${label}, you ${sentence}.</p>`;
+  }
+
+  try {
+    const [todayStats, yesterdayStats] = await Promise.all([
+      periodStats(startOfToday, now),
+      periodStats(startOfYesterday, startOfToday),
+    ]);
+    wrap.innerHTML = describe(yesterdayStats, 'Yesterday') + describe(todayStats, 'So far today');
+  } catch (err) {
+    wrap.innerHTML = '<p class="empty-note">Could not load activity summary.</p>';
+  }
+}

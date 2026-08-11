@@ -38,6 +38,11 @@ async function renderForm(ctx) {
         <div id="directorsList"></div>
         <button type="button" class="btn small" id="addDirectorBtn" style="margin:8px 0 18px;">+ Add director</button>
         <br>
+        <label style="margin-top:10px;">Bank details (shown on your invoices for direct transfer)</label>
+        <input id="ccBankName" placeholder="Bank name, e.g. GTBank" value="${ctx.business.bank_name || ''}">
+        <input id="ccBankAccountNumber" placeholder="Account number" value="${ctx.business.bank_account_number || ''}">
+        <input id="ccBankAccountName" placeholder="Account name" value="${ctx.business.bank_account_name || ''}">
+        <br>
         <button class="btn primary" type="submit">Save</button>
       </form>
     </div>
@@ -69,6 +74,9 @@ async function renderForm(ctx) {
         tin_number: document.getElementById('ccTin').value.trim() || null,
         vat_number: document.getElementById('ccVat').value.trim() || null,
         cac_directors: cacDirectors,
+        bank_name: document.getElementById('ccBankName').value.trim() || null,
+        bank_account_number: document.getElementById('ccBankAccountNumber').value.trim() || null,
+        bank_account_name: document.getElementById('ccBankAccountName').value.trim() || null,
       })
       .eq('id', ctx.business.id);
 

@@ -32,16 +32,50 @@ function showMsg(text, type) {
 
   let currentPeriod = 'week';
 
+  const CHART_COLORS = ['#0D2620', '#C79A3C', '#A8342A', '#5c625b', '#8a6a1f', '#14342B', '#d8d4c8', '#7a9187'];
+  let categoryChart = null;
+
+  function renderCategoryChart(byCategory) {
+    const canvas = document.getElementById('chartExpenseCategories');
+    if (!canvas || typeof Chart === 'undefined') return;
+    if (categoryChart) categoryChart.destroy();
+
+    const entries = Object.entries(byCategory).sort((a, b) => b[1] - a[1]);
+    if (!entries.length) {
+      const ctx = canvas.getContext('2d');
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      return;
+    }
+
+    categoryChart = new Chart(canvas.getContext('2d'), {
+      type: 'doughnut',
+      data: {
+        labels: entries.map(([cat]) => cat.charAt(0).toUpperCase() + cat.slice(1)),
+        datasets: [{ data: entries.map(([, amt]) => amt), backgroundColor: CHART_COLORS, borderWidth: 0 }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { position: 'bottom', labels: { font: { size: 10 }, boxWidth: 10 } },
+          tooltip: { callbacks: { label: (ctx) => `${ctx.label}: ${naira(ctx.raw)}` } }
+        }
+      }
+    });
+  }
+
   async function renderSnapshot() {
     const start = periodStart(currentPeriod).toISOString();
 
-    const { data: paidInvoices } = await supabase
-      .from('documents')
-      .select('amount, created_at')
+    // Income by actual payment date, not invoice creation date — this also
+    // fixes a subtler bug the old approximation had: an invoice created
+    // last month but paid this month never counted as this month's income
+    // at all, since it filtered on documents.created_at, not payment date.
+    const { data: payments } = await supabase
+      .from('document_payments')
+      .select('amount, paid_at')
       .eq('business_id', business.id)
-      .eq('doc_type', 'invoice')
-      .eq('payment_status', 'paid')
-      .gte('created_at', start);
+      .gte('paid_at', start);
 
     const { data: expenses } = await supabase
       .from('expenses')
@@ -49,7 +83,7 @@ function showMsg(text, type) {
       .eq('business_id', business.id)
       .gte('expense_date', start.split('T')[0]);
 
-    const income = (paidInvoices || []).reduce((s, d) => s + Number(d.amount || 0), 0);
+    const income = (payments || []).reduce((s, p) => s + Number(p.amount || 0), 0);
     const expenseTotal = (expenses || []).reduce((s, e) => s + Number(e.amount || 0), 0);
     const profit = income - expenseTotal;
 
@@ -68,6 +102,7 @@ function showMsg(text, type) {
     catEl.innerHTML = cats.length
       ? cats.map(([cat, amt]) => `<div class="cat-row"><span style="text-transform:capitalize;">${cat}</span><span>${naira(amt)}</span></div>`).join('')
       : '<div class="empty-note" style="padding:8px 0;">No expenses logged in this period.</div>';
+    renderCategoryChart(byCategory);
   }
 
   document.querySelectorAll('#periodToggle button').forEach(btn => {

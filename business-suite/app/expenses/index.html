@@ -28,6 +28,7 @@
   .period-toggle button.active{ background:var(--ink-green-deep); color:var(--paper); border-color:var(--ink-green-deep); }
   .snapshot-grid{ display:grid; grid-template-columns:repeat(3, 1fr); gap:16px; }
   @media (max-width:700px){ .snapshot-grid{ grid-template-columns:1fr; } }
+  @media (max-width:700px){ .cat-breakdown-wrap{ grid-template-columns:1fr !important; } }
   .stat-card{ background:var(--bone); border:1px solid var(--line); border-radius:8px; padding:18px; }
   .stat-card .label{ font-size:0.76rem; opacity:0.6; margin-bottom:6px; }
   .stat-card .value{ font-family:'Fraunces', serif; font-size:1.4rem; }
@@ -121,8 +122,13 @@
         <div class="value" id="statProfit">—</div>
       </div>
     </div>
-    <div class="cat-breakdown" id="catBreakdown"></div>
-    <p style="font-size:0.78rem; opacity:0.55; margin-top:14px;">Income reflects invoices marked "paid" that were created in this period — a close approximation, not a payment-date ledger.</p>
+    <div class="cat-breakdown-wrap" style="display:grid; grid-template-columns:1fr 220px; gap:20px; align-items:start; margin-top:14px;">
+      <div class="cat-breakdown" id="catBreakdown"></div>
+      <div style="position:relative; height:220px;">
+        <canvas id="chartExpenseCategories"></canvas>
+      </div>
+    </div>
+    <p style="font-size:0.78rem; opacity:0.55; margin-top:14px;">Income reflects actual payment dates — recorded manually or via Squad checkout.</p>
   </div>
 
   <div class="bs-panel">
@@ -175,6 +181,7 @@
 <script src="/assets/nav-auth.js" defer></script>
 <script src="/business-suite/app/guard.js"></script>
 <script src="/business-suite/app/shell.js?v=3" defer></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.1/dist/chart.umd.min.js"></script>
 <script src="/business-suite/app/expenses/expenses.js" defer></script>
 <script src="/assets/tools-index.js" defer></script>
 <script src="/assets/search.js" defer></script>
