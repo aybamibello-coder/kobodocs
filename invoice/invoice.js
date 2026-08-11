@@ -1,17 +1,38 @@
 // ---------- helpers ----------
-const naira = (n) => '₦' + (Number(n) || 0).toLocaleString('en-NG', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const CURRENCY_SYMBOLS = { NGN: '₦', USD: '$', GBP: '£', EUR: '€' };
+const CURRENCY_LOCALES = { NGN: 'en-NG', USD: 'en-US', GBP: 'en-GB', EUR: 'de-DE' };
+function money(n, currency) {
+  currency = currency || (document.getElementById('invCurrency') ? document.getElementById('invCurrency').value : 'NGN');
+  const symbol = CURRENCY_SYMBOLS[currency] || '₦';
+  const locale = CURRENCY_LOCALES[currency] || 'en-NG';
+  return symbol + (Number(n) || 0).toLocaleString(locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+const naira = (n) => money(n, 'NGN'); // kept for any external callers; new code should use money()
 const todayStr = () => new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+
+function currentCurrency() {
+  const el = document.getElementById('invCurrency');
+  return el ? el.value : 'NGN';
+}
+
+function updateItemPricePlaceholders() {
+  const symbol = CURRENCY_SYMBOLS[currentCurrency()] || '₦';
+  document.querySelectorAll('.item-price').forEach(inp => {
+    inp.placeholder = `Unit price (${symbol})`;
+  });
+}
 
 let itemId = 0;
 function addItemRow(desc = '', qty = 1, price = '') {
   itemId++;
+  const symbol = CURRENCY_SYMBOLS[currentCurrency()] || '₦';
   const row = document.createElement('div');
   row.className = 'item-row';
   row.dataset.id = itemId;
   row.innerHTML = `
     <input type="text" class="item-desc" placeholder="Item or service" value="${desc}">
     <input type="number" class="item-qty" min="1" value="${qty}">
-    <input type="number" class="item-price" min="0" placeholder="Unit price (₦)" value="${price}">
+    <input type="number" class="item-price" min="0" placeholder="Unit price (${symbol})" value="${price}">
     <button type="button" class="item-remove" aria-label="Remove item">&times;</button>
   `;
   document.getElementById('itemRows').appendChild(row);
@@ -34,8 +55,12 @@ function renderPreview() {
   const invNumber = document.getElementById('invNumber').value || 'INV-0001';
   const invDateRaw = document.getElementById('invDate').value;
   const clientName = document.getElementById('clientName').value || 'Client name';
+  const currency = currentCurrency();
   const vatOn = document.getElementById('vatToggle').checked;
   const note = document.getElementById('invNote').value;
+
+  const foreignNote = document.getElementById('foreignCurrencyNote');
+  if (foreignNote) foreignNote.style.display = (currency !== 'NGN') ? 'block' : 'none';
 
   document.getElementById('pBizName').textContent = bizName;
   document.getElementById('pBizContact').textContent = [bizPhone, bizBank].filter(Boolean).join(' · ') || 'Phone · Bank details';
@@ -69,7 +94,7 @@ function renderPreview() {
     <tr>
       <td>${it.desc}</td>
       <td class="num">${it.qty}</td>
-      <td class="num">${naira(it.qty * it.price)}</td>
+      <td class="num">${money(it.qty * it.price, currency)}</td>
     </tr>
   `).join('');
 
@@ -77,18 +102,18 @@ function renderPreview() {
   const vat = vatOn ? subtotal * 0.075 : 0;
   const total = subtotal + vat;
 
-  let totalsHtml = `<div class="row"><span>Subtotal</span><span>${naira(subtotal)}</span></div>`;
-  if (vatOn) totalsHtml += `<div class="row"><span>VAT (7.5%)</span><span>${naira(vat)}</span></div>`;
-  totalsHtml += `<div class="row grand"><span>Total due</span><span>${naira(total)}</span></div>`;
+  let totalsHtml = `<div class="row"><span>Subtotal</span><span>${money(subtotal, currency)}</span></div>`;
+  if (vatOn) totalsHtml += `<div class="row"><span>VAT (7.5%)</span><span>${money(vat, currency)}</span></div>`;
+  totalsHtml += `<div class="row grand"><span>Total due</span><span>${money(total, currency)}</span></div>`;
   document.getElementById('pTotals').innerHTML = totalsHtml;
 
   const noteEl = document.getElementById('pNote');
   if (note) { noteEl.textContent = note; noteEl.style.display = 'block'; }
   else { noteEl.style.display = 'none'; }
 
-  if (window.KoboStorage) KoboStorage.save('invoice', { bizName, bizPhone, bizBank, bizRc, bizDirectors, bizTin, bizVat, invNumber, invDate: invDateRaw, clientName, vatOn, note, items });
+  if (window.KoboStorage) KoboStorage.save('invoice', { bizName, bizPhone, bizBank, bizRc, bizDirectors, bizTin, bizVat, invNumber, invDate: invDateRaw, clientName, currency, vatOn, note, items });
 
-  return { bizName, bizPhone, bizBank, invNumber, clientName, items, subtotal, vat, total, vatOn, note };
+  return { bizName, bizPhone, bizBank, invNumber, clientName, currency, items, subtotal, vat, total, vatOn, note };
 }
 
 function collectFormState() {
@@ -103,6 +128,7 @@ function collectFormState() {
     invNumber: document.getElementById('invNumber').value,
     invDate: document.getElementById('invDate').value,
     clientName: document.getElementById('clientName').value,
+    currency: currentCurrency(),
     vatOn: document.getElementById('vatToggle').checked,
     note: document.getElementById('invNote').value,
     items: getItems()
@@ -120,6 +146,7 @@ function applyFormState(state) {
   document.getElementById('invNumber').value = state.invNumber || 'INV-0001';
   document.getElementById('invDate').value = state.invDate || new Date().toISOString().split('T')[0];
   document.getElementById('clientName').value = state.clientName || '';
+  document.getElementById('invCurrency').value = state.currency || 'NGN';
   document.getElementById('vatToggle').checked = state.vatOn !== false;
   document.getElementById('invNote').value = state.note || '';
   document.getElementById('itemRows').innerHTML = '';
@@ -132,6 +159,7 @@ function applyFormState(state) {
   document.getElementById(id).addEventListener('input', renderPreview);
 });
 document.getElementById('vatToggle').addEventListener('change', renderPreview);
+document.getElementById('invCurrency').addEventListener('change', () => { updateItemPricePlaceholders(); renderPreview(); });
 document.getElementById('addItemBtn').addEventListener('click', () => { addItemRow(); renderPreview(); });
 
 document.getElementById('clearFormBtn').addEventListener('click', () => {
@@ -190,10 +218,10 @@ let watermarkHidden = false;
 
 // ---------- Build the real PDF from data (no screenshotting) ----------
 function buildInvoicePdf(data) {
-  const rows = data.items.map(it => [it.desc, it.qty, naira(it.qty * it.price)]);
-  const totals = [{ label: 'Subtotal', value: naira(data.subtotal) }];
-  if (data.vatOn) totals.push({ label: 'VAT (7.5%)', value: naira(data.vat) });
-  totals.push({ label: 'Total due', value: naira(data.total), emphasis: true });
+  const rows = data.items.map(it => [it.desc, it.qty, money(it.qty * it.price, data.currency)]);
+  const totals = [{ label: 'Subtotal', value: money(data.subtotal, data.currency) }];
+  if (data.vatOn) totals.push({ label: 'VAT (7.5%)', value: money(data.vat, data.currency) });
+  totals.push({ label: 'Total due', value: money(data.total, data.currency), emphasis: true });
 
   return KoboExport.buildTablePdf({
     style: 'branded',
@@ -234,7 +262,7 @@ document.getElementById('waBtn').addEventListener('click', async () => {
     `From: ${data.bizName}`,
     `To: ${data.clientName}`,
     '',
-    `Total due: *${naira(data.total)}*`,
+    `Total due: *${money(data.total, data.currency)}*`,
     data.bizBank ? `Pay to: ${data.bizBank}` : ''
   ].filter(Boolean).join('\n');
 

@@ -1,7 +1,8 @@
 // Shared tools index for site-wide search (assets/search.js).
 // Keep in sync when tools are added/removed.
 window.KOBO_TOOLS_INDEX = [
-  { name: "Invoice Generator", url: "/invoice/", keywords: "invoice bill billing" },
+  { name: "Invoice Generator", url: "/invoice/", keywords: "invoice bill billing usd gbp eur foreign currency international client" },
+  { name: "Freelancer Tax & Invoicing (2026)", url: "/freelancer-tax-invoicing/", keywords: "freelancer tax nigeria 2026 remote worker foreign income usd invoice withholding tax firs tin" },
   { name: "Business Invoice", url: "/invoice/business/", keywords: "invoice business company" },
   { name: "Receipt Generator", url: "/receipt/", keywords: "receipt payment proof" },
   { name: "Quotation Generator", url: "/quotation/", keywords: "quote quotation price estimate" },
