@@ -43,4 +43,5 @@ window.KOBO_TOOLS_INDEX = [
   { name: "Proof of Funds Calculator", url: "/relocation/proof-of-funds/", keywords: "proof of funds visa savings threshold" },
   { name: "Cost of Living Calculator", url: "/relocation/cost-of-living/", keywords: "cost of living abroad city budget" },
   { name: "WHT Tracker", url: "/wht-tracker/", keywords: "withholding tax wht credit note certificate remittance tracker" },
+  { name: "Contract Scanner", url: "/contract-scanner/", keywords: "contract review scan risk clause legal freelancer rent land sale employment power of attorney" },
 ];
