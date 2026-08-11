@@ -18,24 +18,28 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Work+Sans:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/assets/style.css">
-<link rel="stylesheet" href="/business-suite/app/shell.css?v=3">
+<link rel="stylesheet" href="/business-suite/app/shell.css?v=4">
 <style>
-  .bs-dash-wrap{ max-width:1000px; margin:0 auto; padding:36px 20px 100px; }
-  .bs-dash-top{ display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:16px; margin-bottom:26px; }
+  .bs-dash-wrap{ max-width:1180px; margin:0 auto; padding:34px 24px 110px; }
+  .bs-dash-top{ display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:20px; margin-bottom:26px; }
   .trial-badge{
-    font-family:'Space Mono', monospace; font-size:0.72rem; background:var(--bone);
-    border:1px solid var(--line); border-radius:20px; padding:6px 14px;
+    display:inline-flex; align-items:center; gap:8px; font-family:'Space Mono', monospace; font-size:0.72rem; background:rgba(20,52,43,0.08);
+    border:1px solid rgba(20,52,43,0.12); border-radius:999px; padding:7px 14px; color:var(--ink-green-deep);
   }
+  .trial-badge::before{ content:''; width:8px; height:8px; border-radius:50%; background:var(--stamp-gold); box-shadow:0 0 0 5px rgba(199,154,60,.16); }
   .bs-actions{ display:flex; gap:10px; flex-wrap:wrap; }
-  .stat-grid{ display:grid; grid-template-columns:repeat(4, 1fr); gap:16px; margin-bottom:32px; }
-  @media (max-width:900px){ .stat-grid{ grid-template-columns:1fr 1fr; } }
+  .stat-grid{ display:grid; grid-template-columns:repeat(5, minmax(0, 1fr)); gap:16px; margin-bottom:26px; }
+  @media (max-width:1100px){ .stat-grid{ grid-template-columns:repeat(2, minmax(0, 1fr)); } }
   @media (max-width:500px){ .stat-grid{ grid-template-columns:1fr; } }
-  .stat-card{ background:var(--paper); border:1px solid var(--line); border-radius:8px; padding:20px 18px; }
+  .stat-card{ position:relative; overflow:hidden; min-height:132px; padding:20px 18px; }
+  .stat-card::after{ content:''; position:absolute; right:-24px; bottom:-30px; width:96px; height:96px; border-radius:50%; background:rgba(199,154,60,.12); }
   .stat-card .label{ font-size:0.78rem; opacity:0.6; margin-bottom:8px; }
-  .stat-card .value{ font-family:'Fraunces', serif; font-size:1.6rem; }
+  .stat-card .value{ font-family:'Fraunces', serif; font-size:clamp(1.35rem, 2vw, 1.85rem); color:var(--ink-green-deep); }
   .stat-card.warn .value{ color:var(--stamp-red); }
 
-  .bs-panel{ background:var(--paper); border:1px solid var(--line); border-radius:8px; padding:22px 20px; }
+  .bs-panel{ padding:24px; }
+  .dashboard-grid{ display:grid; grid-template-columns:1.05fr .95fr; gap:20px; margin-bottom:24px; }
+  @media (max-width:900px){ .dashboard-grid{ grid-template-columns:1fr; } }
   .bs-panel h2{ font-size:1.05rem; margin-bottom:16px; }
   table.doc-table{ width:100%; border-collapse:collapse; font-size:0.88rem; }
   table.doc-table th{ text-align:left; opacity:0.55; font-weight:500; font-size:0.76rem; text-transform:uppercase; letter-spacing:0.03em; padding:6px 8px; border-bottom:1px solid var(--line); }
@@ -65,6 +69,7 @@
     <button class="menu-btn" aria-label="Toggle menu" id="menuBtn"><span></span><span></span><span></span></button>
     <div class="nav-links" id="navLinks">
       <a href="/" class="mobile-only-link">Home</a>
+      <a href="/business-suite/app/">Dashboard</a>
       
       <a href="/business-suite/app/debt/">Who owes you</a>
       <a href="/business-suite/app/credit/">Credit & Collections</a>
@@ -100,6 +105,7 @@
     <div>
       <h1 style="margin-bottom:6px;" id="bizNameHeading">Business Suite</h1>
       <span class="trial-badge" id="trialBadge">Checking access…</span>
+      <p>Premium command centre for invoices, cash collection, inventory and compliance — tuned for Nigerian businesses.</p>
     </div>
     <div class="bs-actions">
       <a href="/business-suite/app/clients/" class="btn btn-ghost">Manage clients</a>
@@ -130,14 +136,15 @@
     </a>
   </div>
 
-  <div class="bs-panel" style="margin-bottom:24px;" id="activitySummaryPanel">
+  <div class="dashboard-grid">
+  <div class="bs-panel" id="activitySummaryPanel">
     <h2>How business is going</h2>
     <div id="activitySummaryWrap">
       <div class="empty-note">Loading…</div>
     </div>
   </div>
 
-  <div class="bs-panel" style="margin-bottom:24px;">
+  <div class="bs-panel">
     <h2>Analytics</h2>
     <div id="dashAnalyticsEmpty" class="empty-note" style="display:none;">Create a few invoices to see your analytics.</div>
     <div id="dashAnalyticsGrid" style="display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:20px;">
@@ -151,6 +158,7 @@
       </div>
     </div>
     <p style="font-size:0.78rem; opacity:0.55; margin-top:14px;">Revenue reflects actual payment dates — recorded manually or via Squad checkout.</p>
+  </div>
   </div>
 
   <div class="bs-panel">
