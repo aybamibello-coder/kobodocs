@@ -1,6 +1,12 @@
 // ---------- Receivable Manager app access guard ----------
 // Standalone product — doesn't require a Business Suite subscription,
-// just a logged-in user who owns a business record.
+// just a logged-in user who owns a business record. Owners can have more
+// than one business (see /business-suite/app/my-businesses/), so the
+// lookup below is ordered + limited to 1 rather than a bare .maybeSingle()
+// — that would throw once an owner has 2+ businesses, which used to send
+// people here to a false "no active plan" page. Picks the oldest (first
+// created) as the default; there's no business-switcher on this product
+// yet, unlike Business Suite's ?business_id= param.
 //
 // Two paid tiers (Starter / Growth) plus a one-time 21-day trial of
 // Growth for every new business: the very first time a business hits
@@ -28,6 +34,8 @@ window.ReceivableGuard = {
       .from('businesses')
       .select('id, name')
       .eq('owner_user_id', session.user.id)
+      .order('created_at', { ascending: true })
+      .limit(1)
       .maybeSingle();
 
     if (!business) {
