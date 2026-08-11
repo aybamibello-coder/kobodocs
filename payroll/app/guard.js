@@ -4,6 +4,11 @@
 // (payroll_subscriptions) is checked separately by the page itself, since
 // an unsubscribed owner should still see the "subscribe" screen rather
 // than be redirected away.
+//
+// Owners can have more than one business (see /business-suite/app/my-businesses/),
+// so this lookup is ordered + limited to 1 rather than a bare .maybeSingle()
+// — that would throw once an owner has 2+ businesses, silently bouncing
+// them to the marketing page instead of the app. Picks the oldest business.
 window.PayrollGuard = {
   async requireAccess() {
     await new Promise(r => {
@@ -23,6 +28,8 @@ window.PayrollGuard = {
       .from('businesses')
       .select('id, name')
       .eq('owner_user_id', session.user.id)
+      .order('created_at', { ascending: true })
+      .limit(1)
       .maybeSingle();
 
     if (!business) {
