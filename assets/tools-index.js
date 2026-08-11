@@ -9,6 +9,7 @@ window.KOBO_TOOLS_INDEX = [
   { name: "Payslip / Salary Slip", url: "/payslip/", keywords: "payslip salary slip paye pension nhf" },
   { name: "Compliance Calendar", url: "/compliance-calendar/", keywords: "compliance calendar cac annual return vat paye pension deadline checklist filing" },
   { name: "Compliance Tracker (Business Suite)", url: "/compliance-tracker/", keywords: "compliance tracker software cac annual return vat paye pension license reminders document vault ai assistant" },
+  { name: "Tax Exemption Checker", url: "/tax-exemption-checker/", keywords: "company income tax exemption checker nigeria 2026 small business turnover cgt development levy" },
   { name: "Waybill / Delivery Note", url: "/waybill/", keywords: "waybill delivery note shipping goods" },
   { name: "QR Code Generator", url: "/qr-code/", keywords: "qr code scan" },
   { name: "HR Letter Generator", url: "/hr-letters/", keywords: "hr letter employment appointment termination offer" },
@@ -42,4 +43,8 @@ window.KOBO_TOOLS_INDEX = [
   { name: "Japa Cost Calculator", url: "/relocation/japa-calculator/", keywords: "japa cost calculator relocation visa fees" },
   { name: "Proof of Funds Calculator", url: "/relocation/proof-of-funds/", keywords: "proof of funds visa savings threshold" },
   { name: "Cost of Living Calculator", url: "/relocation/cost-of-living/", keywords: "cost of living abroad city budget" },
+  { name: "WHT Tracker", url: "/wht-tracker/", keywords: "withholding tax wht credit note certificate remittance tracker" },
+  { name: "Contract Scanner", url: "/contract-scanner/", keywords: "contract review scan risk clause legal freelancer rent land sale employment power of attorney" },
+  { name: "Payroll", url: "/payroll/", keywords: "payroll paye pension nhf payslip staff salary run payroll" },
+  { name: "e-Signature", url: "/esign/", keywords: "esignature e-signature envelope sign document signing" },
 ];

@@ -1,42 +1,45 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-EN4PYGX7EW"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-
-  gtag('config', 'G-EN4PYGX7EW');
-</script>
-
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Tax & Compliance Settings | KoboDocs</title>
+<title>Contract Scanner | KoboDocs</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Work+Sans:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/assets/style.css">
-<link rel="stylesheet" href="/business-suite/app/shell.css?v=4">
 <style>
-  .cc-wrap{ max-width:760px; margin:0 auto; padding:36px 20px 100px; }
+  .pr-wrap{ max-width:900px; margin:0 auto; padding:36px 20px 100px; }
+  .pr-top{ display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:14px; margin-bottom:24px; }
   .bs-panel{ background:var(--paper); border:1px solid var(--line); border-radius:8px; padding:22px 20px; margin-bottom:20px; }
-  .cc-form input{ width:100%; padding:8px 10px; border:1px solid var(--line); border-radius:6px; font-family:inherit; font-size:0.9rem; margin-bottom:10px; }
-  .cc-form label{ font-size:0.78rem; opacity:0.7; display:block; margin-bottom:3px; }
-  .director-row{ display:grid; grid-template-columns:1.2fr 1fr 0.8fr auto; gap:8px; margin-bottom:8px; align-items:center; }
-  .director-row input{ margin-bottom:0; }
+  .pr-meta{ font-size:0.82rem; opacity:0.65; }
   .btn{ font-size:0.85rem; border:1px solid var(--line); background:none; border-radius:20px; padding:7px 16px; cursor:pointer; }
   .btn.primary{ background:var(--ink-green-deep); color:var(--paper); border-color:var(--ink-green-deep); }
   .btn.small{ padding:5px 12px; font-size:0.78rem; }
-  .notice{ background:rgba(199,154,60,0.1); border:1px solid rgba(199,154,60,0.3); border-radius:8px; padding:14px 16px; font-size:0.85rem; margin-bottom:20px; }
+  .empty-note{ font-size:0.88rem; opacity:0.6; padding:20px 0; text-align:center; }
+  .pr-form textarea, .pr-form select{ width:100%; padding:10px; border:1px solid var(--line); border-radius:6px; font-family:inherit; font-size:0.9rem; margin-bottom:10px; }
+  .pr-form textarea{ min-height:260px; resize:vertical; font-family:'Space Mono', monospace; font-size:0.82rem; }
+  .pr-form label{ font-size:0.78rem; opacity:0.7; display:block; margin-bottom:3px; }
+  .payg-row{ display:flex; gap:10px; align-items:center; justify-content:center; margin-top:14px; }
+  .payg-row input{ width:70px; text-align:center; }
   #toast{ position:fixed; bottom:20px; left:50%; transform:translateX(-50%); background:var(--ink-green-deep); color:var(--paper); padding:10px 20px; border-radius:6px; font-size:0.85rem; display:none; z-index:50; }
+  .risk-badge{ font-size:0.75rem; padding:4px 12px; border-radius:20px; font-family:'Space Mono', monospace; text-transform:uppercase; letter-spacing:0.03em; font-weight:700; }
+  .risk-low{ background:#dcefe1; color:#1c6b3a; }
+  .risk-medium{ background:#fbeecb; color:#8a5a12; }
+  .risk-high{ background:#fbdcd8; color:#a3261a; }
+  .flag-card{ border:1px solid var(--line); border-left:4px solid var(--line); border-radius:6px; padding:12px 14px; margin-bottom:10px; }
+  .flag-card.sev-high{ border-left-color:#a3261a; }
+  .flag-card.sev-medium{ border-left-color:#8a5a12; }
+  .flag-card.sev-low{ border-left-color:#1c6b3a; }
+  .flag-clause{ font-weight:600; font-size:0.9rem; margin-bottom:4px; }
+  .flag-issue{ font-size:0.85rem; opacity:0.8; }
+  .disclaimer-note{ font-size:0.78rem; opacity:0.6; margin-top:16px; font-style:italic; }
 </style>
 </head>
-<body class="suite-body">
+<body>
 
 <header>
-  <nav class="nav suite-nav">
+  <nav class="nav">
     <a href="/" class="logo">
       <svg class="mark" viewBox="0 0 32 32" fill="none">
         <circle cx="16" cy="16" r="14" stroke="#C79A3C" stroke-width="2.5"/>
@@ -50,9 +53,8 @@
     <button class="menu-btn" aria-label="Toggle menu" id="menuBtn"><span></span><span></span><span></span></button>
     <div class="nav-links" id="navLinks">
       <a href="/" class="mobile-only-link">Home</a>
-      <a href="/business-suite/app/">Dashboard</a>
-      
       <a href="/business-suite/app/">Business Suite</a>
+      <a href="/contract-scanner/app/">Contract Scanner</a>
       <a href="/blog/" class="mobile-only-link">Blog</a>
       <a href="/about/" class="mobile-only-link">About</a>
       <a href="/account/" id="navAccountLink">Sign in</a>
@@ -73,28 +75,24 @@
 </div>
 
 
-<div class="cc-wrap">
-  <h1 style="font-size:1.4rem; margin-bottom:6px;">Tax &amp; Compliance Settings</h1>
-  <p style="font-size:0.88rem; opacity:0.7; margin-bottom:20px;">Set this up once — it's added automatically to every invoice, quotation, and letter you generate.</p>
-
-  <div class="notice">
-    Since <strong>1 August 2026</strong>, CAC actively enforces CAMA 2020 s.304 &amp; s.729(1)(c): every registered company's business letters, invoices, and quotations must display the registered name, RC number, and every director's current (and former, if any) name — plus nationality for non-Nigerian directors. Non-compliance carries sanctions.
+<div class="pr-wrap">
+  <div class="pr-top">
+    <div>
+      <h1 style="font-size:1.4rem;">Contract Scanner</h1>
+      <p style="font-size:0.88rem; opacity:0.7; margin-top:4px;">Paste a contract, get a plain-English risk read before you sign.</p>
+    </div>
   </div>
 
-  <div class="notice" style="background:rgba(35,120,60,0.08); border-color:rgba(35,120,60,0.25);">
-    <strong>About NRS e-invoicing:</strong> Nigeria is separately rolling out mandatory e-invoicing (medium businesses by July 2026, small businesses by July 2027) through the NRS Merchant Buyer Solution. Entering your TIN and VAT number below adds them to your invoices — it does <strong>not</strong> submit invoices to NRS. Real submission requires your business to individually register on the NRS e-invoicing platform (<a href="https://einvoice.nrs.gov.ng" target="_blank" rel="noopener">einvoice.nrs.gov.ng</a>) for your own API credentials, which KoboDocs cannot obtain on your behalf.
-  </div>
-
-  <div id="mainArea"><div class="bs-panel">Loading…</div></div>
+  <div id="mainArea"><div class="empty-note">Loading…</div></div>
 </div>
 
 <div id="toast"></div>
 
 <script type="module" src="/assets/auth.js"></script>
 <script src="/assets/nav-auth.js" defer></script>
-<script src="/business-suite/app/guard.js"></script>
-<script src="/business-suite/app/shell.js?v=3" defer></script>
-<script src="/business-suite/app/compliance/compliance.js"></script>
+<script src="/assets/subscribe.js"></script>
+<script src="/contract-scanner/app/guard.js"></script>
+<script src="/contract-scanner/app/scanner.js"></script>
 <script src="/assets/tools-index.js" defer></script>
 <script src="/assets/search.js" defer></script>
 </body>

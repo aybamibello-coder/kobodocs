@@ -295,6 +295,18 @@
     <priority>0.8</priority>
   </url>
   <url>
+    <loc>https://kobodocs.com.ng/wht-tracker/</loc>
+    <lastmod>2026-08-11</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://kobodocs.com.ng/contract-scanner/</loc>
+    <lastmod>2026-08-11</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
     <loc>https://kobodocs.com.ng/esign/</loc>
     <lastmod>2026-08-02</lastmod>
     <changefreq>monthly</changefreq>
