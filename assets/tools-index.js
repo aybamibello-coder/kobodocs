@@ -45,4 +45,6 @@ window.KOBO_TOOLS_INDEX = [
   { name: "Cost of Living Calculator", url: "/relocation/cost-of-living/", keywords: "cost of living abroad city budget" },
   { name: "WHT Tracker", url: "/wht-tracker/", keywords: "withholding tax wht credit note certificate remittance tracker" },
   { name: "Contract Scanner", url: "/contract-scanner/", keywords: "contract review scan risk clause legal freelancer rent land sale employment power of attorney" },
+  { name: "Payroll", url: "/payroll/", keywords: "payroll paye pension nhf payslip staff salary run payroll" },
+  { name: "e-Signature", url: "/esign/", keywords: "esignature e-signature envelope sign document signing" },
 ];
