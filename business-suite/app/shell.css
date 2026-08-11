@@ -382,3 +382,11 @@ table.doc-table td:last-child { border-right: 1px solid rgba(35,39,34,.06); bord
   .suite-page-header h1 { font-size: 1.85rem; }
   .suite-card, .bs-panel, .cl-panel, .stat-card, .up-card { border-radius: 18px !important; }
 }
+
+/* Dashboard hero actions: keep contrast high on light/dark buttons. */
+body.suite-body .btn-ghost {
+  color: #000;
+}
+body.suite-body .btn-primary {
+  color: #fff !important;
+}
