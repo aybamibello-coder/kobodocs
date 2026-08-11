@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Freelancer Income Log | KoboDocs</title>
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Work+Sans:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/style.css">
+<style>
+  .fl-wrap{ max-width:960px; margin:0 auto; padding:36px 20px 100px; }
+  .fl-top{ display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:14px; margin-bottom:24px; }
+  .fl-top h1{ font-family:'Fraunces', serif; font-size:1.5rem; }
+  .fl-top p{ opacity:0.65; font-size:0.9rem; margin-top:4px; }
+
+  .fl-panel{
+    background:var(--paper); border:1px solid var(--line); border-left:3px solid var(--stamp-gold);
+    border-radius:6px; padding:22px; margin-bottom:20px;
+  }
+  .fl-deadline{
+    background:rgba(199,154,60,0.1); border:1px solid rgba(199,154,60,0.3); border-radius:8px;
+    padding:14px 18px; font-size:0.88rem; margin-bottom:20px;
+  }
+  .fl-stats{ display:grid; grid-template-columns:repeat(auto-fit, minmax(180px,1fr)); gap:14px; margin-bottom:24px; }
+  .fl-stat{ background:var(--paper); border:1px solid var(--line); border-radius:6px; padding:16px 18px; }
+  .fl-stat .num{ font-family:'Fraunces', serif; font-size:1.3rem; color:var(--ink-green-deep); }
+  .fl-stat .label{ font-size:0.76rem; opacity:0.6; text-transform:uppercase; letter-spacing:0.03em; margin-top:4px; }
+
+  .fl-paywall{
+    background:rgba(199,60,60,0.06); border:1px solid rgba(199,60,60,0.25); border-radius:8px;
+    padding:16px 18px; font-size:0.9rem; margin-bottom:20px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;
+  }
+
+  .fl-form{ display:grid; grid-template-columns:repeat(auto-fit, minmax(140px,1fr)); gap:12px; align-items:end; }
+  .fl-form label{ font-size:0.76rem; opacity:0.65; display:block; margin-bottom:4px; }
+  .fl-form select, .fl-form input{ width:100%; }
+  .fl-type-toggle{ display:flex; gap:8px; margin-bottom:16px; }
+  .fl-type-toggle button{
+    flex:1; padding:8px; border:1px solid var(--line); background:var(--paper); border-radius:6px; cursor:pointer; font-size:0.85rem;
+  }
+  .fl-type-toggle button.active{ background:var(--ink-green-deep); color:var(--paper); border-color:var(--ink-green-deep); }
+
+  table.fl-table{ width:100%; border-collapse:collapse; margin-top:8px; font-size:0.87rem; }
+  table.fl-table th, table.fl-table td{ padding:10px 8px; border-bottom:1px solid var(--line); text-align:left; }
+  table.fl-table th{ font-size:0.72rem; text-transform:uppercase; opacity:0.55; }
+  table.fl-table .num{ text-align:right; font-variant-numeric:tabular-nums; }
+  .fl-tag{ font-family:'Space Mono', monospace; font-size:0.7rem; padding:2px 8px; border-radius:10px; }
+  .fl-tag.income{ background:rgba(13,38,32,0.08); color:var(--ink-green-deep); }
+  .fl-tag.expense{ background:rgba(199,60,60,0.08); color:#a03a3a; }
+  .fl-del{ background:none; border:none; cursor:pointer; opacity:0.5; font-size:0.85rem; }
+  .fl-del:hover{ opacity:1; }
+
+  .fl-upgrade-toggle{ display:inline-flex; border:1px solid var(--line); border-radius:20px; overflow:hidden; margin-bottom:14px; }
+  .fl-upgrade-toggle button{ padding:6px 16px; border:none; background:var(--paper); cursor:pointer; font-size:0.82rem; }
+  .fl-upgrade-toggle button.active{ background:var(--ink-green-deep); color:var(--paper); }
+  .fl-loading{ text-align:center; padding:60px 20px; opacity:0.6; }
+</style>
+</head>
+<body>
+
+<header>
+  <nav class="nav">
+    <a href="/" class="logo">
+      <svg class="mark" viewBox="0 0 32 32" fill="none">
+        <circle cx="16" cy="16" r="14" stroke="#C79A3C" stroke-width="2.5"/>
+        <circle cx="16" cy="16" r="8" stroke="#C79A3C" stroke-width="1.5"/>
+      </svg>
+      KoboDocs
+    </a>
+    <button class="menu-btn" aria-label="Toggle menu" id="menuBtn"><span></span><span></span><span></span></button>
+    <div class="nav-links" id="navLinks">
+      <a href="/">Home</a>
+      <a href="/invoice/">Invoice Generator</a>
+      <a href="/freelancer-tax-invoicing/">About this tool</a>
+      <a href="/account/" id="navAccountLink">Account</a>
+    </div>
+  </nav>
+</header>
+
+<div id="loadingState" class="fl-loading">Loading your ledger…</div>
+
+<div class="fl-wrap" id="appRoot" style="display:none;">
+  <div class="fl-top">
+    <div>
+      <h1>Freelancer Income Log</h1>
+      <p>Track what you've earned, what's been withheld, and what you can deduct — in one place.</p>
+    </div>
+  </div>
+
+  <div class="fl-deadline" id="deadlineBanner"></div>
+
+  <div class="fl-paywall" id="paywallBanner" style="display:none;">
+    <span>You've used your 5 free entries. Upgrade for unlimited tracking.</span>
+    <div>
+      <div class="fl-upgrade-toggle">
+        <button type="button" class="active" id="cycleMonthlyBtn">Monthly — ₦3,500</button>
+        <button type="button" id="cycleYearlyBtn">Yearly — ₦35,000</button>
+      </div>
+      <button type="button" class="btn btn-primary" id="upgradeBtn" style="margin-left:10px;">Upgrade</button>
+    </div>
+  </div>
+
+  <div class="fl-stats" id="statsGrid"></div>
+
+  <div class="fl-panel">
+    <div class="fl-type-toggle">
+      <button type="button" class="active" id="typeIncomeBtn">+ Income</button>
+      <button type="button" id="typeExpenseBtn">+ Expense</button>
+    </div>
+    <form class="fl-form" id="entryForm">
+      <div>
+        <label for="entryDate">Date</label>
+        <input type="date" id="entryDate" required>
+      </div>
+      <div>
+        <label for="entryDesc" id="entryDescLabel">Client / description</label>
+        <input type="text" id="entryDesc" required placeholder="e.g. Acme Inc">
+      </div>
+      <div id="categoryField" style="display:none;">
+        <label for="entryCategory">Category</label>
+        <select id="entryCategory">
+          <option value="rent">Rent (up to 20%, capped ₦500k)</option>
+          <option value="internet_data">Internet / data</option>
+          <option value="software">Software subscriptions</option>
+          <option value="pension">Pension (8%)</option>
+          <option value="nhf">NHF (2.5%)</option>
+          <option value="life_insurance">Life insurance (up to ₦100k)</option>
+          <option value="other">Other</option>
+        </select>
+      </div>
+      <div id="currencyField">
+        <label for="entryCurrency">Currency</label>
+        <select id="entryCurrency">
+          <option value="NGN">₦ NGN</option>
+          <option value="USD">$ USD</option>
+          <option value="GBP">£ GBP</option>
+          <option value="EUR">€ EUR</option>
+        </select>
+      </div>
+      <div>
+        <label for="entryAmount">Amount</label>
+        <input type="number" id="entryAmount" min="0" step="0.01" required>
+      </div>
+      <div id="whtField" style="display:none;">
+        <label for="entryWht">WHT already withheld</label>
+        <input type="number" id="entryWht" min="0" step="0.01" value="0">
+      </div>
+      <div>
+        <button type="submit" class="btn btn-primary" style="width:100%;">Add entry</button>
+      </div>
+    </form>
+    <div id="formMsg" style="font-size:0.82rem; margin-top:10px;"></div>
+  </div>
+
+  <div class="fl-panel">
+    <h3 style="font-size:1rem; margin-bottom:4px;">Ledger</h3>
+    <table class="fl-table">
+      <thead>
+        <tr><th>Date</th><th>Type</th><th>Description</th><th class="num">Amount</th><th class="num">WHT credit</th><th></th></tr>
+      </thead>
+      <tbody id="entriesBody"></tbody>
+    </table>
+    <div id="emptyState" style="display:none; text-align:center; padding:24px; opacity:0.6; font-size:0.88rem;">No entries yet — add your first one above.</div>
+  </div>
+</div>
+
+<script type="module" src="/assets/auth.js"></script>
+<script src="/assets/subscribe.js" defer></script>
+<script src="/freelancer-tax-invoicing/app/guard.js" defer></script>
+<script src="/freelancer-tax-invoicing/app/app.js" defer></script>
+</body>
+</html>
