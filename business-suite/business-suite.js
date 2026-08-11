@@ -48,10 +48,15 @@ function daysLeft(endDate) {
   if (!session) return; // no account yet — leave the default "start trial" state
 
   const supabase = window.KoboAuth.supabase;
+  // Ordered + limited to 1: an owner can have more than one business, and
+  // a bare .maybeSingle() here throws once they do, which used to make
+  // this page silently ignore an existing trial/subscription.
   const { data: business } = await supabase
     .from('businesses')
     .select('id, suite_status, suite_trial_ends_at, suite_expires_at')
     .eq('owner_user_id', session.user.id)
+    .order('created_at', { ascending: true })
+    .limit(1)
     .maybeSingle();
 
   if (!business) return; // no business yet — leave default state
@@ -94,10 +99,13 @@ async function startTrial() {
   const profile = await window.KoboAuth.getProfile();
 
   // Find or create this user's business row
+  // Same multi-business-safe lookup as above.
   let { data: business } = await supabase
     .from('businesses')
     .select('*')
     .eq('owner_user_id', session.user.id)
+    .order('created_at', { ascending: true })
+    .limit(1)
     .maybeSingle();
 
   if (!business) {
@@ -231,6 +239,8 @@ function showGrowthMsg(text, type) {
     .from('businesses')
     .select('id, suite_status, suite_tier, suite_trial_ends_at, suite_expires_at')
     .eq('owner_user_id', session.user.id)
+    .order('created_at', { ascending: true })
+    .limit(1)
     .maybeSingle();
 
   if (!business) return;
@@ -263,6 +273,8 @@ growthBtn.addEventListener('click', async () => {
     .from('businesses')
     .select('id, suite_status')
     .eq('owner_user_id', session.user.id)
+    .order('created_at', { ascending: true })
+    .limit(1)
     .maybeSingle();
 
   if (!business || business.suite_status === 'none') {
