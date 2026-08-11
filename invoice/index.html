@@ -14,7 +14,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Free Invoice Generator for Nigerian Businesses | KoboDocs</title>
-<meta name="description" content="Create a professional invoice in Naira, free — VAT built in, no login. Download as PDF or share straight to WhatsApp.">
+<meta name="description" content="Create a professional invoice free — in Naira, USD, GBP or EUR. VAT built in, no login. Download as PDF or share straight to WhatsApp.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Work+Sans:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
@@ -199,6 +199,17 @@
       </div>
 
       <div class="field-group">
+        <label for="invCurrency">Currency</label>
+        <select id="invCurrency">
+          <option value="NGN" selected>₦ Naira (NGN)</option>
+          <option value="USD">$ US Dollar (USD)</option>
+          <option value="GBP">£ British Pound (GBP)</option>
+          <option value="EUR">€ Euro (EUR)</option>
+        </select>
+        <p id="foreignCurrencyNote" class="hint" style="display:none; font-size:0.78rem; opacity:0.65; margin-top:6px;">Billing a client abroad — state the currency clearly on the invoice (already handled below). Exported services are typically zero-rated for VAT; confirm your specific case with an accountant. <a href="/blog/invoice-international-clients-usd-nigeria/" target="_blank" rel="noopener">Full guide →</a></p>
+      </div>
+
+      <div class="field-group">
         <label>Items</label>
         <div id="itemRows"></div>
         <button type="button" class="add-item-btn" id="addItemBtn">+ Add item</button>
@@ -257,10 +268,10 @@
 <section class="page-info">
   <div class="wrap" style="max-width:680px; margin:0 auto; padding:20px 20px 60px;">
     <h2 style="font-size:1.2rem; margin-bottom:12px;">How this free invoice generator works</h2>
-    <p style="font-size:0.95rem; line-height:1.75; opacity:0.85; margin-bottom:16px;">Create a professional invoice online in Naira, free — enter your business details, itemize what's being billed, and download a clean PDF or send it straight to WhatsApp. No signup required. VAT can be added automatically, and registered companies can add their CAC RC number, director names, and TIN, required on business documents since August 2026.</p>
+    <p style="font-size:0.95rem; line-height:1.75; opacity:0.85; margin-bottom:16px;">Create a professional invoice online free — in Naira, USD, GBP or EUR — enter your business details, itemize what's being billed, and download a clean PDF or send it straight to WhatsApp. No signup required. VAT can be added automatically, and registered companies can add their CAC RC number, director names, and TIN, required on business documents since August 2026. Billing a client abroad? Pick their currency and everything — totals, PDF, the lot — reflects it correctly.</p>
     <h2 style="font-size:1.2rem; margin:24px 0 12px;">Frequently asked questions</h2>
-    <p style="font-size:0.95rem; line-height:1.75; opacity:0.85; margin-bottom:14px;"><strong>Is this invoice generator free to use?</strong><br>Yes — creating and downloading an invoice as a PDF is free with no login required, for any Naira-denominated invoice.</p>
-    <p style="font-size:0.95rem; line-height:1.75; opacity:0.85; margin-bottom:14px;"><strong>Can I invoice international clients with this?</strong><br>This tool is Naira-denominated. For invoicing clients abroad, see our <a href="/blog/invoice-international-clients-usd-nigeria/">guide on invoicing international clients</a> for what to include.</p>
+    <p style="font-size:0.95rem; line-height:1.75; opacity:0.85; margin-bottom:14px;"><strong>Is this invoice generator free to use?</strong><br>Yes — creating and downloading an invoice as a PDF is free with no login required, in Naira or a foreign currency.</p>
+    <p style="font-size:0.95rem; line-height:1.75; opacity:0.85; margin-bottom:14px;"><strong>Can I invoice international clients with this?</strong><br>Yes — pick USD, GBP or EUR from the currency field and the invoice (and PDF) reflects it correctly throughout. There's no live exchange-rate conversion built in; you invoice in whichever currency you're billing, which is usually the client's own currency. See our <a href="/blog/invoice-international-clients-usd-nigeria/">guide on invoicing international clients</a> for what else to include.</p>
     <p style="font-size:0.95rem; line-height:1.75; opacity:0.85;"><strong>What should a Nigerian invoice include?</strong><br>Business name, invoice number, date, itemized services or goods, VAT if applicable, and — for registered companies — RC number and director names since CAC's 2026 enforcement. See our <a href="/blog/invoice-template-nigeria/">full invoice template guide</a> for a complete breakdown.</p>
   </div>
 </section>
@@ -272,12 +283,12 @@
     {
       "@type": "Question",
       "name": "Is this invoice generator free to use?",
-      "acceptedAnswer": { "@type": "Answer", "text": "Yes — creating and downloading an invoice as a PDF is free with no login required, for any Naira-denominated invoice." }
+      "acceptedAnswer": { "@type": "Answer", "text": "Yes — creating and downloading an invoice as a PDF is free with no login required, in Naira or a foreign currency." }
     },
     {
       "@type": "Question",
       "name": "Can I invoice international clients with this generator?",
-      "acceptedAnswer": { "@type": "Answer", "text": "This tool is Naira-denominated. For invoicing clients abroad, amounts should be entered clearly with the billed currency stated, since there is no automatic currency conversion." }
+      "acceptedAnswer": { "@type": "Answer", "text": "Yes — select USD, GBP or EUR as the currency and the invoice, totals and PDF all reflect it correctly. There's no live exchange-rate conversion; you invoice in whichever currency you're billing, which is usually the client's own currency." }
     },
     {
       "@type": "Question",

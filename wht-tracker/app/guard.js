@@ -1,15 +1,9 @@
-// ---------- Payroll app access guard ----------
-// Unlike Business Suite, Payroll doesn't require a Suite subscription —
-// just a logged-in user who owns a business record. Subscription status
-// (payroll_subscriptions) is checked separately by the page itself, since
-// an unsubscribed owner should still see the "subscribe" screen rather
-// than be redirected away.
-//
-// Owners can have more than one business (see /business-suite/app/my-businesses/),
-// so this lookup is ordered + limited to 1 rather than a bare .maybeSingle()
-// — that would throw once an owner has 2+ businesses, silently bouncing
-// them to the marketing page instead of the app. Picks the oldest business.
-window.PayrollGuard = {
+// ---------- WHT Tracker app access guard ----------
+// Like Payroll, doesn't require a Suite subscription — just a logged-in
+// user who owns a business record. Access itself (payg credits OR an
+// active plan allowance) is checked by the page, since a business with
+// zero credits should still see the picker screen rather than be bounced.
+window.WhtGuard = {
   async requireAccess() {
     await new Promise(r => {
       if (window.KoboAuth) return r();
@@ -38,14 +32,16 @@ window.PayrollGuard = {
     }
 
     const { data: subscription } = await supabase
-      .from('payroll_subscriptions')
+      .from('wht_subscriptions')
       .select('*')
       .eq('business_id', business.id)
       .maybeSingle();
 
-    const subActive = subscription && subscription.status === 'active' &&
+    const subActive = !!subscription && subscription.status === 'active' &&
       subscription.expires_at && new Date(subscription.expires_at) > new Date();
+    const allowanceLeft = subActive && (subscription.records_used_this_period || 0) < (subscription.record_allowance || 0);
+    const hasCredits = !!subscription && subscription.plan === 'payg' && (subscription.credits_balance || 0) > 0;
 
-    return { session, business, supabase, subscription, subActive };
+    return { session, business, supabase, subscription, subActive, allowanceLeft, hasCredits, canRecord: allowanceLeft || hasCredits };
   }
 };

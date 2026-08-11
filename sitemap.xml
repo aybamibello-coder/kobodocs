@@ -19,6 +19,18 @@
     <priority>0.7</priority>
   </url>
   <url>
+    <loc>https://kobodocs.com.ng/freelancer-tax-invoicing/</loc>
+    <lastmod>2026-08-11</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://kobodocs.com.ng/blog/freelancer-remote-worker-tax-nigeria-2026/</loc>
+    <lastmod>2026-08-11</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
     <loc>https://kobodocs.com.ng/grant-application-generator/</loc>
     <lastmod>2026-08-05</lastmod>
     <changefreq>monthly</changefreq>
@@ -279,6 +291,18 @@
   <url>
     <loc>https://kobodocs.com.ng/payroll/</loc>
     <lastmod>2026-08-02</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://kobodocs.com.ng/wht-tracker/</loc>
+    <lastmod>2026-08-11</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://kobodocs.com.ng/contract-scanner/</loc>
+    <lastmod>2026-08-11</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>

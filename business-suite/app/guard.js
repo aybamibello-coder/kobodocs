@@ -47,9 +47,13 @@ window.BizSuiteGuard = {
         }
       }
     } else {
-      // Default (unchanged): owner match first, else first membership row.
+      // Default (no ?business_id): owner match first, else first membership
+      // row. Ordered + limited to 1 — a bare .maybeSingle() here throws the
+      // moment an owner has 2+ businesses (see /my-businesses/), which used
+      // to silently bounce multi-business owners to the marketing page.
       const { data: ownedBiz } = await supabase
-        .from('businesses').select('*').eq('owner_user_id', session.user.id).maybeSingle();
+        .from('businesses').select('*').eq('owner_user_id', session.user.id)
+        .order('created_at', { ascending: true }).limit(1).maybeSingle();
       if (ownedBiz) {
         business = ownedBiz;
         role = 'owner';
