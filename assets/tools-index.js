@@ -42,4 +42,5 @@ window.KOBO_TOOLS_INDEX = [
   { name: "Japa Cost Calculator", url: "/relocation/japa-calculator/", keywords: "japa cost calculator relocation visa fees" },
   { name: "Proof of Funds Calculator", url: "/relocation/proof-of-funds/", keywords: "proof of funds visa savings threshold" },
   { name: "Cost of Living Calculator", url: "/relocation/cost-of-living/", keywords: "cost of living abroad city budget" },
+  { name: "WHT Tracker", url: "/wht-tracker/", keywords: "withholding tax wht credit note certificate remittance tracker" },
 ];
