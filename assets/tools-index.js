@@ -2,6 +2,7 @@
 // Keep in sync when tools are added/removed.
 window.KOBO_TOOLS_INDEX = [
   { name: "Merge PDF", url: "/merge-pdf/", keywords: "merge pdf combine pdf files pdf merger join pdf online free" },
+  { name: "Split PDF", url: "/split-pdf/", keywords: "split pdf extract pages pdf separate pages pdf online free" },
   { name: "Invoice Generator", url: "/invoice/", keywords: "invoice bill billing usd gbp eur foreign currency international client" },
   { name: "Freelancer Tax & Invoicing (2026)", url: "/freelancer-tax-invoicing/", keywords: "freelancer tax nigeria 2026 remote worker foreign income usd invoice withholding tax firs tin" },
   { name: "Business Invoice", url: "/invoice/business/", keywords: "invoice business company" },

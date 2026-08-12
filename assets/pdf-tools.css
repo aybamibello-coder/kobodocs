@@ -98,7 +98,24 @@
 .pdf-next-tools span{ opacity:0.6; margin-right:6px; }
 .pdf-next-tools a{ color:var(--stamp-gold); margin-right:12px; text-decoration:underline; }
 
-.pdf-how, .pdf-usecases, .pdf-faq, .pdf-related{ padding:36px 0; border-top:1px solid var(--line); }
+.pdf-split-modes{ display:flex; flex-direction:column; gap:10px; margin:16px 0; }
+.pdf-split-mode{
+  display:flex; align-items:flex-start; gap:10px; cursor:pointer;
+  padding:12px 14px; border:1px solid var(--line); border-radius:var(--radius);
+  font-size:0.88rem; line-height:1.5;
+}
+.pdf-split-mode:has(input:checked){ border-color:var(--stamp-gold); background:rgba(199,154,60,0.05); }
+.pdf-split-mode input{ margin-top:3px; flex-shrink:0; }
+
+.pdf-range-input-wrap{ margin:14px 0; }
+.pdf-range-input-wrap label{ display:block; font-size:0.85rem; font-weight:500; margin-bottom:6px; }
+.pdf-range-input-wrap input{
+  width:100%; padding:10px 12px; border:1px solid var(--line); border-radius:var(--radius);
+  font-family:'Space Mono', monospace; font-size:0.9rem; background:var(--paper);
+}
+.pdf-range-hint{ font-size:0.78rem; opacity:0.6; margin:6px 0 0; }
+
+
 .pdf-how .wrap, .pdf-usecases .wrap, .pdf-faq .wrap, .pdf-related .wrap{ max-width:760px; }
 .pdf-how h2, .pdf-usecases h2, .pdf-faq h2, .pdf-related h2{
   font-family:'Fraunces', serif; font-size:1.4rem; margin-bottom:16px; color:var(--ink-green-deep);
