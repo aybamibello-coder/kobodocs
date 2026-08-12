@@ -8,6 +8,8 @@ window.KOBO_TOOLS_INDEX = [
   { name: "Quotation Generator", url: "/quotation/", keywords: "quote quotation price estimate" },
   { name: "Payslip / Salary Slip", url: "/payslip/", keywords: "payslip salary slip paye pension nhf" },
   { name: "Compliance Calendar", url: "/compliance-calendar/", keywords: "compliance calendar cac annual return vat paye pension deadline checklist filing" },
+  { name: "WHT Deadline Guide", url: "/blog/withholding-tax-wht-deadline-nigeria/", keywords: "withholding tax wht deadline nigeria 21 day remittance certificate" },
+  { name: "Risky Contract Clauses Guide", url: "/blog/spot-risky-contract-clauses-nigeria/", keywords: "contract review nigeria risky clauses indemnity termination one-sided" },
   { name: "Compliance Tracker (Business Suite)", url: "/compliance-tracker/", keywords: "compliance tracker software cac annual return vat paye pension license reminders document vault ai assistant" },
   { name: "Tax Exemption Checker", url: "/tax-exemption-checker/", keywords: "company income tax exemption checker nigeria 2026 small business turnover cgt development levy" },
   { name: "Waybill / Delivery Note", url: "/waybill/", keywords: "waybill delivery note shipping goods" },
