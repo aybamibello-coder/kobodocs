@@ -4,6 +4,7 @@ window.KOBO_TOOLS_INDEX = [
   { name: "Merge PDF", url: "/merge-pdf/", keywords: "merge pdf combine pdf files pdf merger join pdf online free" },
   { name: "Split PDF", url: "/split-pdf/", keywords: "split pdf extract pages pdf separate pages pdf online free" },
   { name: "JPG to PDF", url: "/jpg-to-pdf/", keywords: "jpg to pdf png to pdf image to pdf convert photo pdf online free" },
+  { name: "PDF to JPG", url: "/pdf-to-jpg/", keywords: "pdf to jpg pdf to png pdf to image convert pdf pages online free" },
   { name: "Compress PDF", url: "/compress-pdf/", keywords: "compress pdf reduce pdf size shrink pdf file size online free" },
   { name: "Watermark PDF", url: "/watermark-pdf/", keywords: "watermark pdf add text watermark confidential draft stamp pdf pro" },
   { name: "Invoice Generator", url: "/invoice/", keywords: "invoice bill billing usd gbp eur foreign currency international client" },
