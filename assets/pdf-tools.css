@@ -98,7 +98,11 @@
 .pdf-next-tools span{ opacity:0.6; margin-right:6px; }
 .pdf-next-tools a{ color:var(--stamp-gold); margin-right:12px; text-decoration:underline; }
 
-.pdf-split-modes{ display:flex; flex-direction:column; gap:10px; margin:16px 0; }
+.pdf-honesty-note{
+  background:var(--bone); border:1px solid var(--line); border-radius:var(--radius);
+  padding:12px 14px; font-size:0.85rem; line-height:1.55; opacity:0.85; margin-bottom:18px;
+}
+
 .pdf-split-mode{
   display:flex; align-items:flex-start; gap:10px; cursor:pointer;
   padding:12px 14px; border:1px solid var(--line); border-radius:var(--radius);

@@ -12,16 +12,16 @@
 
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Split PDF Online Free — Extract Pages | KoboDocs</title>
-<meta name="description" content="Split a PDF into separate pages or extract a page range for free. Processed in your browser, no upload, no login required.">
-<link rel="canonical" href="https://kobodocs.com.ng/split-pdf/">
+<title>Compress PDF Online Free — Reduce File Size | KoboDocs</title>
+<meta name="description" content="Compress a PDF to reduce its file size for free. Processed in your browser, no upload, no login required. Best for text-heavy PDFs.">
+<link rel="canonical" href="https://kobodocs.com.ng/compress-pdf/">
 <meta property="og:type" content="website">
-<meta property="og:title" content="Split PDF Online Free — Extract Pages | KoboDocs">
-<meta property="og:description" content="Split a PDF into individual pages, or pull out just the pages you need. Fast, private and free — no account needed.">
-<meta property="og:url" content="https://kobodocs.com.ng/split-pdf/">
+<meta property="og:title" content="Compress PDF Online Free — Reduce File Size | KoboDocs">
+<meta property="og:description" content="Shrink a PDF's file size for free — no account needed. Works entirely in your browser.">
+<meta property="og:url" content="https://kobodocs.com.ng/compress-pdf/">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="Split PDF Online Free — Extract Pages | KoboDocs">
-<meta name="twitter:description" content="Split a PDF into individual pages, or pull out just the pages you need. Fast, private and free.">
+<meta name="twitter:title" content="Compress PDF Online Free — Reduce File Size | KoboDocs">
+<meta name="twitter:description" content="Shrink a PDF's file size for free — no account needed.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Work+Sans:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
@@ -33,7 +33,7 @@
   "@type": "BreadcrumbList",
   "itemListElement": [
     {"@type":"ListItem","position":1,"name":"Home","item":"https://kobodocs.com.ng/"},
-    {"@type":"ListItem","position":2,"name":"Split PDF","item":"https://kobodocs.com.ng/split-pdf/"}
+    {"@type":"ListItem","position":2,"name":"Compress PDF","item":"https://kobodocs.com.ng/compress-pdf/"}
   ]
 }
 </script>
@@ -42,10 +42,10 @@
   "@context": "https://schema.org",
   "@type": "FAQPage",
   "mainEntity": [
-    {"@type":"Question","name":"Is splitting a PDF on KoboDocs free?","acceptedAnswer":{"@type":"Answer","text":"Yes. Splitting and extracting pages from a PDF is completely free, with no account required."}},
-    {"@type":"Question","name":"Are my files uploaded to a server?","acceptedAnswer":{"@type":"Answer","text":"No. Splitting happens entirely in your browser. Your PDF is never uploaded to KoboDocs servers for this operation."}},
-    {"@type":"Question","name":"Can I choose which pages to extract?","acceptedAnswer":{"@type":"Answer","text":"Yes. Enter a page range like 1-3 or a list like 1,3,5 to pull out exactly the pages you need as one new PDF."}},
-    {"@type":"Question","name":"Can I split every page into its own file?","acceptedAnswer":{"@type":"Answer","text":"Yes. Choose \"Split into individual pages\" and you'll get a ZIP file containing one PDF per page."}}
+    {"@type":"Question","name":"Is compressing a PDF on KoboDocs free?","acceptedAnswer":{"@type":"Answer","text":"Yes. Basic compression is completely free, with no account required."}},
+    {"@type":"Question","name":"Are my files uploaded to a server?","acceptedAnswer":{"@type":"Answer","text":"No. Compression happens entirely in your browser. Your PDF is never uploaded to KoboDocs servers for this operation."}},
+    {"@type":"Question","name":"How much smaller will my PDF get?","acceptedAnswer":{"@type":"Answer","text":"It depends on the file. Text-based PDFs (documents, forms, exported files) usually shrink a noticeable amount. PDFs that are mostly scanned photos may only shrink a little with this free, browser-based tool, since deep image recompression needs heavier processing."}},
+    {"@type":"Question","name":"Why didn't my file get much smaller?","acceptedAnswer":{"@type":"Answer","text":"If a PDF is already well-optimized, or is made up mostly of high-resolution scanned images, browser-based compression has limited room to work with. This is an honest limitation of client-side processing, not a bug."}}
   ]
 }
 </script>
@@ -78,9 +78,9 @@
         <span class="nav-category">PDF Tools ▾</span>
         <div class="dropdown">
           <a href="/merge-pdf/">Merge PDF</a>
-          <a href="/compress-pdf/">Compress PDF</a>
           <a href="/split-pdf/">Split PDF</a>
           <a href="/jpg-to-pdf/">JPG/PNG to PDF</a>
+          <a href="/compress-pdf/">Compress PDF</a>
         </div>
       </div>
       <div class="nav-item">
@@ -117,8 +117,8 @@
 <section class="page-header">
   <div class="wrap">
     <a href="/">&larr; Back to KoboDocs</a>
-    <h1>Split a PDF into pages, free</h1>
-    <p>Pull out the pages you need, or split every page into its own file. No account needed.</p>
+    <h1>Compress PDF, free</h1>
+    <p>Reduce your PDF's file size — works best on text-based documents. No account needed.</p>
   </div>
 </section>
 
@@ -131,7 +131,11 @@
       <span>Processed in your browser. Your file is not uploaded to our servers for this operation.</span>
     </div>
 
-    <div class="pdf-dropzone" id="pdfDropzone" tabindex="0" role="button" aria-label="Select a PDF file to split">
+    <div class="pdf-honesty-note">
+      This free tool strips unused data and repacks your PDF more efficiently — it works well on text-based documents (forms, reports, exported files). It does <strong>not</strong> re-encode embedded photos, so heavily scanned/image-based PDFs will shrink less. Deeper image compression needs more processing power than a browser can safely provide.
+    </div>
+
+    <div class="pdf-dropzone" id="pdfDropzone" tabindex="0" role="button" aria-label="Select a PDF file to compress">
       <input type="file" id="pdfFileInput" accept="application/pdf" hidden aria-hidden="true">
       <svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M12 18v-6M9 15l3-3 3 3"/></svg>
       <p class="pdf-dropzone-title">Tap to select a PDF file</p>
@@ -142,49 +146,31 @@
 
     <div id="pdfErrorBox" class="pdf-error-box" role="alert" hidden></div>
 
-    <div id="pdfSplitOptions" hidden>
+    <div id="pdfCompressOptions" hidden>
       <p class="pdf-summary-line" id="pdfFileSummary"></p>
-
-      <div class="pdf-split-modes" role="radiogroup" aria-label="Split mode">
-        <label class="pdf-split-mode">
-          <input type="radio" name="splitMode" value="range" checked>
-          <span><strong>Extract a page range</strong> — get one new PDF with just the pages you choose</span>
-        </label>
-        <label class="pdf-split-mode">
-          <input type="radio" name="splitMode" value="all">
-          <span><strong>Split into individual pages</strong> — get a ZIP with one PDF per page</span>
-        </label>
-      </div>
-
-      <div id="pdfRangeInputWrap" class="pdf-range-input-wrap">
-        <label for="pdfRangeInput">Pages to extract</label>
-        <input type="text" id="pdfRangeInput" placeholder="e.g. 1-3, 5, 8-10" inputmode="text">
-        <p class="pdf-range-hint" id="pdfRangeHint"></p>
-      </div>
-
       <div class="pdf-action-row">
-        <button type="button" id="pdfSplitBtn" class="btn btn-primary pdf-merge-btn">Split PDF</button>
+        <button type="button" id="pdfCompressBtn" class="btn btn-primary pdf-merge-btn">Compress PDF</button>
         <button type="button" id="pdfChangeFileBtn" class="btn btn-ghost">Choose a different file</button>
       </div>
     </div>
 
     <div id="pdfProgressBox" class="pdf-progress-box" hidden role="status" aria-live="polite">
       <div class="pdf-progress-bar"><div class="pdf-progress-fill" id="pdfProgressFill"></div></div>
-      <p id="pdfProgressLabel">Splitting your PDF…</p>
+      <p id="pdfProgressLabel">Compressing your PDF…</p>
     </div>
 
     <div id="pdfResultBox" class="pdf-result-box" hidden role="status" aria-live="polite">
       <svg viewBox="0 0 24 24" width="36" height="36" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="m9 11 3 3L22 4"/></svg>
-      <p class="pdf-result-title" id="pdfResultTitle">Your split PDF is ready</p>
+      <p class="pdf-result-title" id="pdfResultTitle">Your compressed PDF is ready</p>
       <p id="pdfResultMeta" class="pdf-result-meta"></p>
       <div class="pdf-action-row">
         <a href="#" id="pdfDownloadBtn" class="btn btn-primary" download>Download</a>
-        <button type="button" id="pdfSplitAnotherBtn" class="btn btn-ghost">Split another file</button>
+        <button type="button" id="pdfCompressAnotherBtn" class="btn btn-ghost">Compress another file</button>
       </div>
       <div class="pdf-next-tools">
         <span>Next:</span>
-        <a href="/merge-pdf/">Merge PDFs back together</a>
-        <a href="/compress-pdf/">Compress a PDF</a>
+        <a href="/merge-pdf/">Merge PDFs</a>
+        <a href="/split-pdf/">Split a PDF</a>
       </div>
     </div>
 
@@ -193,24 +179,23 @@
 
 <section class="pdf-how">
   <div class="wrap">
-    <h2>How to split a PDF</h2>
+    <h2>How to compress a PDF</h2>
     <ol>
-      <li>Select the PDF you want to split.</li>
-      <li>Choose whether to extract a specific page range, or split every page into its own file.</li>
-      <li>If extracting a range, type the pages you want — e.g. <strong>1-3, 5</strong>.</li>
-      <li>Tap <strong>Split PDF</strong> and download the result. Everything runs on your own device.</li>
+      <li>Select the PDF you want to shrink.</li>
+      <li>Tap <strong>Compress PDF</strong>. This runs on your own device.</li>
+      <li>Check the new file size shown, then download.</li>
     </ol>
   </div>
 </section>
 
 <section class="pdf-usecases">
   <div class="wrap">
-    <h2>Common reasons people split PDFs</h2>
+    <h2>Common reasons people compress PDFs</h2>
     <div class="pdf-usecases-grid">
-      <div><strong>Pulling out one form</strong><p>Extract just the page a bank or embassy asked for out of a longer scanned document.</p></div>
-      <div><strong>Sharing a chapter or section</strong><p>Send only the relevant pages of a report instead of the whole file.</p></div>
-      <div><strong>Separating a scanned bundle</strong><p>Split a multi-document scan back into individual files, one per page.</p></div>
-      <div><strong>Shrinking an upload</strong><p>Remove pages you don't need before uploading to a portal with a size limit.</p></div>
+      <div><strong>Email attachment limits</strong><p>Get a report or form under your email provider's attachment size limit.</p></div>
+      <div><strong>Portal upload limits</strong><p>Meet a job or school portal's maximum upload size for a document.</p></div>
+      <div><strong>Faster sharing on slow data</strong><p>Send a smaller file over WhatsApp or email on a slower connection.</p></div>
+      <div><strong>Cleaner archiving</strong><p>Trim unnecessary bloat from exported or scanned PDFs before saving them.</p></div>
     </div>
   </div>
 </section>
@@ -218,10 +203,10 @@
 <section class="pdf-faq">
   <div class="wrap">
     <h2>Frequently asked questions</h2>
-    <details><summary>Is splitting a PDF on KoboDocs free?</summary><p>Yes. Splitting and extracting pages from a PDF is completely free, with no account required.</p></details>
-    <details><summary>Are my files uploaded to a server?</summary><p>No. Splitting happens entirely in your browser. Your PDF is never uploaded to KoboDocs servers for this operation.</p></details>
-    <details><summary>Can I choose which pages to extract?</summary><p>Yes. Enter a page range like 1-3 or a list like 1,3,5 to pull out exactly the pages you need as one new PDF.</p></details>
-    <details><summary>Can I split every page into its own file?</summary><p>Yes. Choose "Split into individual pages" and you'll get a ZIP file containing one PDF per page.</p></details>
+    <details><summary>Is compressing a PDF on KoboDocs free?</summary><p>Yes. Basic compression is completely free, with no account required.</p></details>
+    <details><summary>Are my files uploaded to a server?</summary><p>No. Compression happens entirely in your browser. Your PDF is never uploaded to KoboDocs servers for this operation.</p></details>
+    <details><summary>How much smaller will my PDF get?</summary><p>It depends on the file. Text-based PDFs (documents, forms, exported files) usually shrink a noticeable amount. PDFs that are mostly scanned photos may only shrink a little with this free, browser-based tool, since deep image recompression needs heavier processing.</p></details>
+    <details><summary>Why didn't my file get much smaller?</summary><p>If a PDF is already well-optimized, or is made up mostly of high-resolution scanned images, browser-based compression has limited room to work with. This is an honest limitation of client-side processing, not a bug.</p></details>
   </div>
 </section>
 
@@ -230,7 +215,7 @@
     <h2>Related PDF tools</h2>
     <div class="pdf-related-grid">
       <a href="/merge-pdf/" class="pdf-related-card">Merge PDF</a>
-      <a href="/compress-pdf/" class="pdf-related-card">Compress PDF</a>
+      <a href="/split-pdf/" class="pdf-related-card">Split PDF</a>
       <a href="/jpg-to-pdf/" class="pdf-related-card">JPG/PNG to PDF</a>
     </div>
   </div>
@@ -278,7 +263,6 @@
 <script src="/assets/tools-index.js"></script>
 <script src="/assets/nav-auth.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-<script src="/split-pdf/split.js"></script>
+<script src="/compress-pdf/compress.js"></script>
 </body>
 </html>
