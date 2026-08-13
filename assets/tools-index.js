@@ -5,6 +5,7 @@ window.KOBO_TOOLS_INDEX = [
   { name: "Split PDF", url: "/split-pdf/", keywords: "split pdf extract pages pdf separate pages pdf online free" },
   { name: "JPG to PDF", url: "/jpg-to-pdf/", keywords: "jpg to pdf png to pdf image to pdf convert photo pdf online free" },
   { name: "Compress PDF", url: "/compress-pdf/", keywords: "compress pdf reduce pdf size shrink pdf file size online free" },
+  { name: "Watermark PDF", url: "/watermark-pdf/", keywords: "watermark pdf add text watermark confidential draft stamp pdf pro" },
   { name: "Invoice Generator", url: "/invoice/", keywords: "invoice bill billing usd gbp eur foreign currency international client" },
   { name: "Freelancer Tax & Invoicing (2026)", url: "/freelancer-tax-invoicing/", keywords: "freelancer tax nigeria 2026 remote worker foreign income usd invoice withholding tax firs tin" },
   { name: "Business Invoice", url: "/invoice/business/", keywords: "invoice business company" },

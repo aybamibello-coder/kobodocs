@@ -148,3 +148,19 @@
   .pdf-dropzone{ padding:32px 14px; }
   .pdf-action-row .btn{ min-width:100%; }
 }
+
+.pdf-pro-pricing{ display:flex; gap:14px; flex-wrap:wrap; margin:18px 0; }
+.pdf-pro-plan{
+  flex:1; min-width:200px; border:1px solid var(--line); border-radius:8px;
+  padding:18px; text-align:center; background:var(--paper);
+}
+.pdf-pro-plan-name{ font-weight:600; margin-bottom:6px; }
+.pdf-pro-save{ font-size:0.75rem; color:var(--stamp-gold); font-weight:500; }
+.pdf-pro-plan-price{ font-family:'Fraunces', serif; font-size:1.6rem; margin-bottom:14px; color:var(--ink-green-deep); }
+.pdf-pro-plan-price span{ font-size:0.85rem; opacity:0.6; font-family:'Work Sans', sans-serif; }
+.pdf-pro-plan .btn{ width:100%; justify-content:center; }
+
+.pdf-wm-controls{ display:flex; gap:20px; margin:16px 0; flex-wrap:wrap; }
+.pdf-wm-controls > div{ flex:1; min-width:160px; }
+.pdf-wm-controls label{ display:block; font-size:0.82rem; font-weight:500; margin-bottom:6px; }
+.pdf-wm-controls input[type="range"]{ width:100%; }

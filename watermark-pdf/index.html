@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-EN4PYGX7EW"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-EN4PYGX7EW');
+</script>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Watermark PDF Online — Add Text Watermark | KoboDocs Pro</title>
+<meta name="description" content="Add a text watermark to your PDF — CONFIDENTIAL, DRAFT, your company name, or anything else. A KoboDocs PDF Toolkit Pro feature, processed in your browser.">
+<link rel="canonical" href="https://kobodocs.com.ng/watermark-pdf/">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Watermark PDF Online — Add Text Watermark | KoboDocs Pro">
+<meta property="og:description" content="Stamp a text watermark across every page of a PDF. A KoboDocs PDF Toolkit Pro feature.">
+<meta property="og:url" content="https://kobodocs.com.ng/watermark-pdf/">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Work+Sans:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/style.css">
+<link rel="stylesheet" href="/assets/pdf-tools.css">
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute">
+  <filter id="roughen" x="-20%" y="-20%" width="140%" height="140%">
+    <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed="7" result="noise"/>
+    <feDisplacementMap in="SourceGraphic" in2="noise" scale="4"/>
+  </filter>
+</svg>
+
+<header>
+  <nav class="nav">
+    <a href="/" class="logo">
+      <svg class="mark" viewBox="0 0 32 32" fill="none">
+        <circle cx="16" cy="16" r="14" stroke="#C79A3C" stroke-width="2.5"/>
+        <circle cx="16" cy="16" r="8" stroke="#C79A3C" stroke-width="1.5"/>
+      </svg>
+      KoboDocs
+    </a>
+    <button class="search-btn" id="searchBtn" aria-label="Search tools">
+      <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    </button>
+    <button class="menu-btn" aria-label="Toggle menu" id="menuBtn"><span></span><span></span><span></span></button>
+    <div class="nav-links" id="navLinks">
+      <a href="/" class="mobile-only-link">Home</a>
+      <div class="nav-item">
+        <span class="nav-category">PDF Tools ▾</span>
+        <div class="dropdown">
+          <a href="/merge-pdf/">Merge PDF</a>
+          <a href="/split-pdf/">Split PDF</a>
+          <a href="/jpg-to-pdf/">JPG/PNG to PDF</a>
+          <a href="/compress-pdf/">Compress PDF</a>
+          <a href="/watermark-pdf/">Watermark PDF (Pro)</a>
+        </div>
+      </div>
+      <div class="nav-item">
+        <span class="nav-category">Business Tools ▾</span>
+        <div class="dropdown">
+          <a href="/invoice/">Invoice Generator</a>
+          <a href="/receipt/">Receipt Generator</a>
+          <a href="/payslip/">Payslip / Salary Slip</a>
+          <a href="/business-suite/">Business Suite (Pro)</a>
+        </div>
+      </div>
+      <a href="/pricing/">Pricing</a>
+      <a href="/blog/" class="mobile-only-link">Blog</a>
+      <a href="/about/" class="mobile-only-link">About</a>
+      <a href="/account/" id="navAccountLink">Sign in</a>
+      <a href="/merge-pdf/" class="nav-cta">Merge PDF</a>
+    </div>
+  </nav>
+</header>
+
+<div class="search-overlay" id="searchOverlay">
+  <div class="search-panel">
+    <div class="search-panel-head">
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input type="text" id="searchInput" placeholder="Search tools — e.g. invoice, will, visa, siwes..." autocomplete="off">
+      <button class="search-close" id="searchClose" aria-label="Close search">&times;</button>
+    </div>
+    <div class="search-results" id="searchResults"></div>
+    <div class="search-hint">↑↓ to navigate · Enter to open · Esc to close</div>
+  </div>
+</div>
+
+<section class="page-header">
+  <div class="wrap">
+    <a href="/">&larr; Back to KoboDocs</a>
+    <h1>Watermark a PDF</h1>
+    <p>Stamp text like "CONFIDENTIAL", "DRAFT" or your company name across every page. A PDF Toolkit Pro feature.</p>
+  </div>
+</section>
+
+<main>
+<section class="pdf-tool">
+  <div class="wrap">
+
+    <div id="pdfLoadingState" class="pdf-summary-line">Checking your account…</div>
+
+    <!-- ===== Not signed in / not Pro: upgrade card ===== -->
+    <div id="pdfUpgradeCard" hidden>
+      <div class="pdf-honesty-note" style="margin-bottom:0;">
+        <strong>Watermark PDF is a Pro feature.</strong> Everything else in the PDF Toolkit (Merge, Split, JPG/PNG to PDF, Compress) stays free — this one needs an account so your subscription can be checked securely.
+      </div>
+
+      <div class="pdf-pro-pricing">
+        <div class="pdf-pro-plan">
+          <div class="pdf-pro-plan-name">Monthly</div>
+          <div class="pdf-pro-plan-price">₦2,500<span>/month</span></div>
+          <button type="button" class="btn btn-primary" id="pdfUpgradeMonthlyBtn">Upgrade to Pro</button>
+        </div>
+        <div class="pdf-pro-plan">
+          <div class="pdf-pro-plan-name">Yearly <span class="pdf-pro-save">save ~33%</span></div>
+          <div class="pdf-pro-plan-price">₦20,000<span>/year</span></div>
+          <button type="button" class="btn btn-primary" id="pdfUpgradeYearlyBtn">Upgrade to Pro</button>
+        </div>
+      </div>
+      <p class="pdf-limits-note">Cancel anytime from your account. Payment handled securely by Squad.</p>
+    </div>
+
+    <!-- ===== Pro: the actual tool ===== -->
+    <div id="pdfProTool" hidden>
+
+      <div class="pdf-privacy-note">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2 4 5v6c0 5 3.4 9.4 8 11 4.6-1.6 8-6 8-11V5l-8-3Z"/></svg>
+        <span>Processed in your browser. Your file is not uploaded to our servers for this operation.</span>
+      </div>
+
+      <div class="pdf-dropzone" id="pdfDropzone" tabindex="0" role="button" aria-label="Select a PDF file to watermark">
+        <input type="file" id="pdfFileInput" accept="application/pdf" hidden aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M12 18v-6M9 15l3-3 3 3"/></svg>
+        <p class="pdf-dropzone-title">Tap to select a PDF file</p>
+        <p class="pdf-dropzone-sub">or drag and drop here (desktop) · one file at a time</p>
+      </div>
+
+      <p class="pdf-limits-note">Up to 30MB per file. File must be a valid, non-password-protected PDF.</p>
+
+      <div id="pdfErrorBox" class="pdf-error-box" role="alert" hidden></div>
+
+      <div id="pdfWatermarkOptions" hidden>
+        <p class="pdf-summary-line" id="pdfFileSummary"></p>
+
+        <div class="pdf-range-input-wrap">
+          <label for="pdfWatermarkText">Watermark text</label>
+          <input type="text" id="pdfWatermarkText" value="CONFIDENTIAL" maxlength="60">
+        </div>
+
+        <div class="pdf-wm-controls">
+          <div>
+            <label for="pdfWmOpacity">Opacity</label>
+            <input type="range" id="pdfWmOpacity" min="10" max="80" value="30">
+          </div>
+          <div>
+            <label for="pdfWmRotation">Rotation</label>
+            <input type="range" id="pdfWmRotation" min="0" max="90" value="45">
+          </div>
+        </div>
+
+        <div class="pdf-action-row">
+          <button type="button" id="pdfWatermarkBtn" class="btn btn-primary pdf-merge-btn">Add watermark</button>
+          <button type="button" id="pdfChangeFileBtn" class="btn btn-ghost">Choose a different file</button>
+        </div>
+      </div>
+
+      <div id="pdfProgressBox" class="pdf-progress-box" hidden role="status" aria-live="polite">
+        <div class="pdf-progress-bar"><div class="pdf-progress-fill" id="pdfProgressFill"></div></div>
+        <p id="pdfProgressLabel">Adding watermark…</p>
+      </div>
+
+      <div id="pdfResultBox" class="pdf-result-box" hidden role="status" aria-live="polite">
+        <svg viewBox="0 0 24 24" width="36" height="36" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="m9 11 3 3L22 4"/></svg>
+        <p class="pdf-result-title">Your watermarked PDF is ready</p>
+        <p id="pdfResultMeta" class="pdf-result-meta"></p>
+        <div class="pdf-action-row">
+          <a href="#" id="pdfDownloadBtn" class="btn btn-primary" download>Download</a>
+          <button type="button" id="pdfWatermarkAnotherBtn" class="btn btn-ghost">Watermark another file</button>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+</section>
+
+<section class="pdf-usecases">
+  <div class="wrap">
+    <h2>Common reasons people watermark PDFs</h2>
+    <div class="pdf-usecases-grid">
+      <div><strong>Draft documents</strong><p>Mark a contract or report "DRAFT" before it's finalized, so it's never mistaken for the signed version.</p></div>
+      <div><strong>Confidential business documents</strong><p>Stamp "CONFIDENTIAL" across proposals, financials or internal reports before sharing.</p></div>
+      <div><strong>Branding</strong><p>Add your company name across sample work, portfolios or preview documents.</p></div>
+      <div><strong>Copy protection</strong><p>Discourage unauthorized reuse of shared PDFs with a visible ownership mark.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="pdf-related">
+  <div class="wrap">
+    <h2>Other PDF tools</h2>
+    <div class="pdf-related-grid">
+      <a href="/merge-pdf/" class="pdf-related-card">Merge PDF</a>
+      <a href="/split-pdf/" class="pdf-related-card">Split PDF</a>
+      <a href="/compress-pdf/" class="pdf-related-card">Compress PDF</a>
+    </div>
+  </div>
+</section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <div class="footer-top">
+      <div>
+        <div class="footer-logo">KoboDocs</div>
+        <p class="footer-note">Every business document, stamped and sent — built for Nigeria, one Naira at a time.</p>
+      </div>
+      <div class="footer-links">
+        <div>
+          <strong>PDF Tools</strong>
+          <a href="/merge-pdf/">Merge PDF</a>
+          <a href="/split-pdf/">Split PDF</a>
+          <a href="/jpg-to-pdf/">JPG/PNG to PDF</a>
+          <a href="/compress-pdf/">Compress PDF</a>
+          <a href="/watermark-pdf/">Watermark PDF (Pro)</a>
+        </div>
+        <div>
+          <strong>Tools</strong>
+          <a href="/invoice/">Invoice</a>
+          <a href="/receipt/">Receipt</a>
+          <a href="/payslip/">Payslip</a>
+        </div>
+        <div>
+          <strong>Company</strong>
+          <a href="/pricing/">Pricing</a>
+          <a href="/privacy/">Privacy</a>
+          <a href="/">Home</a>
+        </div>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2026 KoboDocs. Not a financial institution — we never hold or move your money.</span>
+      <span>Made in Lagos</span>
+    </div>
+  </div>
+</footer>
+
+<script type="module" src="/assets/auth.js"></script>
+<script src="/assets/subscribe.js"></script>
+<script src="/assets/app.js"></script>
+<script src="/assets/search.js"></script>
+<script src="/assets/tools-index.js"></script>
+<script src="/assets/nav-auth.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
+<script src="/watermark-pdf/guard.js"></script>
+<script src="/watermark-pdf/watermark.js"></script>
+</body>
+</html>
