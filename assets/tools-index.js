@@ -8,6 +8,7 @@ window.KOBO_TOOLS_INDEX = [
   { name: "Word to PDF", url: "/word-to-pdf/", keywords: "word to pdf docx to pdf convert word document online free" },
   { name: "Compress PDF", url: "/compress-pdf/", keywords: "compress pdf reduce pdf size shrink pdf file size online free" },
   { name: "Watermark PDF", url: "/watermark-pdf/", keywords: "watermark pdf add text watermark confidential draft stamp pdf pro" },
+  { name: "OCR PDF", url: "/ocr-pdf/", keywords: "ocr pdf extract text scanned pdf text recognition pro" },
   { name: "Invoice Generator", url: "/invoice/", keywords: "invoice bill billing usd gbp eur foreign currency international client" },
   { name: "Freelancer Tax & Invoicing (2026)", url: "/freelancer-tax-invoicing/", keywords: "freelancer tax nigeria 2026 remote worker foreign income usd invoice withholding tax firs tin" },
   { name: "Business Invoice", url: "/invoice/business/", keywords: "invoice business company" },

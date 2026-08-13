@@ -12,13 +12,13 @@
 
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Watermark PDF Online — Add Text Watermark | KoboDocs Pro</title>
-<meta name="description" content="Add a text watermark to your PDF — CONFIDENTIAL, DRAFT, your company name, or anything else. A KoboDocs PDF Toolkit Pro feature, processed in your browser.">
-<link rel="canonical" href="https://kobodocs.com.ng/watermark-pdf/">
+<title>OCR PDF — Extract Text from Scanned Documents | KoboDocs Pro</title>
+<meta name="description" content="Extract editable text from a scanned or image-based PDF. A KoboDocs PDF Toolkit Pro feature — copy the text, or download it as a PDF or .txt file.">
+<link rel="canonical" href="https://kobodocs.com.ng/ocr-pdf/">
 <meta property="og:type" content="website">
-<meta property="og:title" content="Watermark PDF Online — Add Text Watermark | KoboDocs Pro">
-<meta property="og:description" content="Stamp a text watermark across every page of a PDF. A KoboDocs PDF Toolkit Pro feature.">
-<meta property="og:url" content="https://kobodocs.com.ng/watermark-pdf/">
+<meta property="og:title" content="OCR PDF — Extract Text from Scanned Documents | KoboDocs Pro">
+<meta property="og:description" content="Turn a scanned PDF into editable, searchable text. A KoboDocs PDF Toolkit Pro feature.">
+<meta property="og:url" content="https://kobodocs.com.ng/ocr-pdf/">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Work+Sans:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
@@ -95,8 +95,8 @@
 <section class="page-header">
   <div class="wrap">
     <a href="/">&larr; Back to KoboDocs</a>
-    <h1>Watermark a PDF</h1>
-    <p>Stamp text like "CONFIDENTIAL", "DRAFT" or your company name across every page. A PDF Toolkit Pro feature.</p>
+    <h1>Extract text from a scanned PDF</h1>
+    <p>Turn a scanned or photographed document into editable, copyable text. A PDF Toolkit Pro feature.</p>
   </div>
 </section>
 
@@ -109,7 +109,7 @@
     <!-- ===== Not signed in / not Pro: upgrade card ===== -->
     <div id="pdfUpgradeCard" hidden>
       <div class="pdf-honesty-note" style="margin-bottom:0;">
-        <strong>Watermark PDF is a Pro feature.</strong> Everything else in the PDF Toolkit (Merge, Split, JPG/PNG to PDF, Compress) stays free — this one needs an account so your subscription can be checked securely.
+        <strong>OCR is a Pro feature</strong>, bundled with Watermark PDF in the same PDF Toolkit Pro subscription. Everything else in the PDF Toolkit stays free.
       </div>
 
       <div class="pdf-pro-pricing">
@@ -124,65 +124,51 @@
           <button type="button" class="btn btn-primary" id="pdfUpgradeYearlyBtn">Upgrade to Pro</button>
         </div>
       </div>
-      <p class="pdf-limits-note">Cancel anytime from your account. Payment handled securely by Squad.</p>
+      <p class="pdf-limits-note">Already Pro from Watermark PDF? Just sign in — it's the same subscription.</p>
     </div>
 
     <!-- ===== Pro: the actual tool ===== -->
     <div id="pdfProTool" hidden>
 
-      <div class="pdf-privacy-note">
-        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2 4 5v6c0 5 3.4 9.4 8 11 4.6-1.6 8-6 8-11V5l-8-3Z"/></svg>
-        <span>Processed in your browser. Your file is not uploaded to our servers for this operation.</span>
+      <div class="pdf-honesty-note">
+        Pages are rendered in your browser, then sent securely for text recognition (this step needs a server). We never store the image or extracted text beyond processing your request.
       </div>
 
-      <div class="pdf-dropzone" id="pdfDropzone" tabindex="0" role="button" aria-label="Select a PDF file to watermark">
+      <div class="pdf-dropzone" id="pdfDropzone" tabindex="0" role="button" aria-label="Select a PDF file to extract text from">
         <input type="file" id="pdfFileInput" accept="application/pdf" hidden aria-hidden="true">
         <svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M12 18v-6M9 15l3-3 3 3"/></svg>
         <p class="pdf-dropzone-title">Tap to select a PDF file</p>
-        <p class="pdf-dropzone-sub">or drag and drop here (desktop) · one file at a time</p>
+        <p class="pdf-dropzone-sub">or drag and drop here (desktop) · scanned or photographed pages work best</p>
       </div>
 
-      <p class="pdf-limits-note">Up to 30MB per file. File must be a valid, non-password-protected PDF.</p>
+      <p class="pdf-limits-note">Up to 10 pages, 20MB per file.</p>
 
       <div id="pdfErrorBox" class="pdf-error-box" role="alert" hidden></div>
 
-      <div id="pdfWatermarkOptions" hidden>
+      <div id="pdfOcrOptions" hidden>
         <p class="pdf-summary-line" id="pdfFileSummary"></p>
-
-        <div class="pdf-range-input-wrap">
-          <label for="pdfWatermarkText">Watermark text</label>
-          <input type="text" id="pdfWatermarkText" value="CONFIDENTIAL" maxlength="60">
-        </div>
-
-        <div class="pdf-wm-controls">
-          <div>
-            <label for="pdfWmOpacity">Opacity</label>
-            <input type="range" id="pdfWmOpacity" min="10" max="80" value="30">
-          </div>
-          <div>
-            <label for="pdfWmRotation">Rotation</label>
-            <input type="range" id="pdfWmRotation" min="0" max="90" value="45">
-          </div>
-        </div>
-
         <div class="pdf-action-row">
-          <button type="button" id="pdfWatermarkBtn" class="btn btn-primary pdf-merge-btn">Add watermark</button>
+          <button type="button" id="pdfOcrBtn" class="btn btn-primary pdf-merge-btn">Extract text</button>
           <button type="button" id="pdfChangeFileBtn" class="btn btn-ghost">Choose a different file</button>
         </div>
       </div>
 
       <div id="pdfProgressBox" class="pdf-progress-box" hidden role="status" aria-live="polite">
         <div class="pdf-progress-bar"><div class="pdf-progress-fill" id="pdfProgressFill"></div></div>
-        <p id="pdfProgressLabel">Adding watermark…</p>
+        <p id="pdfProgressLabel">Reading pages…</p>
       </div>
 
-      <div id="pdfResultBox" class="pdf-result-box" hidden role="status" aria-live="polite">
-        <svg viewBox="0 0 24 24" width="36" height="36" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="m9 11 3 3L22 4"/></svg>
-        <p class="pdf-result-title">Your watermarked PDF is ready</p>
-        <p id="pdfResultMeta" class="pdf-result-meta"></p>
+      <div id="pdfResultBox" class="pdf-result-box" hidden role="status" aria-live="polite" style="text-align:left;">
+        <p class="pdf-result-title" style="text-align:center;">Extracted text</p>
+        <p id="pdfResultMeta" class="pdf-result-meta" style="text-align:center;"></p>
+        <textarea id="pdfOcrTextarea" class="pdf-ocr-textarea" readonly aria-label="Extracted text"></textarea>
         <div class="pdf-action-row">
-          <a href="#" id="pdfDownloadBtn" class="btn btn-primary" download>Download</a>
-          <button type="button" id="pdfWatermarkAnotherBtn" class="btn btn-ghost">Watermark another file</button>
+          <button type="button" id="pdfCopyBtn" class="btn btn-primary">Copy text</button>
+          <button type="button" id="pdfDownloadTxtBtn" class="btn btn-ghost">Download .txt</button>
+          <button type="button" id="pdfDownloadPdfBtn" class="btn btn-ghost">Download as PDF</button>
+        </div>
+        <div class="pdf-action-row">
+          <button type="button" id="pdfOcrAnotherBtn" class="btn btn-ghost">Scan another file</button>
         </div>
       </div>
 
@@ -193,12 +179,12 @@
 
 <section class="pdf-usecases">
   <div class="wrap">
-    <h2>Common reasons people watermark PDFs</h2>
+    <h2>Common reasons people use OCR</h2>
     <div class="pdf-usecases-grid">
-      <div><strong>Draft documents</strong><p>Mark a contract or report "DRAFT" before it's finalized, so it's never mistaken for the signed version.</p></div>
-      <div><strong>Confidential business documents</strong><p>Stamp "CONFIDENTIAL" across proposals, financials or internal reports before sharing.</p></div>
-      <div><strong>Branding</strong><p>Add your company name across sample work, portfolios or preview documents.</p></div>
-      <div><strong>Copy protection</strong><p>Discourage unauthorized reuse of shared PDFs with a visible ownership mark.</p></div>
+      <div><strong>Editing an old scanned document</strong><p>Get a photocopied or scanned letter into text you can actually edit.</p></div>
+      <div><strong>Searching a scanned archive</strong><p>Pull text out of scanned records so you can search and copy from them.</p></div>
+      <div><strong>Retyping a printed form</strong><p>Extract text from a photographed form instead of retyping it by hand.</p></div>
+      <div><strong>Quoting a physical document</strong><p>Copy accurate text from a scanned certificate, letter or report.</p></div>
     </div>
   </div>
 </section>
@@ -207,9 +193,9 @@
   <div class="wrap">
     <h2>Other PDF tools</h2>
     <div class="pdf-related-grid">
-      <a href="/merge-pdf/" class="pdf-related-card">Merge PDF</a>
-      <a href="/split-pdf/" class="pdf-related-card">Split PDF</a>
-      <a href="/compress-pdf/" class="pdf-related-card">Compress PDF</a>
+      <a href="/watermark-pdf/" class="pdf-related-card">Watermark PDF</a>
+      <a href="/pdf-to-jpg/" class="pdf-related-card">PDF to JPG</a>
+      <a href="/word-to-pdf/" class="pdf-related-card">Word to PDF</a>
     </div>
   </div>
 </section>
@@ -261,8 +247,9 @@
 <script src="/assets/search.js"></script>
 <script src="/assets/tools-index.js"></script>
 <script src="/assets/nav-auth.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
-<script src="/watermark-pdf/guard.js"></script>
-<script src="/watermark-pdf/watermark.js"></script>
+<script src="/ocr-pdf/guard.js"></script>
+<script src="/ocr-pdf/ocr.js"></script>
 </body>
 </html>
