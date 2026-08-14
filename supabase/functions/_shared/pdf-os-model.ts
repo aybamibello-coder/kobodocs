@@ -6,11 +6,12 @@
 // prepared (text layer, or base64 page images) into plain text, then
 // makes the task-specific model call.
 //
-// Confirmed against the live ocr-pdf-pages function: env var is
-// GEMINI_API_KEY, model is gemini-2.5-flash.
+// Confirmed live: GEMINI_API_KEY works; gemini-2.5-flash returned 404
+// ('no longer available to new users') for this key's account tier.
+// Using gemini-flash-latest instead, verified working via a live test call.
 
 const GEMINI_API_KEY = Deno.env.get('GEMINI_API_KEY')!;
-const GEMINI_MODEL = 'gemini-2.5-flash';
+const GEMINI_MODEL = 'gemini-flash-latest';
 
 export type DocumentInput =
   | { mode: 'text'; text: string }
