@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-EN4PYGX7EW"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-EN4PYGX7EW');
+</script>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Transcription Suite — Audio & Video to Text | KoboDocs</title>
+<meta name="description" content="Transcribe audio and video with AI. Get accurate transcripts, summaries, subtitles, translations and useful documents in one transcription suite. Try 40 minutes free — no signup required.">
+<link rel="canonical" href="https://kobodocs.com.ng/transcribe/">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Work+Sans:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/style.css">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "KoboDocs Transcribe",
+  "applicationCategory": "BusinessApplication",
+  "operatingSystem": "Web",
+  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "NGN" },
+  "description": "AI-powered audio and video transcription suite with summaries, translation, subtitles, and document generation."
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "Do I need to sign up to try transcription?",
+      "acceptedAnswer": { "@type": "Answer", "text": "No. You get 40 minutes of free transcription across up to 2 files without creating an account. Sign up only when you want a larger monthly allowance or saved history." }
+    },
+    {
+      "@type": "Question",
+      "name": "What file types can I upload?",
+      "acceptedAnswer": { "@type": "Answer", "text": "Common audio and video formats are supported, including MP3, WAV, M4A, MP4, and MOV." }
+    },
+    {
+      "@type": "Question",
+      "name": "Does it identify different speakers?",
+      "acceptedAnswer": { "@type": "Answer", "text": "Yes. Speaker identification is included, labeling each speaker in the transcript so you can see who said what." }
+    },
+    {
+      "@type": "Question",
+      "name": "Can I get subtitles for a video?",
+      "acceptedAnswer": { "@type": "Answer", "text": "Yes. Subtitle generation in SRT and VTT format is available on the Pro and Business plans." }
+    },
+    {
+      "@type": "Question",
+      "name": "Is there a pay-as-you-go option, or do I have to subscribe monthly?",
+      "acceptedAnswer": { "@type": "Answer", "text": "Both. Prepaid minute packs starting at ₦1,500 for 60 minutes never expire and don't require a subscription. Monthly plans are available if you transcribe regularly." }
+    },
+    {
+      "@type": "Question",
+      "name": "How is usage measured?",
+      "acceptedAnswer": { "@type": "Answer", "text": "By actual audio/video duration processed. A failed transcription doesn't consume any of your minutes." }
+    }
+  ]
+}
+</script>
+<style>
+  .hero-tr{ text-align:center; padding:64px 20px 40px; max-width:760px; margin:0 auto; }
+  .hero-tr h1{ font-size:2.3rem; margin-bottom:16px; }
+  .hero-tr p{ font-size:1.05rem; opacity:0.75; margin-bottom:28px; }
+  .hero-ctas{ display:flex; gap:12px; justify-content:center; flex-wrap:wrap; }
+  .trial-strip{
+    text-align:center; font-family:'Space Mono', monospace; font-size:0.78rem;
+    text-transform:uppercase; letter-spacing:0.04em; color:var(--stamp-gold);
+    margin-top:18px;
+  }
+  .tr-features{ max-width:1000px; margin:50px auto; padding:0 20px; display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:20px; }
+  .tr-feature{ border:1px solid var(--line); border-radius:8px; padding:20px; }
+  .tr-feature h3{ font-family:'Fraunces', serif; font-size:1.05rem; margin-bottom:8px; }
+  .tr-feature p{ font-size:0.88rem; opacity:0.75; line-height:1.6; }
+  .tr-pricing{ max-width:1100px; margin:60px auto; padding:0 20px; }
+  .tr-pricing h2{ text-align:center; font-size:1.6rem; margin-bottom:8px; }
+  .tr-pricing-sub{ text-align:center; opacity:0.7; margin-bottom:32px; }
+  .payg-row{ display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:14px; margin-bottom:36px; }
+  .payg-card{ border:1px solid var(--line); border-radius:8px; padding:18px; text-align:center; }
+  .payg-card .amt{ font-family:'Fraunces', serif; font-size:1.3rem; color:var(--ink-green-deep); }
+  .payg-card .mins{ font-size:0.82rem; opacity:0.7; margin:4px 0 12px; }
+  .plans-row{ display:grid; grid-template-columns:repeat(auto-fit,minmax(230px,1fr)); gap:16px; }
+  .plan-card-tr{ border:1px solid var(--line); border-radius:8px; padding:22px 18px; text-align:center; }
+  .plan-card-tr.featured{ border-color:var(--stamp-gold); box-shadow:0 4px 16px rgba(199,154,60,0.15); }
+  .plan-card-tr h3{ font-family:'Fraunces', serif; font-size:1.1rem; margin-bottom:6px; }
+  .plan-card-tr .price{ font-family:'Fraunces', serif; font-size:1.4rem; color:var(--ink-green-deep); margin-bottom:2px; }
+  .plan-card-tr .cycle{ font-size:0.72rem; opacity:0.6; margin-bottom:14px; }
+  .plan-card-tr ul{ list-style:none; padding:0; text-align:left; margin-bottom:16px; }
+  .plan-card-tr li{ font-size:0.82rem; padding:4px 0; opacity:0.8; }
+  .plan-card-tr li::before{ content:'✓ '; color:var(--stamp-gold); font-weight:700; }
+  .tr-faq{ max-width:720px; margin:60px auto; padding:0 20px; }
+  .tr-faq h2{ text-align:center; font-size:1.5rem; margin-bottom:24px; }
+  .tr-faq-item{ border-bottom:1px solid var(--line); padding:16px 0; }
+  .tr-faq-item strong{ display:block; margin-bottom:6px; }
+  .tr-faq-item p{ font-size:0.9rem; opacity:0.75; line-height:1.6; }
+</style>
+</head>
+<body>
+
+<header>
+  <nav class="nav">
+    <a href="/" class="logo">
+      <svg class="mark" viewBox="0 0 32 32" fill="none">
+        <circle cx="16" cy="16" r="14" stroke="#C79A3C" stroke-width="2.5"/>
+        <circle cx="16" cy="16" r="8" stroke="#C79A3C" stroke-width="1.5"/>
+      </svg>
+      KoboDocs
+    </a>
+    <button class="search-btn" id="searchBtn" aria-label="Search tools">
+      <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    </button>
+    <button class="menu-btn" aria-label="Toggle menu" id="menuBtn"><span></span><span></span><span></span></button>
+    <div class="nav-links" id="navLinks">
+      <a href="/" class="mobile-only-link">Home</a>
+      <a href="#pricing">Pricing</a>
+      <a href="/blog/" class="mobile-only-link">Blog</a>
+      <a href="/about/" class="mobile-only-link">About</a>
+      <a href="/account/" id="navAccountLink">Sign in</a>
+      <a href="/transcribe/app/" class="nav-cta">Try free</a>
+    </div>
+  </nav>
+</header>
+
+<div class="search-overlay" id="searchOverlay">
+  <div class="search-panel">
+    <div class="search-panel-head">
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input type="text" id="searchInput" placeholder="Search tools — e.g. invoice, will, visa, siwes..." autocomplete="off">
+      <button class="search-close" id="searchClose" aria-label="Close search">&times;</button>
+    </div>
+    <div class="search-results" id="searchResults"></div>
+    <div class="search-hint">↑↓ to navigate · Enter to open · Esc to close</div>
+  </div>
+</div>
+
+<section class="hero-tr">
+  <h1>Turn Audio and Video Into Useful Work</h1>
+  <p>Transcribe, summarize, translate, subtitle and transform your recordings with one powerful AI transcription suite.</p>
+  <div class="hero-ctas">
+    <a href="/transcribe/app/" class="btn btn-primary">Try 40 minutes free</a>
+    <a href="#pricing" class="btn">See pricing</a>
+  </div>
+  <div class="trial-strip">No signup required · No card required</div>
+</section>
+
+<section class="tr-features">
+  <div class="tr-feature">
+    <h3>Accurate transcripts</h3>
+    <p>Upload audio or video and get a timestamped transcript with speaker identification, so you always know who said what.</p>
+  </div>
+  <div class="tr-feature">
+    <h3>AI summaries</h3>
+    <p>Turn a 60-minute meeting into a 5-point summary. Ask questions about a recording and get answers pulled straight from it.</p>
+  </div>
+  <div class="tr-feature">
+    <h3>Translation &amp; subtitles</h3>
+    <p>Translate transcripts into other languages, or generate SRT and VTT subtitle files ready for any video platform.</p>
+  </div>
+  <div class="tr-feature">
+    <h3>Export anywhere</h3>
+    <p>Download as TXT, DOCX, PDF, SRT or VTT — whatever format the next step in your workflow needs.</p>
+  </div>
+  <div class="tr-feature">
+    <h3>Built for teams</h3>
+    <p>Business plan workspaces let your team share a searchable library of every recording and transcript in one place.</p>
+  </div>
+  <div class="tr-feature">
+    <h3>Naira pricing</h3>
+    <p>Prepaid minute packs from ₦1,500, or monthly plans from ₦10,000 — priced for Nigerian businesses and creators.</p>
+  </div>
+</section>
+
+<section class="tr-pricing" id="pricing">
+  <h2>Pricing</h2>
+  <p class="tr-pricing-sub">Start free. Pay only for the minutes you use, or subscribe monthly once you transcribe regularly.</p>
+
+  <div class="payg-row">
+    <div class="payg-card">
+      <div class="amt">₦1,500</div>
+      <div class="mins">60 minutes · up to 10 files · never expires</div>
+      <a href="/transcribe/app/" class="btn small">Buy pack</a>
+    </div>
+    <div class="payg-card">
+      <div class="amt">₦5,000</div>
+      <div class="mins">200 minutes · up to 20 files · never expires</div>
+      <a href="/transcribe/app/" class="btn small">Buy pack</a>
+    </div>
+    <div class="payg-card">
+      <div class="amt">₦8,000</div>
+      <div class="mins">400 minutes · up to 30 files · never expires</div>
+      <a href="/transcribe/app/" class="btn small">Buy pack</a>
+    </div>
+  </div>
+
+  <div class="plans-row">
+    <div class="plan-card-tr">
+      <h3>Free</h3>
+      <div class="price">₦0</div>
+      <div class="cycle">/month</div>
+      <ul>
+        <li>100 minutes/month</li>
+        <li>Up to 5 files/month</li>
+        <li>Basic transcription</li>
+        <li>Saved history</li>
+        <li>Basic exports (TXT)</li>
+      </ul>
+      <a href="/transcribe/app/" class="btn small">Start free</a>
+    </div>
+    <div class="plan-card-tr">
+      <h3>Starter</h3>
+      <div class="price">₦10,000</div>
+      <div class="cycle">/month</div>
+      <ul>
+        <li>500 minutes/month</li>
+        <li>Up to 30 files/month</li>
+        <li>AI summaries</li>
+        <li>DOCX &amp; PDF export</li>
+        <li>Speaker identification</li>
+      </ul>
+      <a href="/transcribe/app/" class="btn small">Subscribe</a>
+    </div>
+    <div class="plan-card-tr featured">
+      <h3>Pro</h3>
+      <div class="price">₦25,000</div>
+      <div class="cycle">/month</div>
+      <ul>
+        <li>1,500 minutes/month</li>
+        <li>Up to 100 files/month</li>
+        <li>Ask This Recording</li>
+        <li>Translation</li>
+        <li>Subtitles (SRT &amp; VTT)</li>
+        <li>Content repurposing</li>
+      </ul>
+      <a href="/transcribe/app/" class="btn small btn-primary">Subscribe</a>
+    </div>
+    <div class="plan-card-tr">
+      <h3>Business</h3>
+      <div class="price">₦75,000</div>
+      <div class="cycle">/month</div>
+      <ul>
+        <li>5,000 minutes/month</li>
+        <li>Up to 300 files/month</li>
+        <li>Team workspace</li>
+        <li>Searchable company library</li>
+        <li>Priority processing</li>
+      </ul>
+      <a href="/transcribe/app/" class="btn small">Subscribe</a>
+    </div>
+  </div>
+</section>
+
+<section class="tr-faq">
+  <h2>Frequently asked questions</h2>
+  <div class="tr-faq-item">
+    <strong>Do I need to sign up to try transcription?</strong>
+    <p>No. You get 40 minutes of free transcription across up to 2 files without creating an account. Sign up only when you want a larger monthly allowance or saved history.</p>
+  </div>
+  <div class="tr-faq-item">
+    <strong>What file types can I upload?</strong>
+    <p>Common audio and video formats are supported, including MP3, WAV, M4A, MP4, and MOV.</p>
+  </div>
+  <div class="tr-faq-item">
+    <strong>Does it identify different speakers?</strong>
+    <p>Yes. Speaker identification is included, labeling each speaker in the transcript so you can see who said what.</p>
+  </div>
+  <div class="tr-faq-item">
+    <strong>Can I get subtitles for a video?</strong>
+    <p>Yes. Subtitle generation in SRT and VTT format is available on the Pro and Business plans.</p>
+  </div>
+  <div class="tr-faq-item">
+    <strong>Is there a pay-as-you-go option, or do I have to subscribe monthly?</strong>
+    <p>Both. Prepaid minute packs starting at ₦1,500 for 60 minutes never expire and don't require a subscription. Monthly plans are available if you transcribe regularly.</p>
+  </div>
+  <div class="tr-faq-item">
+    <strong>How is usage measured?</strong>
+    <p>By actual audio/video duration processed. A failed transcription doesn't consume any of your minutes.</p>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div class="footer-top">
+      <div>
+        <div class="footer-logo">KoboDocs</div>
+        <p class="footer-note">Every business document, stamped and sent — built for Nigeria, one Naira at a time.</p>
+      </div>
+      <div class="footer-links">
+        <div>
+          <strong>Business tools</strong>
+          <a href="/invoice/">Invoice</a>
+          <a href="/receipt/">Receipt</a>
+          <a href="/payslip/">Payslip</a>
+          <a href="/transcribe/">Transcribe</a>
+          <a href="/qr-code/">QR Code</a>
+        </div>
+        <div>
+          <strong>Relocation</strong>
+          <a href="/relocation/">Relocation home</a>
+          <a href="/relocation/japa-calculator/">Japa Cost Calculator</a>
+          <a href="/relocation/proof-of-funds/">Proof of Funds</a>
+          <a href="/relocation/cost-of-living/">Cost of Living</a>
+        </div>
+        <div>
+          <strong>Company</strong>
+          <a href="/pricing/">Pricing</a>
+          <a href="/about/">About</a>
+          <a href="/contact/">Contact</a>
+          <a href="/blog/">Blog</a>
+        </div>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2026 KoboDocs. Not a financial institution — we never hold or move your money.</span>
+      <span><a href="/privacy/">Privacy</a> · <a href="/terms/">Terms</a> · Made in Lagos</span>
+    </div>
+  </div>
+</footer>
+
+<script src="/assets/app.js" defer></script>
+<script type="module" src="/assets/auth.js"></script>
+<script src="/assets/nav-auth.js" defer></script>
+<script src="/assets/tools-index.js" defer></script>
+<script src="/assets/search.js" defer></script>
+</body>
+</html>
