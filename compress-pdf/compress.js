@@ -136,9 +136,14 @@
       downloadBtn.href = currentObjectUrl;
       downloadBtn.setAttribute('download', filename);
 
-      if (newSize >= originalSize) {
+      // A rounded "0% smaller" (or 1-2% on a large file) reads as broken, even
+      // though it's technically true — this is common on scanned/image-heavy
+      // PDFs where this tool's metadata/structure cleanup has little to work
+      // with (see the honesty note above). Show the honest "little room left"
+      // message instead of a misleadingly precise percentage in that case.
+      if (savedPct < 3) {
         resultTitle.textContent = 'This PDF is already well-optimized';
-        resultMeta.textContent = formatBytes(originalSize) + ' \u2192 ' + formatBytes(newSize) + ' — little to no room left to shrink it further with browser-based compression.';
+        resultMeta.textContent = formatBytes(originalSize) + ' \u2192 ' + formatBytes(newSize) + ' — little to no room left to shrink it further with browser-based compression. This is common for scanned or image-heavy PDFs.';
       } else {
         resultTitle.textContent = 'Your compressed PDF is ready';
         resultMeta.textContent = formatBytes(originalSize) + ' \u2192 ' + formatBytes(newSize) + ' (' + savedPct + '% smaller)';

@@ -171,3 +171,16 @@
   font-family:'Space Mono', monospace; font-size:0.85rem; line-height:1.6;
   background:var(--paper); resize:vertical;
 }
+
+/* Base .btn-ghost is styled for dark hero backgrounds (light/bone text) —
+   every PDF Toolkit page has a light background, so override for legibility.
+   Same fix already applied to Business Suite's light-background pages. */
+.btn-ghost{
+  color: var(--ink-green-deep);
+  background: rgba(255,255,255,0.5);
+  border-color: rgba(35,39,34,0.28);
+}
+.btn-ghost:hover{
+  color: var(--stamp-gold);
+  border-color: var(--stamp-gold);
+}
