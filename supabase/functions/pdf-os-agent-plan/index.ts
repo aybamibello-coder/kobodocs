@@ -3,10 +3,8 @@
 // next tool call(s) or returns a final answer.
 //
 // Uses Groq (OpenAI-compatible chat completions + tool calling) for
-// planning — fast/cheap, good fit for an orchestration step that runs on
-// every turn. Gemini stays reserved for the multimodal/document-heavy
-// work in _shared/pdf-os-model.ts (OCR, summarize, extract). No
-// Anthropic key in use anywhere in this project.
+// planning. Gemini stays reserved for the multimodal/document-heavy work
+// in pdf-os-ask-document/summarize/extract. No Anthropic key in use.
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
@@ -25,7 +23,15 @@ Rules:
   question as a final answer instead of guessing.
 - Never claim an action succeeded before its tool result confirms it.`;
 
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+};
+
 Deno.serve(async (req) => {
+  if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
+
   const authHeader = req.headers.get('Authorization');
   if (!authHeader) return jsonResponse({ error: 'UNAUTHENTICATED' }, 401);
 
@@ -33,15 +39,12 @@ Deno.serve(async (req) => {
   const { data: { user } } = await supabase.auth.getUser(authHeader.replace('Bearer ', ''));
   if (!user) return jsonResponse({ error: 'UNAUTHENTICATED' }, 401);
 
-  // Agent-run quota (distinct from per-tool AI-action quota) is spent once
-  // per planning call, since each call is one "turn" of agent reasoning.
   const { data: allowed, error: quotaErr } = await supabase.rpc('consume_pdf_os_agent_run', { p_user_id: user.id });
   if (quotaErr) return jsonResponse({ error: 'QUOTA_CHECK_FAILED' }, 500);
   if (!allowed) return jsonResponse({ error: 'QUOTA_EXCEEDED' }, 402);
 
   const { conversation, file_manifest, tools } = await req.json();
 
-  // OpenAI/Groq tool-calling shape: { type: "function", function: { name, description, parameters } }
   const groqTools = tools.map((t: any) => ({
     type: 'function',
     function: { name: t.name, description: t.description, parameters: t.input_schema }
@@ -81,9 +84,6 @@ Deno.serve(async (req) => {
       name: tc.function.name,
       input: safeParseJson(tc.function.arguments)
     })),
-    // Stored verbatim so the next turn's assistant message satisfies
-    // Groq/OpenAI's requirement that every tool_call have a matching
-    // preceding assistant message with that tool_calls array.
     assistant_turn: { role: 'assistant', content: message.content, tool_calls: message.tool_calls }
   });
 });
@@ -97,8 +97,6 @@ function buildMessages(conversation: any[], fileManifest: any[]) {
         content: `Files available:\n${JSON.stringify(fileManifest, null, 2)}\n\nRequest: ${turn.content}`
       });
     } else if (turn.role === 'tool_results') {
-      // Groq/OpenAI expects one 'tool' role message per tool_call_id,
-      // not a single combined block like Anthropic's format.
       turn.content.forEach((r: any) => {
         messages.push({
           role: 'tool',
@@ -106,8 +104,6 @@ function buildMessages(conversation: any[], fileManifest: any[]) {
           content: r.error ? `Error: ${r.error}` : JSON.stringify({ output_file: r.output_file?.name, output_text: r.output_text })
         });
       });
-    } else if (turn.role === 'assistant') {
-      messages.push(turn);
     } else {
       messages.push(turn);
     }
@@ -120,5 +116,5 @@ function safeParseJson(raw: string) {
 }
 
 function jsonResponse(body: unknown, status = 200) {
-  return new Response(JSON.stringify(body), { status, headers: { 'Content-Type': 'application/json' } });
+  return new Response(JSON.stringify(body), { status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
 }

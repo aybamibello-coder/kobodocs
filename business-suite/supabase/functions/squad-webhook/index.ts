@@ -1,7 +1,7 @@
 // Supabase Edge Function: squad-webhook
 // Replaces nomba-webhook (and the older, already-unused paystack-webhook)
 // now that Squad (squadco.com) is the sole payment processor for KoboDocs.
-// Handles every product on the site via the payment_intents table — same
+// Handles every product on the site via the payment_intents table -- same
 // pattern nomba-webhook used, since Squad also doesn't reliably echo
 // custom metadata back on every payload variant.
 //
@@ -9,7 +9,7 @@
 //   { "Event": "charge_successful", "TransactionRef": "...", "Body": {
 //       "amount": 10000, "transaction_ref": "...", "transaction_status": "Success", ... } }
 // Signature: header x-squad-encrypted-body, HMAC-SHA512 of the raw request
-// body using the secret key, compared as UPPERCASE hex (per Squad docs —
+// body using the secret key, compared as UPPERCASE hex (per Squad docs --
 // different from Paystack's lowercase and Nomba's SHA-256).
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
@@ -109,9 +109,6 @@ Deno.serve(async (req) => {
           .update({ amount_paid: newAmountPaid, payment_status: newStatus })
           .eq("id", metadata.document_id);
 
-        // Log the event too (not just the running total) — this is the
-        // source of truth for revenue analytics, alongside manual
-        // payments recorded from the Business Suite debt/collections page.
         await supabase.from("document_payments").insert({
           document_id: metadata.document_id,
           business_id: doc.business_id,
@@ -119,31 +116,6 @@ Deno.serve(async (req) => {
           method: "squad",
         });
       }
-    } else if (metadata?.product === "pdf_os") {
-      // PDF OS carries its own subscriptions table (pdf_os_subscriptions),
-      // separate from profiles.plan (Toolkit/general) and businesses.suite_*
-      // (Business Suite) — per the explicit "own subscription" decision.
-      const { data: existing } = await supabase
-        .from("pdf_os_subscriptions")
-        .select("id, expires_at, status")
-        .eq("user_id", metadata.user_id)
-        .maybeSingle();
-
-      const currentExpiry = existing?.expires_at && existing.status === "active"
-        ? new Date(existing.expires_at) : null;
-      const base = currentExpiry && currentExpiry > new Date() ? currentExpiry : new Date();
-      const newExpiry = new Date(base);
-      newExpiry.setDate(newExpiry.getDate() + cycleDays);
-
-      await supabase.from("pdf_os_subscriptions").upsert({
-        user_id: metadata.user_id,
-        plan: metadata.plan === "business" ? "business" : "pro",
-        status: "active",
-        provider: "squad",
-        provider_subscription_id: reference,
-        expires_at: newExpiry.toISOString(),
-        updated_at: new Date().toISOString(),
-      }, { onConflict: "user_id" });
     } else if (metadata?.plan === "pro") {
       await supabase
         .from("profiles")
@@ -407,6 +379,122 @@ Deno.serve(async (req) => {
           updated_at: new Date().toISOString(),
         }, { onConflict: "user_id" });
       }
+    } else if (metadata?.product === "wht") {
+      if (metadata.mode === "payg") {
+        const { data: existing } = await supabase
+          .from("wht_subscriptions")
+          .select("credits_balance")
+          .eq("business_id", metadata.business_id)
+          .maybeSingle();
+
+        if (existing) {
+          await supabase
+            .from("wht_subscriptions")
+            .update({ credits_balance: Number(existing.credits_balance || 0) + Number(metadata.credit_count || 0), updated_at: new Date().toISOString() })
+            .eq("business_id", metadata.business_id);
+        } else {
+          await supabase.from("wht_subscriptions").insert({
+            business_id: metadata.business_id,
+            plan: "payg",
+            credits_balance: Number(metadata.credit_count || 0),
+          });
+        }
+      } else if (metadata.mode === "subscription") {
+        await supabase.from("wht_subscriptions").upsert({
+          business_id: metadata.business_id,
+          plan: metadata.plan,
+          record_allowance: metadata.allowance,
+          records_used_this_period: 0,
+          period_reset_at: addDays(30),
+          status: "active",
+          billing_cycle: "monthly",
+          expires_at: addDays(30),
+          updated_at: new Date().toISOString(),
+        }, { onConflict: "business_id" });
+      }
+    } else if (metadata?.product === "contract_scanner") {
+      const { data: existing } = await supabase
+        .from("contract_scan_credits")
+        .select("credits_balance")
+        .eq("user_id", metadata.user_id)
+        .maybeSingle();
+
+      if (existing) {
+        await supabase
+          .from("contract_scan_credits")
+          .update({ credits_balance: Number(existing.credits_balance || 0) + Number(metadata.credit_count || 0), updated_at: new Date().toISOString() })
+          .eq("user_id", metadata.user_id);
+      } else {
+        await supabase.from("contract_scan_credits").insert({
+          user_id: metadata.user_id,
+          credits_balance: Number(metadata.credit_count || 0),
+        });
+      }
+    } else if (metadata?.product === "freelance_tax") {
+      const { data: existing } = await supabase
+        .from("freelance_subscriptions")
+        .select("expires_at")
+        .eq("user_id", metadata.user_id)
+        .maybeSingle();
+
+      const currentExpiry = existing?.expires_at ? new Date(existing.expires_at) : null;
+      const base = currentExpiry && currentExpiry > new Date() ? currentExpiry : new Date();
+      const newExpiry = new Date(base);
+      newExpiry.setDate(newExpiry.getDate() + cycleDays);
+
+      await supabase.from("freelance_subscriptions").upsert({
+        user_id: metadata.user_id,
+        plan: "pro",
+        status: "active",
+        billing_cycle: metadata.billing_cycle === "yearly" ? "yearly" : "monthly",
+        expires_at: newExpiry.toISOString(),
+        updated_at: new Date().toISOString(),
+      }, { onConflict: "user_id" });
+    } else if (metadata?.product === "pdf_toolkit") {
+      const { data: existing } = await supabase
+        .from("pdf_toolkit_subscriptions")
+        .select("expires_at")
+        .eq("user_id", metadata.user_id)
+        .maybeSingle();
+
+      const currentExpiry = existing?.expires_at ? new Date(existing.expires_at) : null;
+      const base = currentExpiry && currentExpiry > new Date() ? currentExpiry : new Date();
+      const newExpiry = new Date(base);
+      newExpiry.setDate(newExpiry.getDate() + cycleDays);
+
+      await supabase.from("pdf_toolkit_subscriptions").upsert({
+        user_id: metadata.user_id,
+        plan: "pro",
+        status: "active",
+        billing_cycle: metadata.billing_cycle === "yearly" ? "yearly" : "monthly",
+        expires_at: newExpiry.toISOString(),
+        updated_at: new Date().toISOString(),
+      }, { onConflict: "user_id" });
+    } else if (metadata?.product === "pdf_os") {
+      // PDF OS carries its own subscriptions table (pdf_os_subscriptions),
+      // separate from pdf_toolkit_subscriptions/profiles.plan, per the
+      // explicit "own subscription" product decision.
+      const { data: existing } = await supabase
+        .from("pdf_os_subscriptions")
+        .select("expires_at, status")
+        .eq("user_id", metadata.user_id)
+        .maybeSingle();
+
+      const currentExpiry = existing?.expires_at && existing.status === "active"
+        ? new Date(existing.expires_at) : null;
+      const base = currentExpiry && currentExpiry > new Date() ? currentExpiry : new Date();
+      const newExpiry = new Date(base);
+      newExpiry.setDate(newExpiry.getDate() + cycleDays);
+
+      await supabase.from("pdf_os_subscriptions").upsert({
+        user_id: metadata.user_id,
+        plan: metadata.plan === "business" ? "business" : "pro",
+        status: "active",
+        provider: "squad",
+        provider_subscription_id: reference,
+        expires_at: newExpiry.toISOString(),
+        updated_at: new Date().toISOString(),
+      }, { onConflict: "user_id" });
     }
 
     await supabase.from("payment_intents").delete().eq("order_reference", reference);

@@ -120,24 +120,28 @@
     return chain.then(function () { return results; });
   }
 
-  // REMOTE tools upload only the specific file(s) the call needs — not the
-  // whole session's files — and the edge function re-checks + decrements
-  // the AI action quota atomically before doing any model call.
+  // REMOTE tools send prepared document content (text layer, or rendered
+  // page images) as JSON — never a raw PDF file. Rendering happens here,
+  // client-side, via PdfOsExtractClient (same reasoning as the proven
+  // ocr-pdf-pages function: the edge runtime has no reliable canvas to
+  // render PDF pages with).
   function executeRemoteTool(toolDef, call, fileStore, access) {
-    return Promise.resolve(access.session.access_token).then(function (token) {
-      var file = fileStore[call.input.file_id];
-      var form = new FormData();
-      form.append('file', new Blob([file.arrayBuffer], { type: 'application/pdf' }), file.name);
-      form.append('input', JSON.stringify(call.input));
-
-      return fetch(FN_BASE + '/' + toolDef.edge_function, {
-        method: 'POST',
-        headers: { Authorization: 'Bearer ' + token },
-        body: form
-      }).then(function (res) {
-        if (res.status === 402) throw { code: 'QUOTA_EXCEEDED' };
-        if (!res.ok) throw { code: 'REMOTE_TOOL_FAILED', status: res.status };
-        return res.json();
+    var file = fileStore[call.input.file_id];
+    return window.PdfOsExtractClient.prepare(file).then(function (documentInput) {
+      return Promise.resolve(access.session.access_token).then(function (token) {
+        return fetch(FN_BASE + '/' + toolDef.edge_function, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
+          body: JSON.stringify({
+            document_input: documentInput,
+            question: call.input.question,
+            fields: call.input.fields
+          })
+        }).then(function (res) {
+          if (res.status === 402) throw { code: 'QUOTA_EXCEEDED' };
+          if (!res.ok) throw { code: 'REMOTE_TOOL_FAILED', status: res.status };
+          return res.json();
+        });
       });
     });
   }
