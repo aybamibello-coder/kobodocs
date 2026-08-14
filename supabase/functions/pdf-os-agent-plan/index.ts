@@ -1,14 +1,18 @@
 // PDF OS — planning step. Sees ONLY the file manifest (names/sizes/page
 // counts) and the running conversation — never file bytes. Decides the
-// next tool call(s) or returns a final answer. Uses Claude's native tool
-// calling; swap MODEL/endpoint here if a different provider is preferred,
-// nothing else in the agent loop needs to change.
+// next tool call(s) or returns a final answer.
+//
+// Uses Groq (OpenAI-compatible chat completions + tool calling) for
+// planning — fast/cheap, good fit for an orchestration step that runs on
+// every turn. Gemini stays reserved for the multimodal/document-heavy
+// work in _shared/pdf-os-model.ts (OCR, summarize, extract). No
+// Anthropic key in use anywhere in this project.
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-const ANTHROPIC_API_KEY = Deno.env.get('ANTHROPIC_API_KEY')!;
-const MODEL = 'claude-sonnet-4-6';
+const GROQ_API_KEY = Deno.env.get('GROQ_API_KEY')!;
+const GROQ_MODEL = 'llama-3.3-70b-versatile';
 
 const SYSTEM_PROMPT = `You are the PDF OS planning agent. You turn a natural-language
 request plus a manifest of the user's uploaded files into a sequence of tool
@@ -37,50 +41,54 @@ Deno.serve(async (req) => {
 
   const { conversation, file_manifest, tools } = await req.json();
 
-  const anthropicTools = tools.map((t: any) => ({
-    name: t.name,
-    description: t.description,
-    input_schema: t.input_schema
+  // OpenAI/Groq tool-calling shape: { type: "function", function: { name, description, parameters } }
+  const groqTools = tools.map((t: any) => ({
+    type: 'function',
+    function: { name: t.name, description: t.description, parameters: t.input_schema }
   }));
 
   const messages = buildMessages(conversation, file_manifest);
 
-  const res = await fetch('https://api.anthropic.com/v1/messages', {
+  const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'x-api-key': ANTHROPIC_API_KEY,
-      'anthropic-version': '2023-06-01'
+      Authorization: `Bearer ${GROQ_API_KEY}`
     },
     body: JSON.stringify({
-      model: MODEL,
-      max_tokens: 1024,
-      system: SYSTEM_PROMPT,
-      tools: anthropicTools,
-      messages
+      model: GROQ_MODEL,
+      messages: [{ role: 'system', content: SYSTEM_PROMPT }, ...messages],
+      tools: groqTools,
+      tool_choice: 'auto',
+      max_tokens: 1024
     })
   });
 
-  if (!res.ok) return jsonResponse({ error: 'PLAN_MODEL_CALL_FAILED', status: res.status }, 502);
+  if (!res.ok) return jsonResponse({ error: 'PLAN_MODEL_CALL_FAILED', status: res.status, detail: await res.text() }, 502);
   const data = await res.json();
 
-  const toolUseBlocks = (data.content || []).filter((b: any) => b.type === 'tool_use');
-  const textBlocks = (data.content || []).filter((b: any) => b.type === 'text');
+  const message = data.choices?.[0]?.message;
+  const toolCalls = message?.tool_calls || [];
 
-  if (toolUseBlocks.length === 0) {
-    return jsonResponse({ type: 'final', text: textBlocks.map((b: any) => b.text).join('\n') });
+  if (toolCalls.length === 0) {
+    return jsonResponse({ type: 'final', text: message?.content || '' });
   }
 
   return jsonResponse({
     type: 'tool_calls',
-    calls: toolUseBlocks.map((b: any) => ({ id: b.id, name: b.name, input: b.input })),
-    assistant_turn: { role: 'assistant', content: data.content }
+    calls: toolCalls.map((tc: any) => ({
+      id: tc.id,
+      name: tc.function.name,
+      input: safeParseJson(tc.function.arguments)
+    })),
+    // Stored verbatim so the next turn's assistant message satisfies
+    // Groq/OpenAI's requirement that every tool_call have a matching
+    // preceding assistant message with that tool_calls array.
+    assistant_turn: { role: 'assistant', content: message.content, tool_calls: message.tool_calls }
   });
 });
 
 function buildMessages(conversation: any[], fileManifest: any[]) {
-  // First user turn gets the file manifest attached as context; later
-  // turns carry tool_result blocks as Anthropic's format expects.
   const messages: any[] = [];
   conversation.forEach((turn, i) => {
     if (turn.role === 'user' && i === 0) {
@@ -89,19 +97,26 @@ function buildMessages(conversation: any[], fileManifest: any[]) {
         content: `Files available:\n${JSON.stringify(fileManifest, null, 2)}\n\nRequest: ${turn.content}`
       });
     } else if (turn.role === 'tool_results') {
-      messages.push({
-        role: 'user',
-        content: turn.content.map((r: any) => ({
-          type: 'tool_result',
-          tool_use_id: r.call_id,
+      // Groq/OpenAI expects one 'tool' role message per tool_call_id,
+      // not a single combined block like Anthropic's format.
+      turn.content.forEach((r: any) => {
+        messages.push({
+          role: 'tool',
+          tool_call_id: r.call_id,
           content: r.error ? `Error: ${r.error}` : JSON.stringify({ output_file: r.output_file?.name, output_text: r.output_text })
-        }))
+        });
       });
+    } else if (turn.role === 'assistant') {
+      messages.push(turn);
     } else {
       messages.push(turn);
     }
   });
   return messages;
+}
+
+function safeParseJson(raw: string) {
+  try { return JSON.parse(raw); } catch { return {}; }
 }
 
 function jsonResponse(body: unknown, status = 200) {
