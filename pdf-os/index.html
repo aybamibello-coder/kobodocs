@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-EN4PYGX7EW"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-EN4PYGX7EW');
+</script>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PDF OS — Tell it what you want done | KoboDocs</title>
+<meta name="description" content="Describe what you need done with your PDFs in plain language — PDF OS plans and runs the steps. Ask questions about a document, extract data, or chain multiple edits in one request.">
+<link rel="canonical" href="https://kobodocs.com.ng/pdf-os/">
+<link rel="stylesheet" href="/assets/style.css">
+<link rel="stylesheet" href="/assets/pdf-tools.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+</head>
+<body>
+<main class="pdf-tool-page" id="pdfOsRoot">
+  <h1>PDF OS</h1>
+  <p>Tell it what you want done with your documents. Free plan: 10 requests / 15 AI actions per month.</p>
+
+  <div id="pdfOsAuthGate" hidden>
+    <p>Sign in to use PDF OS.</p>
+    <a href="/account/" class="pdf-file-btn">Sign in</a>
+  </div>
+
+  <div id="pdfOsApp" hidden>
+    <div id="pdfOsDropzone" tabindex="0" class="pdf-dropzone">Drop files here or click to add</div>
+    <input type="file" id="pdfOsFileInput" multiple hidden accept=".pdf,.jpg,.jpeg,.png">
+    <ul id="pdfOsFileList"></ul>
+
+    <div id="pdfOsChatLog" aria-live="polite"></div>
+
+    <form id="pdfOsForm">
+      <textarea id="pdfOsInput" placeholder="e.g. Merge these, drop blank pages, then compress under 5MB" rows="2"></textarea>
+      <button type="submit" id="pdfOsSendBtn">Send</button>
+    </form>
+    <p id="pdfOsUsage" class="pdf-file-meta"></p>
+    <div id="pdfOsUpgradeRow">
+      <button type="button" id="pdfOsUpgradeProBtn" class="pdf-file-btn">Upgrade to Pro — ₦4,000/mo</button>
+    </div>
+  </div>
+</main>
+
+<script src="/assets/auth.js"></script>
+<script src="/pdf-os/guard.js"></script>
+<script src="/pdf-os/tool-contract.js"></script>
+<script src="/pdf-os/local-tools.js"></script>
+<script src="/pdf-os/extract-client.js"></script>
+<script src="/pdf-os/agent.js"></script>
+<script src="/pdf-os/app.js"></script>
+</body>
+</html>
