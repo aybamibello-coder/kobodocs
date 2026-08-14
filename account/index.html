@@ -326,6 +326,8 @@
       <p class="auth-note">Business Suite and Receivable Manager are billed separately, per business. PDF Toolkit Pro is billed to your account directly, not a business.</p>
       <div id="subscriptionsList"></div>
       <div id="pdfToolkitSubBlock"></div>
+      <div id="freelanceTaxSubBlock"></div>
+      <div id="contractScannerCreditsBlock"></div>
     </div>
   </div>
 
@@ -601,6 +603,8 @@
     }).join('');
 
     await loadPdfToolkitSubscription();
+    await loadFreelanceTaxSubscription();
+    await loadContractScannerCredits();
   }
 
   async function loadPdfToolkitSubscription() {
@@ -629,6 +633,61 @@
       <div class="sub-business-block">
         <div class="sub-business-name">PDF Toolkit</div>
         <div class="sub-row"><span>Pro</span>${statusHtml}</div>
+      </div>
+    `;
+  }
+
+  async function loadFreelanceTaxSubscription() {
+    const blockEl = document.getElementById('freelanceTaxSubBlock');
+    if (!blockEl) return;
+    const session = await window.KoboAuth.getSession();
+    if (!session) { blockEl.innerHTML = ''; return; }
+
+    const { data: sub } = await window.KoboAuth.supabase
+      .from('freelance_subscriptions')
+      .select('plan, status, expires_at, billing_cycle')
+      .eq('user_id', session.user.id)
+      .maybeSingle();
+
+    const active = !!sub && sub.status === 'active' && sub.expires_at && new Date(sub.expires_at) > new Date();
+    let statusHtml;
+    if (active) {
+      const cycleLabel = sub.billing_cycle === 'yearly' ? 'Yearly' : 'Monthly';
+      const expiryLabel = new Date(sub.expires_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+      statusHtml = `<span class="sub-active">${cycleLabel} Pro — active until ${expiryLabel}. Doesn't auto-renew — pay again after this date to keep access.</span>`;
+    } else {
+      statusHtml = `<span class="sub-none">No active plan — <a href="/freelancer-tax-invoicing/">upgrade to Pro</a> to unlock.</span>`;
+    }
+
+    blockEl.innerHTML = `
+      <div class="sub-business-block">
+        <div class="sub-business-name">Freelancer Tax &amp; Invoicing</div>
+        <div class="sub-row"><span>Pro</span>${statusHtml}</div>
+      </div>
+    `;
+  }
+
+  async function loadContractScannerCredits() {
+    const blockEl = document.getElementById('contractScannerCreditsBlock');
+    if (!blockEl) return;
+    const session = await window.KoboAuth.getSession();
+    if (!session) { blockEl.innerHTML = ''; return; }
+
+    const { data: credits } = await window.KoboAuth.supabase
+      .from('contract_scan_credits')
+      .select('credits_balance')
+      .eq('user_id', session.user.id)
+      .maybeSingle();
+
+    const balance = credits?.credits_balance ?? 0;
+    const statusHtml = balance > 0
+      ? `<span class="sub-active">${balance} scan credit${balance === 1 ? '' : 's'} remaining. Pay-as-you-go — no expiry, no auto-billing.</span>`
+      : `<span class="sub-none">No scan credits — <a href="/contract-scanner/">buy credits</a> to scan a contract.</span>`;
+
+    blockEl.innerHTML = `
+      <div class="sub-business-block">
+        <div class="sub-business-name">Contract Scanner</div>
+        <div class="sub-row"><span>Credits</span>${statusHtml}</div>
       </div>
     `;
   }
