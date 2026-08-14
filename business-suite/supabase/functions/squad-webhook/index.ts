@@ -119,6 +119,31 @@ Deno.serve(async (req) => {
           method: "squad",
         });
       }
+    } else if (metadata?.product === "pdf_os") {
+      // PDF OS carries its own subscriptions table (pdf_os_subscriptions),
+      // separate from profiles.plan (Toolkit/general) and businesses.suite_*
+      // (Business Suite) — per the explicit "own subscription" decision.
+      const { data: existing } = await supabase
+        .from("pdf_os_subscriptions")
+        .select("id, expires_at, status")
+        .eq("user_id", metadata.user_id)
+        .maybeSingle();
+
+      const currentExpiry = existing?.expires_at && existing.status === "active"
+        ? new Date(existing.expires_at) : null;
+      const base = currentExpiry && currentExpiry > new Date() ? currentExpiry : new Date();
+      const newExpiry = new Date(base);
+      newExpiry.setDate(newExpiry.getDate() + cycleDays);
+
+      await supabase.from("pdf_os_subscriptions").upsert({
+        user_id: metadata.user_id,
+        plan: metadata.plan === "business" ? "business" : "pro",
+        status: "active",
+        provider: "squad",
+        provider_subscription_id: reference,
+        expires_at: newExpiry.toISOString(),
+        updated_at: new Date().toISOString(),
+      }, { onConflict: "user_id" });
     } else if (metadata?.plan === "pro") {
       await supabase
         .from("profiles")
