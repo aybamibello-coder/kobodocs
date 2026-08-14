@@ -75,7 +75,7 @@
 
   // ---- Planning: server-side LLM call, sees manifest only, never file bytes ----
   function plan(conversation, fileManifest, access) {
-    return access.session.getSupabaseAuthToken().then(function (token) {
+    return Promise.resolve(access.session.access_token).then(function (token) {
       return fetch(FN_BASE + '/pdf-os-agent-plan', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
@@ -124,7 +124,7 @@
   // whole session's files — and the edge function re-checks + decrements
   // the AI action quota atomically before doing any model call.
   function executeRemoteTool(toolDef, call, fileStore, access) {
-    return access.session.getSupabaseAuthToken().then(function (token) {
+    return Promise.resolve(access.session.access_token).then(function (token) {
       var file = fileStore[call.input.file_id];
       var form = new FormData();
       form.append('file', new Blob([file.arrayBuffer], { type: 'application/pdf' }), file.name);

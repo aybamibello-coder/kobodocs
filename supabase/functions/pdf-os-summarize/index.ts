@@ -7,17 +7,16 @@ Deno.serve(async (req) => {
 
   const form = await req.formData();
   const file = form.get('file') as File;
-  const input = JSON.parse((form.get('input') as string) || '{}');
-  if (!file || !input.question) return jsonResponse({ error: 'BAD_REQUEST' }, 400);
+  if (!file) return jsonResponse({ error: 'BAD_REQUEST' }, 400);
 
   try {
     const documentText = await extractDocumentText(file);
-    const answer = await callModel({
-      system: 'Answer the question using only the document text provided. If the answer is not in the document, say so plainly.',
+    const summary = await callModel({
+      system: 'Summarize the document in 3-5 sentences, plain language, no preamble.',
       document: documentText,
-      question: input.question
+      instruction: 'Summarize this document.'
     });
-    return jsonResponse({ output_text: answer });
+    return jsonResponse({ output_text: summary });
   } catch (e) {
     return jsonResponse({ error: 'TOOL_FAILED', detail: String(e) }, 500);
   }

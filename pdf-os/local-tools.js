@@ -102,10 +102,45 @@ window.PdfOsLocalTools = {
     });
   },
 
-  convert_pdf_to_image: function () {
-    // Uses pdf.js render-to-canvas, same technique as pdf-to-jpg/pdf-to-jpg.js.
-    // Omitted here for brevity — same pattern as the tools above.
-    return Promise.reject({ code: 'NOT_IMPLEMENTED_IN_SKELETON' });
+  convert_pdf_to_image: function (input, fileStore) {
+    // Same render-to-canvas technique as pdf-to-jpg/pdf-to-jpg.js.
+    var RENDER_SCALE = 2.0;
+    var src = fileStore[input.file_id];
+    if (window.pdfjsLib) {
+      window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    }
+    return window.pdfjsLib.getDocument({ data: src.arrayBuffer.slice(0) }).promise.then(function (doc) {
+      var chain = Promise.resolve();
+      var outputs = [];
+      var pageCount = doc.numPages;
+      for (var i = 1; i <= pageCount; i++) {
+        (function (pageNum) {
+          chain = chain.then(function () {
+            return doc.getPage(pageNum).then(function (page) {
+              var viewport = page.getViewport({ scale: RENDER_SCALE });
+              var canvas = document.createElement('canvas');
+              canvas.width = viewport.width;
+              canvas.height = viewport.height;
+              var ctx = canvas.getContext('2d');
+              return page.render({ canvasContext: ctx, viewport: viewport }).promise.then(function () {
+                return new Promise(function (resolve) {
+                  canvas.toBlob(function (blob) {
+                    outputs.push({
+                      id: 'f_' + Math.random().toString(36).slice(2),
+                      name: stripExt(src.name) + '-page' + pageNum + '.jpg',
+                      size: blob.size,
+                      blob: blob
+                    });
+                    resolve();
+                  }, 'image/jpeg', 0.9);
+                });
+              });
+            });
+          });
+        })(i);
+      }
+      return chain.then(function () { return { output_file: outputs[0], output_files: outputs }; });
+    });
   }
 };
 
