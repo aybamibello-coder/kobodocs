@@ -164,3 +164,10 @@
 .pdf-wm-controls > div{ flex:1; min-width:160px; }
 .pdf-wm-controls label{ display:block; font-size:0.82rem; font-weight:500; margin-bottom:6px; }
 .pdf-wm-controls input[type="range"]{ width:100%; }
+
+.pdf-ocr-textarea{
+  width:100%; min-height:280px; padding:14px; margin:14px 0;
+  border:1px solid var(--line); border-radius:var(--radius);
+  font-family:'Space Mono', monospace; font-size:0.85rem; line-height:1.6;
+  background:var(--paper); resize:vertical;
+}

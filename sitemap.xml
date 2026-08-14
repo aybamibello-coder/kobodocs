@@ -43,6 +43,18 @@
     <priority>0.85</priority>
   </url>
   <url>
+    <loc>https://kobodocs.com.ng/word-to-pdf/</loc>
+    <lastmod>2026-08-13</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.85</priority>
+  </url>
+  <url>
+    <loc>https://kobodocs.com.ng/ocr-pdf/</loc>
+    <lastmod>2026-08-13</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
     <loc>https://kobodocs.com.ng/receivable-manager/</loc>
     <lastmod>2026-08-05</lastmod>
     <changefreq>weekly</changefreq>
