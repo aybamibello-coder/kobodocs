@@ -19,11 +19,36 @@
 <meta property="og:title" content="Watermark PDF Online — Add Text Watermark | KoboDocs Pro">
 <meta property="og:description" content="Stamp a text watermark across every page of a PDF. A KoboDocs PDF Toolkit Pro feature.">
 <meta property="og:url" content="https://kobodocs.com.ng/watermark-pdf/">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Watermark PDF Online — Add Text Watermark | KoboDocs Pro">
+<meta name="twitter:description" content="Stamp a text watermark across every page of a PDF, processed in your browser. First one free.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Work+Sans:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/assets/style.css">
 <link rel="stylesheet" href="/assets/pdf-tools.css">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {"@type":"ListItem","position":1,"name":"Home","item":"https://kobodocs.com.ng/"},
+    {"@type":"ListItem","position":2,"name":"Watermark PDF","item":"https://kobodocs.com.ng/watermark-pdf/"}
+  ]
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {"@type":"Question","name":"Is watermarking a PDF free on KoboDocs?","acceptedAnswer":{"@type":"Answer","text":"Your first watermark is free, no account required. After that, it's part of PDF Toolkit Pro (\u20a62,500/month or \u20a620,000/year), which also unlocks OCR — every other PDF Toolkit tool (Merge, Split, Compress, JPG/PNG to PDF, PDF to JPG, Word to PDF) stays free permanently."}},
+    {"@type":"Question","name":"Are my files uploaded to a server?","acceptedAnswer":{"@type":"Answer","text":"No. Watermarking happens entirely in your browser. Your PDF is never uploaded to KoboDocs servers for this operation."}},
+    {"@type":"Question","name":"Can I control the watermark's opacity and rotation?","acceptedAnswer":{"@type":"Answer","text":"Yes. You can set the watermark text, opacity, and rotation angle before applying it, and it's stamped diagonally across every page."}},
+    {"@type":"Question","name":"Does the watermark work on scanned PDFs?","acceptedAnswer":{"@type":"Answer","text":"Yes — the watermark is added as a text layer on top of every page regardless of what's underneath, including scanned or image-based PDFs."}}
+  ]
+}
+</script>
 </head>
 <body>
 
@@ -108,8 +133,8 @@
 
     <!-- ===== Not signed in / not Pro: upgrade card ===== -->
     <div id="pdfUpgradeCard" hidden>
-      <div class="pdf-honesty-note" style="margin-bottom:0;">
-        <strong>Watermark PDF is a Pro feature.</strong> Everything else in the PDF Toolkit (Merge, Split, JPG/PNG to PDF, Compress) stays free — this one needs an account so your subscription can be checked securely.
+      <div class="pdf-honesty-note" style="margin-bottom:0;" id="pdfUpgradeNote">
+        <strong>Watermark PDF is a Pro feature</strong> after your first free use. Everything else in the PDF Toolkit (Merge, Split, JPG/PNG to PDF, Compress) stays free.
       </div>
 
       <div class="pdf-pro-pricing">
@@ -127,9 +152,12 @@
       <p class="pdf-limits-note">No auto-billing — this doesn't renew automatically. You'll have Pro access until the date shown in your account, and can pay again any time to extend it. Payment handled securely by Squad.</p>
     </div>
 
-    <!-- ===== Pro: the actual tool ===== -->
+    <!-- ===== Pro (or free trial): the actual tool ===== -->
     <div id="pdfProTool" hidden>
 
+      <div class="pdf-honesty-note" id="pdfFreeTrialBanner" hidden>
+        This is your one free watermark — after this, it needs PDF Toolkit Pro. Everything else in the toolkit stays free.
+      </div>
       <div class="pdf-privacy-note">
         <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2 4 5v6c0 5 3.4 9.4 8 11 4.6-1.6 8-6 8-11V5l-8-3Z"/></svg>
         <span>Processed in your browser. Your file is not uploaded to our servers for this operation.</span>
@@ -263,6 +291,6 @@
 <script src="/assets/nav-auth.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
 <script src="/watermark-pdf/guard.js"></script>
-<script src="/watermark-pdf/watermark.js"></script>
+<script src="/watermark-pdf/watermark.js?v=2"></script>
 </body>
 </html>

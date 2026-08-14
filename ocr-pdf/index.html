@@ -19,11 +19,36 @@
 <meta property="og:title" content="OCR PDF — Extract Text from Scanned Documents | KoboDocs Pro">
 <meta property="og:description" content="Turn a scanned PDF into editable, searchable text. A KoboDocs PDF Toolkit Pro feature.">
 <meta property="og:url" content="https://kobodocs.com.ng/ocr-pdf/">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="OCR PDF — Extract Text from Scanned Documents | KoboDocs Pro">
+<meta name="twitter:description" content="Turn a scanned PDF into editable, searchable text. First scan free with an account.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Work+Sans:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/assets/style.css">
 <link rel="stylesheet" href="/assets/pdf-tools.css">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {"@type":"ListItem","position":1,"name":"Home","item":"https://kobodocs.com.ng/"},
+    {"@type":"ListItem","position":2,"name":"OCR PDF","item":"https://kobodocs.com.ng/ocr-pdf/"}
+  ]
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {"@type":"Question","name":"Is OCR on KoboDocs free?","acceptedAnswer":{"@type":"Answer","text":"Your first OCR scan is free — sign in (no payment needed) to claim it. After that, OCR is part of PDF Toolkit Pro (\u20a62,500/month or \u20a620,000/year), which also unlocks Watermark PDF — every other PDF Toolkit tool stays free permanently."}},
+    {"@type":"Question","name":"How accurate is the text extraction?","acceptedAnswer":{"@type":"Answer","text":"It uses an AI vision model to read each page image, which handles typed and clearly handwritten text well. Accuracy drops with very low-resolution scans, heavy handwriting, or unusual fonts."}},
+    {"@type":"Question","name":"How many pages can I scan at once?","acceptedAnswer":{"@type":"Answer","text":"Up to 10 pages per scan."}},
+    {"@type":"Question","name":"Is my document stored after scanning?","acceptedAnswer":{"@type":"Answer","text":"No. Pages are sent securely for text recognition and the image or extracted text isn't stored beyond processing your request."}}
+  ]
+}
+</script>
 </head>
 <body>
 
@@ -108,7 +133,7 @@
 
     <!-- ===== Not signed in / not Pro: upgrade card ===== -->
     <div id="pdfUpgradeCard" hidden>
-      <div class="pdf-honesty-note" style="margin-bottom:0;">
+      <div class="pdf-honesty-note" style="margin-bottom:0;" id="pdfUpgradeNote">
         <strong>OCR is a Pro feature</strong>, bundled with Watermark PDF in the same PDF Toolkit Pro subscription. Everything else in the PDF Toolkit stays free.
       </div>
 
@@ -124,12 +149,16 @@
           <button type="button" class="btn btn-primary" id="pdfUpgradeYearlyBtn">Upgrade to Pro</button>
         </div>
       </div>
-      <p class="pdf-limits-note">Already Pro from Watermark PDF? Just sign in — it's the same subscription.</p>
+      <p class="pdf-limits-note" id="pdfUpgradeSignInNote">Already Pro from Watermark PDF? Just sign in — it's the same subscription.</p>
+      <p class="pdf-limits-note" id="pdfSignInForTrialNote" hidden><a href="/account/?redirect=%2Focr-pdf%2F">Sign in</a> for one free OCR scan before you need Pro.</p>
     </div>
 
-    <!-- ===== Pro: the actual tool ===== -->
+    <!-- ===== Pro (or free trial): the actual tool ===== -->
     <div id="pdfProTool" hidden>
 
+      <div class="pdf-honesty-note" id="pdfFreeTrialBanner" hidden>
+        This is your one free OCR scan — after this, OCR needs PDF Toolkit Pro. Everything else in the toolkit stays free.
+      </div>
       <div class="pdf-honesty-note">
         Pages are rendered in your browser, then sent securely for text recognition (this step needs a server). We never store the image or extracted text beyond processing your request.
       </div>
@@ -250,6 +279,6 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
 <script src="/ocr-pdf/guard.js"></script>
-<script src="/ocr-pdf/ocr.js"></script>
+<script src="/ocr-pdf/ocr.js?v=2"></script>
 </body>
 </html>

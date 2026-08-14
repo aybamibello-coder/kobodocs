@@ -33,18 +33,32 @@
 
   var current = null;
   var currentObjectUrl = null;
+  var currentIsPro = false;
+
+  var FREE_USED_KEY = 'kobo_watermark_free_used';
+  var freeUsed = !!localStorage.getItem(FREE_USED_KEY);
 
   function track(name, params) { if (typeof gtag === 'function') { try { gtag('event', name, params || {}); } catch (e) {} } }
 
   // ---------- Access check ----------
   window.PdfToolkitGuard.checkAccess().then(function (access) {
     loadingState.hidden = true;
-    if (access.pro) {
+    currentIsPro = access.pro;
+
+    // Watermarking is entirely client-side (no server cost), so the free
+    // trial doesn't need an account -- same zero-friction pattern as
+    // guarantor-form's first-document-free. Unlike OCR, this is a UI-only
+    // gate; there's no marginal cost to protect against a cleared localStorage.
+    var trialAvailable = !access.pro && !freeUsed;
+
+    if (access.pro || trialAvailable) {
       proTool.hidden = false;
-      track('tool_view', { tool: 'watermark_pdf', pro: true });
+      document.getElementById('pdfFreeTrialBanner').hidden = access.pro;
+      track('tool_view', { tool: 'watermark_pdf', pro: access.pro, free_trial: trialAvailable });
       initTool();
     } else {
       upgradeCard.hidden = false;
+      document.getElementById('pdfUpgradeNote').innerHTML = '<strong>You\'ve used your free watermark.</strong> Upgrade to PDF Toolkit Pro for unlimited use — everything else in the toolkit stays free.';
       track('tool_view', { tool: 'watermark_pdf', pro: false });
       track('pricing_viewed', { tool: 'watermark_pdf' });
     }
@@ -189,6 +203,10 @@
         resultMeta.textContent = current.pageCount + (current.pageCount === 1 ? ' page' : ' pages') + ' · ' + formatBytes(blob.size);
         progressBox.hidden = true;
         resultBox.hidden = false;
+        if (!currentIsPro && !freeUsed) {
+          localStorage.setItem(FREE_USED_KEY, '1');
+          freeUsed = true;
+        }
         track('watermark_completed', { tool: 'watermark_pdf', page_count: current.pageCount, duration_ms: Date.now() - startedAt });
       }).catch(function () {
         progressBox.hidden = true;
@@ -205,6 +223,15 @@
       resultBox.hidden = true;
       progressBox.hidden = true;
       clearError();
+
+      // Trial was just consumed by the run that got them here -- if they're
+      // still not Pro, re-gate to the upgrade card instead of letting them
+      // keep watermarking for free.
+      if (!currentIsPro && freeUsed) {
+        proTool.hidden = true;
+        upgradeCard.hidden = false;
+        document.getElementById('pdfUpgradeNote').innerHTML = '<strong>You\'ve used your free watermark.</strong> Upgrade to PDF Toolkit Pro for unlimited use — everything else in the toolkit stays free.';
+      }
     });
 
     downloadBtn.addEventListener('click', function () { track('download_clicked', { tool: 'watermark_pdf' }); });

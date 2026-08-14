@@ -49,12 +49,25 @@
   window.PdfToolkitGuard.checkAccess().then(function (access) {
     loadingState.hidden = true;
     sessionRef = access.session;
-    if (access.pro) {
+
+    var trialAvailable = !access.pro && !!access.session && !(access.subscription && access.subscription.ocr_free_trial_used_at);
+
+    if (access.pro || trialAvailable) {
       proTool.hidden = false;
-      track('tool_view', { tool: 'ocr_pdf', pro: true });
+      document.getElementById('pdfFreeTrialBanner').hidden = access.pro; // only show the "one free scan" note when it's actually the trial
+      track('tool_view', { tool: 'ocr_pdf', pro: access.pro, free_trial: trialAvailable });
       initTool();
     } else {
       upgradeCard.hidden = false;
+      // Tailor the note: signed-in-but-trial-used vs never-signed-in.
+      if (access.session) {
+        document.getElementById('pdfUpgradeNote').innerHTML = '<strong>You\'ve used your free OCR scan.</strong> Upgrade to PDF Toolkit Pro for unlimited OCR — everything else in the toolkit stays free.';
+        document.getElementById('pdfSignInForTrialNote').hidden = true;
+        document.getElementById('pdfUpgradeSignInNote').hidden = true;
+      } else {
+        document.getElementById('pdfUpgradeSignInNote').hidden = true;
+        document.getElementById('pdfSignInForTrialNote').hidden = false;
+      }
       track('tool_view', { tool: 'ocr_pdf', pro: false });
       track('pricing_viewed', { tool: 'ocr_pdf' });
     }
