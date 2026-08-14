@@ -58,6 +58,9 @@
           <a href="/ocr-pdf/">OCR PDF (Pro)</a>
         </div>
       </div>
+      <div class="nav-item">
+        <a href="/pdf-os/" class="nav-category">PDF OS</a>
+      </div>
       
       <div class="nav-item">
         <span class="nav-category">Business Tools ▾</span>
@@ -358,6 +361,57 @@
           <li>Lower per-document overage rate</li>
         </ul>
         <a href="/esign/" class="btn btn-ghost">See plans</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="pdf-os-pricing" class="relocation-pricing-section">
+  <div class="wrap">
+    <div class="section-head">
+      <span class="eyebrow mono">AI-powered document assistant</span>
+      <h2>PDF OS</h2>
+      <p>Describe what you need done with your documents in plain language — merge, split, compress, chain multiple steps, or ask questions about a PDF. Separate from the free PDF Tools above.</p>
+    </div>
+    <div class="pricing-grid">
+      <div class="plan">
+        <span class="plan-tag">Free</span>
+        <h3>Try it out</h3>
+        <div class="plan-price">₦0</div>
+        <p class="plan-note">10 requests, 15 AI actions / month</p>
+        <ul class="plan-features">
+          <li>Natural-language requests</li>
+          <li>Merge, split, compress, convert, watermark</li>
+          <li>Ask, summarize &amp; extract data from documents</li>
+          <li>5 documents in your Vault, 30-day retention</li>
+        </ul>
+        <a href="/pdf-os/" class="btn btn-primary">Start free</a>
+      </div>
+      <div class="plan featured">
+        <span class="plan-tag">Most popular</span>
+        <h3>Pro</h3>
+        <div class="plan-price" id="pdfOsProPrice">₦4,000<span>/month</span></div>
+        <p class="plan-note">or ₦36,000/year — save 25%</p>
+        <ul class="plan-features">
+          <li>300 requests / month</li>
+          <li>Unlimited AI actions</li>
+          <li>Unlimited Vault, permanent storage</li>
+          <li>Up to 20 saved workflows</li>
+        </ul>
+        <a href="#" class="btn btn-primary" id="pdfOsProBtn">Upgrade to Pro</a>
+      </div>
+      <div class="plan">
+        <span class="plan-tag">Business</span>
+        <h3>Teams</h3>
+        <div class="plan-price" id="pdfOsBizPrice">₦12,000<span>/user/month</span></div>
+        <p class="plan-note">or ₦120,000/user/year — save 17%</p>
+        <ul class="plan-features">
+          <li>Unlimited requests &amp; AI actions</li>
+          <li>Unlimited saved workflows, shareable across team</li>
+          <li>API access (usage-based)</li>
+          <li>Priority support</li>
+        </ul>
+        <a href="#" class="btn btn-primary" id="pdfOsBizBtn">Upgrade to Business</a>
       </div>
     </div>
   </div>
@@ -883,6 +937,29 @@
   document.getElementById('agencyPassBtn').addEventListener('click', (e) => {
     e.preventDefault();
     startRelocationCheckout('agency', 'agencyPassBtn');
+  });
+
+  async function startPdfOsCheckout(plan, btnId) {
+    const btn = document.getElementById(btnId);
+    const originalText = btn.textContent;
+    btn.textContent = 'Redirecting…';
+    btn.style.pointerEvents = 'none';
+    try {
+      await KoboSubscribe.start('init-pdf-os-payment', { plan, billing_cycle: 'monthly' });
+    } catch {
+      btn.textContent = originalText;
+      btn.style.pointerEvents = 'auto';
+    }
+  }
+
+  document.getElementById('pdfOsProBtn').addEventListener('click', (e) => {
+    e.preventDefault();
+    startPdfOsCheckout('pro', 'pdfOsProBtn');
+  });
+
+  document.getElementById('pdfOsBizBtn').addEventListener('click', (e) => {
+    e.preventDefault();
+    startPdfOsCheckout('business', 'pdfOsBizBtn');
   });
 </script>
 <script src="/assets/tools-index.js" defer></script>

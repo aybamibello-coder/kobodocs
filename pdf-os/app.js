@@ -17,17 +17,12 @@
   var upgradeProBtn = document.getElementById('pdfOsUpgradeProBtn');
 
   upgradeProBtn.addEventListener('click', function () {
-    window.PdfOsGuard.checkAccess().then(function (access) {
-      if (!access.session) return;
-      fetch('https://vwmzulzluaxedkozxjfy.supabase.co/functions/v1/init-pdf-os-payment', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + access.session.access_token },
-        body: JSON.stringify({ plan: 'pro', billing_cycle: 'monthly' })
-      }).then(function (res) { return res.json(); }).then(function (data) {
-        if (data.authorization_url) window.location.href = data.authorization_url;
-      });
-    });
+    window.KoboSubscribe.start('init-pdf-os-payment', { plan: 'pro', billing_cycle: 'monthly' });
   });
+
+  if (window.KoboSubscribe && window.KoboSubscribe.resumePendingIfAny) {
+    window.KoboSubscribe.resumePendingIfAny();
+  }
 
   var files = [];
   var idSeq = 0;
