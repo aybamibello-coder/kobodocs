@@ -323,8 +323,9 @@
 
     <div class="auth-card branding-card auth-hidden" id="subscriptionsCard">
       <h4>Your subscriptions</h4>
-      <p class="auth-note">Business Suite and Receivable Manager are billed separately, per business.</p>
+      <p class="auth-note">Business Suite and Receivable Manager are billed separately, per business. PDF Toolkit Pro is billed to your account directly, not a business.</p>
       <div id="subscriptionsList"></div>
+      <div id="pdfToolkitSubBlock"></div>
     </div>
   </div>
 
@@ -551,10 +552,12 @@
 
     if (error) {
       listEl.innerHTML = `<p class="auth-msg error">Could not load subscriptions: ${error.message}</p>`;
+      await loadPdfToolkitSubscription();
       return;
     }
     if (!businesses || !businesses.length) {
       listEl.innerHTML = '<p class="auth-note">No businesses yet.</p>';
+      await loadPdfToolkitSubscription();
       return;
     }
 
@@ -596,6 +599,38 @@
         </div>
       `;
     }).join('');
+
+    await loadPdfToolkitSubscription();
+  }
+
+  async function loadPdfToolkitSubscription() {
+    const blockEl = document.getElementById('pdfToolkitSubBlock');
+    if (!blockEl) return;
+    const session = await window.KoboAuth.getSession();
+    if (!session) { blockEl.innerHTML = ''; return; }
+
+    const { data: sub } = await window.KoboAuth.supabase
+      .from('pdf_toolkit_subscriptions')
+      .select('plan, status, expires_at, billing_cycle')
+      .eq('user_id', session.user.id)
+      .maybeSingle();
+
+    const active = !!sub && sub.plan === 'pro' && sub.status === 'active' && sub.expires_at && new Date(sub.expires_at) > new Date();
+    let statusHtml;
+    if (active) {
+      const cycleLabel = sub.billing_cycle === 'yearly' ? 'Yearly' : 'Monthly';
+      const expiryLabel = new Date(sub.expires_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+      statusHtml = `<span class="sub-active">${cycleLabel} Pro — active until ${expiryLabel}. Unlocks Watermark PDF and OCR PDF. Doesn't auto-renew — pay again after this date to keep access.</span>`;
+    } else {
+      statusHtml = `<span class="sub-none">No active plan — <a href="/watermark-pdf/">upgrade to Pro</a> to unlock Watermark PDF and OCR PDF.</span>`;
+    }
+
+    blockEl.innerHTML = `
+      <div class="sub-business-block">
+        <div class="sub-business-name">PDF Toolkit</div>
+        <div class="sub-row"><span>Pro</span>${statusHtml}</div>
+      </div>
+    `;
   }
 
   async function resumeRedirectOrRefresh() {
