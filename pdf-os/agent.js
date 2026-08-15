@@ -40,7 +40,8 @@
     }).catch(onError);
   }
 
-  function stepLoop(stepIndex, conversation, fileManifest, fileStore, access, onStep, onDone, onError) {
+  function stepLoop(stepIndex, conversation, fileManifest, fileStore, access, onStep, onDone, onError, seenCallSignatures) {
+    seenCallSignatures = seenCallSignatures || {};
     if (stepIndex >= MAX_STEPS) {
       return onError({ code: 'MAX_STEPS_EXCEEDED' });
     }
@@ -51,6 +52,23 @@
       if (planResult.type === 'final') {
         return onDone({ text: planResult.text, fileStore: fileStore });
       }
+
+      // Defense-in-depth against a planning loop bug: if the model
+      // repeats the exact same tool+input it already ran successfully,
+      // don't trust it blindly and keep spending quota -- stop here with
+      // whatever's already been produced rather than looping to MAX_STEPS.
+      var repeated = planResult.calls.some(function (c) {
+        return seenCallSignatures[c.name + ':' + JSON.stringify(c.input)];
+      });
+      if (repeated) {
+        return onDone({
+          text: 'Done — produced ' + Object.keys(fileStore).length + ' file(s). (Stopped early: the plan repeated a step it had already completed.)',
+          fileStore: fileStore
+        });
+      }
+      planResult.calls.forEach(function (c) {
+        seenCallSignatures[c.name + ':' + JSON.stringify(c.input)] = true;
+      });
 
       onStep({ phase: 'executing', calls: planResult.calls });
 
@@ -68,7 +86,7 @@
           return { id: f.id, name: f.name, size: f.size, pages: f.pages };
         });
 
-        stepLoop(stepIndex + 1, conversation, updatedManifest, fileStore, access, onStep, onDone, onError);
+        stepLoop(stepIndex + 1, conversation, updatedManifest, fileStore, access, onStep, onDone, onError, seenCallSignatures);
       }).catch(onError);
     }).catch(onError);
   }
@@ -87,7 +105,11 @@
           })
         })
       }).then(function (res) {
-        if (!res.ok) throw { code: 'PLAN_FAILED', status: res.status };
+        if (!res.ok) {
+          return res.text().then(function (body) {
+            throw { code: 'PLAN_FAILED', status: res.status, message: 'PLAN_FAILED: ' + res.status + ' ' + body };
+          });
+        }
         return res.json();
       });
     });

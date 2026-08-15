@@ -21,7 +21,12 @@ Rules:
 - Prefer the minimum number of steps that accomplishes the request.
 - If the request is ambiguous (e.g. which files, what order), ask a clarifying
   question as a final answer instead of guessing.
-- Never claim an action succeeded before its tool result confirms it.`;
+- Never claim an action succeeded before its tool result confirms it.
+- CRITICAL: once a tool result shows "status":"success", that step is DONE.
+  Do not call that tool again on the same file for the same purpose. If the
+  request only needed one step and it succeeded, your next response MUST be
+  a final plain-language answer (no further tool_calls) telling the user
+  what was produced -- never repeat a successful tool call.`;
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -101,7 +106,7 @@ function buildMessages(conversation: any[], fileManifest: any[]) {
         messages.push({
           role: 'tool',
           tool_call_id: r.call_id,
-          content: r.error ? `Error: ${r.error}` : JSON.stringify({ output_file: r.output_file?.name, output_text: r.output_text })
+          content: r.error ? `Error: ${r.error}` : JSON.stringify({ status: 'success', output_file: r.output_file?.name, output_text: r.output_text })
         });
       });
     } else {
