@@ -193,14 +193,14 @@ const STATUS_LABEL = {
     if (!files || !files.length) { wrap.innerHTML = '<div class="empty-note">No files yet — upload something above to get started.</div>'; return false; }
 
     wrap.innerHTML = files.map(f => `
-      <div class="file-row">
+      <a href="/transcribe/app/view/?id=${f.id}" class="file-row" style="text-decoration:none; color:inherit; display:flex; cursor:pointer;">
         <div>
           <div class="file-name">${escapeHtml(f.filename)}</div>
           <div class="file-meta">${fmtBytes(f.file_size_bytes)}${f.duration_seconds ? ` · ${Math.round(f.duration_seconds / 60)} min` : ''} · ${new Date(f.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</div>
           ${f.status === 'failed' && f.error_message ? `<div class="file-meta" style="color:var(--stamp-red);">${escapeHtml(f.error_message)}</div>` : ''}
         </div>
         <span class="status-pill status-${f.status}">${STATUS_LABEL[f.status] || f.status}</span>
-      </div>
+      </a>
     `).join('');
 
     const pending = files.some(f => f.status === 'queued' || f.status === 'processing');
