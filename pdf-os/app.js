@@ -4,6 +4,18 @@
 (function () {
   'use strict';
 
+  // Global safety net: report ANY uncaught error or promise rejection on
+  // this page. Without this, a bug in a code path I haven't traced (e.g.
+  // outside PdfOsAgent's own promise chain) would fail completely
+  // silently with zero diagnostic trail.
+  window.addEventListener('error', function (e) {
+    reportClientError({ message: 'window.onerror: ' + e.message, stack: e.error && e.error.stack }, null);
+  });
+  window.addEventListener('unhandledrejection', function (e) {
+    var reason = e.reason;
+    reportClientError({ message: 'unhandledrejection: ' + (reason && (reason.message || reason.code) || String(reason)), stack: reason && reason.stack }, null);
+  });
+
   var authGate = document.getElementById('pdfOsAuthGate');
   var app = document.getElementById('pdfOsApp');
   var dropzone = document.getElementById('pdfOsDropzone');
@@ -205,16 +217,40 @@
         window.PdfOsGuard.checkAccess().then(renderUsage);
       },
       onError: function (err) {
-        var msg = err.code === 'QUOTA_EXCEEDED'
+        console.error('PDF OS error:', err);
+        var msg = err && err.code === 'QUOTA_EXCEEDED'
           ? 'You have used all your requests for this period. Upgrade to keep going.'
-          : err.code === 'AUTH_REQUIRED'
+          : err && err.code === 'AUTH_REQUIRED'
           ? 'Please sign in to continue.'
           : 'Something went wrong running that request. Please try again.';
         appendChat('agent', msg);
         sendBtn.disabled = false;
+        reportClientError(err, message);
       }
     });
   });
+
+  // Best-effort error telemetry -- there's no way to remotely inspect a
+  // user's mobile browser console, so this is the only way failures like
+  // this one become diagnosable instead of just "something went wrong".
+  function reportClientError(err, userMessage) {
+    try {
+      window.PdfOsGuard.checkAccess().then(function (access) {
+        if (!access.session) return;
+        return fetch('https://vwmzulzluaxedkozxjfy.supabase.co/functions/v1/pdf-os-client-error', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + access.session.access_token },
+          body: JSON.stringify({
+            message: (err && (err.message || err.code)) || String(err),
+            stack: err && err.stack,
+            userAgent: navigator.userAgent,
+            userRequest: userMessage,
+            fileCount: (typeof files !== 'undefined' && files) ? files.length : null
+          })
+        });
+      }).catch(function () {});
+    } catch (e) { /* diagnostic helper must never itself throw */ }
+  }
 
   function appendChat(role, text) {
     var div = document.createElement('div');
