@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-EN4PYGX7EW"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-EN4PYGX7EW');
+</script>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>How to Split a PDF Into Separate Pages or Files | KoboDocs Blog</title>
+<meta name="description" content="Pull specific pages out of a PDF, or split every page into its own file — free, no software needed. When you actually need this and how it works.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Work+Sans:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/style.css">
+<style>
+  .post-wrap{ max-width:680px; margin:0 auto; padding:20px 20px 80px; }
+  .post-meta{ font-size:0.8rem; opacity:0.55; margin-bottom:28px; }
+  .post-wrap h2{ font-size:1.2rem; margin:32px 0 10px; }
+  .post-wrap p, .post-wrap li{ font-size:0.98rem; line-height:1.75; opacity:0.85; }
+  .post-wrap ul{ margin:0 0 18px 20px; }
+  .post-note{
+    background:rgba(20,52,43,0.05); border-left:3px solid var(--ink-green-deep);
+    padding:14px 18px; font-size:0.9rem; margin:20px 0;
+  }
+  .post-cta{ margin-top:36px; padding:24px; background:var(--paper); border:1px solid var(--line); border-radius:8px; text-align:center; }
+  .key-takeaways{
+    background:var(--paper); border:1px solid var(--stamp-gold); border-radius:8px;
+    padding:18px 22px; margin:24px 0 32px;
+  }
+  .key-takeaways strong{ display:block; font-size:0.78rem; text-transform:uppercase; letter-spacing:0.05em; color:var(--stamp-gold); margin-bottom:10px; }
+  .key-takeaways ul{ margin:0 0 0 18px; }
+  .key-takeaways li{ font-size:0.92rem; line-height:1.6; opacity:0.85; margin-bottom:4px; }
+</style>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    { "@type": "Question", "name": "What does splitting a PDF actually do?", "acceptedAnswer": { "@type": "Answer", "text": "It either extracts specific pages from a longer document into their own file, or breaks every page of a PDF into separate individual files — two different outcomes depending on what you choose." } },
+    { "@type": "Question", "name": "Does splitting a PDF reduce its quality?", "acceptedAnswer": { "@type": "Answer", "text": "No — splitting extracts existing pages as they are, without recreating or reformatting them, so quality and formatting stay exactly as they were in the original document." } },
+    { "@type": "Question", "name": "Why would I need to split a scanned document?", "acceptedAnswer": { "@type": "Answer", "text": "If several distinct documents were scanned together as one file — for example, multiple ID documents or certificates — splitting separates them back into individual files." } },
+    { "@type": "Question", "name": "Do I need special software to split a PDF?", "acceptedAnswer": { "@type": "Answer", "text": "No — a browser-based splitter handles this without installing anything or creating an account." } },
+    { "@type": "Question", "name": "Can I extract just a few pages from a long PDF?", "acceptedAnswer": { "@type": "Answer", "text": "Yes — most split tools let you specify exactly which pages to extract, so you can pull out just the section you need rather than splitting the entire document." } }
+  ]
+}
+</script>
+</head>
+<body>
+
+<header>
+  <nav class="nav">
+    <a href="/" class="logo">
+      <svg class="mark" viewBox="0 0 32 32" fill="none">
+        <circle cx="16" cy="16" r="14" stroke="#C79A3C" stroke-width="2.5"/>
+        <circle cx="16" cy="16" r="8" stroke="#C79A3C" stroke-width="1.5"/>
+      </svg>
+      KoboDocs
+    </a>
+    <button class="search-btn" id="searchBtn" aria-label="Search tools">
+      <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    </button>
+    <button class="menu-btn" aria-label="Toggle menu" id="menuBtn"><span></span><span></span><span></span></button>
+    <div class="nav-links" id="navLinks">
+      <a href="/" class="mobile-only-link">Home</a>
+      
+      <div class="nav-item">
+        <span class="nav-category">Business Tools ▾</span>
+        <div class="dropdown">
+          <a href="/invoice/">Invoice Generator</a>
+          <a href="/receipt/">Receipt Generator</a>
+          <a href="/quotation/">Quotation Generator</a>
+          <a href="/payslip/">Payslip / Salary Slip</a>
+          <a href="/budget/">Budget Planner</a>
+          <a href="/loan/">Loan Schedule</a>
+          <a href="/qr-code/">QR Code Generator</a>
+          <a href="/salary-calculator/">Take-Home Pay Calculator</a>
+          <a href="/hr-letters/">HR Letter Generator</a>
+          <a href="/waybill/">Waybill / Delivery Note</a>
+          <a href="/freelancer-contract/">Freelancer Contract</a>
+          <a href="/rent-agreement/">Rent / Tenancy Agreement</a>
+          <div class="dropdown-divider"></div>
+          <a href="/business-suite/">Business Suite (Pro)</a>
+          <a href="/school-report-card/">School Report Card (Pro)</a>
+        </div>
+      </div>
+      <a href="/ajo/">Ajo &amp; Esusu</a>
+      <div class="nav-item">
+        <span class="nav-category">Weddings &amp; Events ▾</span>
+        <div class="dropdown">
+          <a href="/events/">Events Suite (Wedding/Naming/Funeral)</a>
+          <a href="/bride-price-list/">Bride Price / Wedding List</a>
+          <a href="/wedding-budget-planner/">Wedding/Party Budget Planner</a>
+        </div>
+      </div>
+      <div class="nav-item">
+        <span class="nav-category">Legal &amp; Personal ▾</span>
+        <div class="dropdown">
+          <a href="/will-generator/">Will &amp; Testament</a>
+          <a href="/power-of-attorney/">Power of Attorney</a>
+          <a href="/affidavit-generator/">Affidavit Generator</a>
+          <a href="/guarantor-form/">Guarantor's Form</a>
+          <a href="/visa-cover-letter/">Visa Cover Letter</a>
+          <a href="/land-sale-agreement/">Land Sale / Deed of Assignment</a>
+          <a href="/nysc-documents/">NYSC Documents</a>
+          <a href="/siwes-logbook-report/">SIWES Logbook &amp; Report</a>
+        </div>
+      </div>
+      <div class="nav-item">
+        <span class="nav-category">Relocation ▾</span>
+        <div class="dropdown">
+          <a href="/relocation/">Relocation Overview</a>
+          <a href="/relocation/japa-calculator/">Japa Cost Calculator</a>
+          <a href="/relocation/proof-of-funds/">Proof of Funds Calculator</a>
+          <a href="/relocation/cost-of-living/">Cost of Living Calculator</a>
+          <a href="/visa-cover-letter/">Visa Cover Letter Generator</a>
+          <div class="dropdown-divider"></div>
+          <a href="/cac-calculator/">CAC Registration Cost</a>
+          <a href="/cac-registration-assistant/">CAC Registration Assistant</a>
+          <a href="/post-incorporation-pack/">Post-Incorporation Pack</a>
+          <a href="/import-duty-calculator/">Import Duty Calculator</a>
+        </div>
+      </div>
+      <a href="/pricing/">Pricing</a>
+      <a href="/blog/" class="mobile-only-link">Blog</a>
+      <a href="/about/" class="mobile-only-link">About</a>
+      <a href="/account/" id="navAccountLink">Sign in</a>
+      <a href="/invoice/" class="nav-cta">Start free</a>
+    </div>
+  </nav>
+</header>
+
+<div class="search-overlay" id="searchOverlay">
+  <div class="search-panel">
+    <div class="search-panel-head">
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input type="text" id="searchInput" placeholder="Search tools — e.g. invoice, will, visa, siwes..." autocomplete="off">
+      <button class="search-close" id="searchClose" aria-label="Close search">&times;</button>
+    </div>
+    <div class="search-results" id="searchResults"></div>
+    <div class="search-hint">↑↓ to navigate · Enter to open · Esc to close</div>
+  </div>
+</div>
+
+
+
+
+<section class="page-header">
+  <div class="wrap">
+    <a href="/blog/">&larr; Blog</a>
+    <h1>How to Split a PDF Into Separate Pages</h1>
+  </div>
+</section>
+
+<div class="post-wrap">
+  <div class="post-meta">August 2026 · 5 min read</div>
+
+  <p>A 40-page PDF where you only need pages 3-5 for a form, or a scanned bundle of documents that actually needs to become five separate files — splitting a PDF comes up more often than people expect, usually right when there's no obvious way to do it without proper software.</p>
+
+  <div class="key-takeaways">
+    <strong>Key takeaways</strong>
+    <ul>
+      <li>Splitting extracts specific pages from a PDF, or breaks every page into its own separate file — two different outcomes depending on what you need.</li>
+      <li>Common uses: pulling one form or section out of a longer document, separating a scanned bundle back into individual documents.</li>
+      <li>Splitting doesn't lose any quality or formatting — you're extracting existing pages, not recreating them.</li>
+      <li>A browser-based splitter handles this without installing anything.</li>
+    </ul>
+  </div>
+
+  <h2>The two things "splitting" can mean</h2>
+  <ul>
+    <li><strong>Extracting specific pages</strong> — pulling out, say, pages 3 through 5 of a longer document, discarding the rest, and keeping just that section as its own file.</li>
+    <li><strong>Splitting every page into its own file</strong> — turning a 10-page PDF into ten separate single-page files, useful when a scanned bundle actually contains several distinct documents that need to be separated.</li>
+  </ul>
+  <p>Knowing which one you actually need before starting saves time — most tools handle both, but they're genuinely different operations with different results.</p>
+
+  <h2>When this actually comes up</h2>
+  <ul>
+    <li><strong>A long contract or report</strong> where only one section is relevant to what you're sending someone.</li>
+    <li><strong>A scanned bundle of multiple documents</strong> — say, several ID documents or certificates scanned together as one file — that needs to become separate files again.</li>
+    <li><strong>A form buried inside a larger document</strong> that needs to be extracted and submitted on its own.</li>
+    <li><strong>Reducing a large file for a specific purpose</strong> — sending only the relevant pages instead of the entire original document.</li>
+  </ul>
+
+  <h2>No quality loss — you're extracting, not recreating</h2>
+  <p>Splitting doesn't touch the content of the pages themselves — you're pulling existing pages out intact, not converting or recreating them, so formatting, text, and image quality all stay exactly as they were in the original.</p>
+
+  <h2>Splitting without installing anything</h2>
+  <p>For an occasional split, a browser-based tool is faster than installing desktop PDF software. KoboDocs' <a href="/split-pdf/">Split PDF tool</a> handles both extracting specific pages and splitting every page into its own file — free, no account needed.</p>
+
+
+  <h2>Frequently asked questions</h2>
+  <p><strong>What does splitting a PDF actually do?</strong><br>
+  It either extracts specific pages from a longer document into their own file, or breaks every page of a PDF into separate individual files — two different outcomes depending on what you choose.</p>
+  <p><strong>Does splitting a PDF reduce its quality?</strong><br>
+  No — splitting extracts existing pages as they are, without recreating or reformatting them, so quality and formatting stay exactly as they were in the original document.</p>
+  <p><strong>Why would I need to split a scanned document?</strong><br>
+  If several distinct documents were scanned together as one file — for example, multiple ID documents or certificates — splitting separates them back into individual files.</p>
+  <p><strong>Do I need special software to split a PDF?</strong><br>
+  No — a browser-based splitter handles this without installing anything or creating an account.</p>
+  <p><strong>Can I extract just a few pages from a long PDF?</strong><br>
+  Yes — most split tools let you specify exactly which pages to extract, so you can pull out just the section you need rather than splitting the entire document.</p>
+
+  <div class="post-cta">
+    <p style="margin-bottom:14px;">Extract pages or split a PDF apart in seconds — free, no account needed.</p>
+    <a href="/split-pdf/" class="btn btn-primary">Split a PDF free</a>
+  </div>
+
+  <p style="font-size:0.8rem; opacity:0.55; margin-top:24px;">This article is for general guidance and reflects current common practice — it isn't legal or tax advice. Confirm your specific situation with a qualified professional where it matters.</p>
+</div>
+
+<footer>
+  <div class="wrap">
+    <div class="footer-top">
+      <div>
+        <div class="footer-logo">KoboDocs</div>
+        <p class="footer-note">Every business document, stamped and sent — built for Nigeria, one Naira at a time.</p>
+      </div>
+      <div class="footer-links">
+        <div>
+          <strong>Business tools</strong>
+          <a href="/invoice/">Invoice</a>
+          <a href="/receipt/">Receipt</a>
+          <a href="/payslip/">Payslip</a>
+          <a href="/ajo/">Ajo &amp; Esusu</a>
+          <a href="/qr-code/">QR Code</a>
+        </div>
+        <div>
+          <strong>Relocation</strong>
+          <a href="/relocation/">Relocation home</a>
+          <a href="/relocation/japa-calculator/">Japa Cost Calculator</a>
+          <a href="/relocation/proof-of-funds/">Proof of Funds</a>
+          <a href="/relocation/cost-of-living/">Cost of Living</a>
+        </div>
+        <div>
+          <strong>Company</strong>
+          <a href="/pricing/">Pricing</a>
+          <a href="/about/">About</a>
+          <a href="/contact/">Contact</a>
+          <a href="/blog/">Blog</a>
+        </div>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2026 KoboDocs. Not a financial institution — we never hold or move your money.</span>
+      <span><a href="/privacy/">Privacy</a> · <a href="/terms/">Terms</a> · Made in Lagos</span>
+    </div>
+  </div>
+</footer>
+
+<script src="/assets/app.js" defer></script>
+<script type="module" src="/assets/auth.js"></script>
+<script src="/assets/nav-auth.js" defer></script>
+
+<script src="/assets/tools-index.js" defer></script>
+<script src="/assets/search.js" defer></script>
+</body>
+</html>

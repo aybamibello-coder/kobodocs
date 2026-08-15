@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-EN4PYGX7EW"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-EN4PYGX7EW');
+</script>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>How to Transcribe Audio or Video to Text (Meetings, Lectures &amp; Interviews) | KoboDocs Blog</title>
+<meta name="description" content="Turn recordings into accurate text — for meeting notes, lecture transcripts, interviews, or content repurposing. What to expect from AI transcription.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Work+Sans:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/style.css">
+<style>
+  .post-wrap{ max-width:680px; margin:0 auto; padding:20px 20px 80px; }
+  .post-meta{ font-size:0.8rem; opacity:0.55; margin-bottom:28px; }
+  .post-wrap h2{ font-size:1.2rem; margin:32px 0 10px; }
+  .post-wrap p, .post-wrap li{ font-size:0.98rem; line-height:1.75; opacity:0.85; }
+  .post-wrap ul{ margin:0 0 18px 20px; }
+  .post-note{
+    background:rgba(20,52,43,0.05); border-left:3px solid var(--ink-green-deep);
+    padding:14px 18px; font-size:0.9rem; margin:20px 0;
+  }
+  .post-cta{ margin-top:36px; padding:24px; background:var(--paper); border:1px solid var(--line); border-radius:8px; text-align:center; }
+  .key-takeaways{
+    background:var(--paper); border:1px solid var(--stamp-gold); border-radius:8px;
+    padding:18px 22px; margin:24px 0 32px;
+  }
+  .key-takeaways strong{ display:block; font-size:0.78rem; text-transform:uppercase; letter-spacing:0.05em; color:var(--stamp-gold); margin-bottom:10px; }
+  .key-takeaways ul{ margin:0 0 0 18px; }
+  .key-takeaways li{ font-size:0.92rem; line-height:1.6; opacity:0.85; margin-bottom:4px; }
+</style>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    { "@type": "Question", "name": "What's the difference between a transcript and a summary?", "acceptedAnswer": { "@type": "Answer", "text": "A transcript is the full written text of everything said in a recording. A summary condenses that down to key points and decisions, useful when you want the outcome without reading the entire word-for-word record." } },
+    { "@type": "Question", "name": "Does background noise affect transcription accuracy?", "acceptedAnswer": { "@type": "Answer", "text": "Yes, significantly — clear, single-speaker audio with minimal background noise produces noticeably more accurate transcripts than recordings with cross-talk or heavy background noise." } },
+    { "@type": "Question", "name": "Can a transcript be translated into another language?", "acceptedAnswer": { "@type": "Answer", "text": "Yes — once audio is transcribed, the text can typically be translated into other languages, extending the same content to a wider audience." } },
+    { "@type": "Question", "name": "Why transcribe a meeting instead of just recording it?", "acceptedAnswer": { "@type": "Answer", "text": "A transcript is searchable and readable in a way raw audio isn't — finding a specific point in a long recording takes seconds with a transcript, versus scrubbing through playback." } },
+    { "@type": "Question", "name": "Can transcription be used to create video subtitles?", "acceptedAnswer": { "@type": "Answer", "text": "Yes — a transcript can be converted into subtitle format, making video content accessible to viewers watching without sound or who need text support." } }
+  ]
+}
+</script>
+</head>
+<body>
+
+<header>
+  <nav class="nav">
+    <a href="/" class="logo">
+      <svg class="mark" viewBox="0 0 32 32" fill="none">
+        <circle cx="16" cy="16" r="14" stroke="#C79A3C" stroke-width="2.5"/>
+        <circle cx="16" cy="16" r="8" stroke="#C79A3C" stroke-width="1.5"/>
+      </svg>
+      KoboDocs
+    </a>
+    <button class="search-btn" id="searchBtn" aria-label="Search tools">
+      <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    </button>
+    <button class="menu-btn" aria-label="Toggle menu" id="menuBtn"><span></span><span></span><span></span></button>
+    <div class="nav-links" id="navLinks">
+      <a href="/" class="mobile-only-link">Home</a>
+      
+      <div class="nav-item">
+        <span class="nav-category">Business Tools ▾</span>
+        <div class="dropdown">
+          <a href="/invoice/">Invoice Generator</a>
+          <a href="/receipt/">Receipt Generator</a>
+          <a href="/quotation/">Quotation Generator</a>
+          <a href="/payslip/">Payslip / Salary Slip</a>
+          <a href="/budget/">Budget Planner</a>
+          <a href="/loan/">Loan Schedule</a>
+          <a href="/qr-code/">QR Code Generator</a>
+          <a href="/salary-calculator/">Take-Home Pay Calculator</a>
+          <a href="/hr-letters/">HR Letter Generator</a>
+          <a href="/waybill/">Waybill / Delivery Note</a>
+          <a href="/freelancer-contract/">Freelancer Contract</a>
+          <a href="/rent-agreement/">Rent / Tenancy Agreement</a>
+          <div class="dropdown-divider"></div>
+          <a href="/business-suite/">Business Suite (Pro)</a>
+          <a href="/school-report-card/">School Report Card (Pro)</a>
+        </div>
+      </div>
+      <a href="/ajo/">Ajo &amp; Esusu</a>
+      <div class="nav-item">
+        <span class="nav-category">Weddings &amp; Events ▾</span>
+        <div class="dropdown">
+          <a href="/events/">Events Suite (Wedding/Naming/Funeral)</a>
+          <a href="/bride-price-list/">Bride Price / Wedding List</a>
+          <a href="/wedding-budget-planner/">Wedding/Party Budget Planner</a>
+        </div>
+      </div>
+      <div class="nav-item">
+        <span class="nav-category">Legal &amp; Personal ▾</span>
+        <div class="dropdown">
+          <a href="/will-generator/">Will &amp; Testament</a>
+          <a href="/power-of-attorney/">Power of Attorney</a>
+          <a href="/affidavit-generator/">Affidavit Generator</a>
+          <a href="/guarantor-form/">Guarantor's Form</a>
+          <a href="/visa-cover-letter/">Visa Cover Letter</a>
+          <a href="/land-sale-agreement/">Land Sale / Deed of Assignment</a>
+          <a href="/nysc-documents/">NYSC Documents</a>
+          <a href="/siwes-logbook-report/">SIWES Logbook &amp; Report</a>
+        </div>
+      </div>
+      <div class="nav-item">
+        <span class="nav-category">Relocation ▾</span>
+        <div class="dropdown">
+          <a href="/relocation/">Relocation Overview</a>
+          <a href="/relocation/japa-calculator/">Japa Cost Calculator</a>
+          <a href="/relocation/proof-of-funds/">Proof of Funds Calculator</a>
+          <a href="/relocation/cost-of-living/">Cost of Living Calculator</a>
+          <a href="/visa-cover-letter/">Visa Cover Letter Generator</a>
+          <div class="dropdown-divider"></div>
+          <a href="/cac-calculator/">CAC Registration Cost</a>
+          <a href="/cac-registration-assistant/">CAC Registration Assistant</a>
+          <a href="/post-incorporation-pack/">Post-Incorporation Pack</a>
+          <a href="/import-duty-calculator/">Import Duty Calculator</a>
+        </div>
+      </div>
+      <a href="/pricing/">Pricing</a>
+      <a href="/blog/" class="mobile-only-link">Blog</a>
+      <a href="/about/" class="mobile-only-link">About</a>
+      <a href="/account/" id="navAccountLink">Sign in</a>
+      <a href="/invoice/" class="nav-cta">Start free</a>
+    </div>
+  </nav>
+</header>
+
+<div class="search-overlay" id="searchOverlay">
+  <div class="search-panel">
+    <div class="search-panel-head">
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input type="text" id="searchInput" placeholder="Search tools — e.g. invoice, will, visa, siwes..." autocomplete="off">
+      <button class="search-close" id="searchClose" aria-label="Close search">&times;</button>
+    </div>
+    <div class="search-results" id="searchResults"></div>
+    <div class="search-hint">↑↓ to navigate · Enter to open · Esc to close</div>
+  </div>
+</div>
+
+
+
+
+<section class="page-header">
+  <div class="wrap">
+    <a href="/blog/">&larr; Blog</a>
+    <h1>How to Transcribe Audio or Video to Text</h1>
+  </div>
+</section>
+
+<div class="post-wrap">
+  <div class="post-meta">August 2026 · 6 min read</div>
+
+  <p>Typing up a meeting from memory, replaying a lecture recording to catch a missed point, or manually transcribing an interview word by word — all of this used to take roughly as long as the original recording, sometimes longer. AI transcription has changed that math considerably, turning an hour of audio into readable text in a fraction of the time.</p>
+
+  <div class="key-takeaways">
+    <strong>Key takeaways</strong>
+    <ul>
+      <li>Transcription converts spoken audio or video into written text — the foundation for meeting notes, subtitles, or searchable records.</li>
+      <li>Summaries go a step further, condensing a long recording into key points without needing to read the full transcript.</li>
+      <li>Clear audio produces significantly more accurate transcripts than recordings with background noise or overlapping speakers.</li>
+      <li>Translation and subtitle generation extend the same transcript into other languages or formats.</li>
+      <li>Transcripts are searchable in a way audio never is — finding a specific point in a two-hour recording takes seconds instead of scrubbing through playback.</li>
+    </ul>
+  </div>
+
+  <h2>Common uses</h2>
+  <ul>
+    <li><strong>Meeting notes</strong> — a full, accurate written record of what was discussed and decided, without someone manually taking notes in real time and inevitably missing details.</li>
+    <li><strong>Lecture and class recordings</strong> — turning a recorded lecture into text that can be reviewed, searched, or studied from directly, rather than replayed in full.</li>
+    <li><strong>Interviews</strong> — for research, journalism, or hiring, a written transcript is far easier to reference and quote from than scrubbing back through audio.</li>
+    <li><strong>Content repurposing</strong> — turning a recorded video or podcast into a written article, social post, or blog content.</li>
+    <li><strong>Subtitles</strong> — making video content accessible and easier to follow, especially for audiences watching without sound.</li>
+  </ul>
+
+  <h2>What makes a transcript more or less accurate</h2>
+  <p>Audio quality matters more than almost anything else — clear, single-speaker audio with minimal background noise produces noticeably more accurate transcripts than recordings with cross-talk, heavy accents mixed with poor audio, or significant background noise. For anything important, using a decent microphone or a quiet recording environment upfront pays off far more than trying to fix a bad transcript afterward.</p>
+
+  <h2>Summaries: beyond the raw transcript</h2>
+  <p>A full transcript of a two-hour meeting is useful, but not always what you actually need — a summary condenses the recording down to key points and decisions, useful when you want the outcome without reading every word that was said to get there. Having both available covers different situations: the summary for a quick catch-up, the full transcript when exact wording matters.</p>
+
+  <h2>Translation and subtitles</h2>
+  <p>Once a recording is transcribed, the same text can typically be translated into other languages or converted into subtitle format for video — useful for reaching a wider audience or making video content accessible to viewers who'd otherwise miss spoken content entirely.</p>
+
+  <h2>Why a searchable transcript beats scrubbing through audio</h2>
+  <p>Finding one specific moment in a long recording by scrubbing through playback is slow and imprecise. A transcript is searchable text — finding exactly where a topic was discussed takes seconds, which matters considerably for anyone regularly working with recorded meetings, interviews, or lectures.</p>
+
+  <h2>Getting started</h2>
+  <p>KoboDocs' <a href="/transcribe/">Transcription Suite</a> handles transcription, AI summaries, translation, and subtitles, with a free tier to get started and Naira-priced paid tiers for heavier use.</p>
+
+
+  <h2>Frequently asked questions</h2>
+  <p><strong>What's the difference between a transcript and a summary?</strong><br>
+  A transcript is the full written text of everything said in a recording. A summary condenses that down to key points and decisions, useful when you want the outcome without reading the entire word-for-word record.</p>
+  <p><strong>Does background noise affect transcription accuracy?</strong><br>
+  Yes, significantly — clear, single-speaker audio with minimal background noise produces noticeably more accurate transcripts than recordings with cross-talk or heavy background noise.</p>
+  <p><strong>Can a transcript be translated into another language?</strong><br>
+  Yes — once audio is transcribed, the text can typically be translated into other languages, extending the same content to a wider audience.</p>
+  <p><strong>Why transcribe a meeting instead of just recording it?</strong><br>
+  A transcript is searchable and readable in a way raw audio isn't — finding a specific point in a long recording takes seconds with a transcript, versus scrubbing through playback.</p>
+  <p><strong>Can transcription be used to create video subtitles?</strong><br>
+  Yes — a transcript can be converted into subtitle format, making video content accessible to viewers watching without sound or who need text support.</p>
+
+  <div class="post-cta">
+    <p style="margin-bottom:14px;">Transcribe, summarize, and translate your recordings — free tier available.</p>
+    <a href="/transcribe/" class="btn btn-primary">Try transcription free</a>
+  </div>
+
+  <p style="font-size:0.8rem; opacity:0.55; margin-top:24px;">This article is for general guidance and reflects current common practice — it isn't legal or tax advice. Confirm your specific situation with a qualified professional where it matters.</p>
+</div>
+
+<footer>
+  <div class="wrap">
+    <div class="footer-top">
+      <div>
+        <div class="footer-logo">KoboDocs</div>
+        <p class="footer-note">Every business document, stamped and sent — built for Nigeria, one Naira at a time.</p>
+      </div>
+      <div class="footer-links">
+        <div>
+          <strong>Business tools</strong>
+          <a href="/invoice/">Invoice</a>
+          <a href="/receipt/">Receipt</a>
+          <a href="/payslip/">Payslip</a>
+          <a href="/ajo/">Ajo &amp; Esusu</a>
+          <a href="/qr-code/">QR Code</a>
+        </div>
+        <div>
+          <strong>Relocation</strong>
+          <a href="/relocation/">Relocation home</a>
+          <a href="/relocation/japa-calculator/">Japa Cost Calculator</a>
+          <a href="/relocation/proof-of-funds/">Proof of Funds</a>
+          <a href="/relocation/cost-of-living/">Cost of Living</a>
+        </div>
+        <div>
+          <strong>Company</strong>
+          <a href="/pricing/">Pricing</a>
+          <a href="/about/">About</a>
+          <a href="/contact/">Contact</a>
+          <a href="/blog/">Blog</a>
+        </div>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2026 KoboDocs. Not a financial institution — we never hold or move your money.</span>
+      <span><a href="/privacy/">Privacy</a> · <a href="/terms/">Terms</a> · Made in Lagos</span>
+    </div>
+  </div>
+</footer>
+
+<script src="/assets/app.js" defer></script>
+<script type="module" src="/assets/auth.js"></script>
+<script src="/assets/nav-auth.js" defer></script>
+
+<script src="/assets/tools-index.js" defer></script>
+<script src="/assets/search.js" defer></script>
+</body>
+</html>
