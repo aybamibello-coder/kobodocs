@@ -15,6 +15,8 @@
   var sendBtn = document.getElementById('pdfOsSendBtn');
   var usageEl = document.getElementById('pdfOsUsage');
   var upgradeProBtn = document.getElementById('pdfOsUpgradeProBtn');
+  var vaultListEl = document.getElementById('pdfOsVaultList');
+  var vaultMetaEl = document.getElementById('pdfOsVaultMeta');
 
   upgradeProBtn.addEventListener('click', function () {
     window.KoboSubscribe.start('init-pdf-os-payment', { plan: 'pro', billing_cycle: 'monthly' });
@@ -34,6 +36,7 @@
     }
     app.hidden = false;
     renderUsage(access);
+    refreshVault();
   });
 
   function renderUsage(access) {
@@ -73,6 +76,69 @@
     });
   }
 
+  function formatBytes(n) {
+    if (n < 1024) return n + ' B';
+    if (n < 1024 * 1024) return (n / 1024).toFixed(0) + ' KB';
+    return (n / (1024 * 1024)).toFixed(1) + ' MB';
+  }
+
+  function refreshVault() {
+    window.PdfOsVault.list().then(function (rows) {
+      vaultMetaEl.textContent = rows.length + ' document' + (rows.length === 1 ? '' : 's') + ' saved';
+      vaultListEl.innerHTML = '';
+      rows.forEach(function (row) {
+        var li = document.createElement('li');
+        var nameSpan = document.createElement('span');
+        nameSpan.textContent = row.file_name + ' (' + formatBytes(row.size_bytes) + ')';
+        var dlBtn = document.createElement('button');
+        dlBtn.type = 'button';
+        dlBtn.textContent = 'Download';
+        dlBtn.addEventListener('click', function () {
+          window.PdfOsVault.getDownloadUrl(row.id).then(function (url) { window.open(url, '_blank'); });
+        });
+        var delBtn = document.createElement('button');
+        delBtn.type = 'button';
+        delBtn.textContent = 'Delete';
+        delBtn.addEventListener('click', function () {
+          window.PdfOsVault.remove(row.id).then(refreshVault);
+        });
+        li.appendChild(nameSpan);
+        li.appendChild(dlBtn);
+        li.appendChild(delBtn);
+        vaultListEl.appendChild(li);
+      });
+    }).catch(function () {
+      vaultMetaEl.textContent = 'Could not load your Vault.';
+    });
+  }
+
+  function offerSaveToVault(outputFiles) {
+    outputFiles.forEach(function (f) {
+      var div = document.createElement('div');
+      div.className = 'pdf-os-chat-turn pdf-os-chat-agent';
+      var label = document.createElement('span');
+      label.textContent = 'Produced: ' + f.name + '  ';
+      var saveBtn = document.createElement('button');
+      saveBtn.type = 'button';
+      saveBtn.textContent = 'Save to Vault';
+      saveBtn.addEventListener('click', function () {
+        saveBtn.disabled = true;
+        saveBtn.textContent = 'Saving…';
+        window.PdfOsVault.save(f).then(function () {
+          saveBtn.textContent = 'Saved';
+          refreshVault();
+        }).catch(function (err) {
+          saveBtn.disabled = false;
+          saveBtn.textContent = err.code === 'VAULT_LIMIT_REACHED' ? 'Vault full — upgrade to save more' : 'Save failed — retry';
+        });
+      });
+      div.appendChild(label);
+      div.appendChild(saveBtn);
+      chatLog.appendChild(div);
+    });
+    chatLog.scrollTop = chatLog.scrollHeight;
+  }
+
   form.addEventListener('submit', function (e) {
     e.preventDefault();
     var message = input.value.trim();
@@ -82,6 +148,9 @@
     input.value = '';
     sendBtn.disabled = true;
 
+    var uploadedIds = {};
+    files.forEach(function (f) { uploadedIds[f.id] = true; });
+
     window.PdfOsAgent.run(message, files, {
       onStep: function (step) {
         if (step.phase === 'executing') {
@@ -90,6 +159,10 @@
       },
       onDone: function (result) {
         appendChat('agent', result.text);
+        var produced = Object.keys(result.fileStore || {})
+          .filter(function (id) { return !uploadedIds[id]; })
+          .map(function (id) { return result.fileStore[id]; });
+        if (produced.length) offerSaveToVault(produced);
         sendBtn.disabled = false;
         window.PdfOsGuard.checkAccess().then(renderUsage);
       },
