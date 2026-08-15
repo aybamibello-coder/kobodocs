@@ -17,6 +17,11 @@ Deno.serve(async (req) => {
     });
     return jsonResponse({ output_text: summary });
   } catch (e) {
+    // Refund the AI-action quota unit consumed by requireAiQuota() above --
+    // a failed call (e.g. upstream 503) shouldn't cost the user one of
+    // their limited actions. Best-effort: if the refund itself fails,
+    // still return the original error rather than masking it.
+    await gate.supabase.rpc('refund_pdf_os_ai_action', { p_user_id: gate.userId }).catch(() => {});
     return jsonResponse({ error: 'TOOL_FAILED', detail: String(e) }, 500);
   }
 });

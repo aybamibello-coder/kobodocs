@@ -35,7 +35,7 @@ export async function resolveDocumentText(input: DocumentInput): Promise<string>
       generationConfig: { maxOutputTokens: 8000, responseMimeType: 'application/json' }
     })
   });
-  if (!res.ok) throw new Error('OCR_CALL_FAILED');
+  if (!res.ok) throw new Error('OCR_CALL_FAILED: ' + res.status + ' ' + await res.text());
   const data = await res.json();
   const raw = data?.candidates?.[0]?.content?.parts?.map((p: any) => p.text).join('\n')?.trim();
   if (!raw) throw new Error('OCR_EMPTY_RESULT');
@@ -56,7 +56,7 @@ export async function callModel(args: { system: string; document: string; questi
       contents: [{ role: 'user', parts: [{ text: userText }] }]
     })
   });
-  if (!res.ok) throw new Error('MODEL_CALL_FAILED');
+  if (!res.ok) throw new Error('MODEL_CALL_FAILED: ' + res.status + ' ' + await res.text());
   const data = await res.json();
   return data.candidates?.[0]?.content?.parts?.[0]?.text ?? '';
 }
