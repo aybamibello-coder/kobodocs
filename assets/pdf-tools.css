@@ -184,3 +184,39 @@
   color: var(--stamp-gold);
   border-color: var(--stamp-gold);
 }
+
+/* PDF OS — agent chat + form. New patterns not used elsewhere on the
+   site (no other tool has a conversational interface), styled with the
+   same tokens/radius/spacing as the rest of pdf-tools.css. */
+.pdf-os-chat-log{
+  margin-top:18px; display:flex; flex-direction:column; gap:10px;
+  max-height:420px; overflow-y:auto;
+}
+.pdf-os-chat-log:empty{ display:none; }
+.pdf-os-chat-turn{
+  padding:10px 14px; border-radius:var(--radius); font-size:0.9rem; line-height:1.55;
+  max-width:88%;
+}
+.pdf-os-chat-user{
+  align-self:flex-end; background:var(--ink-green-deep); color:var(--paper);
+}
+.pdf-os-chat-agent{
+  align-self:flex-start; background:var(--paper); border:1px solid var(--line);
+  display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+}
+.pdf-os-chat-agent button{
+  background:none; border:1px solid var(--stamp-gold); color:var(--stamp-gold);
+  border-radius:var(--radius); padding:4px 10px; font-size:0.8rem; cursor:pointer;
+}
+.pdf-os-chat-agent button:hover:not(:disabled){ background:var(--stamp-gold); color:var(--paper); }
+.pdf-os-chat-agent button:disabled{ opacity:0.5; cursor:default; }
+
+.pdf-os-form{ margin-top:14px; display:flex; flex-direction:column; gap:10px; }
+.pdf-os-form textarea{
+  width:100%; padding:12px 14px; border:1px solid var(--line); border-radius:var(--radius);
+  font-family:inherit; font-size:0.92rem; resize:vertical; background:var(--paper); color:var(--charcoal);
+}
+.pdf-os-form textarea:focus{ outline:none; border-color:var(--stamp-gold); }
+
+#pdfOsVaultSection{ border-top:1px solid var(--line); padding-top:30px; }
+#pdfOsVaultSection h2{ font-family:'Fraunces', serif; font-size:1.4rem; margin-bottom:6px; color:var(--ink-green-deep); }

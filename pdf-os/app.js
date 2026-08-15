@@ -67,13 +67,38 @@
     });
   }
 
+  var FILE_ICON_SVG = '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>';
+
   function renderFileList() {
     fileListEl.innerHTML = '';
-    files.forEach(function (f) {
+    files.forEach(function (f, idx) {
       var li = document.createElement('li');
-      li.textContent = f.name;
+      li.className = 'pdf-file-card';
+      li.innerHTML =
+        '<span class="pdf-file-icon">' + FILE_ICON_SVG + '</span>' +
+        '<span class="pdf-file-info">' +
+          '<span class="pdf-file-name">' + escapeHtml(f.name) + '</span>' +
+          '<span class="pdf-file-meta">' + formatBytes(f.size) + '</span>' +
+        '</span>' +
+        '<span class="pdf-file-controls"></span>';
+      var removeBtn = document.createElement('button');
+      removeBtn.type = 'button';
+      removeBtn.className = 'pdf-file-btn pdf-file-remove';
+      removeBtn.setAttribute('aria-label', 'Remove ' + f.name);
+      removeBtn.innerHTML = '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>';
+      removeBtn.addEventListener('click', function () {
+        files.splice(idx, 1);
+        renderFileList();
+      });
+      li.querySelector('.pdf-file-controls').appendChild(removeBtn);
       fileListEl.appendChild(li);
     });
+  }
+
+  function escapeHtml(s) {
+    var d = document.createElement('div');
+    d.textContent = s;
+    return d.innerHTML;
   }
 
   function formatBytes(n) {
@@ -88,23 +113,36 @@
       vaultListEl.innerHTML = '';
       rows.forEach(function (row) {
         var li = document.createElement('li');
-        var nameSpan = document.createElement('span');
-        nameSpan.textContent = row.file_name + ' (' + formatBytes(row.size_bytes) + ')';
+        li.className = 'pdf-file-card';
+        li.innerHTML =
+          '<span class="pdf-file-icon">' + FILE_ICON_SVG + '</span>' +
+          '<span class="pdf-file-info">' +
+            '<span class="pdf-file-name">' + escapeHtml(row.file_name) + '</span>' +
+            '<span class="pdf-file-meta">' + formatBytes(row.size_bytes) + '</span>' +
+          '</span>' +
+          '<span class="pdf-file-controls"></span>';
+        var controls = li.querySelector('.pdf-file-controls');
+
         var dlBtn = document.createElement('button');
         dlBtn.type = 'button';
-        dlBtn.textContent = 'Download';
+        dlBtn.className = 'pdf-file-btn';
+        dlBtn.setAttribute('aria-label', 'Download ' + row.file_name);
+        dlBtn.innerHTML = '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0-4-4m4 4 4-4M4 19h16"/></svg>';
         dlBtn.addEventListener('click', function () {
           window.PdfOsVault.getDownloadUrl(row.id).then(function (url) { window.open(url, '_blank'); });
         });
+
         var delBtn = document.createElement('button');
         delBtn.type = 'button';
-        delBtn.textContent = 'Delete';
+        delBtn.className = 'pdf-file-btn pdf-file-remove';
+        delBtn.setAttribute('aria-label', 'Delete ' + row.file_name);
+        delBtn.innerHTML = '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0-1 14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2L4 6"/></svg>';
         delBtn.addEventListener('click', function () {
           window.PdfOsVault.remove(row.id).then(refreshVault);
         });
-        li.appendChild(nameSpan);
-        li.appendChild(dlBtn);
-        li.appendChild(delBtn);
+
+        controls.appendChild(dlBtn);
+        controls.appendChild(delBtn);
         vaultListEl.appendChild(li);
       });
     }).catch(function () {
