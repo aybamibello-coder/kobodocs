@@ -1,14 +1,19 @@
 // ---------- Transcription Suite app access guard ----------
 // User-centric (not businesses-table-centric) — this is a personal/team
 // productivity product, not a business-invoicing one. Every logged-in
-// user gets a permanent Free plan automatically on first visit (100
-// min/month), no signup friction beyond having an account at all. Paid
-// plans/PAYG packs layer on top via the same row (see
-// transcription_subscriptions: minutes_balance = PAYG credits that never
-// expire, minutes_allowance/minutes_used_this_period = the recurring
-// plan's monthly bucket, which resets lazily here on access rather than
-// needing a cron job — correct enough since the reset only matters the
-// next time someone actually uses the product).
+// user gets a permanent Free plan automatically on first visit, no
+// signup friction beyond having an account at all. Paid plans/PAYG
+// packs layer on top via the same row (see transcription_subscriptions:
+// minutes_balance = PAYG credits that never expire, minutes_allowance/
+// minutes_used_this_period = the recurring plan's monthly bucket, which
+// resets lazily here on access rather than needing a cron job — correct
+// enough since the reset only matters the next time someone actually
+// uses the product).
+//
+// The Free plan's minute allowance is read from transcription_plans at
+// provision/reset time rather than hardcoded here — the plans table is
+// the single source of truth for limits (see spec instruction 13), so a
+// pricing change there takes effect without touching this file.
 window.TranscribeGuard = {
   async requireAccess() {
     await new Promise(r => {
@@ -31,6 +36,11 @@ window.TranscribeGuard = {
       .maybeSingle();
 
     if (!subscription) {
+      const { data: freePlan } = await supabase
+        .from('transcription_plans')
+        .select('minutes_per_period')
+        .eq('key', 'free')
+        .maybeSingle();
       const periodReset = new Date();
       periodReset.setDate(periodReset.getDate() + 30);
       const { data: created } = await supabase
@@ -39,7 +49,7 @@ window.TranscribeGuard = {
           user_id: session.user.id,
           plan: 'free',
           minutes_balance: 0,
-          minutes_allowance: 100,
+          minutes_allowance: freePlan?.minutes_per_period ?? 10,
           minutes_used_this_period: 0,
           period_reset_at: periodReset.toISOString(),
           status: 'active'
@@ -49,11 +59,23 @@ window.TranscribeGuard = {
       subscription = created;
     } else if (subscription.period_reset_at && new Date(subscription.period_reset_at) <= new Date()) {
       // Lazy monthly reset: the period lapsed since their last visit.
+      // Also re-syncs the allowance to the current plan config, in case
+      // it changed since they last reset (e.g. a pricing adjustment).
+      const { data: planNow } = await supabase
+        .from('transcription_plans')
+        .select('minutes_per_period')
+        .eq('key', subscription.plan)
+        .maybeSingle();
       const nextReset = new Date();
       nextReset.setDate(nextReset.getDate() + 30);
       const { data: updated } = await supabase
         .from('transcription_subscriptions')
-        .update({ minutes_used_this_period: 0, period_reset_at: nextReset.toISOString(), updated_at: new Date().toISOString() })
+        .update({
+          minutes_used_this_period: 0,
+          minutes_allowance: planNow?.minutes_per_period ?? subscription.minutes_allowance,
+          period_reset_at: nextReset.toISOString(),
+          updated_at: new Date().toISOString()
+        })
         .eq('user_id', session.user.id)
         .select('*')
         .maybeSingle();
