@@ -77,6 +77,19 @@ const STATUS_LABEL = {
     fileInput.value = '';
   });
 
+  async function getMediaDuration(file) {
+    return new Promise((resolve) => {
+      const el = file.type.startsWith('video/') ? document.createElement('video') : document.createElement('audio');
+      el.preload = 'metadata';
+      el.onloadedmetadata = () => {
+        URL.revokeObjectURL(el.src);
+        resolve(isFinite(el.duration) ? el.duration : null);
+      };
+      el.onerror = () => { URL.revokeObjectURL(el.src); resolve(null); };
+      el.src = URL.createObjectURL(file);
+    });
+  }
+
   async function handleUpload(file) {
     const maxBytes = (planConfig?.max_file_size_mb || 200) * 1024 * 1024;
     if (file.size > maxBytes) {
@@ -89,6 +102,20 @@ const STATUS_LABEL = {
     }
 
     uploadProgress.style.display = 'block';
+    uploadProgress.textContent = 'Checking file…';
+    const durationSeconds = await getMediaDuration(file);
+
+    if (durationSeconds && planConfig?.max_duration_minutes && durationSeconds / 60 > planConfig.max_duration_minutes) {
+      uploadProgress.style.display = 'none';
+      toast(`This file is ${Math.round(durationSeconds / 60)} min — your plan's limit is ${planConfig.max_duration_minutes} min per file.`);
+      return;
+    }
+    if (durationSeconds && durationSeconds / 60 > remainingMinutes) {
+      uploadProgress.style.display = 'none';
+      toast(`This file (${Math.round(durationSeconds / 60)} min) is longer than your ${fmtMinutes(remainingMinutes)} remaining minutes.`);
+      return;
+    }
+
     uploadProgress.textContent = `Uploading ${file.name}…`;
 
     try {
@@ -108,17 +135,49 @@ const STATUS_LABEL = {
         storage_path: storagePath,
         mime_type: file.type,
         file_size_bytes: file.size,
+        duration_seconds: durationSeconds,
         status: 'queued'
       });
       if (insertErr) throw insertErr;
 
-      toast('Uploaded — queued for transcription.');
+      await loadFiles();
+      startPolling();
+
+      uploadProgress.textContent = 'Starting transcription…';
+      const { data: startResult, error: startErr } = await supabase.functions.invoke('transcribe-start', {
+        body: { file_id: fileId }
+      });
+      if (startErr || startResult?.error) {
+        toast('Could not start transcription: ' + (startResult?.error || startErr.message));
+      } else {
+        toast('Transcription started.');
+      }
       await loadFiles();
     } catch (err) {
       toast('Upload failed: ' + err.message);
     } finally {
       uploadProgress.style.display = 'none';
     }
+  }
+
+  let pollTimer = null;
+  function startPolling() {
+    if (pollTimer) return;
+    pollTimer = setInterval(async () => {
+      const stillPending = await loadFiles();
+      if (!stillPending) {
+        clearInterval(pollTimer);
+        pollTimer = null;
+      }
+    }, 5000);
+  }
+
+  async function refreshMinutesBadge() {
+    const { data: sub } = await supabase.from('transcription_subscriptions').select('*').eq('user_id', session.user.id).maybeSingle();
+    if (!sub) return;
+    const allowanceLeft = Math.max(0, Number(sub.minutes_allowance) - Number(sub.minutes_used_this_period));
+    const badge = document.querySelector('.minutes-badge .num');
+    if (badge) badge.textContent = fmtMinutes(allowanceLeft + Number(sub.minutes_balance));
   }
 
   async function loadFiles() {
@@ -130,8 +189,8 @@ const STATUS_LABEL = {
       .order('created_at', { ascending: false })
       .limit(50);
 
-    if (error) { wrap.innerHTML = `<div class="empty-note">Could not load files: ${escapeHtml(error.message)}</div>`; return; }
-    if (!files || !files.length) { wrap.innerHTML = '<div class="empty-note">No files yet — upload something above to get started.</div>'; return; }
+    if (error) { wrap.innerHTML = `<div class="empty-note">Could not load files: ${escapeHtml(error.message)}</div>`; return false; }
+    if (!files || !files.length) { wrap.innerHTML = '<div class="empty-note">No files yet — upload something above to get started.</div>'; return false; }
 
     wrap.innerHTML = files.map(f => `
       <div class="file-row">
@@ -143,7 +202,11 @@ const STATUS_LABEL = {
         <span class="status-pill status-${f.status}">${STATUS_LABEL[f.status] || f.status}</span>
       </div>
     `).join('');
+
+    const pending = files.some(f => f.status === 'queued' || f.status === 'processing');
+    if (!pending) await refreshMinutesBadge();
+    return pending;
   }
 
-  await loadFiles();
+  if (await loadFiles()) startPolling();
 })();
