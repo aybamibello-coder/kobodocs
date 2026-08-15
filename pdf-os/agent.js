@@ -112,7 +112,7 @@
         return Promise.resolve(exec).then(function (result) {
           results.push({ call_id: call.id, name: call.name, output_file: result.output_file, output_text: result.output_text });
         }).catch(function (err) {
-          results.push({ call_id: call.id, name: call.name, error: err && err.code || 'TOOL_FAILED' });
+          results.push({ call_id: call.id, name: call.name, error: (err && (err.code || err.message)) || 'TOOL_FAILED' });
         });
       });
     });

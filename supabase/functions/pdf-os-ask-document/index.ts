@@ -1,7 +1,9 @@
-import { requireAiQuota, jsonResponse } from '../_shared/pdf-os-guard.ts';
+import { requireAiQuota, jsonResponse, corsHeaders } from '../_shared/pdf-os-guard.ts';
 import { resolveDocumentText, callModel, type DocumentInput } from '../_shared/pdf-os-model.ts';
 
 Deno.serve(async (req) => {
+  if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
+
   const gate = await requireAiQuota(req);
   if (gate.error) return gate.error;
 
