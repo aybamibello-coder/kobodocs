@@ -57,6 +57,7 @@
 .pdf-file-card .pdf-file-info{ flex:1; min-width:0; }
 .pdf-file-card .pdf-file-name{
   font-size:0.9rem; font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+  max-width:100%; display:block;
 }
 .pdf-file-card .pdf-file-meta{ font-size:0.78rem; opacity:0.6; }
 .pdf-file-card .pdf-file-controls{ display:flex; align-items:center; gap:2px; flex-shrink:0; }
