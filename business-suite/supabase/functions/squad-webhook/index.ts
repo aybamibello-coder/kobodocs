@@ -88,6 +88,28 @@ Deno.serve(async (req) => {
   const metadata = intent.metadata ?? {};
   const cycleDays = metadata?.billing_cycle === "yearly" ? 365 : 30;
 
+  // Central revenue log -- covers every product uniformly, regardless of
+  // which branch below handles the actual subscription/entitlement
+  // activation. Additive only: doesn't change any existing behavior.
+  const productForLog = metadata?.document_id
+    ? "client_document_payment"
+    : metadata?.product ?? (metadata?.plan === "pro" ? "legacy_pro" : "unknown");
+  // Wrapped so a logging failure can never block the actual entitlement
+  // activation below, which matters far more than the log row. Supabase-js
+  // returns {error} rather than throwing, so check that too, not just try/catch.
+  try {
+    const { error: logErr } = await supabase.from("payments_log").insert({
+      order_reference: reference,
+      user_id: metadata?.user_id ?? null,
+      product: productForLog,
+      plan: metadata?.plan ?? null,
+      amount_naira: amountNaira,
+    });
+    if (logErr) console.error("payments_log insert failed (non-fatal):", logErr);
+  } catch (logErr) {
+    console.error("payments_log insert threw (non-fatal):", logErr);
+  }
+
   try {
     if (metadata?.document_id) {
       await supabase
