@@ -95,7 +95,7 @@ const FILE_ICON = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" s
           <input type="text" id="linkInput" placeholder="https://example.com/episode.mp3" style="flex:1; min-width:220px; padding:10px 12px; border:1px solid var(--line); border-radius:6px; font-family:inherit;">
           <button class="btn primary" id="linkSubmitBtn">Transcribe</button>
         </div>
-        <p style="font-size:0.8rem; opacity:0.6; margin-top:8px;">Paste a direct link to an audio or video file (e.g. a podcast episode URL). Support for pasting YouTube/TikTok/Instagram links directly is coming soon — for now, download the audio first and upload it instead.</p>
+        <p style="font-size:0.8rem; opacity:0.6; margin-top:8px;">Paste a direct link to an audio/video file, or a YouTube/TikTok/Instagram link${subscription.plan === 'pro' || subscription.plan === 'business' ? '' : ' (Pro plan and above)'}.</p>
       </div>
       <div id="progressCard"></div>
     </div>
@@ -132,8 +132,9 @@ const FILE_ICON = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" s
     if (!/^https?:$/.test(parsed.protocol)) { toast('Link must start with http:// or https://'); return; }
 
     const socialHosts = ['youtube.com', 'youtu.be', 'tiktok.com', 'instagram.com', 'facebook.com', 'twitter.com', 'x.com', 'vimeo.com'];
-    if (socialHosts.some(h => parsed.hostname.includes(h))) {
-      toast('Links from that platform aren\'t supported yet — please paste a direct audio/video file link, or download and upload the file instead.');
+    const isSocial = socialHosts.some(h => parsed.hostname.includes(h));
+    if (isSocial && (subscription.plan !== 'pro' && subscription.plan !== 'business')) {
+      toast('Transcribing directly from YouTube/TikTok/Instagram links needs the Pro plan or above.');
       return;
     }
 
@@ -141,7 +142,7 @@ const FILE_ICON = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" s
 
     const btn = document.getElementById('linkSubmitBtn');
     btn.disabled = true;
-    btn.textContent = 'Starting…';
+    btn.textContent = isSocial ? 'Extracting audio…' : 'Starting…';
 
     try {
       const fileId = crypto.randomUUID();
@@ -159,6 +160,7 @@ const FILE_ICON = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" s
       startPolling();
       input.value = '';
 
+      if (isSocial) toast('Extracting audio from the link — this can take a little longer than a direct upload.');
       const { data: startResult, error: startErr } = await supabase.functions.invoke('transcribe-start', { body: { file_id: fileId } });
       if (startErr || startResult?.error) {
         toast('Could not start transcription: ' + (startResult?.error || startErr.message));
