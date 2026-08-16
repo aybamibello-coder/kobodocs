@@ -12,42 +12,65 @@
 <link rel="stylesheet" href="/business-suite/app/shell.css">
 <style>
   body{ background:var(--bone); }
-  .tr-wrap{ max-width:980px; margin:0 auto; padding:36px 20px 100px; }
-  .tr-top{ display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:14px; margin-bottom:24px; }
-  .bs-panel{
-    background:var(--paper); border:1px solid var(--line); border-left:3px solid var(--stamp-gold);
-    border-radius:6px; padding:24px 22px; margin-bottom:20px;
-    box-shadow:0 1px 2px rgba(35,39,34,0.04), 0 8px 20px rgba(35,39,34,0.03);
-  }
-  .minutes-badge{ text-align:right; }
-  .minutes-badge .num{ font-family:'Fraunces', serif; font-size:1.8rem; color:var(--ink-green-deep); }
-  .minutes-badge .lbl{ font-family:'Space Mono', monospace; font-size:0.68rem; text-transform:uppercase; opacity:0.6; }
+  .tr-wrap{ max-width:1040px; margin:0 auto; padding:36px 20px 100px; }
+  .tr-top{ display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:14px; margin-bottom:22px; }
   .plan-pill{
     display:inline-block; font-family:'Space Mono', monospace; font-size:0.68rem; text-transform:uppercase;
-    letter-spacing:0.03em; padding:3px 10px; border-radius:20px; background:rgba(199,154,60,0.14); color:#8a6a1f; margin-top:4px;
+    letter-spacing:0.03em; padding:3px 10px; border-radius:20px; background:rgba(199,154,60,0.14); color:#8a6a1f; margin-top:6px;
   }
+  .bs-panel{
+    background:var(--paper); border:1px solid var(--line); border-left:3px solid var(--stamp-gold);
+    border-radius:6px; padding:22px 20px; margin-bottom:20px;
+    box-shadow:0 1px 2px rgba(35,39,34,0.04), 0 8px 20px rgba(35,39,34,0.03);
+  }
+  .stats-row{ display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:14px; margin-bottom:20px; }
+  .rm-stat{ background:var(--paper); border:1px solid var(--line); border-radius:6px; padding:16px 14px; text-align:center; }
+  .rm-stat-label{ font-family:'Space Mono', monospace; font-size:0.64rem; text-transform:uppercase; letter-spacing:0.04em; opacity:0.6; margin-bottom:6px; }
+  .rm-stat-value{ font-family:'Fraunces', serif; font-size:1.5rem; color:var(--ink-green-deep); }
+  .rm-stat.warn .rm-stat-value{ color:#8a6a1f; }
+
   .upload-zone{
-    border:2px dashed var(--line); border-radius:8px; padding:40px 20px; text-align:center;
+    border:2px dashed var(--line); border-radius:8px; padding:36px 20px; text-align:center;
     cursor:pointer; transition:border-color .15s, background .15s;
   }
   .upload-zone:hover, .upload-zone.dragover{ border-color:var(--stamp-gold); background:rgba(199,154,60,0.04); }
-  .upload-zone p{ font-size:0.9rem; opacity:0.7; margin-top:8px; }
-  .file-row{
-    display:flex; justify-content:space-between; align-items:center; gap:14px;
-    padding:14px 4px; border-bottom:1px dashed var(--line); flex-wrap:wrap;
+  .upload-zone svg{ opacity:0.4; margin-bottom:10px; }
+  .upload-zone p{ font-size:0.85rem; opacity:0.65; margin-top:6px; }
+
+  .progress-card{ margin-top:14px; border:1px solid var(--line); border-radius:6px; padding:14px 16px; }
+  .progress-card .pc-name{ font-size:0.85rem; font-weight:600; margin-bottom:8px; }
+  .progress-track{ height:6px; background:var(--bone); border-radius:20px; overflow:hidden; }
+  .progress-fill{ height:100%; background:var(--stamp-gold); border-radius:20px; width:0%; transition:width .2s ease; }
+  .progress-fill.indeterminate{
+    width:35%; animation:tr-indeterminate 1.3s ease-in-out infinite;
   }
-  .file-row:last-child{ border-bottom:none; }
-  .file-name{ font-weight:600; font-size:0.92rem; }
+  @keyframes tr-indeterminate{
+    0%{ margin-left:-35%; } 100%{ margin-left:100%; }
+  }
+  .progress-status{ font-size:0.76rem; opacity:0.6; margin-top:6px; font-family:'Space Mono', monospace; }
+
+  .file-card{
+    display:flex; align-items:flex-start; gap:14px; padding:16px 4px;
+    border-bottom:1px dashed var(--line); text-decoration:none; color:inherit;
+  }
+  .file-card:last-child{ border-bottom:none; }
+  .file-icon{
+    width:38px; height:38px; border-radius:8px; background:var(--bone); flex-shrink:0;
+    display:flex; align-items:center; justify-content:center; color:var(--ink-green-deep);
+  }
+  .file-info{ flex:1; min-width:0; }
+  .file-name{ font-weight:600; font-size:0.92rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
   .file-meta{ font-size:0.78rem; opacity:0.6; margin-top:2px; }
   .status-pill{
     font-family:'Space Mono', monospace; font-size:0.66rem; text-transform:uppercase;
-    padding:3px 9px; border-radius:20px; display:inline-flex; align-items:center; gap:5px;
+    padding:3px 9px; border-radius:20px; display:inline-flex; align-items:center; gap:5px; flex-shrink:0;
   }
   .status-pill::before{ content:''; width:6px; height:6px; border-radius:50%; }
   .status-uploaded, .status-queued{ background:rgba(199,154,60,0.14); color:#8a6a1f; }
   .status-uploaded::before, .status-queued::before{ background:var(--stamp-gold); }
   .status-processing{ background:rgba(13,38,32,0.07); color:var(--ink-green-deep); }
-  .status-processing::before{ background:var(--ink-green-deep); }
+  .status-processing::before{ background:var(--ink-green-deep); animation:tr-pulse 1.2s ease-in-out infinite; }
+  @keyframes tr-pulse{ 0%,100%{ opacity:1; } 50%{ opacity:0.3; } }
   .status-completed{ background:rgba(13,38,32,0.07); color:var(--ink-green-deep); }
   .status-completed::before{ background:var(--ink-green-deep); }
   .status-failed{ background:rgba(168,52,42,0.09); color:var(--stamp-red); }
@@ -57,6 +80,18 @@
   .btn{ font-size:0.85rem; border:1px solid var(--line); background:none; border-radius:20px; padding:7px 16px; cursor:pointer; }
   .btn.primary{ background:var(--stamp-gold); color:var(--ink-green-deep); border-color:var(--stamp-gold); font-weight:600; }
   .btn.small{ padding:5px 12px; font-size:0.78rem; }
+  .upsell-strip{
+    display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap;
+    background:rgba(199,154,60,0.08); border:1px solid rgba(199,154,60,0.25); border-radius:6px;
+    padding:12px 16px; margin-bottom:20px; font-size:0.85rem;
+  }
+  .upload-tabs{ display:flex; gap:4px; margin-bottom:14px; background:var(--bone); border-radius:8px; padding:4px; width:fit-content; }
+  .upload-tab{
+    font-size:0.82rem; font-weight:600; padding:7px 16px; border-radius:6px; border:none; background:none;
+    cursor:pointer; opacity:0.55; font-family:inherit;
+  }
+  .upload-tab.active{ opacity:1; background:var(--paper); box-shadow:0 1px 3px rgba(13,38,32,0.08); color:var(--ink-green-deep); }
+  .view-cue{ font-size:0.76rem; color:var(--ink-green-deep); font-weight:600; margin-top:4px; }
 </style>
 </head>
 <body class="suite-body">

@@ -1,0 +1,21 @@
+{
+  "name": "kobodocs-transcribe-extraction",
+  "main": "worker.js",
+  "compatibility_date": "2026-04-13",
+  "containers": [
+    {
+      "class_name": "ExtractionContainer",
+      "image": "./Dockerfile",
+      "max_instances": 5,
+      "instance_type": "standard-1"
+    }
+  ],
+  "durable_objects": {
+    "bindings": [
+      { "name": "EXTRACTION_CONTAINER", "class_name": "ExtractionContainer" }
+    ]
+  },
+  "migrations": [
+    { "tag": "v1", "new_sqlite_classes": ["ExtractionContainer"] }
+  ]
+}
