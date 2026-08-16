@@ -138,6 +138,27 @@ const PLAN_TIER = { free: 0, starter: 1, pro: 2, business: 3 };
         </div>
       ` : `<div class="plan-lock" style="margin-top:10px;">AI summaries are available on the Starter plan and above. <a href="/transcribe/#pricing">See plans</a></div>`}
     </div>
+
+    <div class="bs-panel">
+      <strong style="font-size:0.9rem;">Translate</strong>
+      <div id="translateWrap" style="margin-top:10px;">
+        <div class="tr-lang-row">
+          <select id="translateLangSelect">
+            <option value="yo">Yoruba</option>
+            <option value="ig">Igbo</option>
+            <option value="ha">Hausa</option>
+            <option value="pcm">Nigerian Pidgin</option>
+            <option value="fr">French</option>
+            <option value="de">German</option>
+          </select>
+          <button class="btn small primary" id="translateBtn">Translate</button>
+        </div>
+        <p style="font-size:0.78rem; opacity:0.6; margin-top:8px;">
+          ${planTier >= 2 ? 'Included on your plan — translate to as many languages as you like.' : 'Free plan: your first translation each month is fully unlocked. After that, translations show a preview with an upgrade option.'}
+        </p>
+        <div id="translateResult"></div>
+      </div>
+    </div>
   `;
 
   // ---------- Speaker rename ----------
@@ -243,5 +264,68 @@ const PLAN_TIER = { free: 0, starter: 1, pro: 2, business: 3 };
     } else {
       document.getElementById('summarizeBtn').addEventListener('click', generateSummary);
     }
+  }
+
+  // ---------- Translate ----------
+  {
+    const langSelect = document.getElementById('translateLangSelect');
+    const translateBtn = document.getElementById('translateBtn');
+    const resultEl = document.getElementById('translateResult');
+
+    function renderTranslation(data) {
+      if (data.locked) {
+        const remaining = Math.max(0, (data.total_length || 0) - (data.text || '').length);
+        resultEl.innerHTML = `
+          <div class="ai-result">
+            <p>${escapeHtml(data.text || '')}</p>
+            <div class="tr-blur-block" aria-hidden="true">
+              ${Array.from({ length: 4 }).map(() => `<div class="tr-blur-line"></div>`).join('')}
+            </div>
+            <div class="plan-lock" style="margin-top:10px;">
+              ${remaining > 0 ? 'The rest of this translation (' + remaining.toLocaleString() + ' more characters) is locked.' : 'The rest of this translation is locked.'}
+              You already used this month's free translation — upgrade for unlimited translations in any language.
+              <br><a href="/transcribe/#pricing" class="btn small primary" style="margin-top:8px; display:inline-block;">Upgrade to unlock</a>
+            </div>
+          </div>
+        `;
+      } else {
+        resultEl.innerHTML = `
+          <div class="ai-result">
+            <p style="white-space:pre-wrap;">${escapeHtml(data.text || '')}</p>
+            <div class="export-row" style="margin-top:10px;">
+              <button class="btn small" id="copyTranslationBtn">Copy text</button>
+              <button class="btn small" id="downloadTranslationBtn">Download .txt</button>
+            </div>
+          </div>
+        `;
+        document.getElementById('copyTranslationBtn')?.addEventListener('click', async () => {
+          await navigator.clipboard.writeText(data.text || '');
+          toast('Copied to clipboard.');
+        });
+        document.getElementById('downloadTranslationBtn')?.addEventListener('click', () => {
+          downloadBlob(`${file.filename} (${data.language_name || 'translation'}).txt`, data.text || '', 'text/plain');
+        });
+      }
+    }
+
+    async function runTranslate() {
+      const language = langSelect.value;
+      translateBtn.disabled = true;
+      translateBtn.textContent = 'Translating…';
+      resultEl.innerHTML = '';
+      try {
+        const { data, error } = await supabase.functions.invoke('transcribe-translate', { body: { file_id: fileId, language } });
+        if (error || data?.error) {
+          toast('Could not translate: ' + (data?.error || error.message));
+          return;
+        }
+        renderTranslation(data);
+      } finally {
+        translateBtn.disabled = false;
+        translateBtn.textContent = 'Translate';
+      }
+    }
+
+    translateBtn.addEventListener('click', runTranslate);
   }
 })();
