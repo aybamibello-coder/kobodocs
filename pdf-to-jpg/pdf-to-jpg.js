@@ -30,7 +30,12 @@
   var current = null; // { file, arrayBuffer, name, pageCount }
   var currentObjectUrl = null;
 
-  function track(name, params) { if (typeof gtag === 'function') { try { gtag('event', name, params || {}); } catch (e) {} } }
+  function track(name, params) {
+    if (window.KoboTrack) { window.KoboTrack(name, params); }
+    else if (typeof gtag === 'function') {
+      try { gtag('event', name, params || {}); } catch (e) { /* no-op */ }
+    }
+  }
   track('tool_view', { tool: 'pdf_to_jpg' });
 
   function formatBytes(bytes) {

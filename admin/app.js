@@ -12,7 +12,9 @@
     business_teams: 'Business Teams', cooperative_plan: 'Cooperative Plan', japa_pass: 'Japa Pass',
     tool_pass: 'Tool Pass', siwes_report: 'SIWES Report', grant_application_generator: 'Grant Application Generator',
     school_report_card: 'School Report Card', event_pass: 'Event Pass', contract_scanner: 'Contract Scanner',
-    client_document_payment: 'Client Document Payment', legacy_pro: 'Legacy Pro Plan', unknown: 'Unknown'
+    client_document_payment: 'Client Document Payment', legacy_pro: 'Legacy Pro Plan', unknown: 'Unknown',
+    merge_pdf: 'Merge PDF', split_pdf: 'Split PDF', compress_pdf: 'Compress PDF', jpg_to_pdf: 'JPG/PNG to PDF',
+    pdf_to_jpg: 'PDF to JPG', word_to_pdf: 'Word to PDF', watermark_pdf: 'Watermark PDF', ocr_pdf: 'OCR PDF'
   };
   function label(key) { return PRODUCT_LABELS[key] || key; }
 
@@ -91,6 +93,45 @@
     var bizLabels = { total_businesses: 'Businesses', total_clients: 'Clients', total_receivables: 'Receivables', total_events: 'Events' };
     Object.keys(bizLabels).forEach(function (key) {
       bizGrid.appendChild(statCard(bizLabels[key], fmtNum(stats.business_suite_snapshot[key])));
+    });
+
+    // Free tool usage -- previously only visible in Google Analytics,
+    // not queryable from here at all.
+    document.getElementById('toolEventsToday').textContent = fmtNum(stats.tool_events_today);
+    document.getElementById('toolEventsAllTime').textContent = fmtNum(stats.tool_events_all_time);
+    var toolBody = document.querySelector('#freeToolTable tbody');
+    if (!stats.free_tool_usage_30d.length) {
+      document.getElementById('freeToolEmpty').hidden = false;
+    } else {
+      stats.free_tool_usage_30d.forEach(function (row) {
+        var rate = row.views > 0 ? Math.round((row.completions / row.views) * 100) + '%' : '—';
+        var tr = document.createElement('tr');
+        tr.innerHTML = '<td>' + label(row.tool) + '</td><td>' + fmtNum(row.views) + '</td><td>' + fmtNum(row.completions) + '</td><td>' + fmtNum(row.downloads) + '</td><td>' + rate + '</td>';
+        toolBody.appendChild(tr);
+      });
+    }
+
+    // Daily trend chart -- signups + tool events (left axis, bars) vs
+    // revenue (right axis, line) across the full 30-day window, so daily/
+    // weekly/monthly patterns are visible at a glance, not just totals.
+    var days = stats.daily_series_30d.map(function (d) { return d.day.slice(5); });
+    new Chart(document.getElementById('trendChart'), {
+      type: 'bar',
+      data: {
+        labels: days,
+        datasets: [
+          { label: 'Signups', data: stats.daily_series_30d.map(function (d) { return d.signups; }), backgroundColor: '#C79A3C', yAxisID: 'y' },
+          { label: 'Tool events', data: stats.daily_series_30d.map(function (d) { return d.tool_events; }), backgroundColor: '#14342B', yAxisID: 'y' },
+          { label: 'Revenue (₦)', data: stats.daily_series_30d.map(function (d) { return d.revenue; }), type: 'line', borderColor: '#A8342A', backgroundColor: 'transparent', yAxisID: 'y1', tension: 0.3 }
+        ]
+      },
+      options: {
+        responsive: true,
+        scales: {
+          y: { position: 'left', beginAtZero: true, title: { display: true, text: 'Count' } },
+          y1: { position: 'right', beginAtZero: true, grid: { drawOnChartArea: false }, title: { display: true, text: '₦' } }
+        }
+      }
     });
   }
 })();

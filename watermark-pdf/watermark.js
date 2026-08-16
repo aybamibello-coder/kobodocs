@@ -38,7 +38,12 @@
   var FREE_USED_KEY = 'kobo_watermark_free_used';
   var freeUsed = !!localStorage.getItem(FREE_USED_KEY);
 
-  function track(name, params) { if (typeof gtag === 'function') { try { gtag('event', name, params || {}); } catch (e) {} } }
+  function track(name, params) {
+    if (window.KoboTrack) { window.KoboTrack(name, params); }
+    else if (typeof gtag === 'function') {
+      try { gtag('event', name, params || {}); } catch (e) { /* no-op */ }
+    }
+  }
 
   // ---------- Access check ----------
   window.PdfToolkitGuard.checkAccess().then(function (access) {

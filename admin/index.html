@@ -7,6 +7,7 @@
 <meta name="robots" content="noindex, nofollow">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Work+Sans:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/assets/style.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
 <style>
   #adminRoot{ max-width:1100px; margin:0 auto; padding:32px 20px 80px; }
   #adminDenied, #adminLoading{ max-width:480px; margin:80px auto; text-align:center; }
@@ -69,6 +70,22 @@
       <h2>Revenue (₦)</h2>
       <div class="admin-range-grid" id="revenueGrid"></div>
       <p class="admin-note">Only includes payments since this dashboard was built (2026-08-16) — historical charges before that weren't logged.</p>
+    </section>
+
+    <section class="admin-section">
+      <h2>Trends — last 30 days</h2>
+      <canvas id="trendChart" height="90"></canvas>
+      <p class="admin-note">Signups and free-tool events (left axis) vs revenue in ₦ (right axis). Read daily bars, or eyeball the week-to-week / month-to-date pattern across the full window.</p>
+    </section>
+
+    <section class="admin-section">
+      <h2>Free tool usage — last 30 days</h2>
+      <table class="admin-table" id="freeToolTable">
+        <thead><tr><th>Tool</th><th>Views</th><th>Completions</th><th>Downloads</th><th>View → Complete</th></tr></thead>
+        <tbody></tbody>
+      </table>
+      <p class="admin-note" id="freeToolEmpty" hidden>No free-tool activity logged in this window yet — tracking just went live, so this fills in as people use the tools.</p>
+      <p class="admin-note">Total tracked events: <span id="toolEventsToday"></span> today, <span id="toolEventsAllTime"></span> all-time.</p>
     </section>
 
     <section class="admin-section">

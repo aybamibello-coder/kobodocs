@@ -44,7 +44,12 @@
   var current = null;
   var sessionRef = null;
 
-  function track(name, params) { if (typeof gtag === 'function') { try { gtag('event', name, params || {}); } catch (e) {} } }
+  function track(name, params) {
+    if (window.KoboTrack) { window.KoboTrack(name, params); }
+    else if (typeof gtag === 'function') {
+      try { gtag('event', name, params || {}); } catch (e) { /* no-op */ }
+    }
+  }
 
   window.PdfToolkitGuard.checkAccess().then(function (access) {
     loadingState.hidden = true;

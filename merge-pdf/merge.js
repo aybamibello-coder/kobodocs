@@ -32,7 +32,8 @@
   var dragSrcId = null;
 
   function track(name, params) {
-    if (typeof gtag === 'function') {
+    if (window.KoboTrack) { window.KoboTrack(name, params); }
+    else if (typeof gtag === 'function') {
       try { gtag('event', name, params || {}); } catch (e) { /* no-op */ }
     }
   }
