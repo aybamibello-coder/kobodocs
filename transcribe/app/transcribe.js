@@ -78,11 +78,24 @@ const FILE_ICON = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" s
     </div>
 
     <div class="bs-panel">
-      <div class="upload-zone" id="uploadZone">
-        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-        <div><strong>Click to upload, or drag a file here</strong></div>
-        <p>Audio or video — MP3, WAV, M4A, MP4, MOV. Max ${planConfig?.max_file_size_mb || 200}MB, ${planConfig?.max_duration_minutes || 60} min per file.</p>
-        <input type="file" id="fileInput" accept="audio/*,video/*" style="display:none;">
+      <div class="upload-tabs">
+        <button class="upload-tab active" id="tabFile" type="button">Upload file</button>
+        <button class="upload-tab" id="tabLink" type="button">Paste a link</button>
+      </div>
+      <div id="uploadPanelFile">
+        <div class="upload-zone" id="uploadZone">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          <div><strong>Click to upload, or drag a file here</strong></div>
+          <p>Audio or video — MP3, WAV, M4A, MP4, MOV. Max ${planConfig?.max_file_size_mb || 200}MB, ${planConfig?.max_duration_minutes || 60} min per file.</p>
+          <input type="file" id="fileInput" accept="audio/*,video/*" style="display:none;">
+        </div>
+      </div>
+      <div id="uploadPanelLink" style="display:none;">
+        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+          <input type="text" id="linkInput" placeholder="https://example.com/episode.mp3" style="flex:1; min-width:220px; padding:10px 12px; border:1px solid var(--line); border-radius:6px; font-family:inherit;">
+          <button class="btn primary" id="linkSubmitBtn">Transcribe</button>
+        </div>
+        <p style="font-size:0.8rem; opacity:0.6; margin-top:8px;">Paste a direct link to an audio or video file (e.g. a podcast episode URL). Support for pasting YouTube/TikTok/Instagram links directly is coming soon — for now, download the audio first and upload it instead.</p>
       </div>
       <div id="progressCard"></div>
     </div>
@@ -91,6 +104,75 @@ const FILE_ICON = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" s
       <div id="fileListWrap" style="margin-top:10px;"></div>
     </div>
   `;
+
+  const tabFile = document.getElementById('tabFile');
+  const tabLink = document.getElementById('tabLink');
+  const panelFile = document.getElementById('uploadPanelFile');
+  const panelLink = document.getElementById('uploadPanelLink');
+  tabFile.addEventListener('click', () => {
+    tabFile.classList.add('active'); tabLink.classList.remove('active');
+    panelFile.style.display = 'block'; panelLink.style.display = 'none';
+  });
+  tabLink.addEventListener('click', () => {
+    tabLink.classList.add('active'); tabFile.classList.remove('active');
+    panelLink.style.display = 'block'; panelFile.style.display = 'none';
+  });
+
+  document.getElementById('linkSubmitBtn').addEventListener('click', handleLinkSubmit);
+  document.getElementById('linkInput').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') handleLinkSubmit();
+  });
+
+  async function handleLinkSubmit() {
+    const input = document.getElementById('linkInput');
+    const url = input.value.trim();
+    if (!url) { toast('Paste a link first.'); return; }
+    let parsed;
+    try { parsed = new URL(url); } catch { toast('That doesn\'t look like a valid URL.'); return; }
+    if (!/^https?:$/.test(parsed.protocol)) { toast('Link must start with http:// or https://'); return; }
+
+    const socialHosts = ['youtube.com', 'youtu.be', 'tiktok.com', 'instagram.com', 'facebook.com', 'twitter.com', 'x.com', 'vimeo.com'];
+    if (socialHosts.some(h => parsed.hostname.includes(h))) {
+      toast('Links from that platform aren\'t supported yet — please paste a direct audio/video file link, or download and upload the file instead.');
+      return;
+    }
+
+    if (remainingMinutes <= 0) { toast('You\'re out of minutes. Buy a pack or upgrade to continue.'); return; }
+
+    const btn = document.getElementById('linkSubmitBtn');
+    btn.disabled = true;
+    btn.textContent = 'Starting…';
+
+    try {
+      const fileId = crypto.randomUUID();
+      const filename = parsed.pathname.split('/').pop() || parsed.hostname;
+      const { error: insertErr } = await supabase.from('transcription_files').insert({
+        id: fileId,
+        user_id: session.user.id,
+        filename,
+        source_url: url,
+        status: 'queued'
+      });
+      if (insertErr) throw insertErr;
+
+      await loadFiles();
+      startPolling();
+      input.value = '';
+
+      const { data: startResult, error: startErr } = await supabase.functions.invoke('transcribe-start', { body: { file_id: fileId } });
+      if (startErr || startResult?.error) {
+        toast('Could not start transcription: ' + (startResult?.error || startErr.message));
+      } else {
+        toast('Transcription started.');
+      }
+      await loadFiles();
+    } catch (err) {
+      toast('Could not start transcription: ' + err.message);
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Transcribe';
+    }
+  }
 
   const uploadZone = document.getElementById('uploadZone');
   const fileInput = document.getElementById('fileInput');
@@ -260,6 +342,9 @@ const FILE_ICON = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" s
     return FILE_ICON; // single consistent glyph for now — audio vs video icon variants can follow later
   }
 
+  const FILE_ICON_STR = FILE_ICON;
+  let knownStatuses = {};
+
   async function loadFiles() {
     const wrap = document.getElementById('fileListWrap');
     const { data: files, error } = await supabase
@@ -273,6 +358,17 @@ const FILE_ICON = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" s
 
     if (error) { wrap.innerHTML = `<div class="empty-note">Could not load files: ${escapeHtml(error.message)}</div>`; return false; }
     if (!files || !files.length) { wrap.innerHTML = '<div class="empty-note">No files yet — upload something above to get started.</div>'; return false; }
+
+    // Detect files that JUST finished since the last check, so someone
+    // who uploads and looks away gets told when it's actually ready —
+    // the status pill alone was easy to miss (per user feedback).
+    files.forEach(f => {
+      const prev = knownStatuses[f.id];
+      if (prev && prev !== 'completed' && f.status === 'completed') {
+        toast(`"${f.filename}" is ready — click it to view the transcript.`);
+      }
+      knownStatuses[f.id] = f.status;
+    });
 
     wrap.innerHTML = files.map(f => {
       const durationLabel = fmtDuration(f.duration_seconds);
@@ -289,6 +385,7 @@ const FILE_ICON = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" s
           <div class="file-name">${escapeHtml(f.filename)}</div>
           <div class="file-meta">${metaParts.filter(Boolean).join(' · ')}</div>
           ${f.status === 'failed' && f.error_message ? `<div class="file-meta" style="color:var(--stamp-red);">${escapeHtml(f.error_message)}</div>` : ''}
+          ${f.status === 'completed' ? `<div class="view-cue">View transcript →</div>` : ''}
         </div>
         <span class="status-pill status-${f.status}">${STATUS_LABEL[f.status] || f.status}</span>
       </a>
