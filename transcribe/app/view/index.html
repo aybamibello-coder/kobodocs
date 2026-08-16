@@ -35,6 +35,21 @@
   #toast{ position:fixed; bottom:20px; left:50%; transform:translateX(-50%); background:var(--ink-green-deep); color:var(--paper); padding:10px 20px; border-radius:6px; font-size:0.85rem; display:none; z-index:50; }
   .ai-result{ font-size:0.9rem; line-height:1.7; margin-top:12px; padding-top:12px; border-top:1px dashed var(--line); }
   .ai-result ul{ margin:8px 0 0 20px; }
+  .tr-lang-row{ display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+  .tr-lang-row select{
+    font-size:0.85rem; padding:7px 10px; border:1px solid var(--line); border-radius:6px;
+    background:var(--paper); color:var(--charcoal);
+  }
+  .tr-blur-block{ margin-top:10px; display:flex; flex-direction:column; gap:8px; }
+  .tr-blur-line{
+    height:12px; border-radius:4px; background:var(--line);
+    filter:blur(3px); opacity:0.7;
+  }
+  .tr-blur-line:nth-child(1){ width:96%; }
+  .tr-blur-line:nth-child(2){ width:88%; }
+  .tr-blur-line:nth-child(3){ width:92%; }
+  .tr-blur-line:nth-child(4){ width:70%; }
+  @media (prefers-reduced-motion: reduce){ .tr-blur-line{ filter:blur(3px); } }
 </style>
 </head>
 <body class="suite-body">
