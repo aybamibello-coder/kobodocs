@@ -2,6 +2,13 @@ function escapeHtml(str) {
   if (str === null || str === undefined) return '';
   return String(str).replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m]));
 }
+
+// Public anon key — safe to expose client-side (same one used in
+// assets/auth.js). Hardcoded here rather than reading it off the
+// supabase-js client instance, since supabaseUrl/supabaseKey aren't a
+// documented public API on that object and could change across versions.
+const SUPABASE_URL = 'https://vwmzulzluaxedkozxjfy.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_4HDVb8ZzRh1W-Z97m2uT1Q_4FwH6bTt';
 function fmtMinutes(mins) {
   return Number(mins).toLocaleString('en-NG', { maximumFractionDigits: 1 });
 }
@@ -9,6 +16,12 @@ function fmtBytes(bytes) {
   if (!bytes) return '';
   const mb = bytes / (1024 * 1024);
   return mb < 1 ? `${Math.round(bytes / 1024)} KB` : `${mb.toFixed(1)} MB`;
+}
+function fmtDuration(seconds) {
+  if (seconds === null || seconds === undefined) return null;
+  const s = Math.round(seconds);
+  if (s < 60) return `${s}s`;
+  return `${Math.round(s / 60)} min`;
 }
 function toast(msg) {
   const el = document.getElementById('toast');
@@ -22,14 +35,14 @@ const STATUS_LABEL = {
   completed: 'Completed', failed: 'Failed', cancelled: 'Cancelled'
 };
 
+const FILE_ICON = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>`;
+
 (async function init() {
   const ctx = await window.TranscribeGuard.requireAccess();
   if (!ctx) return;
 
   const { session, supabase, subscription, planConfig, remainingMinutes } = ctx;
 
-  // If they arrived here right after signing up from an anonymous trial,
-  // link that session for abuse-prevention analytics.
   window.TranscribeGuard.claimAnonymousSession(supabase, session.user.id);
 
   document.getElementById('pageHeader').innerHTML = `
@@ -38,21 +51,40 @@ const STATUS_LABEL = {
       <p style="font-size:0.88rem; opacity:0.7; margin-top:4px;">Upload audio or video to get a transcript.</p>
       <span class="plan-pill">${escapeHtml(planConfig?.display_name || subscription.plan)} plan</span>
     </div>
-    <div class="minutes-badge">
-      <div class="num">${fmtMinutes(remainingMinutes)}</div>
-      <div class="lbl">Minutes remaining</div>
-    </div>
+    ${subscription.plan === 'free' ? '<button id="upgradeBtn" class="btn primary small">Upgrade</button>' : ''}
   `;
+  document.getElementById('upgradeBtn')?.addEventListener('click', () => { window.location.href = '/transcribe/#pricing'; });
 
   const area = document.getElementById('mainArea');
   area.innerHTML = `
+    ${subscription.plan === 'free' ? `
+    <div class="upsell-strip">
+      <span>Free plan gives you 10 minutes a month. Upgrade for AI summaries, translation, and more.</span>
+      <a href="/transcribe/#pricing" class="btn small">See plans</a>
+    </div>` : ''}
+    <div class="stats-row">
+      <div class="rm-stat ${remainingMinutes < 5 ? 'warn' : ''}">
+        <div class="rm-stat-label">Minutes left</div>
+        <div class="rm-stat-value">${fmtMinutes(remainingMinutes)}</div>
+      </div>
+      <div class="rm-stat">
+        <div class="rm-stat-label">Files this period</div>
+        <div class="rm-stat-value" id="statFileCount">—</div>
+      </div>
+      <div class="rm-stat">
+        <div class="rm-stat-label">Minutes transcribed</div>
+        <div class="rm-stat-value" id="statMinutesUsed">${fmtMinutes(subscription.minutes_used_this_period)}</div>
+      </div>
+    </div>
+
     <div class="bs-panel">
       <div class="upload-zone" id="uploadZone">
-        <strong>Click to upload, or drag a file here</strong>
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        <div><strong>Click to upload, or drag a file here</strong></div>
         <p>Audio or video — MP3, WAV, M4A, MP4, MOV. Max ${planConfig?.max_file_size_mb || 200}MB, ${planConfig?.max_duration_minutes || 60} min per file.</p>
         <input type="file" id="fileInput" accept="audio/*,video/*" style="display:none;">
       </div>
-      <div id="uploadProgress" style="margin-top:12px; font-size:0.82rem; opacity:0.7; display:none;"></div>
+      <div id="progressCard"></div>
     </div>
     <div class="bs-panel">
       <strong style="font-size:0.9rem;">Your files</strong>
@@ -62,7 +94,7 @@ const STATUS_LABEL = {
 
   const uploadZone = document.getElementById('uploadZone');
   const fileInput = document.getElementById('fileInput');
-  const uploadProgress = document.getElementById('uploadProgress');
+  const progressCard = document.getElementById('progressCard');
 
   uploadZone.addEventListener('click', () => fileInput.click());
   uploadZone.addEventListener('dragover', (e) => { e.preventDefault(); uploadZone.classList.add('dragover'); });
@@ -82,11 +114,44 @@ const STATUS_LABEL = {
       const el = file.type.startsWith('video/') ? document.createElement('video') : document.createElement('audio');
       el.preload = 'metadata';
       el.onloadedmetadata = () => {
-        URL.revokeObjectURL(el.src);
-        resolve(isFinite(el.duration) ? el.duration : null);
+        // Some MP4/WebM containers report Infinity until a seek — nudge it.
+        if (el.duration === Infinity || isNaN(el.duration)) {
+          el.currentTime = 1e101;
+          el.ontimeupdate = () => {
+            el.ontimeupdate = null;
+            URL.revokeObjectURL(el.src);
+            resolve(isFinite(el.duration) ? el.duration : null);
+          };
+        } else {
+          URL.revokeObjectURL(el.src);
+          resolve(el.duration);
+        }
       };
       el.onerror = () => { URL.revokeObjectURL(el.src); resolve(null); };
       el.src = URL.createObjectURL(file);
+    });
+  }
+
+  // XHR (not fetch) specifically because it exposes real upload progress
+  // events — fetch has no equivalent for outgoing request bodies.
+  function uploadWithProgress(path, file, onProgress) {
+    return new Promise((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+      const url = `${SUPABASE_URL}/storage/v1/object/transcription-media/${encodeURI(path)}`;
+      xhr.open('POST', url, true);
+      xhr.setRequestHeader('Authorization', `Bearer ${session.access_token}`);
+      xhr.setRequestHeader('apikey', SUPABASE_ANON_KEY);
+      xhr.setRequestHeader('Content-Type', file.type || 'application/octet-stream');
+      xhr.setRequestHeader('x-upsert', 'false');
+      xhr.upload.onprogress = (e) => {
+        if (e.lengthComputable) onProgress(Math.round((e.loaded / e.total) * 100));
+      };
+      xhr.onload = () => {
+        if (xhr.status >= 200 && xhr.status < 300) resolve();
+        else reject(new Error(`Upload failed (${xhr.status})`));
+      };
+      xhr.onerror = () => reject(new Error('Upload failed — check your connection.'));
+      xhr.send(file);
     });
   }
 
@@ -101,32 +166,39 @@ const STATUS_LABEL = {
       return;
     }
 
-    uploadProgress.style.display = 'block';
-    uploadProgress.textContent = 'Checking file…';
+    progressCard.innerHTML = `
+      <div class="progress-card">
+        <div class="pc-name">${escapeHtml(file.name)}</div>
+        <div class="progress-track"><div class="progress-fill" id="progressFill" style="width:0%;"></div></div>
+        <div class="progress-status" id="progressStatus">Checking file…</div>
+      </div>
+    `;
+    const fill = document.getElementById('progressFill');
+    const status = document.getElementById('progressStatus');
+
     const durationSeconds = await getMediaDuration(file);
 
     if (durationSeconds && planConfig?.max_duration_minutes && durationSeconds / 60 > planConfig.max_duration_minutes) {
-      uploadProgress.style.display = 'none';
+      progressCard.innerHTML = '';
       toast(`This file is ${Math.round(durationSeconds / 60)} min — your plan's limit is ${planConfig.max_duration_minutes} min per file.`);
       return;
     }
     if (durationSeconds && durationSeconds / 60 > remainingMinutes) {
-      uploadProgress.style.display = 'none';
+      progressCard.innerHTML = '';
       toast(`This file (${Math.round(durationSeconds / 60)} min) is longer than your ${fmtMinutes(remainingMinutes)} remaining minutes.`);
       return;
     }
-
-    uploadProgress.textContent = `Uploading ${file.name}…`;
 
     try {
       const fileId = crypto.randomUUID();
       const ext = file.name.split('.').pop();
       const storagePath = `${session.user.id}/${fileId}/original.${ext}`;
 
-      const { error: uploadErr } = await supabase.storage
-        .from('transcription-media')
-        .upload(storagePath, file, { contentType: file.type, upsert: false });
-      if (uploadErr) throw uploadErr;
+      status.textContent = 'Uploading… 0%';
+      await uploadWithProgress(storagePath, file, (pct) => {
+        fill.style.width = pct + '%';
+        status.textContent = `Uploading… ${pct}%`;
+      });
 
       const { error: insertErr } = await supabase.from('transcription_files').insert({
         id: fileId,
@@ -140,10 +212,11 @@ const STATUS_LABEL = {
       });
       if (insertErr) throw insertErr;
 
+      fill.classList.add('indeterminate');
+      status.textContent = 'Starting transcription…';
       await loadFiles();
       startPolling();
 
-      uploadProgress.textContent = 'Starting transcription…';
       const { data: startResult, error: startErr } = await supabase.functions.invoke('transcribe-start', {
         body: { file_id: fileId }
       });
@@ -156,7 +229,7 @@ const STATUS_LABEL = {
     } catch (err) {
       toast('Upload failed: ' + err.message);
     } finally {
-      uploadProgress.style.display = 'none';
+      setTimeout(() => { progressCard.innerHTML = ''; }, 1200);
     }
   }
 
@@ -172,39 +245,58 @@ const STATUS_LABEL = {
     }, 5000);
   }
 
-  async function refreshMinutesBadge() {
+  async function refreshStats() {
     const { data: sub } = await supabase.from('transcription_subscriptions').select('*').eq('user_id', session.user.id).maybeSingle();
     if (!sub) return;
     const allowanceLeft = Math.max(0, Number(sub.minutes_allowance) - Number(sub.minutes_used_this_period));
-    const badge = document.querySelector('.minutes-badge .num');
-    if (badge) badge.textContent = fmtMinutes(allowanceLeft + Number(sub.minutes_balance));
+    const totalLeft = allowanceLeft + Number(sub.minutes_balance);
+    const badge = document.querySelector('.stats-row .rm-stat:nth-child(1) .rm-stat-value');
+    if (badge) badge.textContent = fmtMinutes(totalLeft);
+    const usedEl = document.getElementById('statMinutesUsed');
+    if (usedEl) usedEl.textContent = fmtMinutes(sub.minutes_used_this_period);
+  }
+
+  function fileIconFor(mime) {
+    return FILE_ICON; // single consistent glyph for now — audio vs video icon variants can follow later
   }
 
   async function loadFiles() {
     const wrap = document.getElementById('fileListWrap');
     const { data: files, error } = await supabase
       .from('transcription_files')
-      .select('id, filename, status, duration_seconds, file_size_bytes, created_at, error_message')
+      .select('id, filename, status, duration_seconds, file_size_bytes, created_at, error_message, mime_type')
       .eq('user_id', session.user.id)
       .order('created_at', { ascending: false })
       .limit(50);
 
+    document.getElementById('statFileCount').textContent = files ? files.length : '—';
+
     if (error) { wrap.innerHTML = `<div class="empty-note">Could not load files: ${escapeHtml(error.message)}</div>`; return false; }
     if (!files || !files.length) { wrap.innerHTML = '<div class="empty-note">No files yet — upload something above to get started.</div>'; return false; }
 
-    wrap.innerHTML = files.map(f => `
-      <a href="/transcribe/app/view/?id=${f.id}" class="file-row" style="text-decoration:none; color:inherit; display:flex; cursor:pointer;">
-        <div>
+    wrap.innerHTML = files.map(f => {
+      const durationLabel = fmtDuration(f.duration_seconds);
+      const metaParts = [fmtBytes(f.file_size_bytes)];
+      if (f.status === 'completed' || f.status === 'processing') {
+        metaParts.push(durationLabel ? durationLabel : (f.status === 'processing' ? 'estimating…' : null));
+      }
+      metaParts.push(new Date(f.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }));
+
+      return `
+      <a href="/transcribe/app/view/?id=${f.id}" class="file-card">
+        <div class="file-icon">${fileIconFor(f.mime_type)}</div>
+        <div class="file-info">
           <div class="file-name">${escapeHtml(f.filename)}</div>
-          <div class="file-meta">${fmtBytes(f.file_size_bytes)}${f.duration_seconds ? ` · ${Math.round(f.duration_seconds / 60)} min` : ''} · ${new Date(f.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</div>
+          <div class="file-meta">${metaParts.filter(Boolean).join(' · ')}</div>
           ${f.status === 'failed' && f.error_message ? `<div class="file-meta" style="color:var(--stamp-red);">${escapeHtml(f.error_message)}</div>` : ''}
         </div>
         <span class="status-pill status-${f.status}">${STATUS_LABEL[f.status] || f.status}</span>
       </a>
-    `).join('');
+    `;
+    }).join('');
 
     const pending = files.some(f => f.status === 'queued' || f.status === 'processing');
-    if (!pending) await refreshMinutesBadge();
+    if (!pending) await refreshStats();
     return pending;
   }
 
