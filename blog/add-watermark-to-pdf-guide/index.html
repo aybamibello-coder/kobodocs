@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-EN4PYGX7EW"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-EN4PYGX7EW');
+</script>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>How to Add a Watermark to a PDF (Confidential, Draft, or Your Company Name) | KoboDocs Blog</title>
+<meta name="description" content="Stamp "CONFIDENTIAL", "DRAFT", or your company name across every page of a PDF — why businesses do this and how to add one properly.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Work+Sans:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/style.css">
+<style>
+  .post-wrap{ max-width:680px; margin:0 auto; padding:20px 20px 80px; }
+  .post-meta{ font-size:0.8rem; opacity:0.55; margin-bottom:28px; }
+  .post-wrap h2{ font-size:1.2rem; margin:32px 0 10px; }
+  .post-wrap p, .post-wrap li{ font-size:0.98rem; line-height:1.75; opacity:0.85; }
+  .post-wrap ul{ margin:0 0 18px 20px; }
+  .post-note{
+    background:rgba(20,52,43,0.05); border-left:3px solid var(--ink-green-deep);
+    padding:14px 18px; font-size:0.9rem; margin:20px 0;
+  }
+  .post-cta{ margin-top:36px; padding:24px; background:var(--paper); border:1px solid var(--line); border-radius:8px; text-align:center; }
+  .key-takeaways{
+    background:var(--paper); border:1px solid var(--stamp-gold); border-radius:8px;
+    padding:18px 22px; margin:24px 0 32px;
+  }
+  .key-takeaways strong{ display:block; font-size:0.78rem; text-transform:uppercase; letter-spacing:0.05em; color:var(--stamp-gold); margin-bottom:10px; }
+  .key-takeaways ul{ margin:0 0 0 18px; }
+  .key-takeaways li{ font-size:0.92rem; line-height:1.6; opacity:0.85; margin-bottom:4px; }
+</style>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    { "@type": "Question", "name": "What is a watermark on a PDF for?", "acceptedAnswer": { "@type": "Answer", "text": "It's text (or an image) stamped across every page, typically to mark confidentiality, distinguish a draft from a final version, or brand a shared document with a company name." } },
+    { "@type": "Question", "name": "Does a watermark prevent someone from copying a PDF?", "acceptedAnswer": { "@type": "Answer", "text": "No — a watermark is a visual signal, not a technical security measure. It doesn't encrypt the document or prevent copying or editing; it clarifies status and discourages casual misuse." } },
+    { "@type": "Question", "name": "Why mark a document as DRAFT?", "acceptedAnswer": { "@type": "Answer", "text": "To prevent the common problem of an unfinished version being mistaken for the final, agreed document — a clear DRAFT watermark removes any ambiguity." } },
+    { "@type": "Question", "name": "Where is a watermark usually placed on a page?", "acceptedAnswer": { "@type": "Answer", "text": "Typically diagonally or centered across the page, semi-transparent, and repeated on every page rather than just the first, so it's visible without making the content unreadable." } },
+    { "@type": "Question", "name": "Do I need design software to add a watermark to a PDF?", "acceptedAnswer": { "@type": "Answer", "text": "No — a dedicated watermark tool can stamp text across every page of a PDF directly, without needing separate design software." } }
+  ]
+}
+</script>
+</head>
+<body>
+
+<header>
+  <nav class="nav">
+    <a href="/" class="logo">
+      <svg class="mark" viewBox="0 0 32 32" fill="none">
+        <circle cx="16" cy="16" r="14" stroke="#C79A3C" stroke-width="2.5"/>
+        <circle cx="16" cy="16" r="8" stroke="#C79A3C" stroke-width="1.5"/>
+      </svg>
+      KoboDocs
+    </a>
+    <button class="search-btn" id="searchBtn" aria-label="Search tools">
+      <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    </button>
+    <button class="menu-btn" aria-label="Toggle menu" id="menuBtn"><span></span><span></span><span></span></button>
+    <div class="nav-links" id="navLinks">
+      <a href="/" class="mobile-only-link">Home</a>
+      
+      <div class="nav-item">
+        <span class="nav-category">Business Tools ▾</span>
+        <div class="dropdown">
+          <a href="/invoice/">Invoice Generator</a>
+          <a href="/receipt/">Receipt Generator</a>
+          <a href="/quotation/">Quotation Generator</a>
+          <a href="/payslip/">Payslip / Salary Slip</a>
+          <a href="/budget/">Budget Planner</a>
+          <a href="/loan/">Loan Schedule</a>
+          <a href="/qr-code/">QR Code Generator</a>
+          <a href="/salary-calculator/">Take-Home Pay Calculator</a>
+          <a href="/hr-letters/">HR Letter Generator</a>
+          <a href="/waybill/">Waybill / Delivery Note</a>
+          <a href="/freelancer-contract/">Freelancer Contract</a>
+          <a href="/rent-agreement/">Rent / Tenancy Agreement</a>
+          <div class="dropdown-divider"></div>
+          <a href="/business-suite/">Business Suite (Pro)</a>
+          <a href="/school-report-card/">School Report Card (Pro)</a>
+        </div>
+      </div>
+      <a href="/ajo/">Ajo &amp; Esusu</a>
+      <div class="nav-item">
+        <span class="nav-category">Weddings &amp; Events ▾</span>
+        <div class="dropdown">
+          <a href="/events/">Events Suite (Wedding/Naming/Funeral)</a>
+          <a href="/bride-price-list/">Bride Price / Wedding List</a>
+          <a href="/wedding-budget-planner/">Wedding/Party Budget Planner</a>
+        </div>
+      </div>
+      <div class="nav-item">
+        <span class="nav-category">Legal &amp; Personal ▾</span>
+        <div class="dropdown">
+          <a href="/will-generator/">Will &amp; Testament</a>
+          <a href="/power-of-attorney/">Power of Attorney</a>
+          <a href="/affidavit-generator/">Affidavit Generator</a>
+          <a href="/guarantor-form/">Guarantor's Form</a>
+          <a href="/visa-cover-letter/">Visa Cover Letter</a>
+          <a href="/land-sale-agreement/">Land Sale / Deed of Assignment</a>
+          <a href="/nysc-documents/">NYSC Documents</a>
+          <a href="/siwes-logbook-report/">SIWES Logbook &amp; Report</a>
+        </div>
+      </div>
+      <div class="nav-item">
+        <span class="nav-category">Relocation ▾</span>
+        <div class="dropdown">
+          <a href="/relocation/">Relocation Overview</a>
+          <a href="/relocation/japa-calculator/">Japa Cost Calculator</a>
+          <a href="/relocation/proof-of-funds/">Proof of Funds Calculator</a>
+          <a href="/relocation/cost-of-living/">Cost of Living Calculator</a>
+          <a href="/visa-cover-letter/">Visa Cover Letter Generator</a>
+          <div class="dropdown-divider"></div>
+          <a href="/cac-calculator/">CAC Registration Cost</a>
+          <a href="/cac-registration-assistant/">CAC Registration Assistant</a>
+          <a href="/post-incorporation-pack/">Post-Incorporation Pack</a>
+          <a href="/import-duty-calculator/">Import Duty Calculator</a>
+        </div>
+      </div>
+      <a href="/pricing/">Pricing</a>
+      <a href="/blog/" class="mobile-only-link">Blog</a>
+      <a href="/about/" class="mobile-only-link">About</a>
+      <a href="/account/" id="navAccountLink">Sign in</a>
+      <a href="/invoice/" class="nav-cta">Start free</a>
+    </div>
+  </nav>
+</header>
+
+<div class="search-overlay" id="searchOverlay">
+  <div class="search-panel">
+    <div class="search-panel-head">
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input type="text" id="searchInput" placeholder="Search tools — e.g. invoice, will, visa, siwes..." autocomplete="off">
+      <button class="search-close" id="searchClose" aria-label="Close search">&times;</button>
+    </div>
+    <div class="search-results" id="searchResults"></div>
+    <div class="search-hint">↑↓ to navigate · Enter to open · Esc to close</div>
+  </div>
+</div>
+
+
+
+
+<section class="page-header">
+  <div class="wrap">
+    <a href="/blog/">&larr; Blog</a>
+    <h1>How to Add a Watermark to a PDF</h1>
+  </div>
+</section>
+
+<div class="post-wrap">
+  <div class="post-meta">August 2026 · 5 min read</div>
+
+  <p>A contract draft that gets mistaken for the final version, a confidential proposal that ends up forwarded somewhere it shouldn't, or a document that needs your company's name visibly attached to every page before it goes anywhere — a watermark solves all three, and takes seconds to add once you know why and how.</p>
+
+  <div class="key-takeaways">
+    <strong>Key takeaways</strong>
+    <ul>
+      <li>A watermark is text (or an image) stamped across every page of a document — commonly "CONFIDENTIAL," "DRAFT," or a company name.</li>
+      <li>It's a visual signal, not a security lock — a watermark discourages misuse and clarifies document status, but doesn't technically prevent copying or editing.</li>
+      <li>Marking a draft clearly as "DRAFT" prevents the common problem of an unfinished version being mistaken for final.</li>
+      <li>A company watermark on shared documents reinforces branding and makes the source of a document unambiguous if it's forwarded or printed.</li>
+      <li>Watermarks are typically semi-transparent, positioned to be visible without making the underlying content unreadable.</li>
+    </ul>
+  </div>
+
+  <h2>Why businesses watermark documents</h2>
+  <ul>
+    <li><strong>Marking confidentiality</strong> — a clear "CONFIDENTIAL" stamp signals a document isn't meant for general circulation, even if it does get forwarded further than intended.</li>
+    <li><strong>Distinguishing drafts from final versions</strong> — a "DRAFT" watermark prevents the genuinely common mix-up of an unfinished contract or proposal being treated as the finished, agreed version.</li>
+    <li><strong>Branding shared documents</strong> — stamping a company name across proposals, reports, or shared materials keeps the source clear wherever the document ends up.</li>
+    <li><strong>Discouraging unauthorized use</strong> — a visible watermark makes it obvious if a document has been copied or repurposed without permission.</li>
+  </ul>
+
+  <h2>What a watermark actually protects against — and what it doesn't</h2>
+  <p>A watermark is a visual deterrent and a status signal, not a technical security measure — it doesn't encrypt a document, prevent copying, or stop someone from editing the content. What it does well is make a document's status (draft, confidential, source) impossible to miss or misrepresent, which solves the most common real-world problems: mix-ups, unclear provenance, and casual misuse. If you need genuine access control or encryption, that's a different requirement from a watermark.</p>
+
+  <h2>Getting the look right</h2>
+  <p>An effective watermark is visible enough to serve its purpose but not so heavy it makes the underlying document hard to read — typically semi-transparent text placed diagonally or centered across the page, repeated on every page rather than just the first. Text size and opacity matter: too faint and it's easy to miss, too bold and it interferes with reading the actual content.</p>
+
+  <h2>Common watermark text</h2>
+  <ul>
+    <li><strong>CONFIDENTIAL</strong> — for sensitive proposals, contracts, or internal documents</li>
+    <li><strong>DRAFT</strong> — for anything not yet finalized</li>
+    <li><strong>Company name</strong> — for branding shared reports or proposals</li>
+    <li><strong>COPY</strong> or <strong>SAMPLE</strong> — for template or example documents meant to be clearly distinguished from the real thing</li>
+  </ul>
+
+  <h2>Adding one without design software</h2>
+  <p>KoboDocs' <a href="/watermark-pdf/">Watermark PDF tool</a> stamps text like "CONFIDENTIAL," "DRAFT," or your company name across every page — part of PDF Toolkit Pro, no design software needed.</p>
+
+
+  <h2>Frequently asked questions</h2>
+  <p><strong>What is a watermark on a PDF for?</strong><br>
+  It's text (or an image) stamped across every page, typically to mark confidentiality, distinguish a draft from a final version, or brand a shared document with a company name.</p>
+  <p><strong>Does a watermark prevent someone from copying a PDF?</strong><br>
+  No — a watermark is a visual signal, not a technical security measure. It doesn't encrypt the document or prevent copying or editing; it clarifies status and discourages casual misuse.</p>
+  <p><strong>Why mark a document as DRAFT?</strong><br>
+  To prevent the common problem of an unfinished version being mistaken for the final, agreed document — a clear DRAFT watermark removes any ambiguity.</p>
+  <p><strong>Where is a watermark usually placed on a page?</strong><br>
+  Typically diagonally or centered across the page, semi-transparent, and repeated on every page rather than just the first, so it's visible without making the content unreadable.</p>
+  <p><strong>Do I need design software to add a watermark to a PDF?</strong><br>
+  No — a dedicated watermark tool can stamp text across every page of a PDF directly, without needing separate design software.</p>
+
+  <div class="post-cta">
+    <p style="margin-bottom:14px;">Stamp CONFIDENTIAL, DRAFT, or your company name across your document.</p>
+    <a href="/watermark-pdf/" class="btn btn-primary">Add a watermark to a PDF</a>
+  </div>
+
+  <p style="font-size:0.8rem; opacity:0.55; margin-top:24px;">This article is for general guidance and reflects current common practice — it isn't legal or tax advice. Confirm your specific situation with a qualified professional where it matters.</p>
+</div>
+
+<footer>
+  <div class="wrap">
+    <div class="footer-top">
+      <div>
+        <div class="footer-logo">KoboDocs</div>
+        <p class="footer-note">Every business document, stamped and sent — built for Nigeria, one Naira at a time.</p>
+      </div>
+      <div class="footer-links">
+        <div>
+          <strong>Business tools</strong>
+          <a href="/invoice/">Invoice</a>
+          <a href="/receipt/">Receipt</a>
+          <a href="/payslip/">Payslip</a>
+          <a href="/ajo/">Ajo &amp; Esusu</a>
+          <a href="/qr-code/">QR Code</a>
+        </div>
+        <div>
+          <strong>Relocation</strong>
+          <a href="/relocation/">Relocation home</a>
+          <a href="/relocation/japa-calculator/">Japa Cost Calculator</a>
+          <a href="/relocation/proof-of-funds/">Proof of Funds</a>
+          <a href="/relocation/cost-of-living/">Cost of Living</a>
+        </div>
+        <div>
+          <strong>Company</strong>
+          <a href="/pricing/">Pricing</a>
+          <a href="/about/">About</a>
+          <a href="/contact/">Contact</a>
+          <a href="/blog/">Blog</a>
+        </div>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2026 KoboDocs. Not a financial institution — we never hold or move your money.</span>
+      <span><a href="/privacy/">Privacy</a> · <a href="/terms/">Terms</a> · Made in Lagos</span>
+    </div>
+  </div>
+</footer>
+
+<script src="/assets/app.js" defer></script>
+<script type="module" src="/assets/auth.js"></script>
+<script src="/assets/nav-auth.js" defer></script>
+
+<script src="/assets/tools-index.js" defer></script>
+<script src="/assets/search.js" defer></script>
+</body>
+</html>
