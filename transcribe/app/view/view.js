@@ -107,6 +107,42 @@ const PLAN_TIER = { free: 0, starter: 1, pro: 2, business: 3 };
   }
 
   area.innerHTML = `
+    <div class="bs-panel tr-translate-panel">
+      <div class="tr-translate-head">
+        <div>
+          <strong style="font-size:1.02rem;">Translate this recording</strong>
+          <p style="font-size:0.82rem; opacity:0.7; margin-top:2px;">Yoruba, Igbo, Hausa, Pidgin, and more — accurate translations, ready in seconds.</p>
+        </div>
+      </div>
+      <div id="translateWrap" style="margin-top:14px;">
+        <div class="tr-lang-row">
+          <select id="translateLangSelect">
+            <optgroup label="Nigerian languages">
+              <option value="yo">Yoruba</option>
+              <option value="ig">Igbo</option>
+              <option value="ha">Hausa</option>
+              <option value="pcm">Nigerian Pidgin</option>
+              <option value="ff">Fulfulde</option>
+              <option value="kr">Kanuri</option>
+            </optgroup>
+            <optgroup label="International">
+              <option value="fr">French</option>
+              <option value="de">German</option>
+              <option value="pt">Portuguese</option>
+              <option value="es">Spanish</option>
+              <option value="ar">Arabic</option>
+              <option value="sw">Swahili</option>
+            </optgroup>
+          </select>
+          <button class="btn primary tr-translate-btn" id="translateBtn">Translate</button>
+        </div>
+        <p style="font-size:0.78rem; opacity:0.6; margin-top:10px;">
+          ${planTier >= 2 ? 'Included on your plan — translate to as many languages as you like.' : 'Free plan: your first translation each month is fully unlocked. After that, translations show a preview with an upgrade option.'}
+        </p>
+        <div id="translateResult"></div>
+      </div>
+    </div>
+
     <div class="bs-panel">
       <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:14px;">
         <strong style="font-size:0.9rem;">Transcript</strong>
@@ -137,27 +173,6 @@ const PLAN_TIER = { free: 0, starter: 1, pro: 2, business: 3 };
           <button class="btn small primary" id="summarizeBtn">Generate summary</button>
         </div>
       ` : `<div class="plan-lock" style="margin-top:10px;">AI summaries are available on the Starter plan and above. <a href="/transcribe/#pricing">See plans</a></div>`}
-    </div>
-
-    <div class="bs-panel">
-      <strong style="font-size:0.9rem;">Translate</strong>
-      <div id="translateWrap" style="margin-top:10px;">
-        <div class="tr-lang-row">
-          <select id="translateLangSelect">
-            <option value="yo">Yoruba</option>
-            <option value="ig">Igbo</option>
-            <option value="ha">Hausa</option>
-            <option value="pcm">Nigerian Pidgin</option>
-            <option value="fr">French</option>
-            <option value="de">German</option>
-          </select>
-          <button class="btn small primary" id="translateBtn">Translate</button>
-        </div>
-        <p style="font-size:0.78rem; opacity:0.6; margin-top:8px;">
-          ${planTier >= 2 ? 'Included on your plan — translate to as many languages as you like.' : 'Free plan: your first translation each month is fully unlocked. After that, translations show a preview with an upgrade option.'}
-        </p>
-        <div id="translateResult"></div>
-      </div>
     </div>
   `;
 
@@ -284,7 +299,7 @@ const PLAN_TIER = { free: 0, starter: 1, pro: 2, business: 3 };
             <div class="plan-lock" style="margin-top:10px;">
               ${remaining > 0 ? 'The rest of this translation (' + remaining.toLocaleString() + ' more characters) is locked.' : 'The rest of this translation is locked.'}
               You already used this month's free translation — upgrade for unlimited translations in any language.
-              <br><a href="/transcribe/#pricing" class="btn small primary" style="margin-top:8px; display:inline-block;">Upgrade to unlock</a>
+              <br><a href="/transcribe/#pricing" class="btn primary tr-translate-btn" style="margin-top:10px; display:inline-block;">Upgrade to unlock</a>
             </div>
           </div>
         `;

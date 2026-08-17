@@ -29,6 +29,8 @@
   var items = [];
   var idSeq = 0;
   var currentObjectUrl = null;
+  var currentBlob = null;
+  var currentFilename = null;
   var dragSrcId = null;
 
   function track(name, params) {
@@ -277,6 +279,8 @@
   function resetToStart() {
     items = [];
     if (currentObjectUrl) { URL.revokeObjectURL(currentObjectUrl); currentObjectUrl = null; }
+    currentBlob = null;
+    currentFilename = null;
     renderList();
     clearError();
     listWrap.hidden = true;
@@ -323,6 +327,8 @@
 
       var pageTotal = items.reduce(function (s, it) { return s + (it.pages || 0); }, 0);
       var filename = 'merged-' + items.length + '-files.pdf';
+      currentBlob = blob;
+      currentFilename = filename;
 
       downloadBtn.href = currentObjectUrl;
       downloadBtn.setAttribute('download', filename);
@@ -356,5 +362,14 @@
   downloadBtn.addEventListener('click', function () {
     track('download_clicked', { tool: 'merge_pdf' });
   });
+
+  var shareWhatsAppBtn = document.getElementById('pdfShareWhatsAppBtn');
+  if (shareWhatsAppBtn) {
+    shareWhatsAppBtn.addEventListener('click', function () {
+      if (!currentBlob || !currentFilename || !window.KoboExport) return;
+      track('download_clicked', { tool: 'merge_pdf', via: 'whatsapp' });
+      window.KoboExport.shareWhatsAppBlob(currentFilename, 'Here\'s the merged PDF from KoboDocs.', currentBlob);
+    });
+  }
 
 })();

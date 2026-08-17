@@ -29,6 +29,8 @@
   var items = []; // { id, file, arrayBuffer, name, size, kind: 'jpg'|'png' }
   var idSeq = 0;
   var currentObjectUrl = null;
+  var currentBlob = null;
+  var currentFilename = null;
   var dragSrcId = null;
 
   function track(name, params) {
@@ -200,6 +202,8 @@
   function resetToStart() {
     items = [];
     if (currentObjectUrl) { URL.revokeObjectURL(currentObjectUrl); currentObjectUrl = null; }
+    currentBlob = null;
+    currentFilename = null;
     renderList();
     clearError();
     listWrap.hidden = true;
@@ -244,6 +248,8 @@
       if (currentObjectUrl) URL.revokeObjectURL(currentObjectUrl);
       currentObjectUrl = URL.createObjectURL(blob);
       var filename = 'images-to-pdf-' + items.length + '.pdf';
+      currentBlob = blob;
+      currentFilename = filename;
       downloadBtn.href = currentObjectUrl;
       downloadBtn.setAttribute('download', filename);
       resultMeta.textContent = items.length + (items.length === 1 ? ' page' : ' pages') + ' · ' + formatBytes(blob.size);
@@ -265,5 +271,14 @@
   });
 
   downloadBtn.addEventListener('click', function () { track('download_clicked', { tool: 'jpg_to_pdf' }); });
+
+  var shareWhatsAppBtn = document.getElementById('pdfShareWhatsAppBtn');
+  if (shareWhatsAppBtn) {
+    shareWhatsAppBtn.addEventListener('click', function () {
+      if (!currentBlob || !currentFilename || !window.KoboExport) return;
+      track('download_clicked', { tool: 'jpg_to_pdf', via: 'whatsapp' });
+      window.KoboExport.shareWhatsAppBlob(currentFilename, 'Here\'s the PDF from KoboDocs.', currentBlob);
+    });
+  }
 
 })();

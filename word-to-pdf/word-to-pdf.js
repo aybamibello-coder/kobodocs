@@ -33,6 +33,8 @@
 
   var current = null; // { file, arrayBuffer, name }
   var currentObjectUrl = null;
+  var currentBlob = null;
+  var currentFilename = null;
 
   function track(name, params) {
     if (window.KoboTrack) { window.KoboTrack(name, params); }
@@ -219,8 +221,11 @@
       var blob = new Blob([out.bytes], { type: 'application/pdf' });
       if (currentObjectUrl) URL.revokeObjectURL(currentObjectUrl);
       currentObjectUrl = URL.createObjectURL(blob);
+      var outFilename = current.name.replace(/\.docx$/i, '') + '.pdf';
+      currentBlob = blob;
+      currentFilename = outFilename;
       downloadBtn.href = currentObjectUrl;
-      downloadBtn.setAttribute('download', current.name.replace(/\.docx$/i, '') + '.pdf');
+      downloadBtn.setAttribute('download', outFilename);
       resultMeta.textContent = out.pageCount + (out.pageCount === 1 ? ' page' : ' pages') + ' · ' + formatBytes(blob.size);
 
       if (out.skippedCount > 0) {
@@ -244,6 +249,8 @@
   convertAnotherBtn.addEventListener('click', function () {
     current = null;
     if (currentObjectUrl) { URL.revokeObjectURL(currentObjectUrl); currentObjectUrl = null; }
+    currentBlob = null;
+    currentFilename = null;
     optionsBox.hidden = true;
     resultBox.hidden = true;
     progressBox.hidden = true;
@@ -251,5 +258,14 @@
   });
 
   downloadBtn.addEventListener('click', function () { track('download_clicked', { tool: 'word_to_pdf' }); });
+
+  var shareWhatsAppBtn = document.getElementById('pdfShareWhatsAppBtn');
+  if (shareWhatsAppBtn) {
+    shareWhatsAppBtn.addEventListener('click', function () {
+      if (!currentBlob || !currentFilename || !window.KoboExport) return;
+      track('download_clicked', { tool: 'word_to_pdf', via: 'whatsapp' });
+      window.KoboExport.shareWhatsAppBlob(currentFilename, 'Here\'s the PDF from KoboDocs.', currentBlob);
+    });
+  }
 
 })();

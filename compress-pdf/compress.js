@@ -26,6 +26,8 @@
 
   var current = null; // { file, arrayBuffer, name }
   var currentObjectUrl = null;
+  var currentBlob = null;
+  var currentFilename = null;
 
   function track(name, params) {
     if (window.KoboTrack) { window.KoboTrack(name, params); }
@@ -137,6 +139,8 @@
       var newSize = blob.size;
       var savedPct = Math.max(0, Math.round((1 - newSize / originalSize) * 100));
       var filename = current.name.replace(/\.pdf$/i, '') + '-compressed.pdf';
+      currentBlob = blob;
+      currentFilename = filename;
 
       downloadBtn.href = currentObjectUrl;
       downloadBtn.setAttribute('download', filename);
@@ -168,6 +172,8 @@
   compressAnotherBtn.addEventListener('click', function () {
     current = null;
     if (currentObjectUrl) { URL.revokeObjectURL(currentObjectUrl); currentObjectUrl = null; }
+    currentBlob = null;
+    currentFilename = null;
     optionsBox.hidden = true;
     resultBox.hidden = true;
     progressBox.hidden = true;
@@ -175,5 +181,14 @@
   });
 
   downloadBtn.addEventListener('click', function () { track('download_clicked', { tool: 'compress_pdf' }); });
+
+  var shareWhatsAppBtn = document.getElementById('pdfShareWhatsAppBtn');
+  if (shareWhatsAppBtn) {
+    shareWhatsAppBtn.addEventListener('click', function () {
+      if (!currentBlob || !currentFilename || !window.KoboExport) return;
+      track('download_clicked', { tool: 'compress_pdf', via: 'whatsapp' });
+      window.KoboExport.shareWhatsAppBlob(currentFilename, 'Here\'s the compressed PDF from KoboDocs.', currentBlob);
+    });
+  }
 
 })();
