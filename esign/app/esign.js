@@ -26,7 +26,7 @@ function statusTag(status) {
 async function loadEnvelopes(ctx) {
   const { data } = await ctx.supabase
     .from('signature_envelopes')
-    .select('id, title, status, created_at, signature_signers(name, email, status)')
+    .select('id, title, status, created_at, signature_signers(id, name, email, status)')
     .eq('owner_user_id', ctx.session.user.id)
     .order('created_at', { ascending: false });
   return data || [];
@@ -85,6 +85,13 @@ async function renderApp(ctx) {
           <div>
             <div class="es-name">${e.title}${statusTag(e.status)}</div>
             <div class="es-meta">${(e.signature_signers||[]).map(s => `${s.name} (${s.status})`).join(', ')}</div>
+            ${(e.signature_signers||[]).filter(s => s.status === 'pending').length ? `
+              <div class="es-resend-row">
+                ${(e.signature_signers||[]).filter(s => s.status === 'pending').map(s => `
+                  <button class="btn small resend-signer" data-envelope-id="${e.id}" data-signer-id="${s.id}">Resend to ${s.name}</button>
+                `).join('')}
+              </div>
+            ` : ''}
           </div>
           ${e.status === 'completed' ? `<button class="btn small download-signed" data-id="${e.id}">Download signed PDF</button>` : ''}
         </div>
@@ -140,8 +147,17 @@ async function renderApp(ctx) {
         source_pdf_url: fd.get('source_pdf_url'),
         signers,
       });
-      toast('Sent! Share these signing links:');
-      alert(result.signers.map(s => `${s.name}: ${s.signing_url}`).join('\n\n'));
+
+      if (!result.email_configured) {
+        toast('Sent, but email delivery isn\'t configured right now — share these links directly:');
+        alert(result.signers.map(s => `${s.name}: ${s.signing_url}`).join('\n\n'));
+      } else if (result.warning) {
+        const failed = result.signers.filter(s => !s.email_sent);
+        toast('Sent — but delivery failed for ' + failed.length + ' signer(s). Use Resend from the list below, or share their link directly:');
+        alert(failed.map(s => `${s.name}: ${s.signing_url}`).join('\n\n'));
+      } else {
+        toast('Sent! Each signer has been emailed their signing link.');
+      }
       renderApp(ctx);
     } catch (err) {
       toast(err.message);
@@ -155,6 +171,27 @@ async function renderApp(ctx) {
         window.open(result.signed_url, '_blank');
       } catch (err) {
         toast(err.message);
+      }
+    });
+  });
+
+  area.querySelectorAll('.resend-signer').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const originalText = btn.textContent;
+      btn.disabled = true;
+      btn.textContent = 'Sending…';
+      try {
+        const result = await callFn('resend-signer-email', ctx.session, {
+          envelope_id: btn.dataset.envelopeId,
+          signer_id: btn.dataset.signerId,
+        });
+        const ok = result.results && result.results[0] && result.results[0].sent;
+        toast(ok ? 'Email resent.' : 'Could not send the email — check the address and try again.');
+      } catch (err) {
+        toast(err.message);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = originalText;
       }
     });
   });
