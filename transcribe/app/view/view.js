@@ -111,7 +111,7 @@ const PLAN_TIER = { free: 0, starter: 1, pro: 2, business: 3 };
       <div class="tr-translate-head">
         <div>
           <strong style="font-size:1.02rem;">Translate this recording</strong>
-          <p style="font-size:0.82rem; opacity:0.7; margin-top:2px;">Yoruba, Igbo, Hausa, Pidgin, and more — powered by AI, ready in seconds.</p>
+          <p style="font-size:0.82rem; opacity:0.7; margin-top:2px;">Yoruba, Igbo, Hausa, Pidgin, and more — accurate translations, ready in seconds.</p>
         </div>
       </div>
       <div id="translateWrap" style="margin-top:14px;">
