@@ -33,6 +33,8 @@
 
   var current = null;
   var currentObjectUrl = null;
+  var currentBlob = null;
+  var currentFilename = null;
   var currentIsPro = false;
 
   var FREE_USED_KEY = 'kobo_watermark_free_used';
@@ -203,8 +205,11 @@
         var blob = new Blob([bytes], { type: 'application/pdf' });
         if (currentObjectUrl) URL.revokeObjectURL(currentObjectUrl);
         currentObjectUrl = URL.createObjectURL(blob);
+        var outFilename = current.name.replace(/\.pdf$/i, '') + '-watermarked.pdf';
+        currentBlob = blob;
+        currentFilename = outFilename;
         downloadBtn.href = currentObjectUrl;
-        downloadBtn.setAttribute('download', current.name.replace(/\.pdf$/i, '') + '-watermarked.pdf');
+        downloadBtn.setAttribute('download', outFilename);
         resultMeta.textContent = current.pageCount + (current.pageCount === 1 ? ' page' : ' pages') + ' · ' + formatBytes(blob.size);
         progressBox.hidden = true;
         resultBox.hidden = false;
@@ -224,6 +229,8 @@
     watermarkAnotherBtn.addEventListener('click', function () {
       current = null;
       if (currentObjectUrl) { URL.revokeObjectURL(currentObjectUrl); currentObjectUrl = null; }
+      currentBlob = null;
+      currentFilename = null;
       optionsBox.hidden = true;
       resultBox.hidden = true;
       progressBox.hidden = true;
@@ -240,6 +247,15 @@
     });
 
     downloadBtn.addEventListener('click', function () { track('download_clicked', { tool: 'watermark_pdf' }); });
+
+    var shareWhatsAppBtn = document.getElementById('pdfShareWhatsAppBtn');
+    if (shareWhatsAppBtn) {
+      shareWhatsAppBtn.addEventListener('click', function () {
+        if (!currentBlob || !currentFilename || !window.KoboExport) return;
+        track('download_clicked', { tool: 'watermark_pdf', via: 'whatsapp' });
+        window.KoboExport.shareWhatsAppBlob(currentFilename, 'Here\'s the watermarked PDF from KoboDocs.', currentBlob);
+      });
+    }
   }
 
 })();

@@ -437,7 +437,14 @@ window.KoboExport = {
 
   async shareWhatsApp(filename, caption, doc) {
     const blob = doc.output('blob');
-    const file = new File([blob], filename, { type: 'application/pdf' });
+    return this.shareWhatsAppBlob(filename, caption, blob);
+  },
+
+  // Same share-or-download-then-open-WhatsApp flow as shareWhatsApp, but
+  // for callers that already have a raw Blob (e.g. PDF Toolkit's pdf-lib
+  // output, or a signed envelope's PDF) rather than a jsPDF doc object.
+  async shareWhatsAppBlob(filename, caption, blob) {
+    const file = new File([blob], filename, { type: blob.type || 'application/pdf' });
 
     if (navigator.canShare && navigator.canShare({ files: [file] })) {
       await navigator.share({ files: [file], text: caption, title: filename });
