@@ -20,7 +20,8 @@ async function callFn(name, session, payload) {
 }
 
 function statusTag(status) {
-  return `<span class="status-tag ${status === 'completed' ? 'completed' : ''}">${status.replace('_',' ')}</span>`;
+  const cls = status === 'completed' ? 'completed' : status === 'stamping_failed' ? 'error' : '';
+  return `<span class="status-tag ${cls}">${status.replace(/_/g, ' ')}</span>`;
 }
 
 async function loadEnvelopes(ctx) {
@@ -94,6 +95,15 @@ async function renderApp(ctx) {
             ` : ''}
           </div>
           ${e.status === 'completed' ? `<button class="btn small download-signed" data-id="${e.id}">Download signed PDF</button>` : ''}
+          ${e.status === 'stamping_failed' ? `
+            <div class="es-fix-block">
+              <p class="es-fix-note">Everyone signed, but the final PDF couldn't be produced (usually an invalid document link). Fix the link below and retry — signers won't need to sign again.</p>
+              <form class="fix-stamp-form" data-envelope-id="${e.id}">
+                <input type="url" name="source_pdf_url" placeholder="Corrected link to the PDF" required>
+                <button type="submit" class="btn small primary">Retry</button>
+              </form>
+            </div>
+          ` : ''}
         </div>
       `).join('') : `
         <div class="preview-label">What a completed envelope looks like</div>
@@ -171,6 +181,34 @@ async function renderApp(ctx) {
         window.open(result.signed_url, '_blank');
       } catch (err) {
         toast(err.message);
+      }
+    });
+  });
+
+  area.querySelectorAll('.fix-stamp-form').forEach(form => {
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const btn = form.querySelector('button[type="submit"]');
+      const originalText = btn.textContent;
+      btn.disabled = true;
+      btn.textContent = 'Retrying…';
+      try {
+        const fd = new FormData(form);
+        const result = await callFn('retry-stamp-envelope', ctx.session, {
+          envelope_id: form.dataset.envelopeId,
+          source_pdf_url: fd.get('source_pdf_url'),
+        });
+        if (result.error) {
+          alert('Still could not produce the signed PDF:\n\n' + result.error);
+        } else {
+          toast('Fixed! The signed PDF is ready.');
+          renderApp(ctx);
+        }
+      } catch (err) {
+        alert(err.message);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = originalText;
       }
     });
   });
