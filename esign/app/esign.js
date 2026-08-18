@@ -185,8 +185,17 @@ async function renderApp(ctx) {
           envelope_id: btn.dataset.envelopeId,
           signer_id: btn.dataset.signerId,
         });
-        const ok = result.results && result.results[0] && result.results[0].sent;
-        toast(ok ? 'Email resent.' : 'Could not send the email — check the address and try again.');
+        if (result.error) {
+          alert('Could not resend: ' + result.error);
+        } else {
+          const first = result.results && result.results[0];
+          const ok = first && first.sent;
+          if (ok) {
+            toast('Email resent.');
+          } else {
+            alert('Send failed for ' + (first ? first.email : 'this signer') + ':\n\n' + (first && first.error ? first.error : 'unknown error'));
+          }
+        }
       } catch (err) {
         toast(err.message);
       } finally {
