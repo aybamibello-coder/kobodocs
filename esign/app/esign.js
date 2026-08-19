@@ -27,7 +27,7 @@ function statusTag(status) {
 async function loadEnvelopes(ctx) {
   const { data } = await ctx.supabase
     .from('signature_envelopes')
-    .select('id, title, status, created_at, signature_signers(id, name, email, status)')
+    .select('id, title, status, stamp_error, created_at, signature_signers(id, name, email, status)')
     .eq('owner_user_id', ctx.session.user.id)
     .order('created_at', { ascending: false });
   return data || [];
@@ -97,9 +97,9 @@ async function renderApp(ctx) {
           ${e.status === 'completed' ? `<button class="btn small download-signed" data-id="${e.id}">Download signed PDF</button>` : ''}
           ${e.status === 'stamping_failed' ? `
             <div class="es-fix-block">
-              <p class="es-fix-note">Everyone signed, but the final PDF couldn't be produced (usually an invalid document link). Fix the link below and retry — signers won't need to sign again.</p>
+              <p class="es-fix-note">Everyone signed, but the final PDF couldn't be produced${e.stamp_error ? ': ' + e.stamp_error : ' (usually an invalid document link)'}. Google Docs/Sheets/Slides links now convert automatically — just make sure the doc is shared as "Anyone with the link can view", then retry below. Leave the field blank to retry the original link as-is, or paste a corrected one. Signers won't need to sign again.</p>
               <form class="fix-stamp-form" data-envelope-id="${e.id}">
-                <input type="url" name="source_pdf_url" placeholder="Corrected link to the PDF" required>
+                <input type="url" name="source_pdf_url" placeholder="Leave blank to retry the original link, or paste a corrected one">
                 <button type="submit" class="btn small primary">Retry</button>
               </form>
             </div>
@@ -126,8 +126,9 @@ async function renderApp(ctx) {
       <form id="createEnvForm" class="es-form">
         <label>Document title</label>
         <input name="title" required placeholder="e.g. Service Agreement — Acme Ltd">
-        <label>Document URL (PDF)</label>
-        <input name="source_pdf_url" required placeholder="https://... link to a PDF">
+        <label>Document URL</label>
+        <input name="source_pdf_url" required placeholder="A PDF link, or a Google Docs/Sheets/Slides share link">
+        <p class="es-field-hint">Google Docs, Sheets, and Slides links work directly — just make sure sharing is set to "Anyone with the link can view".</p>
         <label style="margin-top:6px;">Signers</label>
         <div id="signersContainer"></div>
         <button type="button" class="btn small" id="addSignerBtn" style="margin-bottom:14px;">+ Add signer</button>
