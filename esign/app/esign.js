@@ -126,14 +126,16 @@ async function renderApp(ctx) {
       <form id="createEnvForm" class="es-form">
         <label>Document title</label>
         <input name="title" required placeholder="e.g. Service Agreement — Acme Ltd">
-        <label>Document URL</label>
-        <input name="source_pdf_url" required placeholder="A PDF link, or a Google Docs/Sheets/Slides share link">
+        <label>Document</label>
+        <input type="file" id="sourcePdfFile" accept="application/pdf">
+        <p class="es-field-hint">Upload a PDF directly, or use a link below instead.</p>
+        <input name="source_pdf_url" id="sourcePdfUrl" placeholder="Or paste a PDF link, or a Google Docs/Sheets/Slides share link">
         <p class="es-field-hint">Google Docs, Sheets, and Slides links work directly — just make sure sharing is set to "Anyone with the link can view".</p>
         <label style="margin-top:6px;">Signers</label>
         <div id="signersContainer"></div>
         <button type="button" class="btn small" id="addSignerBtn" style="margin-bottom:14px;">+ Add signer</button>
         <br>
-        <button class="btn primary" type="submit">Send for signature</button>
+        <button class="btn primary" type="submit" id="createEnvSubmitBtn">Send for signature</button>
       </form>
     </div>
   `;
@@ -141,6 +143,13 @@ async function renderApp(ctx) {
   const signersContainer = document.getElementById('signersContainer');
   addSignerRow(signersContainer);
   document.getElementById('addSignerBtn').addEventListener('click', () => addSignerRow(signersContainer));
+
+  const fileInput = document.getElementById('sourcePdfFile');
+  const urlInput = document.getElementById('sourcePdfUrl');
+  // A file and a URL are mutually exclusive -- picking one clears the other,
+  // so it's always unambiguous which source create-envelope should use.
+  fileInput.addEventListener('change', () => { if (fileInput.files.length) urlInput.value = ''; });
+  urlInput.addEventListener('input', () => { if (urlInput.value) fileInput.value = ''; });
 
   document.getElementById('createEnvForm').addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -152,10 +161,46 @@ async function renderApp(ctx) {
 
     if (!signers.length) { toast('Add at least one signer'); return; }
 
+    const file = fileInput.files[0];
+    let source_pdf_url = fd.get('source_pdf_url');
+
+    if (!file && !source_pdf_url) {
+      toast('Upload a PDF or paste a document link.');
+      return;
+    }
+
+    const submitBtn = document.getElementById('createEnvSubmitBtn');
+    submitBtn.disabled = true;
+
     try {
+      if (file) {
+        if (file.type !== 'application/pdf' && !file.name.toLowerCase().endsWith('.pdf')) {
+          toast('That file isn\'t a PDF.');
+          return;
+        }
+        if (file.size > 20 * 1024 * 1024) {
+          toast('That file is larger than the 20MB upload limit.');
+          return;
+        }
+        submitBtn.textContent = 'Uploading…';
+        const path = `source-uploads/${ctx.session.user.id}/${Date.now()}-${file.name.replace(/[^a-zA-Z0-9_.-]/g, '_')}`;
+        const { error: uploadErr } = await ctx.supabase.storage.from('esign-documents').upload(path, file, { contentType: 'application/pdf' });
+        if (uploadErr) {
+          toast('Upload failed: ' + uploadErr.message);
+          return;
+        }
+        const { data: signedUrlData, error: signErr } = await ctx.supabase.storage.from('esign-documents').createSignedUrl(path, 60 * 60 * 24 * 365);
+        if (signErr || !signedUrlData) {
+          toast('Could not prepare the uploaded file: ' + (signErr ? signErr.message : 'unknown error'));
+          return;
+        }
+        source_pdf_url = signedUrlData.signedUrl;
+        submitBtn.textContent = 'Send for signature';
+      }
+
       const result = await callFn('create-envelope', ctx.session, {
         title: fd.get('title'),
-        source_pdf_url: fd.get('source_pdf_url'),
+        source_pdf_url,
         signers,
       });
 
@@ -172,6 +217,9 @@ async function renderApp(ctx) {
       renderApp(ctx);
     } catch (err) {
       toast(err.message);
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Send for signature';
     }
   });
 
