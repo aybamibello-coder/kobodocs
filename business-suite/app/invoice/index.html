@@ -169,6 +169,14 @@
         </table>
         <div class="doc-totals" id="pTotals"></div>
         <div class="doc-note" id="pNote" style="display:none;"></div>
+        <div class="how-to-pay" id="pHowToPay" style="display:none;">
+          <strong class="htp-heading">How to pay</strong>
+          <div class="htp-body">
+            <div class="htp-bank" id="pHtpBank"></div>
+            <div class="htp-qr" id="pHtpQr"></div>
+          </div>
+          <a href="#" id="pHtpPayLink" class="btn small primary" target="_blank" rel="noopener" style="display:none; margin-top:10px;">Pay now</a>
+        </div>
         <div class="doc-note" id="pCacFooter" style="display:none; font-size:0.72rem; opacity:0.65; border-top:1px dashed var(--line); padding-top:8px; margin-top:8px;"></div>
         <div class="doc-watermark hidden" id="pWatermark">Made with KoboDocs — kobodocs.com.ng</div>
       </div>
@@ -178,6 +186,7 @@
 </section>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js" defer></script>
 <script src="/assets/export.js" defer></script>
 <script type="module" src="/assets/auth.js"></script>
 <script src="/assets/nav-auth.js" defer></script>

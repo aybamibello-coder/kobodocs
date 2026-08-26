@@ -600,6 +600,13 @@
   .doc-totals .row.grand span:last-child{ font-family:'Space Mono', monospace; color:var(--stamp-red); }
   .doc-totals .row span:last-child{ font-family:'Space Mono', monospace; }
   .doc-note{ margin-top:24px; font-size:0.8rem; opacity:0.6; border-top:1px solid var(--line); padding-top:14px; }
+  .how-to-pay{ margin-top:20px; border-top:1px solid var(--line); padding-top:14px; }
+  .htp-heading{ font-size:0.82rem; display:block; margin-bottom:10px; color:var(--ink-green-deep); }
+  .htp-body{ display:flex; align-items:center; gap:16px; flex-wrap:wrap; }
+  .htp-bank{ font-size:0.82rem; line-height:1.6; opacity:0.8; }
+  .htp-qr{ flex-shrink:0; }
+  .htp-qr img, .htp-qr canvas{ display:block; border-radius:4px; }
+  .htp-qr-caption{ font-size:0.7rem; opacity:0.55; text-align:center; margin-top:4px; max-width:110px; }
 
   /* ---------- Premium document treatment ---------- */
   /* A fine double-line frame + subtle security-paper texture + corner

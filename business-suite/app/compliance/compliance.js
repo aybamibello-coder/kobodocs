@@ -42,6 +42,9 @@ async function renderForm(ctx) {
         <input id="ccBankName" placeholder="Bank name, e.g. GTBank" value="${ctx.business.bank_name || ''}">
         <input id="ccBankAccountNumber" placeholder="Account number" value="${ctx.business.bank_account_number || ''}">
         <input id="ccBankAccountName" placeholder="Account name" value="${ctx.business.bank_account_name || ''}">
+        <label style="margin-top:10px;">Payment link (optional)</label>
+        <input id="ccPaymentLink" placeholder="Your own Paystack, Flutterwave, Opay, or Moniepoint link" value="${ctx.business.payment_link || ''}">
+        <p style="font-size:0.78rem; opacity:0.6; margin:-6px 0 10px;">If you already have a payment link from one of these, paste it here and it'll show as a "Pay now" button on your invoices. KoboDocs never touches this money — it goes straight to your own account.</p>
         <br>
         <button class="btn primary" type="submit">Save</button>
       </form>
@@ -66,6 +69,11 @@ async function renderForm(ctx) {
       }))
       .filter(d => d.name);
 
+    const rawPaymentLink = document.getElementById('ccPaymentLink').value.trim();
+    const paymentLink = rawPaymentLink
+      ? (/^https?:\/\//i.test(rawPaymentLink) ? rawPaymentLink : `https://${rawPaymentLink}`)
+      : null;
+
     const { error } = await ctx.supabase
       .from('businesses')
       .update({
@@ -77,6 +85,7 @@ async function renderForm(ctx) {
         bank_name: document.getElementById('ccBankName').value.trim() || null,
         bank_account_number: document.getElementById('ccBankAccountNumber').value.trim() || null,
         bank_account_name: document.getElementById('ccBankAccountName').value.trim() || null,
+        payment_link: paymentLink,
       })
       .eq('id', ctx.business.id);
 

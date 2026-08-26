@@ -6,6 +6,7 @@ const fmtDate = (isoDate) => isoDate
 
 let itemId = 0;
 let inventoryItems = [];
+let currentBusiness = null;
 
 function inventoryOptionsHtml(selectedId) {
   if (!inventoryItems.length) return '<option value="">Custom item</option>';
@@ -100,7 +101,59 @@ function renderPreview() {
   if (note) { noteEl.textContent = note; noteEl.style.display = 'block'; }
   else { noteEl.style.display = 'none'; }
 
+  renderHowToPay();
+
   return { invNumber, invDateRaw, dueDateRaw, items, subtotal, vat, wht, total, vatOn, whtOn, whtPercent, note };
+}
+
+let qrInstance = null;
+function renderHowToPay() {
+  const section = document.getElementById('pHowToPay');
+  const bankEl = document.getElementById('pHtpBank');
+  const qrWrap = document.getElementById('pHtpQr');
+  const payBtn = document.getElementById('pHtpPayLink');
+  if (!section || !currentBusiness) return;
+
+  const hasBank = currentBusiness.bank_name && currentBusiness.bank_account_number;
+  const hasPaymentLink = currentBusiness.payment_link;
+
+  if (!hasBank && !hasPaymentLink) {
+    section.style.display = 'none';
+    return;
+  }
+  section.style.display = 'block';
+
+  if (hasBank) {
+    bankEl.innerHTML = `
+      Bank: ${currentBusiness.bank_name}<br>
+      Account number: ${currentBusiness.bank_account_number}
+      ${currentBusiness.bank_account_name ? '<br>Account name: ' + currentBusiness.bank_account_name : ''}
+    `;
+
+    // QR encodes the account details as plain text -- scan it to quickly
+    // read/copy the details rather than mistype them. Not every banking
+    // app auto-fills a transfer from this, so it's labelled honestly
+    // rather than promised as instant "scan to pay".
+    qrWrap.innerHTML = '';
+    if (window.QRCode) {
+      const qrText = `Bank: ${currentBusiness.bank_name}\nAccount Number: ${currentBusiness.bank_account_number}${currentBusiness.bank_account_name ? '\nAccount Name: ' + currentBusiness.bank_account_name : ''}`;
+      qrInstance = new QRCode(qrWrap, { text: qrText, width: 100, height: 100, colorDark: '#14342B', colorLight: '#ffffff' });
+      const caption = document.createElement('div');
+      caption.className = 'htp-qr-caption';
+      caption.textContent = 'Scan for payment details';
+      qrWrap.appendChild(caption);
+    }
+  } else {
+    bankEl.innerHTML = '';
+    qrWrap.innerHTML = '';
+  }
+
+  if (hasPaymentLink) {
+    payBtn.href = currentBusiness.payment_link;
+    payBtn.style.display = 'inline-block';
+  } else {
+    payBtn.style.display = 'none';
+  }
 }
 
 ['invNumber', 'invDate', 'dueDate', 'invNote'].forEach(id => {
@@ -127,6 +180,7 @@ function showMsg(text, type) {
   const ctx = await window.BizSuiteGuard.requireAccess();
   if (!ctx) return;
   const { business, supabase, session } = ctx;
+  currentBusiness = business;
 
   // Business branding — this is a paid product, watermark never shows
   document.getElementById('pWatermark').classList.add('hidden');
@@ -286,9 +340,12 @@ function showMsg(text, type) {
     if (data.whtOn) totals.push({ label: `WHT (${data.whtPercent}%)`, value: '-' + naira(data.wht) });
     totals.push({ label: 'Total due', value: naira(data.total), emphasis: true });
 
-    const bankDetails = (business.bank_name && business.bank_account_number)
-      ? `Pay by bank transfer to: ${business.bank_name}, ${business.bank_account_number}${business.bank_account_name ? ' (' + business.bank_account_name + ')' : ''}`
-      : '';
+    const bankDetails = [
+      (business.bank_name && business.bank_account_number)
+        ? `Pay by bank transfer to: ${business.bank_name}, ${business.bank_account_number}${business.bank_account_name ? ' (' + business.bank_account_name + ')' : ''}`
+        : '',
+      business.payment_link ? `Or pay online: ${business.payment_link}` : ''
+    ].filter(Boolean).join('\n');
 
     return KoboExport.buildTablePdf({
       style: 'branded',
@@ -331,7 +388,8 @@ function showMsg(text, type) {
       data.dueDateRaw ? `Due: ${fmtDate(data.dueDateRaw)}` : '',
       (business.bank_name && business.bank_account_number)
         ? `\nPay by transfer: ${business.bank_name}, ${business.bank_account_number}${business.bank_account_name ? ' (' + business.bank_account_name + ')' : ''}`
-        : ''
+        : '',
+      business.payment_link ? `Pay online: ${business.payment_link}` : ''
     ].filter(Boolean).join('\n');
 
     try {
