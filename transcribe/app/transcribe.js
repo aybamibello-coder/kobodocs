@@ -95,7 +95,7 @@ const FILE_ICON = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" s
           <input type="text" id="linkInput" placeholder="https://example.com/episode.mp3" style="flex:1; min-width:220px; padding:10px 12px; border:1px solid var(--line); border-radius:6px; font-family:inherit;">
           <button class="btn primary" id="linkSubmitBtn">Transcribe</button>
         </div>
-        <p style="font-size:0.8rem; opacity:0.6; margin-top:8px;">Paste a direct link to an audio/video file, or a YouTube/TikTok/Instagram link${subscription.plan === 'pro' || subscription.plan === 'business' ? '' : ' (Pro plan and above)'}.</p>
+        <p style="font-size:0.8rem; opacity:0.6; margin-top:8px;" id="linkHelperText"></p>
       </div>
       <div id="progressCard"></div>
     </div>
@@ -118,6 +118,22 @@ const FILE_ICON = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" s
     panelLink.style.display = 'block'; panelFile.style.display = 'none';
   });
 
+  const isUnlimitedSocial = subscription.plan === 'pro' || subscription.plan === 'business';
+  const socialTrialsAllowed = planConfig?.free_social_link_trials ?? 0;
+  let socialTrialsRemaining = Math.max(0, socialTrialsAllowed - (subscription.social_link_trials_used ?? 0));
+
+  function renderLinkHelperText() {
+    const el = document.getElementById('linkHelperText');
+    if (isUnlimitedSocial) {
+      el.textContent = 'Paste a direct link to an audio/video file, or a YouTube/TikTok/Instagram link.';
+    } else if (socialTrialsRemaining > 0) {
+      el.textContent = `Paste a direct link to an audio/video file. YouTube/TikTok/Instagram links: ${socialTrialsRemaining} free ${socialTrialsRemaining === 1 ? 'try' : 'tries'} left, then Pro plan required.`;
+    } else {
+      el.textContent = `Paste a direct link to an audio/video file. You've used your free YouTube/TikTok/Instagram tries — upgrade to Pro for unlimited.`;
+    }
+  }
+  renderLinkHelperText();
+
   document.getElementById('linkSubmitBtn').addEventListener('click', handleLinkSubmit);
   document.getElementById('linkInput').addEventListener('keydown', (e) => {
     if (e.key === 'Enter') handleLinkSubmit();
@@ -133,8 +149,8 @@ const FILE_ICON = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" s
 
     const socialHosts = ['youtube.com', 'youtu.be', 'tiktok.com', 'instagram.com', 'facebook.com', 'twitter.com', 'x.com', 'vimeo.com'];
     const isSocial = socialHosts.some(h => parsed.hostname.includes(h));
-    if (isSocial && (subscription.plan !== 'pro' && subscription.plan !== 'business')) {
-      toast('Transcribing directly from YouTube/TikTok/Instagram links needs the Pro plan or above.');
+    if (isSocial && !isUnlimitedSocial && socialTrialsRemaining <= 0) {
+      toast(`You've used your ${socialTrialsAllowed} free link transcriptions. Upgrade to Pro for unlimited YouTube/TikTok/Instagram link transcription.`);
       return;
     }
 
@@ -166,6 +182,10 @@ const FILE_ICON = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" s
         toast('Could not start transcription: ' + (startResult?.error || startErr.message));
       } else {
         toast('Transcription started.');
+        if (isSocial && !isUnlimitedSocial) {
+          socialTrialsRemaining = Math.max(0, socialTrialsRemaining - 1);
+          renderLinkHelperText();
+        }
       }
       await loadFiles();
     } catch (err) {
