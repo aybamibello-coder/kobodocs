@@ -31,7 +31,7 @@ function toast(msg) {
 }
 
 const STATUS_LABEL = {
-  uploaded: 'Queued', queued: 'Queued', processing: 'Processing',
+  uploaded: 'Queued', queued: 'Queued', extracting: 'Extracting audio…', processing: 'Processing',
   completed: 'Completed', failed: 'Failed', cancelled: 'Cancelled'
 };
 
@@ -176,6 +176,8 @@ const FILE_ICON = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" s
       startPolling();
       input.value = '';
 
+      showLinkProgress(fileId, isSocial);
+
       if (isSocial) toast('Extracting audio from the link — this can take a little longer than a direct upload.');
       const { data: startResult, error: startErr } = await supabase.functions.invoke('transcribe-start', { body: { file_id: fileId } });
       if (startErr || startResult?.error) {
@@ -193,7 +195,49 @@ const FILE_ICON = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" s
     } finally {
       btn.disabled = false;
       btn.textContent = 'Transcribe';
+      stopLinkProgress();
     }
+  }
+
+  // Runs a short-lived local poll (separate from the main file-list
+  // poller) for the one file just submitted via a link, so the progress
+  // card can show a real stage ("Extracting audio…" / "Transcribing…")
+  // driven by the file's actual status in the DB, not a fake timer.
+  // Clears itself once the file moves past the point where this card is
+  // useful -- the normal file list below takes over from there with its
+  // own status pill and, on failure, the actual error message.
+  let linkProgressTimer = null;
+  function showLinkProgress(fileId, isSocial) {
+    const progressCard = document.getElementById('progressCard');
+    progressCard.innerHTML = `
+      <div class="progress-card">
+        <div class="pc-name">${isSocial ? 'Extracting audio from your link' : 'Starting transcription'}</div>
+        <div class="progress-track"><div class="progress-fill indeterminate" id="linkProgressFill"></div></div>
+        <div class="progress-status" id="linkProgressStatus">Starting…</div>
+      </div>
+    `;
+    const statusEl = document.getElementById('linkProgressStatus');
+
+    const check = async () => {
+      const { data } = await supabase.from('transcription_files').select('status').eq('id', fileId).maybeSingle();
+      if (!data) return;
+      if (data.status === 'extracting') {
+        statusEl.textContent = 'Extracting audio from the link — this can take a minute or two for longer videos…';
+      } else if (data.status === 'queued') {
+        statusEl.textContent = 'Starting…';
+      } else {
+        // processing, completed, or failed -- the file list's own status
+        // pill (and, on failure, its error message) takes over from here.
+        stopLinkProgress();
+      }
+    };
+    check();
+    linkProgressTimer = setInterval(check, 1500);
+  }
+  function stopLinkProgress() {
+    if (linkProgressTimer) { clearInterval(linkProgressTimer); linkProgressTimer = null; }
+    const progressCard = document.getElementById('progressCard');
+    if (progressCard) progressCard.innerHTML = '';
   }
 
   const uploadZone = document.getElementById('uploadZone');
