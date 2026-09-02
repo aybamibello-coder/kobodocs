@@ -118,19 +118,9 @@ const FILE_ICON = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" s
     panelLink.style.display = 'block'; panelFile.style.display = 'none';
   });
 
-  const isUnlimitedSocial = subscription.plan === 'pro' || subscription.plan === 'business';
-  const socialTrialsAllowed = planConfig?.free_social_link_trials ?? 0;
-  let socialTrialsRemaining = Math.max(0, socialTrialsAllowed - (subscription.social_link_trials_used ?? 0));
-
   function renderLinkHelperText() {
     const el = document.getElementById('linkHelperText');
-    if (isUnlimitedSocial) {
-      el.textContent = 'Paste a direct link to an audio/video file, or a YouTube/TikTok/Instagram link.';
-    } else if (socialTrialsRemaining > 0) {
-      el.textContent = `Paste a direct link to an audio/video file. YouTube/TikTok/Instagram links: ${socialTrialsRemaining} free ${socialTrialsRemaining === 1 ? 'try' : 'tries'} left, then Pro plan required.`;
-    } else {
-      el.textContent = `Paste a direct link to an audio/video file. You've used your free YouTube/TikTok/Instagram tries — upgrade to Pro for unlimited.`;
-    }
+    el.textContent = 'Paste a direct link to an audio or video file (e.g. a podcast episode URL).';
   }
   renderLinkHelperText();
 
@@ -147,10 +137,9 @@ const FILE_ICON = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" s
     try { parsed = new URL(url); } catch { toast('That doesn\'t look like a valid URL.'); return; }
     if (!/^https?:$/.test(parsed.protocol)) { toast('Link must start with http:// or https://'); return; }
 
-    const socialHosts = ['youtube.com', 'youtu.be', 'tiktok.com', 'instagram.com', 'facebook.com', 'twitter.com', 'x.com', 'vimeo.com'];
-    const isSocial = socialHosts.some(h => parsed.hostname.includes(h));
-    if (isSocial && !isUnlimitedSocial && socialTrialsRemaining <= 0) {
-      toast(`You've used your ${socialTrialsAllowed} free link transcriptions. Upgrade to Pro for unlimited YouTube/TikTok/Instagram link transcription.`);
+    const unsupportedHosts = ['youtube.com', 'youtu.be', 'tiktok.com', 'instagram.com', 'facebook.com', 'twitter.com', 'x.com', 'vimeo.com'];
+    if (unsupportedHosts.some(h => parsed.hostname.includes(h))) {
+      toast('Social media links aren\'t supported right now. Paste a direct link to an audio/video file instead, or download the video and use the Upload file tab.');
       return;
     }
 
@@ -158,7 +147,7 @@ const FILE_ICON = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" s
 
     const btn = document.getElementById('linkSubmitBtn');
     btn.disabled = true;
-    btn.textContent = isSocial ? 'Extracting audio…' : 'Starting…';
+    btn.textContent = 'Starting…';
 
     try {
       const fileId = crypto.randomUUID();
@@ -176,18 +165,13 @@ const FILE_ICON = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" s
       startPolling();
       input.value = '';
 
-      showLinkProgress(fileId, isSocial);
+      showLinkProgress(fileId);
 
-      if (isSocial) toast('Extracting audio from the link — this can take a little longer than a direct upload.');
       const { data: startResult, error: startErr } = await supabase.functions.invoke('transcribe-start', { body: { file_id: fileId } });
       if (startErr || startResult?.error) {
         toast('Could not start transcription: ' + (startResult?.error || startErr.message));
       } else {
         toast('Transcription started.');
-        if (isSocial && !isUnlimitedSocial) {
-          socialTrialsRemaining = Math.max(0, socialTrialsRemaining - 1);
-          renderLinkHelperText();
-        }
       }
       await loadFiles();
     } catch (err) {
@@ -201,17 +185,17 @@ const FILE_ICON = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" s
 
   // Runs a short-lived local poll (separate from the main file-list
   // poller) for the one file just submitted via a link, so the progress
-  // card can show a real stage ("Extracting audio…" / "Transcribing…")
-  // driven by the file's actual status in the DB, not a fake timer.
-  // Clears itself once the file moves past the point where this card is
-  // useful -- the normal file list below takes over from there with its
-  // own status pill and, on failure, the actual error message.
+  // card can show a real stage ("Starting…" / "Transcribing…") driven by
+  // the file's actual status in the DB, not a fake timer. Clears itself
+  // once the file moves past the point where this card is useful -- the
+  // normal file list below takes over from there with its own status
+  // pill and, on failure, the actual error message.
   let linkProgressTimer = null;
-  function showLinkProgress(fileId, isSocial) {
+  function showLinkProgress(fileId) {
     const progressCard = document.getElementById('progressCard');
     progressCard.innerHTML = `
       <div class="progress-card">
-        <div class="pc-name">${isSocial ? 'Extracting audio from your link' : 'Starting transcription'}</div>
+        <div class="pc-name">Starting transcription</div>
         <div class="progress-track"><div class="progress-fill indeterminate" id="linkProgressFill"></div></div>
         <div class="progress-status" id="linkProgressStatus">Starting…</div>
       </div>
@@ -221,9 +205,7 @@ const FILE_ICON = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" s
     const check = async () => {
       const { data } = await supabase.from('transcription_files').select('status').eq('id', fileId).maybeSingle();
       if (!data) return;
-      if (data.status === 'extracting') {
-        statusEl.textContent = 'Extracting audio from the link — this can take a minute or two for longer videos…';
-      } else if (data.status === 'queued') {
+      if (data.status === 'queued') {
         statusEl.textContent = 'Starting…';
       } else {
         // processing, completed, or failed -- the file list's own status
