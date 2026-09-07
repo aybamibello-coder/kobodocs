@@ -27,11 +27,16 @@
   var sendBtn = document.getElementById('pdfOsSendBtn');
   var usageEl = document.getElementById('pdfOsUsage');
   var upgradeProBtn = document.getElementById('pdfOsUpgradeProBtn');
+  var upgradeBusinessBtn = document.getElementById('pdfOsUpgradeBusinessBtn');
+  var upgradeRow = document.getElementById('pdfOsUpgradeRow');
   var vaultListEl = document.getElementById('pdfOsVaultList');
   var vaultMetaEl = document.getElementById('pdfOsVaultMeta');
 
   upgradeProBtn.addEventListener('click', function () {
     window.KoboSubscribe.start('init-pdf-os-payment', { plan: 'pro', billing_cycle: 'monthly' });
+  });
+  upgradeBusinessBtn.addEventListener('click', function () {
+    window.KoboSubscribe.start('init-pdf-os-payment', { plan: 'business', billing_cycle: 'monthly' });
   });
 
   if (window.KoboSubscribe && window.KoboSubscribe.resumePendingIfAny) {
@@ -56,6 +61,21 @@
     var lim = limits[access.plan] || limits.free;
     usageEl.textContent = access.usage.agent_runs_used + '/' + lim[0] + ' requests · ' +
       access.usage.ai_actions_used + '/' + lim[1] + ' AI actions used this period (' + access.plan + ' plan)';
+
+    // Only offer upgrades that are actually upgrades -- a Business
+    // subscriber shouldn't be shown "Upgrade to Pro" (a downgrade), and
+    // a Pro subscriber only needs the Business option, not Pro again.
+    if (access.plan === 'business') {
+      upgradeRow.hidden = true;
+    } else if (access.plan === 'pro') {
+      upgradeRow.hidden = false;
+      upgradeProBtn.hidden = true;
+      upgradeBusinessBtn.hidden = false;
+    } else {
+      upgradeRow.hidden = false;
+      upgradeProBtn.hidden = false;
+      upgradeBusinessBtn.hidden = false;
+    }
   }
 
   dropzone.addEventListener('click', function () { fileInput.click(); });
