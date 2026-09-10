@@ -80,11 +80,11 @@ function renderPicker(ctx) {
 
   document.getElementById('buyPaygBtn').addEventListener('click', () => {
     const count = Math.max(1, Number(document.getElementById('paygCount').value) || 1);
-    window.KoboSubscribe.start('init-wht-payment', { business_id: ctx.business.id, mode: 'payg', credit_count: count });
+    window.KoboSubscribe.startSafely('init-wht-payment', { business_id: ctx.business.id, mode: 'payg', credit_count: count });
   });
   area.querySelectorAll('[data-plan]').forEach(btn => {
     btn.addEventListener('click', () => {
-      window.KoboSubscribe.start('init-wht-payment', { business_id: ctx.business.id, mode: 'subscription', plan: btn.dataset.plan });
+      window.KoboSubscribe.startSafely('init-wht-payment', { business_id: ctx.business.id, mode: 'subscription', plan: btn.dataset.plan });
     });
   });
 }

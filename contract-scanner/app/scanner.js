@@ -91,7 +91,7 @@ async function renderApp(ctx) {
 
   document.getElementById('buyCreditsBtn').addEventListener('click', () => {
     const count = Math.max(1, Number(document.getElementById('creditCount').value) || 1);
-    window.KoboSubscribe.start('init-contract-scan-payment', { credit_count: count });
+    window.KoboSubscribe.startSafely('init-contract-scan-payment', { credit_count: count });
   });
 
   const form = document.getElementById('scanForm');

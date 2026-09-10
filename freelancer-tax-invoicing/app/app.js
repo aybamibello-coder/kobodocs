@@ -193,7 +193,7 @@ async function init() {
     document.getElementById('cycleMonthlyBtn').classList.remove('active');
   });
   document.getElementById('upgradeBtn').addEventListener('click', () => {
-    window.KoboSubscribe.start('init-freelance-payment', { billing_cycle: billingCycle });
+    window.KoboSubscribe.startSafely('init-freelance-payment', { billing_cycle: billingCycle });
   });
 
   await loadEntries();

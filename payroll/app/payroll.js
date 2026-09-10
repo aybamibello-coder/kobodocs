@@ -63,7 +63,7 @@ function renderPlanPicker(ctx) {
   `;
   area.querySelectorAll('[data-plan]').forEach(btn => {
     btn.addEventListener('click', () => {
-      window.KoboSubscribe.start('init-payroll-payment', {
+      window.KoboSubscribe.startSafely('init-payroll-payment', {
         business_id: ctx.business.id,
         plan: btn.dataset.plan,
         billing_cycle: 'monthly'
