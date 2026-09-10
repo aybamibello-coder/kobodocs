@@ -33,10 +33,10 @@
   var vaultMetaEl = document.getElementById('pdfOsVaultMeta');
 
   upgradeProBtn.addEventListener('click', function () {
-    window.KoboSubscribe.start('init-pdf-os-payment', { plan: 'pro', billing_cycle: 'monthly' });
+    window.KoboSubscribe.startSafely('init-pdf-os-payment', { plan: 'pro', billing_cycle: 'monthly' });
   });
   upgradeBusinessBtn.addEventListener('click', function () {
-    window.KoboSubscribe.start('init-pdf-os-payment', { plan: 'business', billing_cycle: 'monthly' });
+    window.KoboSubscribe.startSafely('init-pdf-os-payment', { plan: 'business', billing_cycle: 'monthly' });
   });
 
   if (window.KoboSubscribe && window.KoboSubscribe.resumePendingIfAny) {

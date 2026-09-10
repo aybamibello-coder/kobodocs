@@ -304,12 +304,12 @@ async function renderApp(ctx) {
     updatePaygBtnText();
     paygBtn.addEventListener('click', () => {
       const qty = Math.max(1, Math.min(50, Number(paygQty.value) || 1));
-      window.KoboSubscribe.start('init-esign-payment', { mode: 'payg', credit_count: qty });
+      window.KoboSubscribe.startSafely('init-esign-payment', { mode: 'payg', credit_count: qty });
     });
   }
   area.querySelectorAll('[data-plan]').forEach(btn => {
     btn.addEventListener('click', () => {
-      window.KoboSubscribe.start('init-esign-payment', { mode: 'subscription', plan: btn.dataset.plan });
+      window.KoboSubscribe.startSafely('init-esign-payment', { mode: 'subscription', plan: btn.dataset.plan });
     });
   });
 }

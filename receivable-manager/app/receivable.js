@@ -117,7 +117,7 @@ function renderPlanPicker(ctx) {
 
   area.querySelectorAll('[data-plan]').forEach(btn => {
     btn.addEventListener('click', () => {
-      window.KoboSubscribe.start('init-receivable-payment', {
+      window.KoboSubscribe.startSafely('init-receivable-payment', {
         business_id: ctx.business.id,
         billing_cycle: cycle,
         plan: btn.dataset.plan

@@ -76,11 +76,11 @@
 
   upgradeMonthlyBtn.addEventListener('click', function () {
     track('checkout_started', { tool: 'watermark_pdf', billing_cycle: 'monthly' });
-    window.KoboSubscribe.start('init-pdf-toolkit-payment', { billing_cycle: 'monthly' });
+    window.KoboSubscribe.startSafely('init-pdf-toolkit-payment', { billing_cycle: 'monthly' });
   });
   upgradeYearlyBtn.addEventListener('click', function () {
     track('checkout_started', { tool: 'watermark_pdf', billing_cycle: 'yearly' });
-    window.KoboSubscribe.start('init-pdf-toolkit-payment', { billing_cycle: 'yearly' });
+    window.KoboSubscribe.startSafely('init-pdf-toolkit-payment', { billing_cycle: 'yearly' });
   });
 
   // If bounced through login mid-purchase, resume automatically once signed in.
