@@ -45,6 +45,18 @@ function questionHtml(q) {
         </li>
       `).join('')}</ul>
               <input type="hidden" id="q_${q.id}">`;
+    case 'matrix':
+      return `<div class="matrix-grid-wrap"><table class="matrix-grid" data-q="${q.id}">
+        <thead><tr><th></th>${(q.columns || []).map(c => `<th>${c}</th>`).join('')}</tr></thead>
+        <tbody>
+          ${(q.rows || []).map((row, ri) => `
+            <tr data-row="${row}">
+              <td>${row}</td>
+              ${(q.columns || []).map(col => `<td><input type="radio" name="q_${q.id}_r${ri}" value="${col}"></td>`).join('')}
+            </tr>
+          `).join('')}
+        </tbody>
+      </table></div>`;
     default:
       return `<input type="text" ${common}>`;
   }
@@ -61,6 +73,16 @@ function currentValue(q) {
   if (q.type === 'ranking') {
     const list = document.querySelector(`.ranking-list[data-q="${q.id}"]`);
     return list ? Array.from(list.children).map(li => li.dataset.value) : null;
+  }
+  if (q.type === 'matrix') {
+    const table = document.querySelector(`.matrix-grid[data-q="${q.id}"]`);
+    if (!table) return null;
+    const result = {};
+    table.querySelectorAll('tbody tr').forEach(tr => {
+      const checked = tr.querySelector('input:checked');
+      if (checked) result[tr.dataset.row] = checked.value;
+    });
+    return Object.keys(result).length ? result : null;
   }
   const input = document.getElementById(`q_${q.id}`);
   return input ? input.value : null;
@@ -170,6 +192,14 @@ async function onSubmit(e, surveyDef) {
       } else if (q.type === 'ranking') {
         const list = document.querySelector(`.ranking-list[data-q="${q.id}"]`);
         answers[q.id] = Array.from(list.children).map(li => li.dataset.value);
+      } else if (q.type === 'matrix') {
+        const table = document.querySelector(`.matrix-grid[data-q="${q.id}"]`);
+        const result = {};
+        table.querySelectorAll('tbody tr').forEach(tr => {
+          const checked = tr.querySelector('input:checked');
+          if (checked) result[tr.dataset.row] = checked.value;
+        });
+        answers[q.id] = result;
       } else if (q.type === 'rating' || q.type === 'nps') {
         const input = document.getElementById(`q_${q.id}`);
         answers[q.id] = input.value ? parseInt(input.value, 10) : null;
@@ -178,7 +208,10 @@ async function onSubmit(e, surveyDef) {
         answers[q.id] = input.value.trim();
       }
 
-      if (q.required && (answers[q.id] === null || answers[q.id] === '' || (Array.isArray(answers[q.id]) && !answers[q.id].length))) {
+      if (q.required && q.type === 'matrix' && Object.keys(answers[q.id] || {}).length < (q.rows || []).length) {
+        throw new Error(`Please answer every row of "${q.label}".`);
+      }
+      if (q.required && q.type !== 'matrix' && (answers[q.id] === null || answers[q.id] === '' || (Array.isArray(answers[q.id]) && !answers[q.id].length))) {
         throw new Error(`Please answer "${q.label}".`);
       }
     }

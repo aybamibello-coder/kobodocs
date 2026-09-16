@@ -25,7 +25,7 @@ const GEMINI_MODEL = "gemini-2.5-flash";
 const GROQ_MODEL = "llama-3.3-70b-versatile";
 
 const FORM_TYPES = ["text", "textarea", "number", "email", "phone", "date", "select", "radio", "checkbox", "rating", "file", "signature"];
-const SURVEY_TYPES = ["text", "textarea", "multiple_choice", "checkbox", "rating", "nps", "likert", "ranking"];
+const SURVEY_TYPES = ["text", "textarea", "multiple_choice", "checkbox", "rating", "nps", "likert", "ranking", "matrix"];
 const OPTION_TYPES = new Set(["select", "radio", "checkbox", "multiple_choice", "ranking"]);
 
 function ok(body: Record<string, unknown>) {
@@ -45,7 +45,7 @@ Return ONLY valid JSON, no markdown fences, no commentary, matching exactly this
   "title": "string, a short title for the ${product}",
   "description": "string or null, a one-sentence description",
   "items": [
-    { "type": "one of: ${allowedTypes.join(", ")}", "label": "string, the question/field label", "required": true or false, "options": ["array of strings, ONLY for types that need options (select/radio/checkbox/multiple_choice/ranking), otherwise omit"] }
+    { "type": "one of: ${allowedTypes.join(", ")}", "label": "string, the question/field label", "required": true or false, "options": ["array of strings, ONLY for types that need options (select/radio/checkbox/multiple_choice/ranking), otherwise omit"], "rows": ["ONLY for type matrix: array of row statements"], "columns": ["ONLY for type matrix: array of column scale labels, e.g. Poor/Average/Good"] }
   ]
 }
 
@@ -126,6 +126,12 @@ function sanitizeItems(raw: unknown, product: string) {
       if (OPTION_TYPES.has(it.type)) {
         const opts = Array.isArray(it.options) ? it.options.filter((o: unknown) => typeof o === "string" && o.trim()).slice(0, 15) : [];
         item.options = opts.length ? opts : ["Option 1", "Option 2"];
+      }
+      if (it.type === "matrix") {
+        const rows = Array.isArray(it.rows) ? it.rows.filter((o: unknown) => typeof o === "string" && o.trim()).slice(0, 10) : [];
+        const cols = Array.isArray(it.columns) ? it.columns.filter((o: unknown) => typeof o === "string" && o.trim()).slice(0, 8) : [];
+        item.rows = rows.length ? rows : ["Row 1", "Row 2"];
+        item.columns = cols.length ? cols : ["Poor", "Average", "Good"];
       }
       return item;
     });

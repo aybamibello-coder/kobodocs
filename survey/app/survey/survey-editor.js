@@ -5,6 +5,7 @@ const surveyId = new URLSearchParams(window.location.search).get('id');
 const TYPE_LABELS = {
   text: 'Short text', textarea: 'Paragraph', multiple_choice: 'Multiple choice',
   checkbox: 'Checkboxes', rating: 'Rating', nps: 'NPS', likert: 'Likert', ranking: 'Ranking',
+  matrix: 'Matrix (grid)',
 };
 const OPTION_TYPES = new Set(['multiple_choice', 'checkbox', 'ranking']);
 const COND_OPERATORS = [
@@ -71,6 +72,18 @@ function renderQuestions() {
           <div class="field-options-hint">One option per line.</div>
         </div>
       ` : ''}
+      ${q.type === 'matrix' ? `
+        <div class="matrix-editor">
+          <div>
+            <textarea data-role="matrix-rows" rows="3" placeholder="One row per line, e.g.&#10;Speed of service&#10;Staff friendliness">${(q.rows || []).join('\n')}</textarea>
+            <div class="field-options-hint">Rows (statements to rate).</div>
+          </div>
+          <div>
+            <textarea data-role="matrix-columns" rows="3" placeholder="One column per line, e.g.&#10;Poor&#10;Average&#10;Good">${(q.columns || []).join('\n')}</textarea>
+            <div class="field-options-hint">Columns (answer scale).</div>
+          </div>
+        </div>
+      ` : ''}
       ${q.type === 'nps' ? `<div class="field-options-hint">Respondents pick 0 (not likely) to 10 (very likely).</div>` : ''}
       ${q.type === 'likert' ? `<div class="field-options-hint">Strongly disagree — Disagree — Neutral — Agree — Strongly agree.</div>` : ''}
       ${i > 0 ? `
@@ -99,6 +112,8 @@ document.getElementById('questionsList').addEventListener('input', (e) => {
   if (!q) return;
   if (e.target.dataset.role === 'label') q.label = e.target.value;
   if (e.target.dataset.role === 'options') q.options = e.target.value.split('\n').map(s => s.trim()).filter(Boolean);
+  if (e.target.dataset.role === 'matrix-rows') q.rows = e.target.value.split('\n').map(s => s.trim()).filter(Boolean);
+  if (e.target.dataset.role === 'matrix-columns') q.columns = e.target.value.split('\n').map(s => s.trim()).filter(Boolean);
   if (e.target.dataset.role === 'cond-value') {
     q.showIf = q.showIf || {};
     q.showIf.value = e.target.value;
@@ -167,6 +182,7 @@ document.getElementById('addQuestionMenu').addEventListener('click', (e) => {
   const type = btn.dataset.type;
   const q = { id: questionId(), type, label: TYPE_LABELS[type], required: false };
   if (OPTION_TYPES.has(type)) q.options = ['Option 1', 'Option 2'];
+  if (type === 'matrix') { q.rows = ['Row 1', 'Row 2']; q.columns = ['Poor', 'Average', 'Good']; }
   survey.questions.push(q);
   renderQuestions();
   saveQuestionsDebounced();
@@ -184,6 +200,7 @@ document.querySelector('.qb-tabs').addEventListener('click', (e) => {
   document.querySelectorAll('.qb-panel').forEach(p => p.classList.remove('active'));
   document.getElementById('panel-' + btn.dataset.tab).classList.add('active');
   if (btn.dataset.tab === 'responses') loadResponses();
+  if (btn.dataset.tab === 'analytics') initCrossTab();
 });
 
 // ---------- Share tab ----------
@@ -256,6 +273,7 @@ async function loadResponses() {
 function formatAnswer(val) {
   if (val === undefined || val === null || val === '') return '';
   if (Array.isArray(val)) return val.join(', ');
+  if (typeof val === 'object') return Object.entries(val).map(([k, v]) => `${k}: ${v}`).join('; ');
   return String(val);
 }
 
@@ -272,7 +290,9 @@ document.getElementById('exportCsvBtn').addEventListener('click', () => {
     new Date(r.submitted_at).toISOString(),
     ...cols.map(c => {
       const v = r.answers[c.id];
-      return Array.isArray(v) ? v.join('; ') : (v ?? '');
+      if (Array.isArray(v)) return v.join('; ');
+      if (v && typeof v === 'object') return Object.entries(v).map(([k, val]) => `${k}: ${val}`).join('; ');
+      return v ?? '';
     }),
   ]);
   const csv = [header, ...rows].map(row => row.map(csvEscape).join(',')).join('\n');
@@ -281,6 +301,74 @@ document.getElementById('exportCsvBtn').addEventListener('click', () => {
   a.href = URL.createObjectURL(blob);
   a.download = `${survey.slug}-responses.csv`;
   a.click();
+});
+
+// ---------- Cross-tab analytics ----------
+const CROSSTAB_TYPES = new Set(['multiple_choice', 'rating', 'nps', 'likert']);
+const LIKERT_LABELS = ['Strongly disagree', 'Disagree', 'Neutral', 'Agree', 'Strongly agree'];
+
+function crossTabValue(q, answers) {
+  const v = answers[q.id];
+  if (v === undefined || v === null || v === '') return null;
+  if (q.type === 'likert') return LIKERT_LABELS[parseInt(v, 10) - 1] || String(v);
+  return String(v);
+}
+
+async function initCrossTab() {
+  const eligible = survey.questions.filter(q => CROSSTAB_TYPES.has(q.type));
+  const selA = document.getElementById('crossTabA');
+  const selB = document.getElementById('crossTabB');
+  if (eligible.length < 2) {
+    document.getElementById('crossTabResult').innerHTML = `<div class="empty-note">Add at least two multiple choice / rating / NPS / Likert questions to cross-tabulate.</div>`;
+    selA.innerHTML = '';
+    selB.innerHTML = '';
+    return;
+  }
+  const optionsHtml = eligible.map(q => `<option value="${q.id}">${q.label}</option>`).join('');
+  selA.innerHTML = optionsHtml;
+  selB.innerHTML = optionsHtml;
+  selB.selectedIndex = 1;
+
+  if (!lastResponses.length) await loadResponsesQuietly();
+}
+
+async function loadResponsesQuietly() {
+  const { supabase } = ctx;
+  const { data } = await supabase.from('survey_responses').select('id, answers, submitted_at').eq('survey_id', surveyId);
+  lastResponses = data || [];
+}
+
+document.getElementById('runCrossTabBtn').addEventListener('click', () => {
+  const qA = survey.questions.find(q => q.id === document.getElementById('crossTabA').value);
+  const qB = survey.questions.find(q => q.id === document.getElementById('crossTabB').value);
+  const result = document.getElementById('crossTabResult');
+  if (!qA || !qB) return;
+  if (qA.id === qB.id) { result.innerHTML = `<div class="empty-note">Choose two different questions.</div>`; return; }
+  if (!lastResponses.length) { result.innerHTML = `<div class="empty-note">No responses yet.</div>`; return; }
+
+  const bValues = qB.type === 'likert' ? LIKERT_LABELS.slice() : Array.from(new Set(lastResponses.map(r => crossTabValue(qB, r.answers)).filter(Boolean)));
+  const grid = {};
+  lastResponses.forEach(r => {
+    const a = crossTabValue(qA, r.answers);
+    const b = crossTabValue(qB, r.answers);
+    if (a === null || b === null) return;
+    grid[a] = grid[a] || {};
+    grid[a][b] = (grid[a][b] || 0) + 1;
+  });
+  const aValues = Object.keys(grid);
+  if (!aValues.length) { result.innerHTML = `<div class="empty-note">No overlapping answers for these two questions yet.</div>`; return; }
+
+  result.innerHTML = `
+    <table class="resp-table">
+      <thead><tr><th>${qA.label} \\ ${qB.label}</th>${bValues.map(b => `<th>${b}</th>`).join('')}<th>Total</th></tr></thead>
+      <tbody>
+        ${aValues.map(a => {
+          const rowTotal = bValues.reduce((sum, b) => sum + (grid[a][b] || 0), 0);
+          return `<tr><td>${a}</td>${bValues.map(b => `<td>${grid[a][b] || 0}</td>`).join('')}<td><strong>${rowTotal}</strong></td></tr>`;
+        }).join('')}
+      </tbody>
+    </table>
+  `;
 });
 
 // ---------- AI generator ----------

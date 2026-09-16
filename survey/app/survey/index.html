@@ -32,6 +32,7 @@
   .field-options{ margin-top:8px; }
   .field-options textarea{ width:100%; font-size:0.85rem; padding:6px 8px; border:1px solid var(--line); border-radius:6px; font-family:inherit; }
   .field-options-hint{ font-size:0.72rem; opacity:0.55; margin-top:3px; }
+  .matrix-editor{ display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:8px; }
   .field-required{ font-size:0.78rem; display:flex; align-items:center; gap:5px; opacity:0.8; white-space:nowrap; }
   .field-condition{ margin-top:10px; padding-top:10px; border-top:1px dashed var(--line); }
   .field-condition-row{ display:flex; gap:6px; flex-wrap:wrap; align-items:center; font-size:0.82rem; }
@@ -97,6 +98,7 @@
     <button data-tab="build" class="active">Build</button>
     <button data-tab="share">Share</button>
     <button data-tab="responses">Responses</button>
+    <button data-tab="analytics">Analytics</button>
   </div>
 
   <div class="qb-panel active" id="panel-build">
@@ -112,6 +114,7 @@
         <button data-type="nps">NPS (0–10)</button>
         <button data-type="likert">Likert (agree/disagree)</button>
         <button data-type="ranking">Ranking</button>
+        <button data-type="matrix">Matrix (grid)</button>
       </div>
     </div>
     <div style="margin-top:14px;">
@@ -150,6 +153,16 @@
       <button class="btn" id="exportCsvBtn">Export CSV</button>
     </div>
     <div class="resp-table-wrap" id="responsesTableWrap"><div class="empty-note">Loading…</div></div>
+  </div>
+
+  <div class="qb-panel" id="panel-analytics">
+    <p style="font-size:0.82rem; opacity:0.7; margin-bottom:14px;">Cross-tabulate two single-answer questions (multiple choice, rating, NPS, or Likert). Team-plan feature — usable on any plan for now, but may be gated later.</p>
+    <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:16px;">
+      <select id="crossTabA" style="padding:8px 10px; border:1px solid var(--line); border-radius:6px; font-family:inherit; font-size:0.88rem; min-width:200px;"></select>
+      <select id="crossTabB" style="padding:8px 10px; border:1px solid var(--line); border-radius:6px; font-family:inherit; font-size:0.88rem; min-width:200px;"></select>
+      <button class="btn primary" id="runCrossTabBtn">Cross-tabulate</button>
+    </div>
+    <div class="resp-table-wrap" id="crossTabResult"></div>
   </div>
 </div>
 
