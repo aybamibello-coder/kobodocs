@@ -51,7 +51,15 @@ async function loadSurveys() {
     return;
   }
 
-  container.innerHTML = surveys.map(s => `
+  const totalResponses = surveys.reduce((total, survey) => total + (survey.response_count || 0), 0);
+  const active = surveys.filter(survey => survey.status === 'published').length;
+  container.innerHTML = `
+    <section class="suite-stats" aria-label="Survey overview">
+      <div class="suite-stat"><strong>${surveys.length}</strong><span>Total surveys</span></div>
+      <div class="suite-stat"><strong>${active}</strong><span>Active surveys</span></div>
+      <div class="suite-stat"><strong>${totalResponses}</strong><span>Responses</span></div>
+    </section>
+  ` + surveys.map(s => `
     <div class="sv-card">
       <div>
         <div class="sv-card-name">${s.title}</div>

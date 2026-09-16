@@ -51,7 +51,15 @@ async function loadForms() {
     return;
   }
 
-  container.innerHTML = forms.map(f => `
+  const totalResponses = forms.reduce((total, form) => total + (form.response_count || 0), 0);
+  const published = forms.filter(form => form.status === 'published').length;
+  container.innerHTML = `
+    <section class="suite-stats" aria-label="Form overview">
+      <div class="suite-stat"><strong>${forms.length}</strong><span>Total forms</span></div>
+      <div class="suite-stat"><strong>${published}</strong><span>Published</span></div>
+      <div class="suite-stat"><strong>${totalResponses}</strong><span>Responses</span></div>
+    </section>
+  ` + forms.map(f => `
     <div class="fm-card">
       <div>
         <div class="fm-card-name">${f.title}</div>
