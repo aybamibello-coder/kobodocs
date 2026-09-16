@@ -7,6 +7,12 @@ const TYPE_LABELS = {
   checkbox: 'Checkboxes', rating: 'Rating', nps: 'NPS', likert: 'Likert', ranking: 'Ranking',
 };
 const OPTION_TYPES = new Set(['multiple_choice', 'checkbox', 'ranking']);
+const COND_OPERATORS = [
+  { value: 'equals', label: 'equals' },
+  { value: 'not_equals', label: 'does not equal' },
+  { value: 'answered', label: 'is answered' },
+  { value: 'not_answered', label: 'is not answered' },
+];
 
 function toast(msg) {
   const el = document.getElementById('toast');
@@ -33,6 +39,14 @@ const saveQuestionsDebounced = debounce(() => saveSurvey({ questions: survey.que
 const saveMetaDebounced = debounce((patch) => saveSurvey(patch), 600);
 
 // ---------- Build tab: questions ----------
+function conditionSummary(q, allQuestions) {
+  if (!q.showIf) return 'Always shown';
+  const src = allQuestions.find(x => x.id === q.showIf.fieldId);
+  const opLabel = (COND_OPERATORS.find(o => o.value === q.showIf.op) || {}).label || q.showIf.op;
+  const srcLabel = src ? src.label : '(deleted question)';
+  return q.showIf.op.includes('answered') ? `Shown if "${srcLabel}" ${opLabel}` : `Shown if "${srcLabel}" ${opLabel} "${q.showIf.value || ''}"`;
+}
+
 function renderQuestions() {
   const list = document.getElementById('questionsList');
   if (!survey.questions.length) {
@@ -59,6 +73,21 @@ function renderQuestions() {
       ` : ''}
       ${q.type === 'nps' ? `<div class="field-options-hint">Respondents pick 0 (not likely) to 10 (very likely).</div>` : ''}
       ${q.type === 'likert' ? `<div class="field-options-hint">Strongly disagree — Disagree — Neutral — Agree — Strongly agree.</div>` : ''}
+      ${i > 0 ? `
+        <div class="field-condition">
+          <button type="button" class="cond-toggle-link" data-role="cond-toggle">${conditionSummary(q, survey.questions)} — edit</button>
+          <div class="field-condition-row" data-role="cond-editor" style="display:none; margin-top:8px;">
+            <select data-role="cond-field">
+              <option value="">Always show</option>
+              ${survey.questions.slice(0, i).map(other => `<option value="${other.id}" ${q.showIf && q.showIf.fieldId === other.id ? 'selected' : ''}>${other.label}</option>`).join('')}
+            </select>
+            <select data-role="cond-op">
+              ${COND_OPERATORS.map(o => `<option value="${o.value}" ${q.showIf && q.showIf.op === o.value ? 'selected' : ''}>${o.label}</option>`).join('')}
+            </select>
+            <input type="text" data-role="cond-value" placeholder="value" value="${q.showIf && q.showIf.value ? q.showIf.value.replace(/"/g, '&quot;') : ''}" ${q.showIf && q.showIf.op && q.showIf.op.includes('answered') ? 'style="display:none;"' : ''}>
+          </div>
+        </div>
+      ` : ''}
     </div>
   `).join('');
 }
@@ -70,19 +99,45 @@ document.getElementById('questionsList').addEventListener('input', (e) => {
   if (!q) return;
   if (e.target.dataset.role === 'label') q.label = e.target.value;
   if (e.target.dataset.role === 'options') q.options = e.target.value.split('\n').map(s => s.trim()).filter(Boolean);
+  if (e.target.dataset.role === 'cond-value') {
+    q.showIf = q.showIf || {};
+    q.showIf.value = e.target.value;
+  }
   saveQuestionsDebounced();
 });
 
 document.getElementById('questionsList').addEventListener('change', (e) => {
-  if (e.target.dataset.role !== 'required') return;
   const row = e.target.closest('.field-row');
+  if (!row) return;
   const q = survey.questions.find(q => q.id === row.dataset.id);
   if (!q) return;
-  q.required = e.target.checked;
+
+  if (e.target.dataset.role === 'required') q.required = e.target.checked;
+
+  if (e.target.dataset.role === 'cond-field') {
+    if (!e.target.value) {
+      q.showIf = null;
+    } else {
+      q.showIf = { fieldId: e.target.value, op: (q.showIf && q.showIf.op) || 'equals', value: (q.showIf && q.showIf.value) || '' };
+    }
+    renderQuestions();
+  }
+  if (e.target.dataset.role === 'cond-op') {
+    q.showIf = q.showIf || { fieldId: '', value: '' };
+    q.showIf.op = e.target.value;
+    renderQuestions();
+  }
   saveQuestionsDebounced();
 });
 
 document.getElementById('questionsList').addEventListener('click', (e) => {
+  const toggleBtn = e.target.closest('button[data-role="cond-toggle"]');
+  if (toggleBtn) {
+    const editor = toggleBtn.parentElement.querySelector('[data-role="cond-editor"]');
+    editor.style.display = editor.style.display === 'none' ? 'flex' : 'none';
+    return;
+  }
+
   const btn = e.target.closest('button[data-role]');
   if (!btn) return;
   const row = btn.closest('.field-row');
@@ -228,6 +283,64 @@ document.getElementById('exportCsvBtn').addEventListener('click', () => {
   a.click();
 });
 
+// ---------- AI generator ----------
+document.getElementById('aiGenerateBtn').addEventListener('click', () => {
+  document.getElementById('aiGenerateBox').style.display = 'block';
+});
+document.getElementById('aiGenerateCancelBtn').addEventListener('click', () => {
+  document.getElementById('aiGenerateBox').style.display = 'none';
+});
+
+document.getElementById('aiGenerateSubmitBtn').addEventListener('click', async () => {
+  const { supabase } = ctx;
+  const btn = document.getElementById('aiGenerateSubmitBtn');
+  const errEl = document.getElementById('aiGenerateError');
+  const description = document.getElementById('aiPromptInput').value.trim();
+  errEl.style.display = 'none';
+  if (!description) { errEl.textContent = 'Describe the survey you want first.'; errEl.style.display = 'block'; return; }
+
+  btn.disabled = true;
+  btn.textContent = 'Generating…';
+
+  const { data, error } = await supabase.functions.invoke('generate-schema', { body: { product: 'survey', description } });
+
+  btn.disabled = false;
+  btn.textContent = 'Generate';
+
+  if (error || !data || !data.success) {
+    errEl.textContent = (data && data.error) || (error && error.message) || 'Could not generate a survey from that description.';
+    errEl.style.display = 'block';
+    return;
+  }
+
+  if (!survey.title || survey.title === 'Untitled survey') {
+    document.getElementById('surveyTitleInput').value = data.title;
+    survey.title = data.title;
+  }
+  if (!survey.description && data.description) {
+    document.getElementById('surveyDescInput').value = data.description;
+    survey.description = data.description;
+  }
+  survey.questions.push(...data.items);
+  renderQuestions();
+  saveSurvey({ title: survey.title, description: survey.description, questions: survey.questions });
+  document.getElementById('aiGenerateBox').style.display = 'none';
+  document.getElementById('aiPromptInput').value = '';
+  toast('Added ' + data.items.length + ' question(s) from AI. Review before publishing.');
+});
+
+async function loadAiPlanHint() {
+  const { supabase, session } = ctx;
+  const { data } = await supabase.rpc('get_survey_plan_limits', { p_user_id: session.user.id });
+  const row = Array.isArray(data) ? data[0] : data;
+  const hintEl = document.getElementById('aiPlanHint');
+  if (row && ['pro', 'team'].includes(row.plan_key)) {
+    hintEl.textContent = '';
+  } else {
+    hintEl.textContent = 'Pro-plan feature — you can still try it, but generation is gated server-side.';
+  }
+}
+
 // ---------- Init ----------
 (async () => {
   ctx = await window.SurveyGuard.requireAccess();
@@ -246,4 +359,5 @@ document.getElementById('exportCsvBtn').addEventListener('click', () => {
   document.getElementById('surveyDescInput').value = survey.description || '';
   renderQuestions();
   renderShare();
+  loadAiPlanHint();
 })();

@@ -50,6 +50,45 @@ function questionHtml(q) {
   }
 }
 
+function currentValue(q) {
+  if (q.type === 'checkbox') {
+    return Array.from(document.querySelectorAll(`input[name="q_${q.id}"]:checked`)).map(el => el.value);
+  }
+  if (q.type === 'multiple_choice' || q.type === 'likert') {
+    const checked = document.querySelector(`input[name="q_${q.id}"]:checked`);
+    return checked ? checked.value : null;
+  }
+  if (q.type === 'ranking') {
+    const list = document.querySelector(`.ranking-list[data-q="${q.id}"]`);
+    return list ? Array.from(list.children).map(li => li.dataset.value) : null;
+  }
+  const input = document.getElementById(`q_${q.id}`);
+  return input ? input.value : null;
+}
+
+function isVisible(q, allQuestions) {
+  if (!q.showIf || !q.showIf.fieldId) return true;
+  const source = allQuestions.find(x => x.id === q.showIf.fieldId);
+  if (!source) return true;
+  const val = currentValue(source);
+  const isEmpty = val === null || val === '' || (Array.isArray(val) && !val.length);
+  switch (q.showIf.op) {
+    case 'answered': return !isEmpty;
+    case 'not_answered': return isEmpty;
+    case 'not_equals': return String(val ?? '') !== String(q.showIf.value ?? '');
+    case 'equals':
+    default: return String(val ?? '') === String(q.showIf.value ?? '');
+  }
+}
+
+function evaluateConditions(allQuestions) {
+  allQuestions.forEach(q => {
+    const wrap = document.getElementById(`wrap_${q.id}`);
+    if (!wrap) return;
+    wrap.style.display = isVisible(q, allQuestions) ? '' : 'none';
+  });
+}
+
 function renderSurvey(s) {
   card.innerHTML = `
     <div class="fill-logo">KoboDocs Survey</div>
@@ -57,7 +96,7 @@ function renderSurvey(s) {
     ${s.description ? `<div class="fill-desc">${s.description}</div>` : ''}
     <form id="fillForm">
       ${s.questions.map(q => `
-        <div class="fill-field">
+        <div class="fill-field" id="wrap_${q.id}">
           <label class="qlabel">${q.label}${q.required ? ' <span class="req">*</span>' : ''}</label>
           ${questionHtml(q)}
         </div>
@@ -74,6 +113,7 @@ function renderSurvey(s) {
       const val = parseInt(star.dataset.value, 10);
       wrap.querySelectorAll('span').forEach(sp => sp.classList.toggle('active', parseInt(sp.dataset.value, 10) <= val));
       wrap.nextElementSibling.value = val;
+      evaluateConditions(s.questions);
     });
   });
 
@@ -83,6 +123,7 @@ function renderSurvey(s) {
       if (!btn) return;
       wrap.querySelectorAll('button').forEach(b => b.classList.toggle('active', b === btn));
       wrap.nextElementSibling.nextElementSibling.value = btn.dataset.value;
+      evaluateConditions(s.questions);
     });
   });
 
@@ -97,10 +138,16 @@ function renderSurvey(s) {
         list.insertBefore(li.nextElementSibling, li);
       }
       Array.from(list.children).forEach((el, i) => { el.querySelector('span').textContent = `${i + 1}. ${el.dataset.value}`; });
+      evaluateConditions(s.questions);
     });
   });
 
-  document.getElementById('fillForm').addEventListener('submit', (e) => onSubmit(e, s));
+  const formEl = document.getElementById('fillForm');
+  formEl.addEventListener('input', () => evaluateConditions(s.questions));
+  formEl.addEventListener('change', () => evaluateConditions(s.questions));
+  formEl.addEventListener('submit', (e) => onSubmit(e, s));
+
+  evaluateConditions(s.questions);
 }
 
 async function onSubmit(e, surveyDef) {
@@ -112,8 +159,9 @@ async function onSubmit(e, surveyDef) {
   btn.textContent = 'Submitting…';
 
   try {
+    const visibleQuestions = surveyDef.questions.filter(q => isVisible(q, surveyDef.questions));
     const answers = {};
-    for (const q of surveyDef.questions) {
+    for (const q of visibleQuestions) {
       if (q.type === 'checkbox') {
         answers[q.id] = Array.from(document.querySelectorAll(`input[name="q_${q.id}"]:checked`)).map(el => el.value);
       } else if (q.type === 'multiple_choice' || q.type === 'likert') {

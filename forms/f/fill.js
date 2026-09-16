@@ -12,7 +12,6 @@ function renderError(message) {
 }
 
 function fieldHtml(f) {
-  const req = f.required ? '<span class="req">*</span>' : '';
   const common = `id="field_${f.id}" ${f.required ? 'required' : ''}`;
 
   switch (f.type) {
@@ -29,8 +28,8 @@ function fieldHtml(f) {
     case 'select':
       return `<select ${common}><option value="">Choose…</option>${(f.options || []).map(o => `<option value="${o}">${o}</option>`).join('')}</select>`;
     case 'radio':
-      return `<div class="fill-choice-list">${(f.options || []).map((o, i) => `
-        <label><input type="radio" name="field_${f.id}" value="${o}" ${f.required && i === 0 ? '' : ''}> ${o}</label>
+      return `<div class="fill-choice-list">${(f.options || []).map(o => `
+        <label><input type="radio" name="field_${f.id}" value="${o}"> ${o}</label>
       `).join('')}</div>`;
     case 'checkbox':
       return `<div class="fill-choice-list">${(f.options || []).map(o => `
@@ -41,9 +40,92 @@ function fieldHtml(f) {
               <input type="hidden" ${common}>`;
     case 'file':
       return `<input type="file" ${common}>`;
+    case 'signature':
+      return `<canvas class="sig-pad" id="field_${f.id}" width="480" height="140"></canvas>
+              <button type="button" class="btn sig-clear" data-field="${f.id}" style="margin-top:6px;">Clear</button>`;
     default:
       return `<input type="text" ${common}>`;
   }
+}
+
+function setupSignaturePad(canvas) {
+  const ctx = canvas.getContext('2d');
+  canvas.width = canvas.offsetWidth;
+  canvas.height = canvas.offsetHeight;
+  ctx.strokeStyle = '#0D2620';
+  ctx.lineWidth = 2;
+  ctx.lineJoin = 'round';
+  ctx.lineCap = 'round';
+  let drawing = false;
+  let hasDrawn = false;
+
+  function pos(e) {
+    const rect = canvas.getBoundingClientRect();
+    const t = e.touches ? e.touches[0] : e;
+    return { x: t.clientX - rect.left, y: t.clientY - rect.top };
+  }
+  function start(e) { drawing = true; hasDrawn = true; const p = pos(e); ctx.beginPath(); ctx.moveTo(p.x, p.y); }
+  function move(e) { if (!drawing) return; e.preventDefault(); const p = pos(e); ctx.lineTo(p.x, p.y); ctx.stroke(); }
+  function end() { drawing = false; }
+
+  canvas.addEventListener('mousedown', start);
+  canvas.addEventListener('mousemove', move);
+  canvas.addEventListener('mouseup', end);
+  canvas.addEventListener('mouseleave', end);
+  canvas.addEventListener('touchstart', start);
+  canvas.addEventListener('touchmove', move);
+  canvas.addEventListener('touchend', end);
+
+  return {
+    clear() { ctx.clearRect(0, 0, canvas.width, canvas.height); hasDrawn = false; },
+    hasSignature() { return hasDrawn; },
+    toBlob() { return new Promise(resolve => canvas.toBlob(resolve, 'image/png')); },
+  };
+}
+
+// ---------- Conditional logic ----------
+const sigPads = {};
+
+function currentValue(field) {
+  if (field.type === 'checkbox') {
+    return Array.from(document.querySelectorAll(`input[name="field_${field.id}"]:checked`)).map(el => el.value);
+  }
+  if (field.type === 'radio') {
+    const checked = document.querySelector(`input[name="field_${field.id}"]:checked`);
+    return checked ? checked.value : null;
+  }
+  if (field.type === 'signature') {
+    return sigPads[field.id] && sigPads[field.id].hasSignature() ? 'signed' : null;
+  }
+  if (field.type === 'rating') {
+    const input = document.getElementById(`field_${field.id}`);
+    return input && input.value ? input.value : null;
+  }
+  const input = document.getElementById(`field_${field.id}`);
+  return input ? input.value : null;
+}
+
+function isVisible(field, allFields) {
+  if (!field.showIf || !field.showIf.fieldId) return true;
+  const source = allFields.find(f => f.id === field.showIf.fieldId);
+  if (!source) return true;
+  const val = currentValue(source);
+  const isEmpty = val === null || val === '' || (Array.isArray(val) && !val.length);
+  switch (field.showIf.op) {
+    case 'answered': return !isEmpty;
+    case 'not_answered': return isEmpty;
+    case 'not_equals': return String(val ?? '') !== String(field.showIf.value ?? '');
+    case 'equals':
+    default: return String(val ?? '') === String(field.showIf.value ?? '');
+  }
+}
+
+function evaluateConditions(allFields) {
+  allFields.forEach(f => {
+    const wrap = document.getElementById(`wrap_${f.id}`);
+    if (!wrap) return;
+    wrap.style.display = isVisible(f, allFields) ? '' : 'none';
+  });
 }
 
 function renderForm(f) {
@@ -53,7 +135,7 @@ function renderForm(f) {
     ${f.description ? `<div class="fill-desc">${f.description}</div>` : ''}
     <form id="fillForm">
       ${f.fields.map(field => `
-        <div class="fill-field">
+        <div class="fill-field" id="wrap_${field.id}">
           <label for="field_${field.id}">${field.label}${field.required ? ' <span class="req">*</span>' : ''}</label>
           ${fieldHtml(field)}
         </div>
@@ -63,6 +145,13 @@ function renderForm(f) {
     </form>
   `;
 
+  document.querySelectorAll('.sig-pad').forEach(canvas => {
+    sigPads[canvas.id.replace('field_', '')] = setupSignaturePad(canvas);
+  });
+  document.querySelectorAll('.sig-clear').forEach(btn => {
+    btn.addEventListener('click', () => sigPads[btn.dataset.field] && sigPads[btn.dataset.field].clear());
+  });
+
   // Rating stars behavior
   document.querySelectorAll('.rating-stars').forEach(wrap => {
     wrap.addEventListener('click', (e) => {
@@ -71,18 +160,23 @@ function renderForm(f) {
       const val = parseInt(star.dataset.value, 10);
       wrap.querySelectorAll('span').forEach(s => s.classList.toggle('active', parseInt(s.dataset.value, 10) <= val));
       wrap.nextElementSibling.value = val;
+      evaluateConditions(f.fields);
     });
   });
 
-  document.getElementById('fillForm').addEventListener('submit', (e) => onSubmit(e, f));
+  const formEl = document.getElementById('fillForm');
+  formEl.addEventListener('input', () => evaluateConditions(f.fields));
+  formEl.addEventListener('change', () => evaluateConditions(f.fields));
+  formEl.addEventListener('submit', (e) => onSubmit(e, f));
+
+  evaluateConditions(f.fields);
 }
 
-async function uploadFile(formId, file) {
-  const path = `${formId}/${Math.random().toString(36).slice(2, 10)}-${file.name}`;
-  const { error } = await supabase.storage.from('form-uploads').upload(path, file);
+async function uploadBlob(formId, blob, filename) {
+  const path = `${formId}/${Math.random().toString(36).slice(2, 10)}-${filename}`;
+  const { error } = await supabase.storage.from('form-uploads').upload(path, blob);
   if (error) throw error;
-  const { data } = supabase.storage.from('form-uploads').getPublicUrl(path);
-  return path; // owner reads it back via a signed URL from their dashboard; bucket is private
+  return path; // owner reads it back from their dashboard; bucket is private
 }
 
 async function onSubmit(e, formDef) {
@@ -94,8 +188,9 @@ async function onSubmit(e, formDef) {
   btn.textContent = 'Submitting…';
 
   try {
+    const visibleFields = formDef.fields.filter(field => isVisible(field, formDef.fields));
     const answers = {};
-    for (const field of formDef.fields) {
+    for (const field of visibleFields) {
       if (field.type === 'checkbox') {
         answers[field.id] = Array.from(document.querySelectorAll(`input[name="field_${field.id}"]:checked`)).map(el => el.value);
       } else if (field.type === 'radio') {
@@ -104,7 +199,15 @@ async function onSubmit(e, formDef) {
       } else if (field.type === 'file') {
         const input = document.getElementById(`field_${field.id}`);
         if (input.files && input.files[0]) {
-          answers[field.id] = await uploadFile(formDef.id, input.files[0]);
+          answers[field.id] = await uploadBlob(formDef.id, input.files[0], input.files[0].name);
+        } else {
+          answers[field.id] = null;
+        }
+      } else if (field.type === 'signature') {
+        const pad = sigPads[field.id];
+        if (pad && pad.hasSignature()) {
+          const blob = await pad.toBlob();
+          answers[field.id] = await uploadBlob(formDef.id, blob, 'signature.png');
         } else {
           answers[field.id] = null;
         }

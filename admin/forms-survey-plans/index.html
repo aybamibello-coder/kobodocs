@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Forms & Survey Plans | Admin | KoboDocs</title>
+<meta name="robots" content="noindex, nofollow">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Work+Sans:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/style.css">
+<style>
+  #adminRoot{ max-width:640px; margin:0 auto; padding:32px 20px 80px; }
+  #adminDenied, #adminLoading{ max-width:480px; margin:80px auto; text-align:center; }
+  .plan-box{ background:var(--paper); border:1px solid var(--line); border-radius:8px; padding:20px; margin-bottom:20px; }
+  .plan-box label{ display:block; font-size:0.8rem; opacity:0.7; margin-bottom:4px; margin-top:12px; }
+  .plan-box input, .plan-box select{ width:100%; padding:8px 10px; border:1px solid var(--line); border-radius:6px; font-family:inherit; font-size:0.9rem; }
+  .btn{ font-size:0.85rem; border:1px solid var(--line); background:none; border-radius:20px; padding:8px 18px; cursor:pointer; font-family:inherit; margin-top:14px; }
+  .btn.primary{ background:var(--ink-green-deep); color:var(--paper); border-color:var(--ink-green-deep); }
+  .current-plan{ font-size:0.85rem; opacity:0.75; margin-top:6px; }
+  #toast{ position:fixed; bottom:20px; left:50%; transform:translateX(-50%); background:var(--ink-green-deep); color:var(--paper); padding:10px 20px; border-radius:6px; font-size:0.85rem; display:none; z-index:50; }
+</style>
+</head>
+<body>
+<header>
+  <nav class="nav">
+    <a href="/" class="logo">
+      <svg class="mark" viewBox="0 0 32 32" fill="none">
+        <circle cx="16" cy="16" r="14" stroke="#C79A3C" stroke-width="2.5"/>
+        <circle cx="16" cy="16" r="8" stroke="#C79A3C" stroke-width="1.5"/>
+      </svg>
+      <span>KoboDocs</span>
+    </a>
+    <div class="nav-links">
+      <a href="/admin/">&larr; Admin dashboard</a>
+    </div>
+  </nav>
+</header>
+
+<div id="adminRoot">
+  <div id="adminLoading">Loading…</div>
+  <div id="adminDenied" style="display:none;">
+    <h2>Not authorized</h2>
+    <p style="opacity:0.7; font-size:0.9rem;">This page is restricted to KoboDocs admins.</p>
+  </div>
+  <div id="adminContent" style="display:none;">
+    <h1 style="font-size:1.3rem; margin-bottom:6px;">Forms &amp; Survey plan assignment</h1>
+    <p style="font-size:0.85rem; opacity:0.7; margin-bottom:20px;">Neither product has payment integration yet, so plan changes are manual. Look up a user by email, then set their plan.</p>
+
+    <div class="plan-box">
+      <label for="lookupEmail">User's email</label>
+      <input type="email" id="lookupEmail" placeholder="user@example.com">
+      <button class="btn primary" id="lookupBtn">Look up</button>
+    </div>
+
+    <div id="planEditor" style="display:none;">
+      <div class="plan-box">
+        <h3 style="font-size:1rem;">KoboDocs Form</h3>
+        <div class="current-plan" id="currentFormPlan"></div>
+        <label for="formPlanSelect">Set plan</label>
+        <select id="formPlanSelect">
+          <option value="free">Free</option>
+          <option value="starter">Starter — ₦5,000/mo</option>
+          <option value="pro">Pro — ₦12,000/mo</option>
+          <option value="business">Business — ₦25,000/mo</option>
+        </select>
+        <label for="formExpiryInput">Expires on (optional)</label>
+        <input type="date" id="formExpiryInput">
+        <button class="btn primary" id="saveFormPlanBtn">Save Form plan</button>
+      </div>
+
+      <div class="plan-box">
+        <h3 style="font-size:1rem;">KoboDocs Survey</h3>
+        <div class="current-plan" id="currentSurveyPlan"></div>
+        <label for="surveyPlanSelect">Set plan</label>
+        <select id="surveyPlanSelect">
+          <option value="free">Free</option>
+          <option value="plus">Plus — ₦4,000/mo</option>
+          <option value="pro">Pro — ₦10,000/mo</option>
+          <option value="team">Team — ₦20,000/mo</option>
+        </select>
+        <label for="surveyExpiryInput">Expires on (optional)</label>
+        <input type="date" id="surveyExpiryInput">
+        <button class="btn primary" id="saveSurveyPlanBtn">Save Survey plan</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script type="module" src="/assets/auth.js"></script>
+<script src="/admin/forms-survey-plans/plans.js" defer></script>
+</body>
+</html>

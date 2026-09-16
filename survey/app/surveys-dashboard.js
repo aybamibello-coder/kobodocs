@@ -72,6 +72,45 @@ document.getElementById('cancelSurveyBtn').addEventListener('click', () => {
   document.getElementById('newSurveyForm').classList.remove('show');
 });
 
+function initTemplatePickers() {
+  const catSelect = document.getElementById('templateCategory');
+  const langSelect = document.getElementById('templateLang');
+  const langRow = document.getElementById('templateLangRow');
+  const reviewNote = document.getElementById('templateReviewNote');
+
+  window.SurveyTemplates.categories.forEach(c => {
+    const opt = document.createElement('option');
+    opt.value = c.key;
+    opt.textContent = c.label;
+    catSelect.appendChild(opt);
+  });
+  window.SurveyTemplates.languages.forEach(l => {
+    const opt = document.createElement('option');
+    opt.value = l.key;
+    opt.textContent = l.label;
+    langSelect.appendChild(opt);
+  });
+
+  function applyPreview() {
+    if (!catSelect.value) {
+      document.getElementById('surveyTitle').value = '';
+      document.getElementById('surveyDescription').value = '';
+      return;
+    }
+    const tpl = window.SurveyTemplates.get(catSelect.value, langSelect.value);
+    if (!tpl) return;
+    document.getElementById('surveyTitle').value = tpl.title;
+    document.getElementById('surveyDescription').value = tpl.description;
+    reviewNote.style.display = tpl.needsReview ? 'block' : 'none';
+  }
+
+  catSelect.addEventListener('change', () => {
+    langRow.style.display = catSelect.value ? 'block' : 'none';
+    applyPreview();
+  });
+  langSelect.addEventListener('change', applyPreview);
+}
+
 document.getElementById('createSurveyBtn').addEventListener('click', async () => {
   const btn = document.getElementById('createSurveyBtn');
   const title = document.getElementById('surveyTitle').value.trim();
@@ -81,6 +120,10 @@ document.getElementById('createSurveyBtn').addEventListener('click', async () =>
   btn.disabled = true;
 
   const { supabase, session } = ctx;
+  const catSelect = document.getElementById('templateCategory');
+  const langSelect = document.getElementById('templateLang');
+  const tpl = catSelect.value ? window.SurveyTemplates.get(catSelect.value, langSelect.value) : null;
+
   const { data, error } = await supabase
     .from('surveys')
     .insert({
@@ -88,6 +131,7 @@ document.getElementById('createSurveyBtn').addEventListener('click', async () =>
       title,
       description: document.getElementById('surveyDescription').value.trim() || null,
       slug: slugify(title),
+      questions: tpl ? tpl.questions : [],
     })
     .select('id')
     .single();
@@ -108,5 +152,6 @@ document.getElementById('createSurveyBtn').addEventListener('click', async () =>
 (async () => {
   ctx = await window.SurveyGuard.requireAccess();
   if (!ctx) return;
+  initTemplatePickers();
   await Promise.all([loadPlanStrip(), loadSurveys()]);
 })();

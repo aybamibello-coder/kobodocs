@@ -79,6 +79,15 @@
   <div class="plan-strip" id="planStrip"></div>
 
   <div class="sv-form" id="newSurveyForm">
+    <label for="templateCategory">Start from a template (optional)</label>
+    <select id="templateCategory" style="width:100%; padding:8px 10px; border:1px solid var(--line); border-radius:6px; font-family:inherit; font-size:0.9rem; margin-bottom:10px;">
+      <option value="">Blank survey</option>
+    </select>
+    <div id="templateLangRow" style="display:none;">
+      <label for="templateLang">Language</label>
+      <select id="templateLang" style="width:100%; padding:8px 10px; border:1px solid var(--line); border-radius:6px; font-family:inherit; font-size:0.9rem; margin-bottom:6px;"></select>
+      <div id="templateReviewNote" style="display:none; font-size:0.78rem; opacity:0.65; margin-bottom:10px;">This language's questions are still in English pending native-speaker review — only the title is translated.</div>
+    </div>
     <label for="surveyTitle">Survey title</label>
     <input type="text" id="surveyTitle" placeholder="e.g. Customer Satisfaction Survey">
     <label for="surveyDescription">Description (optional)</label>
@@ -97,6 +106,7 @@
 <script type="module" src="/assets/auth.js"></script>
 <script src="/assets/nav-auth.js" defer></script>
 <script src="/survey/app/guard.js" defer></script>
+<script src="/survey/app/survey-templates.js" defer></script>
 <script src="/survey/app/surveys-dashboard.js" defer></script>
 <script src="/assets/tools-index.js" defer></script>
 <script src="/assets/search.js" defer></script>
