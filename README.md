@@ -19,6 +19,8 @@ Free invoice, receipt, quotation, and payslip generator for Nigerian businesses 
 | Pro accounts (Supabase auth) | Not started |
 | Paystack billing | **Live.** `init-suite-payment` (Starter) and `init-suite-growth-payment` (Growth) both call Paystack's initialize API; `paystack-webhook` verifies the signature and updates `businesses` on `charge.success` (Growth also flips `suite_tier`). |
 | Deployment | Not yet connected to Cloudflare Pages — pending domain purchase |
+| `/forms/` — KoboDocs Form | **Live (MVP).** Builder (11 field types incl. file upload), publish/close, public fill page, responses table + CSV export. Plan limits enforced (forms count via DB trigger); submission-count caps tracked but not yet hard-enforced. **No payment integration** — KoboDocs never collects or holds money through a form. Not yet built: conditional logic, e-signature field, AI form generator, WhatsApp auto-notify (declined by design — see below), self-serve plan upgrades. |
+| `/survey/` — KoboDocs Survey | **Live (MVP).** Builder (8 question types: text, paragraph, multiple choice, checkboxes, rating, NPS, Likert, ranking), publish/close, public fill page, responses table + CSV export. Same plan-limit pattern as Forms. Not yet built: skip logic, multilingual templates, AI summary, cross-tab analytics, matrix questions, self-serve plan upgrades. |
 
 ## Structure
 
@@ -53,6 +55,17 @@ Flagged in-app as estimates — tax rules and individual circumstances vary, so 
 ## Ajo/Esusu tracker
 
 The key differentiator from the market research: existing "ajo/esusu" competitors are all custodial fintech apps that hold members' money. This tool is deliberately **non-custodial** — it only tracks rotation order and payment status. Contributions still happen directly between members. Currently session-only; persistent, shareable circle links are a planned Pro feature (needs Supabase).
+
+## KoboDocs Form & KoboDocs Survey
+
+Two new standalone products, each with its own Supabase schema, plan-limits table, and subscriptions table (`forms`/`form_responses`/`form_plan_limits`/`form_subscriptions` and the `survey_*` equivalents) — following the same per-product pattern as `transcription_*` and `payroll_*`, not the older shared `profiles.plan` gate.
+
+- **No payment integration in either product, or anywhere else in KoboDocs.** KoboDocs does not hold money on a form-filler's or survey-respondent's behalf. If a form owner needs to collect payment, they add their own external payment link as a text/URL field — KoboDocs itself never touches the money. Plan upgrades are currently a manual/admin process (no self-serve checkout yet).
+- Public fill pages (`/forms/f/?s=<slug>`, `/survey/s/?s=<slug>`) work with no login, via `get_public_form`/`submit_form_response` and `get_public_survey`/`submit_survey_response` — SECURITY DEFINER RPCs that mirror the existing RSVP/quote-proposal pattern rather than edge functions.
+- Form field types: text, paragraph, number, email, phone, date, dropdown, multiple choice, checkboxes, rating, file upload (uploads go to the private `form-uploads` storage bucket, keyed `{form_id}/{random}-{filename}`, readable only by the form's owner).
+- Survey question types: text, paragraph, multiple choice, checkboxes, rating, NPS, Likert, ranking.
+- Plan limits (`max_forms`/`max_surveys`) are enforced at creation time by a `BEFORE INSERT` trigger; response/submission caps are tracked (`response_count`) but not yet hard-blocking — soft-cap only, no WhatsApp nudge (declined — no WhatsApp auto-notify in this product).
+- Not yet built, in order of what's likely next: conditional logic, e-signature field (reuse `/esign/`'s envelope engine), AI form/survey generator, skip logic, multilingual survey templates, self-serve plan upgrades/admin plan assignment UI.
 
 ## Business Suite tiers
 

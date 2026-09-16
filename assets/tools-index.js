@@ -57,4 +57,6 @@ window.KOBO_TOOLS_INDEX = [
   { name: "Contract Scanner", url: "/contract-scanner/", keywords: "contract review scan risk clause legal freelancer rent land sale employment power of attorney" },
   { name: "Payroll", url: "/payroll/", keywords: "payroll paye pension nhf payslip staff salary run payroll" },
   { name: "e-Signature", url: "/esign/", keywords: "esignature e-signature envelope sign document signing" },
+  { name: "KoboDocs Form", url: "/forms/", keywords: "form builder online forms drag and drop conditional logic file upload jotform google forms alternative nigeria" },
+  { name: "KoboDocs Survey", url: "/survey/", keywords: "survey tool nps csat likert questionnaire surveymonkey typeform alternative nigeria" },
 ];

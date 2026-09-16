@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KoboDocs Form — Free Form Builder for Nigerian Businesses</title>
+<meta name="description" content="Build forms with conditional logic, file uploads, and e-signatures — free to start, priced in Naira. Built for Nigerian businesses, schools, and churches.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Work+Sans:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/style.css">
+<style>
+  .fh-hero{ background:var(--ink-green-deep); color:var(--paper); padding:60px 20px 48px; text-align:center; }
+  .fh-hero .eyebrow{ font-family:'Space Mono', monospace; font-size:0.75rem; text-transform:uppercase; letter-spacing:0.08em; color:var(--stamp-gold); margin-bottom:12px; }
+  .fh-hero h1{ font-size:2.1rem; margin-bottom:14px; max-width:640px; margin-left:auto; margin-right:auto; }
+  .fh-hero p{ opacity:0.8; max-width:520px; margin:0 auto 26px; }
+  .fh-hero .btn{ font-size:0.95rem; padding:12px 26px; border-radius:24px; background:var(--stamp-gold); color:var(--charcoal); border:none; font-weight:600; text-decoration:none; }
+
+  .fh-section{ max-width:980px; margin:0 auto; padding:44px 20px; }
+  .fh-section h2{ font-size:1.4rem; margin-bottom:22px; text-align:center; }
+  .feature-grid{ display:grid; grid-template-columns:repeat(3, 1fr); gap:18px; }
+  @media (max-width:760px){ .feature-grid{ grid-template-columns:1fr; } }
+  .feature-card{ background:var(--paper); border:1px solid var(--line); border-radius:10px; padding:20px; }
+  .feature-card h3{ font-size:1rem; margin-bottom:6px; }
+  .feature-card p{ font-size:0.85rem; opacity:0.75; line-height:1.5; }
+
+  .pricing-cards{ display:grid; grid-template-columns:repeat(4, 1fr); gap:16px; margin-top:20px; }
+  @media (max-width:900px){ .pricing-cards{ grid-template-columns:1fr 1fr; } }
+  @media (max-width:520px){ .pricing-cards{ grid-template-columns:1fr; } }
+  .price-card{ background:var(--paper); border:1px solid var(--line); border-radius:10px; padding:20px; }
+  .price-card.featured{ border-color:var(--stamp-gold); }
+  .price-card h3{ font-size:1.05rem; margin-bottom:4px; }
+  .price-card .amt{ font-family:'Fraunces', serif; font-size:1.3rem; color:var(--stamp-gold); margin-bottom:14px; }
+  .price-card ul{ list-style:none; padding:0; margin:0; }
+  .price-card li{ font-size:0.83rem; opacity:0.8; padding:4px 0; }
+  .price-card .btn{ margin-top:16px; width:100%; text-align:center; box-sizing:border-box; }
+
+  .btn{ font-size:0.85rem; border:1px solid var(--line); background:none; border-radius:20px; padding:9px 18px; cursor:pointer; font-family:inherit; text-decoration:none; color:inherit; display:inline-block; }
+  .btn.primary{ background:var(--ink-green-deep); color:var(--paper); border-color:var(--ink-green-deep); }
+
+  .note-box{ background:rgba(20,52,43,0.05); border-radius:8px; padding:16px 20px; font-size:0.85rem; opacity:0.85; max-width:720px; margin:30px auto 0; text-align:center; }
+</style>
+</head>
+<body>
+
+<header>
+  <nav class="nav">
+    <a href="/" class="logo">
+      <svg class="mark" viewBox="0 0 32 32" fill="none">
+        <circle cx="16" cy="16" r="14" stroke="#C79A3C" stroke-width="2.5"/>
+        <circle cx="16" cy="16" r="8" stroke="#C79A3C" stroke-width="1.5"/>
+      </svg>
+      KoboDocs Form
+    </a>
+    <button class="menu-btn" aria-label="Toggle menu" id="menuBtn"><span></span><span></span><span></span></button>
+    <div class="nav-links" id="navLinks">
+      <a href="/" class="mobile-only-link">Home</a>
+      <a href="/survey/">KoboDocs Survey</a>
+      <a href="#pricing">Pricing</a>
+      <a href="/blog/" class="mobile-only-link">Blog</a>
+      <a href="/account/" id="navAccountLink">Sign in</a>
+    </div>
+  </nav>
+</header>
+
+<div class="fh-hero">
+  <div class="eyebrow">Free to start · Priced in Naira</div>
+  <h1>Forms built for Nigerian businesses, schools, and churches</h1>
+  <p>Drag-and-drop builder, conditional logic, file uploads, and templates — without US pricing or hard response caps.</p>
+  <a href="/forms/app/" class="btn">Create your first form free</a>
+</div>
+
+<div class="fh-section">
+  <h2>Everything you need to collect information</h2>
+  <div class="feature-grid">
+    <div class="feature-card">
+      <h3>Drag-and-drop builder</h3>
+      <p>11 field types — text, number, email, phone, date, dropdown, multiple choice, checkboxes, rating, and file upload.</p>
+    </div>
+    <div class="feature-card">
+      <h3>Nigerian templates</h3>
+      <p>School admission, NYSC documentation, church/mosque registration, event RSVP, vendor onboarding, and more.</p>
+    </div>
+    <div class="feature-card">
+      <h3>File uploads</h3>
+      <p>Collect ID documents, photos, and PDFs directly on the form — stored securely, visible only to you.</p>
+    </div>
+    <div class="feature-card">
+      <h3>Share anywhere</h3>
+      <p>One link works everywhere — WhatsApp, email, or a QR code you print and post.</p>
+    </div>
+    <div class="feature-card">
+      <h3>Real response limits</h3>
+      <p>No per-response overage fees. When you're close to your plan's limit, we'll tell you — you won't get cut off mid-campaign.</p>
+    </div>
+    <div class="feature-card">
+      <h3>No payment holding</h3>
+      <p>KoboDocs never collects or holds money on your behalf through a form. If you need to charge respondents, add your own payment link as a field.</p>
+    </div>
+  </div>
+</div>
+
+<div class="fh-section" id="pricing">
+  <h2>Pricing</h2>
+  <div class="pricing-cards">
+    <div class="price-card">
+      <h3>Free</h3>
+      <div class="amt">₦0</div>
+      <ul>
+        <li>3 forms</li>
+        <li>100 submissions/mo</li>
+        <li>KoboDocs branding</li>
+      </ul>
+      <a href="/forms/app/" class="btn">Start free</a>
+    </div>
+    <div class="price-card">
+      <h3>Starter</h3>
+      <div class="amt">₦5,000/mo</div>
+      <ul>
+        <li>15 forms</li>
+        <li>1,000 submissions/mo</li>
+        <li>Branding removable</li>
+        <li>WhatsApp share link</li>
+      </ul>
+      <a href="/forms/app/" class="btn">Get started</a>
+    </div>
+    <div class="price-card featured">
+      <h3>Pro</h3>
+      <div class="amt">₦12,000/mo</div>
+      <ul>
+        <li>Unlimited forms</li>
+        <li>10,000 submissions/mo</li>
+        <li>Conditional logic</li>
+        <li>AI form generator</li>
+        <li>Custom subdomain</li>
+      </ul>
+      <a href="/forms/app/" class="btn primary">Get started</a>
+    </div>
+    <div class="price-card">
+      <h3>Business</h3>
+      <div class="amt">₦25,000/mo</div>
+      <ul>
+        <li>Unlimited forms</li>
+        <li>50,000 submissions/mo</li>
+        <li>5 team seats</li>
+        <li>Integrations, priority support</li>
+      </ul>
+      <a href="/forms/app/" class="btn">Get started</a>
+    </div>
+  </div>
+  <div class="note-box">Every account starts on Free. To move to a paid plan right now, reach out to us directly — self-serve upgrades are coming soon.</div>
+</div>
+
+<script type="module" src="/assets/auth.js"></script>
+<script src="/assets/nav-auth.js" defer></script>
+</body>
+</html>

@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Edit Form | KoboDocs Form</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Work+Sans:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/style.css">
+<style>
+  .fb-wrap{ max-width:820px; margin:0 auto; padding:30px 20px 100px; }
+  .fb-head{ display:flex; justify-content:space-between; align-items:flex-start; gap:14px; flex-wrap:wrap; margin-bottom:6px; }
+  .fb-title-input{ font-family:'Fraunces', serif; font-size:1.5rem; font-weight:600; border:none; background:none; width:100%; padding:4px 0; }
+  .fb-title-input:focus{ outline:none; border-bottom:1px solid var(--line); }
+  .fb-desc-input{ width:100%; border:none; background:none; font-size:0.9rem; opacity:0.75; padding:2px 0; font-family:inherit; resize:vertical; }
+  .fb-desc-input:focus{ outline:none; border-bottom:1px solid var(--line); }
+  .fb-tabs{ display:flex; gap:6px; border-bottom:1px solid var(--line); margin:18px 0 22px; }
+  .fb-tabs button{ font-size:0.85rem; padding:9px 4px; margin-right:18px; border:none; background:none; cursor:pointer; font-family:inherit; opacity:0.55; border-bottom:2px solid transparent; }
+  .fb-tabs button.active{ opacity:1; border-color:var(--ink-green-deep); font-weight:600; }
+  .fb-panel{ display:none; }
+  .fb-panel.active{ display:block; }
+
+  .field-row{ background:var(--paper); border:1px solid var(--line); border-radius:8px; padding:14px 16px; margin-bottom:12px; }
+  .field-row-top{ display:flex; gap:10px; align-items:center; margin-bottom:8px; }
+  .field-type-badge{ font-size:0.7rem; text-transform:uppercase; letter-spacing:0.03em; background:rgba(20,52,43,0.08); padding:3px 8px; border-radius:10px; white-space:nowrap; }
+  .field-label-input{ flex:1; border:none; border-bottom:1px solid var(--line); background:none; font-size:0.95rem; padding:4px 2px; font-family:inherit; }
+  .field-label-input:focus{ outline:none; }
+  .field-actions{ display:flex; gap:6px; }
+  .icon-btn{ border:1px solid var(--line); background:none; border-radius:6px; width:28px; height:28px; cursor:pointer; font-size:0.85rem; line-height:1; }
+  .field-options{ margin-top:8px; }
+  .field-options textarea{ width:100%; font-size:0.85rem; padding:6px 8px; border:1px solid var(--line); border-radius:6px; font-family:inherit; }
+  .field-options-hint{ font-size:0.72rem; opacity:0.55; margin-top:3px; }
+  .field-required{ font-size:0.78rem; display:flex; align-items:center; gap:5px; opacity:0.8; white-space:nowrap; }
+
+  .add-field-wrap{ position:relative; }
+  .add-field-menu{ display:none; position:absolute; z-index:10; background:var(--paper); border:1px solid var(--line); border-radius:8px; box-shadow:0 6px 24px rgba(0,0,0,0.12); padding:8px; margin-top:6px; min-width:220px; max-height:320px; overflow-y:auto; }
+  .add-field-menu.show{ display:block; }
+  .add-field-menu button{ display:block; width:100%; text-align:left; padding:8px 10px; border:none; background:none; cursor:pointer; font-family:inherit; font-size:0.88rem; border-radius:5px; }
+  .add-field-menu button:hover{ background:rgba(20,52,43,0.06); }
+
+  .btn{ font-size:0.85rem; border:1px solid var(--line); background:none; border-radius:20px; padding:7px 16px; cursor:pointer; font-family:inherit; text-decoration:none; color:inherit; display:inline-block; }
+  .btn.primary{ background:var(--ink-green-deep); color:var(--paper); border-color:var(--ink-green-deep); }
+  .btn.danger{ color:var(--stamp-red); border-color:rgba(168,52,42,0.4); }
+  .empty-note{ font-size:0.88rem; opacity:0.6; padding:30px 0; text-align:center; }
+
+  .share-box{ background:var(--paper); border:1px solid var(--line); border-radius:8px; padding:20px; }
+  .share-url{ display:flex; gap:8px; margin:12px 0; }
+  .share-url input{ flex:1; padding:8px 10px; border:1px solid var(--line); border-radius:6px; font-family:'Space Mono', monospace; font-size:0.82rem; background:rgba(0,0,0,0.02); }
+  .status-toggle{ display:flex; gap:8px; margin-bottom:16px; }
+  .status-toggle button{ font-size:0.82rem; border:1px solid var(--line); background:none; border-radius:20px; padding:6px 14px; cursor:pointer; font-family:inherit; }
+  .status-toggle button.active{ background:var(--ink-green-deep); color:var(--paper); border-color:var(--ink-green-deep); }
+
+  table.resp-table{ width:100%; border-collapse:collapse; font-size:0.85rem; }
+  table.resp-table th, table.resp-table td{ border:1px solid var(--line); padding:8px 10px; text-align:left; vertical-align:top; }
+  table.resp-table th{ background:rgba(20,52,43,0.05); }
+  .resp-table-wrap{ overflow-x:auto; }
+
+  #toast{ position:fixed; bottom:20px; left:50%; transform:translateX(-50%); background:var(--ink-green-deep); color:var(--paper); padding:10px 20px; border-radius:6px; font-size:0.85rem; display:none; z-index:50; }
+</style>
+</head>
+<body>
+
+<header>
+  <nav class="nav">
+    <a href="/" class="logo">
+      <svg class="mark" viewBox="0 0 32 32" fill="none">
+        <circle cx="16" cy="16" r="14" stroke="#C79A3C" stroke-width="2.5"/>
+        <circle cx="16" cy="16" r="8" stroke="#C79A3C" stroke-width="1.5"/>
+      </svg>
+      KoboDocs Form
+    </a>
+    <button class="menu-btn" aria-label="Toggle menu" id="menuBtn"><span></span><span></span><span></span></button>
+    <div class="nav-links" id="navLinks">
+      <a href="/forms/app/">&larr; Your forms</a>
+      <a href="/account/" id="navAccountLink">Sign in</a>
+    </div>
+  </nav>
+</header>
+
+<div class="fb-wrap">
+  <div class="fb-head">
+    <div style="flex:1; min-width:240px;">
+      <input class="fb-title-input" id="formTitleInput" placeholder="Form title">
+      <textarea class="fb-desc-input" id="formDescInput" rows="1" placeholder="Add a description (optional)"></textarea>
+    </div>
+  </div>
+
+  <div class="fb-tabs">
+    <button data-tab="build" class="active">Build</button>
+    <button data-tab="share">Share</button>
+    <button data-tab="responses">Responses</button>
+  </div>
+
+  <div class="fb-panel active" id="panel-build">
+    <div id="fieldsList"></div>
+    <div class="add-field-wrap">
+      <button class="btn primary" id="addFieldBtn">+ Add field</button>
+      <div class="add-field-menu" id="addFieldMenu">
+        <button data-type="text">Short text</button>
+        <button data-type="textarea">Paragraph</button>
+        <button data-type="number">Number</button>
+        <button data-type="email">Email</button>
+        <button data-type="phone">Phone</button>
+        <button data-type="date">Date</button>
+        <button data-type="select">Dropdown</button>
+        <button data-type="radio">Multiple choice</button>
+        <button data-type="checkbox">Checkboxes</button>
+        <button data-type="rating">Rating (1–5)</button>
+        <button data-type="file">File upload</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="fb-panel" id="panel-share">
+    <div class="share-box">
+      <div class="status-toggle" id="statusToggle">
+        <button data-status="draft">Draft</button>
+        <button data-status="published">Published</button>
+        <button data-status="closed">Closed</button>
+      </div>
+      <p style="font-size:0.85rem; opacity:0.75;">Published forms accept responses at the link below. Closed forms stop accepting new responses but keep existing ones.</p>
+      <div class="share-url">
+        <input type="text" id="shareUrlInput" readonly>
+        <button class="btn" id="copyShareBtn">Copy link</button>
+      </div>
+      <a class="btn" id="waShareBtn" href="#" target="_blank" rel="noopener">Share on WhatsApp</a>
+    </div>
+  </div>
+
+  <div class="fb-panel" id="panel-responses">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+      <div id="responseCount" style="font-size:0.85rem; opacity:0.7;"></div>
+      <button class="btn" id="exportCsvBtn">Export CSV</button>
+    </div>
+    <div class="resp-table-wrap" id="responsesTableWrap"><div class="empty-note">Loading…</div></div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script type="module" src="/assets/auth.js"></script>
+<script src="/assets/nav-auth.js" defer></script>
+<script src="/forms/app/guard.js" defer></script>
+<script src="/forms/app/form/form-editor.js" defer></script>
+</body>
+</html>
