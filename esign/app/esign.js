@@ -78,9 +78,19 @@ async function renderApp(ctx) {
     </div>
   `;
 
+  const awaiting = envelopes.filter(envelope =>
+    envelope.status !== 'completed' && (envelope.signature_signers || []).some(signer => signer.status === 'pending')
+  ).length;
+  const completed = envelopes.filter(envelope => envelope.status === 'completed').length;
+
   area.innerHTML = `
+    <section class="suite-stats" aria-label="Envelope overview">
+      <div class="suite-stat"><strong>${envelopes.length}</strong><span>Documents</span></div>
+      <div class="suite-stat"><strong>${awaiting}</strong><span>Awaiting signature</span></div>
+      <div class="suite-stat"><strong>${completed}</strong><span>Completed</span></div>
+    </section>
     <div class="bs-panel">
-      <h3 style="font-size:1rem; margin-bottom:12px;">Your envelopes</h3>
+      <h3 style="font-size:1rem; margin-bottom:12px;">Documents</h3>
       <div>${envelopes.length ? envelopes.map(e => `
         <div class="es-row">
           <div>
@@ -106,16 +116,7 @@ async function renderApp(ctx) {
           ` : ''}
         </div>
       `).join('') : `
-        <div class="preview-label">What a completed envelope looks like</div>
-        <div class="hero-doc mini">
-          <div class="hero-doc-head">
-            <div class="co">Service Agreement</div>
-            <div class="no">2 signers<br>Sent 1 Aug 2026</div>
-          </div>
-          <div class="hero-doc-row"><span>Adaeze Fabrics Co. (you)</span><span>Signed ✓</span></div>
-          <div class="hero-doc-row"><span>Tunde Bakare</span><span>Signed ✓</span></div>
-          <div class="hero-doc-total"><span>Status</span><span>Completed</span></div>
-        </div>
+        <div class="empty-note">No documents yet. Send your first document below to start a secure signing workflow.</div>
       `}</div>
     </div>
 
