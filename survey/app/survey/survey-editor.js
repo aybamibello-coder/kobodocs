@@ -68,8 +68,13 @@ function renderQuestions() {
       </div>
       ${OPTION_TYPES.has(q.type) ? `
         <div class="field-options">
-          <textarea data-role="options" rows="2" placeholder="One option per line">${(q.options || []).join('\n')}</textarea>
-          <div class="field-options-hint">One option per line.</div>
+          ${(q.options || []).map((opt, oi) => `
+            <div class="option-row" data-idx="${oi}">
+              <input type="text" data-role="option-value" value="${(opt || '').replace(/"/g, '&quot;')}" placeholder="Option ${oi + 1}">
+              <button type="button" class="icon-btn" data-role="option-delete" title="Remove option">✕</button>
+            </div>
+          `).join('')}
+          <button type="button" class="btn" data-role="option-add">+ Add option</button>
         </div>
       ` : ''}
       ${q.type === 'matrix' ? `
@@ -111,7 +116,10 @@ document.getElementById('questionsList').addEventListener('input', (e) => {
   const q = survey.questions.find(q => q.id === row.dataset.id);
   if (!q) return;
   if (e.target.dataset.role === 'label') q.label = e.target.value;
-  if (e.target.dataset.role === 'options') q.options = e.target.value.split('\n').map(s => s.trim()).filter(Boolean);
+  if (e.target.dataset.role === 'option-value') {
+    const idx = parseInt(e.target.closest('.option-row').dataset.idx, 10);
+    q.options[idx] = e.target.value;
+  }
   if (e.target.dataset.role === 'matrix-rows') q.rows = e.target.value.split('\n').map(s => s.trim()).filter(Boolean);
   if (e.target.dataset.role === 'matrix-columns') q.columns = e.target.value.split('\n').map(s => s.trim()).filter(Boolean);
   if (e.target.dataset.role === 'cond-value') {
@@ -159,7 +167,13 @@ document.getElementById('questionsList').addEventListener('click', (e) => {
   const idx = survey.questions.findIndex(q => q.id === row.dataset.id);
   if (idx === -1) return;
 
-  if (btn.dataset.role === 'delete') {
+  if (btn.dataset.role === 'option-add') {
+    survey.questions[idx].options = survey.questions[idx].options || [];
+    survey.questions[idx].options.push(`Option ${survey.questions[idx].options.length + 1}`);
+  } else if (btn.dataset.role === 'option-delete') {
+    const optIdx = parseInt(btn.closest('.option-row').dataset.idx, 10);
+    survey.questions[idx].options.splice(optIdx, 1);
+  } else if (btn.dataset.role === 'delete') {
     survey.questions.splice(idx, 1);
   } else if (btn.dataset.role === 'up' && idx > 0) {
     [survey.questions[idx - 1], survey.questions[idx]] = [survey.questions[idx], survey.questions[idx - 1]];

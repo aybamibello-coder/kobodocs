@@ -68,8 +68,13 @@ function renderFields() {
       </div>
       ${OPTION_TYPES.has(f.type) ? `
         <div class="field-options">
-          <textarea data-role="options" rows="2" placeholder="One option per line">${(f.options || []).join('\n')}</textarea>
-          <div class="field-options-hint">One option per line.</div>
+          ${(f.options || []).map((opt, oi) => `
+            <div class="option-row" data-idx="${oi}">
+              <input type="text" data-role="option-value" value="${(opt || '').replace(/"/g, '&quot;')}" placeholder="Option ${oi + 1}">
+              <button type="button" class="icon-btn" data-role="option-delete" title="Remove option">✕</button>
+            </div>
+          `).join('')}
+          <button type="button" class="btn" data-role="option-add">+ Add option</button>
         </div>
       ` : ''}
       ${f.type === 'signature' ? `<div class="field-options-hint">Respondent draws a signature on a canvas; stored as an image.</div>` : ''}
@@ -98,7 +103,10 @@ document.getElementById('fieldsList').addEventListener('input', (e) => {
   const field = form.fields.find(f => f.id === row.dataset.id);
   if (!field) return;
   if (e.target.dataset.role === 'label') field.label = e.target.value;
-  if (e.target.dataset.role === 'options') field.options = e.target.value.split('\n').map(s => s.trim()).filter(Boolean);
+  if (e.target.dataset.role === 'option-value') {
+    const idx = parseInt(e.target.closest('.option-row').dataset.idx, 10);
+    field.options[idx] = e.target.value;
+  }
   if (e.target.dataset.role === 'cond-value') {
     field.showIf = field.showIf || {};
     field.showIf.value = e.target.value;
@@ -144,7 +152,13 @@ document.getElementById('fieldsList').addEventListener('click', (e) => {
   const idx = form.fields.findIndex(f => f.id === row.dataset.id);
   if (idx === -1) return;
 
-  if (btn.dataset.role === 'delete') {
+  if (btn.dataset.role === 'option-add') {
+    form.fields[idx].options = form.fields[idx].options || [];
+    form.fields[idx].options.push(`Option ${form.fields[idx].options.length + 1}`);
+  } else if (btn.dataset.role === 'option-delete') {
+    const optIdx = parseInt(btn.closest('.option-row').dataset.idx, 10);
+    form.fields[idx].options.splice(optIdx, 1);
+  } else if (btn.dataset.role === 'delete') {
     form.fields.splice(idx, 1);
   } else if (btn.dataset.role === 'up' && idx > 0) {
     [form.fields[idx - 1], form.fields[idx]] = [form.fields[idx], form.fields[idx - 1]];
