@@ -67,11 +67,43 @@ async function loadSurveys() {
       </div>
       <div style="display:flex; align-items:center; gap:10px;">
         <span class="sv-badge ${s.status}">${s.status}</span>
+        <button class="btn" data-role="duplicate" data-id="${s.id}">Duplicate</button>
         <a href="/survey/app/survey/?id=${s.id}" class="btn primary">Open</a>
       </div>
     </div>
   `).join('');
 }
+
+document.getElementById('surveysList').addEventListener('click', async (e) => {
+  const btn = e.target.closest('button[data-role="duplicate"]');
+  if (!btn) return;
+  btn.disabled = true;
+  btn.textContent = 'Duplicating…';
+
+  const { supabase, session } = ctx;
+  const { data: original, error: fetchErr } = await supabase.from('surveys').select('title, description, questions, settings').eq('id', btn.dataset.id).single();
+  if (fetchErr || !original) { toast('Could not duplicate: ' + (fetchErr?.message || 'survey not found')); btn.disabled = false; btn.textContent = 'Duplicate'; return; }
+
+  const { error } = await supabase.from('surveys').insert({
+    owner_id: session.user.id,
+    title: original.title + ' (copy)',
+    description: original.description,
+    questions: original.questions,
+    settings: original.settings,
+    slug: slugify(original.title),
+  });
+
+  if (error) {
+    const msg = error.message.includes('survey_limit_reached') ? "You've reached your plan's survey limit. Upgrade to create more." : 'Could not duplicate: ' + error.message;
+    toast(msg);
+    btn.disabled = false;
+    btn.textContent = 'Duplicate';
+    return;
+  }
+
+  toast('Survey duplicated.');
+  loadSurveys();
+});
 
 document.getElementById('newSurveyBtn').addEventListener('click', () => {
   document.getElementById('newSurveyForm').classList.add('show');

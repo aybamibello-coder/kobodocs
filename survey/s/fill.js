@@ -13,6 +13,20 @@ function renderError(message) {
   card.innerHTML = `<div class="fill-logo">KoboDocs Survey</div><div class="fill-error" style="display:block;">${message}</div>`;
 }
 
+// ---------- Simple human-check (only shown when the survey owner enables it) ----------
+let captchaAnswer = null;
+function captchaHtml() {
+  const a = Math.floor(Math.random() * 8) + 2;
+  const b = Math.floor(Math.random() * 8) + 2;
+  captchaAnswer = a + b;
+  return `
+    <div class="fill-field">
+      <label class="qlabel">Quick check: what is ${a} + ${b}? <span class="req">*</span></label>
+      <input type="number" id="captchaInput" required>
+    </div>
+  `;
+}
+
 function questionHtml(q) {
   const common = `id="q_${q.id}" ${q.required ? 'required' : ''}`;
 
@@ -27,6 +41,11 @@ function questionHtml(q) {
       return `<div class="fill-choice-list">${(q.options || []).map(o => `
         <label><input type="checkbox" name="q_${q.id}" value="${o}"> ${o}</label>
       `).join('')}</div>`;
+    case 'yesno':
+      return `<div class="fill-choice-list">
+        <label><input type="radio" name="q_${q.id}" value="Yes"> Yes</label>
+        <label><input type="radio" name="q_${q.id}" value="No"> No</label>
+      </div>`;
     case 'rating':
       return `<div class="rating-stars" data-q="${q.id}">${[1, 2, 3, 4, 5].map(n => `<span data-value="${n}">★</span>`).join('')}</div>
               <input type="hidden" ${common}>`;
@@ -66,7 +85,7 @@ function currentValue(q) {
   if (q.type === 'checkbox') {
     return Array.from(document.querySelectorAll(`input[name="q_${q.id}"]:checked`)).map(el => el.value);
   }
-  if (q.type === 'multiple_choice' || q.type === 'likert') {
+  if (q.type === 'multiple_choice' || q.type === 'likert' || q.type === 'yesno') {
     const checked = document.querySelector(`input[name="q_${q.id}"]:checked`);
     return checked ? checked.value : null;
   }
@@ -112,6 +131,18 @@ function evaluateConditions(allQuestions) {
 }
 
 function renderSurvey(s) {
+  const submittedKey = `kobodocs_survey_submitted_${s.id}`;
+  if (s.settings && s.settings.oneResponsePerDevice && localStorage.getItem(submittedKey)) {
+    card.innerHTML = `
+      <div class="fill-logo">KoboDocs Survey</div>
+      <div class="fill-success">
+        <h2>${(s.settings && s.settings.confirmationHeading) || 'Already submitted'}</h2>
+        <p style="opacity:0.75; font-size:0.9rem;">${(s.settings && s.settings.confirmationMessage) || 'Looks like you\u2019ve already responded to this survey from this device.'}</p>
+      </div>
+    `;
+    return;
+  }
+
   card.innerHTML = `
     <div class="fill-logo">KoboDocs Survey</div>
     <div class="fill-title">${s.title}</div>
@@ -123,6 +154,8 @@ function renderSurvey(s) {
           ${questionHtml(q)}
         </div>
       `).join('')}
+      ${(s.settings && s.settings.captcha) ? captchaHtml() : ''}
+      <input type="text" name="website" id="hpField" tabindex="-1" autocomplete="off" style="position:absolute; left:-9999px; width:1px; height:1px; opacity:0;">
       <button type="submit" class="fill-submit" id="submitBtn">Submit</button>
       <div class="fill-error" id="fillErrorMsg"></div>
     </form>
@@ -181,6 +214,11 @@ async function onSubmit(e, surveyDef) {
   btn.textContent = 'Submitting…';
 
   try {
+    if (surveyDef.settings && surveyDef.settings.captcha) {
+      const val = parseInt(document.getElementById('captchaInput').value, 10);
+      if (val !== captchaAnswer) throw new Error('That answer doesn\u2019t look right — please try again.');
+    }
+
     const visibleQuestions = surveyDef.questions.filter(q => isVisible(q, surveyDef.questions));
     const answers = {};
     for (const q of visibleQuestions) {
@@ -216,15 +254,25 @@ async function onSubmit(e, surveyDef) {
       }
     }
 
-    const { data, error } = await supabase.rpc('submit_survey_response', { p_slug: slug, p_answers: answers });
+    const honeypot = document.getElementById('hpField').value;
+    const { data, error } = await supabase.rpc('submit_survey_response', { p_slug: slug, p_answers: answers, p_honeypot: honeypot });
     if (error) throw error;
-    if (!data || !data.success) throw new Error(data?.error || 'Could not submit the survey.');
+    if (!data || !data.success) throw new Error((data && data.error) || 'Could not submit the survey.');
+
+    if (surveyDef.settings && surveyDef.settings.oneResponsePerDevice) {
+      localStorage.setItem(`kobodocs_survey_submitted_${surveyDef.id}`, '1');
+    }
+
+    if (surveyDef.settings && surveyDef.settings.redirectUrl) {
+      window.location.href = surveyDef.settings.redirectUrl;
+      return;
+    }
 
     card.innerHTML = `
       <div class="fill-logo">KoboDocs Survey</div>
       <div class="fill-success">
-        <h2>Thank you! 🎉</h2>
-        <p style="opacity:0.75; font-size:0.9rem;">Your response has been recorded.</p>
+        <h2>${(surveyDef.settings && surveyDef.settings.confirmationHeading) || 'Thank you! 🎉'}</h2>
+        <p style="opacity:0.75; font-size:0.9rem;">${(surveyDef.settings && surveyDef.settings.confirmationMessage) || 'Your response has been recorded.'}</p>
       </div>
     `;
   } catch (err) {
@@ -246,6 +294,17 @@ async function onSubmit(e, surveyDef) {
       renderError("We couldn't find this survey. It may have been unpublished or the link may be incorrect.");
       return;
     }
+
+    const settings = data.settings || {};
+    if (settings.closesAt && new Date() > new Date(settings.closesAt)) {
+      renderError(`This survey closed to new responses on ${new Date(settings.closesAt).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}.`);
+      return;
+    }
+    if (settings.responseLimit && data.response_count >= settings.responseLimit) {
+      renderError('This survey has reached its maximum number of responses.');
+      return;
+    }
+
     renderSurvey(data);
   } catch {
     renderError("Something went wrong loading this survey. Please try again in a moment.");

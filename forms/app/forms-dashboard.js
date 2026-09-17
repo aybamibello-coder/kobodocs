@@ -67,11 +67,43 @@ async function loadForms() {
       </div>
       <div style="display:flex; align-items:center; gap:10px;">
         <span class="fm-badge ${f.status}">${f.status}</span>
+        <button class="btn" data-role="duplicate" data-id="${f.id}">Duplicate</button>
         <a href="/forms/app/form/?id=${f.id}" class="btn primary">Open</a>
       </div>
     </div>
   `).join('');
 }
+
+document.getElementById('formsList').addEventListener('click', async (e) => {
+  const btn = e.target.closest('button[data-role="duplicate"]');
+  if (!btn) return;
+  btn.disabled = true;
+  btn.textContent = 'Duplicating…';
+
+  const { supabase, session } = ctx;
+  const { data: original, error: fetchErr } = await supabase.from('forms').select('title, description, fields, settings').eq('id', btn.dataset.id).single();
+  if (fetchErr || !original) { toast('Could not duplicate: ' + (fetchErr?.message || 'form not found')); btn.disabled = false; btn.textContent = 'Duplicate'; return; }
+
+  const { error } = await supabase.from('forms').insert({
+    owner_id: session.user.id,
+    title: original.title + ' (copy)',
+    description: original.description,
+    fields: original.fields,
+    settings: original.settings,
+    slug: slugify(original.title),
+  });
+
+  if (error) {
+    const msg = error.message.includes('form_limit_reached') ? "You've reached your plan's form limit. Upgrade to create more." : 'Could not duplicate: ' + error.message;
+    toast(msg);
+    btn.disabled = false;
+    btn.textContent = 'Duplicate';
+    return;
+  }
+
+  toast('Form duplicated.');
+  loadForms();
+});
 
 document.getElementById('newFormBtn').addEventListener('click', () => {
   document.getElementById('newFormForm').classList.add('show');

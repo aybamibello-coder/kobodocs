@@ -55,6 +55,15 @@
   .empty-note{ font-size:0.88rem; opacity:0.6; padding:30px 0; text-align:center; }
 
   .share-box{ background:var(--paper); border:1px solid var(--line); border-radius:8px; padding:20px; }
+  .settings-label{ display:block; font-size:0.8rem; opacity:0.7; margin:12px 0 4px; }
+  .settings-check{ display:flex; align-items:center; gap:8px; font-size:0.85rem; margin:10px 0; }
+  .share-box input[type=number], .share-box input[type=datetime-local], .share-box input[type=text], .share-box textarea{
+    width:100%; padding:8px 10px; border:1px solid var(--line); border-radius:6px; font-family:inherit; font-size:0.9rem;
+  }
+  .stats-row{ display:grid; grid-template-columns:repeat(auto-fit, minmax(100px, 1fr)); gap:10px; margin-bottom:18px; }
+  .stat-card{ background:var(--paper); border:1px solid var(--line); border-radius:8px; padding:12px 14px; }
+  .stat-card .num{ font-family:'Fraunces', serif; font-size:1.3rem; font-weight:600; }
+  .stat-card .lbl{ font-size:0.72rem; opacity:0.6; text-transform:uppercase; letter-spacing:0.03em; }
   .share-url{ display:flex; gap:8px; margin:12px 0; }
   .share-url input{ flex:1; padding:8px 10px; border:1px solid var(--line); border-radius:6px; font-family:'Space Mono', monospace; font-size:0.82rem; background:rgba(0,0,0,0.02); }
   .status-toggle{ display:flex; gap:8px; margin-bottom:16px; }
@@ -99,6 +108,7 @@
 
   <div class="fb-tabs">
     <button data-tab="build" class="active">Build</button>
+    <button data-tab="settings">Settings</button>
     <button data-tab="share">Share</button>
     <button data-tab="responses">Responses</button>
   </div>
@@ -113,11 +123,15 @@
         <button data-type="number">Number</button>
         <button data-type="email">Email</button>
         <button data-type="phone">Phone</button>
+        <button data-type="url">Website/URL</button>
         <button data-type="date">Date</button>
+        <button data-type="time">Time</button>
         <button data-type="select">Dropdown</button>
         <button data-type="radio">Multiple choice</button>
         <button data-type="checkbox">Checkboxes</button>
-        <button data-type="rating">Rating (1–5)</button>
+        <button data-type="rating">Star rating</button>
+        <button data-type="scale">Linear scale</button>
+        <button data-type="emoji">Emoji rating</button>
         <button data-type="file">File upload</button>
         <button data-type="signature">Signature</button>
       </div>
@@ -136,6 +150,25 @@
     </div>
   </div>
 
+  <div class="fb-panel" id="panel-settings">
+    <div class="share-box">
+      <label class="settings-label" for="responseLimitInput">Maximum responses (optional)</label>
+      <input type="number" id="responseLimitInput" min="1" placeholder="No limit">
+      <label class="settings-label" for="closesAtInput">Closing date/time (optional)</label>
+      <input type="datetime-local" id="closesAtInput">
+      <label class="settings-check"><input type="checkbox" id="oneResponsePerDeviceInput"> Limit to one response per device (uses the visitor's browser storage)</label>
+      <label class="settings-check"><input type="checkbox" id="captchaInput"> Require a quick human-check before submitting</label>
+      <hr style="border:none; border-top:1px solid var(--line); margin:16px 0;">
+      <label class="settings-label" for="confirmationHeadingInput">Confirmation heading</label>
+      <input type="text" id="confirmationHeadingInput" placeholder="Thank you!">
+      <label class="settings-label" for="confirmationMessageInput">Confirmation message</label>
+      <textarea id="confirmationMessageInput" rows="2" placeholder="Your response has been recorded."></textarea>
+      <label class="settings-label" for="redirectUrlInput">Redirect URL after submit (optional)</label>
+      <input type="text" id="redirectUrlInput" placeholder="https://example.com/thank-you">
+      <button class="btn primary" id="saveSettingsBtn" style="margin-top:14px;">Save settings</button>
+    </div>
+  </div>
+
   <div class="fb-panel" id="panel-share">
     <div class="share-box">
       <div class="status-toggle" id="statusToggle">
@@ -149,19 +182,35 @@
         <button class="btn" id="copyShareBtn">Copy link</button>
       </div>
       <a class="btn" id="waShareBtn" href="#" target="_blank" rel="noopener">Share on WhatsApp</a>
+      <button class="btn" id="toggleQrBtn" style="margin-left:6px;">Show QR code</button>
+      <button class="btn" id="toggleEmbedBtn" style="margin-left:6px;">Embed code</button>
+      <div id="qrWrap" style="display:none; margin-top:16px;">
+        <div id="qrCanvas"></div>
+        <button class="btn" id="downloadQrBtn" style="margin-top:8px;">Download PNG</button>
+      </div>
+      <div id="embedWrap" style="display:none; margin-top:16px;">
+        <textarea id="embedCodeInput" rows="3" readonly style="width:100%; font-family:'Space Mono', monospace; font-size:0.78rem; padding:8px; border:1px solid var(--line); border-radius:6px;"></textarea>
+        <button class="btn" id="copyEmbedBtn" style="margin-top:8px;">Copy embed code</button>
+      </div>
     </div>
   </div>
 
   <div class="fb-panel" id="panel-responses">
+    <div class="stats-row" id="statsRow"></div>
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
       <div id="responseCount" style="font-size:0.85rem; opacity:0.7;"></div>
-      <button class="btn" id="exportCsvBtn">Export CSV</button>
+      <div>
+        <button class="btn" id="exportCsvBtn">Export CSV</button>
+        <button class="btn" id="exportJsonBtn">Export JSON</button>
+      </div>
     </div>
     <div class="resp-table-wrap" id="responsesTableWrap"><div class="empty-note">Loading…</div></div>
   </div>
 </div>
 
 <div id="toast"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js" defer></script>
 
 <script type="module" src="/assets/auth.js"></script>
 <script src="/assets/nav-auth.js" defer></script>

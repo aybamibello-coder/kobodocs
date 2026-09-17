@@ -4,7 +4,7 @@ const surveyId = new URLSearchParams(window.location.search).get('id');
 
 const TYPE_LABELS = {
   text: 'Short text', textarea: 'Paragraph', multiple_choice: 'Multiple choice',
-  checkbox: 'Checkboxes', rating: 'Rating', nps: 'NPS', likert: 'Likert', ranking: 'Ranking',
+  checkbox: 'Checkboxes', yesno: 'Yes / No', rating: 'Rating', nps: 'NPS', likert: 'Likert', ranking: 'Ranking',
   matrix: 'Matrix (grid)',
 };
 const OPTION_TYPES = new Set(['multiple_choice', 'checkbox', 'ranking']);
@@ -215,6 +215,37 @@ document.querySelector('.qb-tabs').addEventListener('click', (e) => {
   document.getElementById('panel-' + btn.dataset.tab).classList.add('active');
   if (btn.dataset.tab === 'responses') loadResponses();
   if (btn.dataset.tab === 'analytics') initCrossTab();
+  if (btn.dataset.tab === 'settings') renderSettings();
+});
+
+// ---------- Settings tab ----------
+function renderSettings() {
+  const s = survey.settings || {};
+  document.getElementById('responseLimitInput').value = s.responseLimit || '';
+  document.getElementById('closesAtInput').value = s.closesAt ? s.closesAt.slice(0, 16) : '';
+  document.getElementById('oneResponsePerDeviceInput').checked = !!s.oneResponsePerDevice;
+  document.getElementById('anonymousInput').checked = !!s.anonymous;
+  document.getElementById('captchaInput').checked = !!s.captcha;
+  document.getElementById('confirmationHeadingInput').value = s.confirmationHeading || '';
+  document.getElementById('confirmationMessageInput').value = s.confirmationMessage || '';
+  document.getElementById('redirectUrlInput').value = s.redirectUrl || '';
+}
+
+document.getElementById('saveSettingsBtn').addEventListener('click', async () => {
+  const limitVal = document.getElementById('responseLimitInput').value;
+  const closesVal = document.getElementById('closesAtInput').value;
+  const settings = {
+    responseLimit: limitVal ? parseInt(limitVal, 10) : null,
+    closesAt: closesVal ? new Date(closesVal).toISOString() : null,
+    oneResponsePerDevice: document.getElementById('oneResponsePerDeviceInput').checked,
+    anonymous: document.getElementById('anonymousInput').checked,
+    captcha: document.getElementById('captchaInput').checked,
+    confirmationHeading: document.getElementById('confirmationHeadingInput').value.trim() || null,
+    confirmationMessage: document.getElementById('confirmationMessageInput').value.trim() || null,
+    redirectUrl: document.getElementById('redirectUrlInput').value.trim() || null,
+  };
+  await saveSurvey({ settings });
+  toast('Settings saved.');
 });
 
 // ---------- Share tab ----------
@@ -223,6 +254,7 @@ function renderShare() {
   const url = `${window.location.origin}/survey/s/?s=${survey.slug}`;
   document.getElementById('shareUrlInput').value = url;
   document.getElementById('waShareBtn').href = `https://wa.me/?text=${encodeURIComponent(survey.title + ' — ' + url)}`;
+  document.getElementById('embedCodeInput').value = `<iframe src="${url}" width="100%" height="640" frameborder="0" style="max-width:560px; border:1px solid #ddd; border-radius:8px;"></iframe>`;
 }
 
 document.getElementById('statusToggle').addEventListener('click', async (e) => {
@@ -238,8 +270,53 @@ document.getElementById('copyShareBtn').addEventListener('click', () => {
   toast('Link copied.');
 });
 
+document.getElementById('toggleQrBtn').addEventListener('click', () => {
+  const wrap = document.getElementById('qrWrap');
+  const show = wrap.style.display === 'none';
+  wrap.style.display = show ? 'block' : 'none';
+  if (show && !wrap.dataset.rendered && window.QRCode) {
+    new window.QRCode(document.getElementById('qrCanvas'), {
+      text: document.getElementById('shareUrlInput').value,
+      width: 200, height: 200,
+    });
+    wrap.dataset.rendered = '1';
+  }
+});
+
+document.getElementById('downloadQrBtn').addEventListener('click', () => {
+  const img = document.querySelector('#qrCanvas img') || document.querySelector('#qrCanvas canvas');
+  if (!img) return;
+  const a = document.createElement('a');
+  a.download = `${survey.slug}-qr.png`;
+  a.href = img.tagName === 'CANVAS' ? img.toDataURL('image/png') : img.src;
+  a.click();
+});
+
+document.getElementById('toggleEmbedBtn').addEventListener('click', () => {
+  const wrap = document.getElementById('embedWrap');
+  wrap.style.display = wrap.style.display === 'none' ? 'block' : 'none';
+});
+
+document.getElementById('copyEmbedBtn').addEventListener('click', () => {
+  navigator.clipboard.writeText(document.getElementById('embedCodeInput').value);
+  toast('Embed code copied.');
+});
+
 // ---------- Responses tab ----------
 let lastResponses = [];
+
+function renderStats() {
+  const now = new Date();
+  const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const startOfWeek = new Date(startOfToday); startOfWeek.setDate(startOfWeek.getDate() - 6);
+  const today = lastResponses.filter(r => new Date(r.submitted_at) >= startOfToday).length;
+  const week = lastResponses.filter(r => new Date(r.submitted_at) >= startOfWeek).length;
+  document.getElementById('statsRow').innerHTML = `
+    <div class="stat-card"><div class="num">${lastResponses.length}</div><div class="lbl">Total</div></div>
+    <div class="stat-card"><div class="num">${today}</div><div class="lbl">Today</div></div>
+    <div class="stat-card"><div class="num">${week}</div><div class="lbl">Last 7 days</div></div>
+  `;
+}
 
 async function loadResponses() {
   const { supabase } = ctx;
@@ -257,6 +334,7 @@ async function loadResponses() {
   }
   lastResponses = data || [];
   document.getElementById('responseCount').textContent = `${lastResponses.length} response${lastResponses.length === 1 ? '' : 's'}`;
+  renderStats();
 
   if (!lastResponses.length) {
     wrap.innerHTML = `<div class="empty-note">No responses yet.</div>`;
@@ -314,6 +392,21 @@ document.getElementById('exportCsvBtn').addEventListener('click', () => {
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
   a.download = `${survey.slug}-responses.csv`;
+  a.click();
+});
+
+document.getElementById('exportJsonBtn').addEventListener('click', () => {
+  if (!lastResponses.length) { toast('No responses to export yet.'); return; }
+  const cols = survey.questions;
+  const rows = lastResponses.map(r => {
+    const obj = { submitted_at: r.submitted_at };
+    cols.forEach(c => { obj[c.label] = r.answers[c.id] ?? null; });
+    return obj;
+  });
+  const blob = new Blob([JSON.stringify(rows, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `${survey.slug}-responses.json`;
   a.click();
 });
 
@@ -461,5 +554,6 @@ async function loadAiPlanHint() {
   document.getElementById('surveyDescInput').value = survey.description || '';
   renderQuestions();
   renderShare();
+  renderSettings();
   loadAiPlanHint();
 })();

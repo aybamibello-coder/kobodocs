@@ -6,6 +6,7 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 const slug = new URLSearchParams(window.location.search).get('s');
 const card = document.getElementById('fillCard');
+const EMOJIS = ['😞', '🙁', '😐', '🙂', '😄'];
 
 function renderError(message) {
   card.innerHTML = `<div class="fill-logo">KoboDocs Form</div><div class="fill-error" style="display:block;">${message}</div>`;
@@ -23,8 +24,12 @@ function fieldHtml(f) {
       return `<input type="email" ${common}>`;
     case 'phone':
       return `<input type="tel" ${common}>`;
+    case 'url':
+      return `<input type="url" ${common} placeholder="https://">`;
     case 'date':
       return `<input type="date" ${common}>`;
+    case 'time':
+      return `<input type="time" ${common}>`;
     case 'select':
       return `<select ${common}><option value="">Choose…</option>${(f.options || []).map(o => `<option value="${o}">${o}</option>`).join('')}</select>`;
     case 'radio':
@@ -37,6 +42,12 @@ function fieldHtml(f) {
       `).join('')}</div>`;
     case 'rating':
       return `<div class="rating-stars" data-field="${f.id}">${[1, 2, 3, 4, 5].map(n => `<span data-value="${n}">★</span>`).join('')}</div>
+              <input type="hidden" ${common}>`;
+    case 'scale':
+      return `<div class="nps-scale" data-field="${f.id}">${Array.from({ length: 10 }, (_, n) => `<button type="button" data-value="${n + 1}">${n + 1}</button>`).join('')}</div>
+              <input type="hidden" ${common}>`;
+    case 'emoji':
+      return `<div class="emoji-scale" data-field="${f.id}">${EMOJIS.map((e, i) => `<button type="button" data-value="${i + 1}">${e}</button>`).join('')}</div>
               <input type="hidden" ${common}>`;
     case 'file':
       return `<input type="file" ${common}>`;
@@ -97,7 +108,7 @@ function currentValue(field) {
   if (field.type === 'signature') {
     return sigPads[field.id] && sigPads[field.id].hasSignature() ? 'signed' : null;
   }
-  if (field.type === 'rating') {
+  if (field.type === 'rating' || field.type === 'scale' || field.type === 'emoji') {
     const input = document.getElementById(`field_${field.id}`);
     return input && input.value ? input.value : null;
   }
@@ -128,7 +139,33 @@ function evaluateConditions(allFields) {
   });
 }
 
+// ---------- Simple human-check (only shown when the form owner enables it) ----------
+let captchaAnswer = null;
+function captchaHtml() {
+  const a = Math.floor(Math.random() * 8) + 2;
+  const b = Math.floor(Math.random() * 8) + 2;
+  captchaAnswer = a + b;
+  return `
+    <div class="fill-field">
+      <label class="qlabel">Quick check: what is ${a} + ${b}? <span class="req">*</span></label>
+      <input type="number" id="captchaInput" required>
+    </div>
+  `;
+}
+
 function renderForm(f) {
+  const submittedKey = `kobodocs_form_submitted_${f.id}`;
+  if (f.settings && f.settings.oneResponsePerDevice && localStorage.getItem(submittedKey)) {
+    card.innerHTML = `
+      <div class="fill-logo">KoboDocs Form</div>
+      <div class="fill-success">
+        <h2>${(f.settings && f.settings.confirmationHeading) || 'Already submitted'}</h2>
+        <p style="opacity:0.75; font-size:0.9rem;">${(f.settings && f.settings.confirmationMessage) || 'Looks like you\u2019ve already responded to this form from this device.'}</p>
+      </div>
+    `;
+    return;
+  }
+
   card.innerHTML = `
     <div class="fill-logo">KoboDocs Form</div>
     <div class="fill-title">${f.title}</div>
@@ -140,6 +177,8 @@ function renderForm(f) {
           ${fieldHtml(field)}
         </div>
       `).join('')}
+      ${(f.settings && f.settings.captcha) ? captchaHtml() : ''}
+      <input type="text" name="website" id="hpField" tabindex="-1" autocomplete="off" style="position:absolute; left:-9999px; width:1px; height:1px; opacity:0;">
       <button type="submit" class="fill-submit" id="submitBtn">Submit</button>
       <div class="fill-error" id="fillErrorMsg"></div>
     </form>
@@ -152,7 +191,6 @@ function renderForm(f) {
     btn.addEventListener('click', () => sigPads[btn.dataset.field] && sigPads[btn.dataset.field].clear());
   });
 
-  // Rating stars behavior
   document.querySelectorAll('.rating-stars').forEach(wrap => {
     wrap.addEventListener('click', (e) => {
       const star = e.target.closest('span[data-value]');
@@ -160,6 +198,16 @@ function renderForm(f) {
       const val = parseInt(star.dataset.value, 10);
       wrap.querySelectorAll('span').forEach(s => s.classList.toggle('active', parseInt(s.dataset.value, 10) <= val));
       wrap.nextElementSibling.value = val;
+      evaluateConditions(f.fields);
+    });
+  });
+
+  document.querySelectorAll('.nps-scale, .emoji-scale').forEach(wrap => {
+    wrap.addEventListener('click', (e) => {
+      const btn = e.target.closest('button[data-value]');
+      if (!btn) return;
+      wrap.querySelectorAll('button').forEach(b => b.classList.toggle('active', b === btn));
+      wrap.nextElementSibling.value = btn.dataset.value;
       evaluateConditions(f.fields);
     });
   });
@@ -188,6 +236,11 @@ async function onSubmit(e, formDef) {
   btn.textContent = 'Submitting…';
 
   try {
+    if (formDef.settings && formDef.settings.captcha) {
+      const val = parseInt(document.getElementById('captchaInput').value, 10);
+      if (val !== captchaAnswer) throw new Error('That answer doesn\u2019t look right — please try again.');
+    }
+
     const visibleFields = formDef.fields.filter(field => isVisible(field, formDef.fields));
     const answers = {};
     for (const field of visibleFields) {
@@ -211,7 +264,7 @@ async function onSubmit(e, formDef) {
         } else {
           answers[field.id] = null;
         }
-      } else if (field.type === 'rating') {
+      } else if (field.type === 'rating' || field.type === 'scale' || field.type === 'emoji') {
         const input = document.getElementById(`field_${field.id}`);
         answers[field.id] = input.value ? parseInt(input.value, 10) : null;
       } else {
@@ -224,15 +277,25 @@ async function onSubmit(e, formDef) {
       }
     }
 
-    const { data, error } = await supabase.rpc('submit_form_response', { p_slug: slug, p_answers: answers });
+    const honeypot = document.getElementById('hpField').value;
+    const { data, error } = await supabase.rpc('submit_form_response', { p_slug: slug, p_answers: answers, p_honeypot: honeypot });
     if (error) throw error;
-    if (!data || !data.success) throw new Error(data?.error || 'Could not submit the form.');
+    if (!data || !data.success) throw new Error((data && data.error) || 'Could not submit the form.');
+
+    if (formDef.settings && formDef.settings.oneResponsePerDevice) {
+      localStorage.setItem(`kobodocs_form_submitted_${formDef.id}`, '1');
+    }
+
+    if (formDef.settings && formDef.settings.redirectUrl) {
+      window.location.href = formDef.settings.redirectUrl;
+      return;
+    }
 
     card.innerHTML = `
       <div class="fill-logo">KoboDocs Form</div>
       <div class="fill-success">
-        <h2>Thank you! 🎉</h2>
-        <p style="opacity:0.75; font-size:0.9rem;">Your response has been recorded.</p>
+        <h2>${(formDef.settings && formDef.settings.confirmationHeading) || 'Thank you! 🎉'}</h2>
+        <p style="opacity:0.75; font-size:0.9rem;">${(formDef.settings && formDef.settings.confirmationMessage) || 'Your response has been recorded.'}</p>
       </div>
     `;
   } catch (err) {
@@ -254,6 +317,17 @@ async function onSubmit(e, formDef) {
       renderError("We couldn't find this form. It may have been unpublished or the link may be incorrect.");
       return;
     }
+
+    const settings = data.settings || {};
+    if (settings.closesAt && new Date() > new Date(settings.closesAt)) {
+      renderError(`This form closed to new responses on ${new Date(settings.closesAt).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}.`);
+      return;
+    }
+    if (settings.responseLimit && data.response_count >= settings.responseLimit) {
+      renderError('This form has reached its maximum number of responses.');
+      return;
+    }
+
     renderForm(data);
   } catch {
     renderError("Something went wrong loading this form. Please try again in a moment.");

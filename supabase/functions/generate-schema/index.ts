@@ -24,8 +24,8 @@ const corsHeaders = {
 const GEMINI_MODEL = "gemini-2.5-flash";
 const GROQ_MODEL = "llama-3.3-70b-versatile";
 
-const FORM_TYPES = ["text", "textarea", "number", "email", "phone", "date", "select", "radio", "checkbox", "rating", "file", "signature"];
-const SURVEY_TYPES = ["text", "textarea", "multiple_choice", "checkbox", "rating", "nps", "likert", "ranking", "matrix"];
+const FORM_TYPES = ["text", "textarea", "number", "email", "phone", "url", "date", "time", "select", "radio", "checkbox", "rating", "scale", "emoji", "file", "signature"];
+const SURVEY_TYPES = ["text", "textarea", "multiple_choice", "checkbox", "yesno", "rating", "nps", "likert", "ranking", "matrix"];
 const OPTION_TYPES = new Set(["select", "radio", "checkbox", "multiple_choice", "ranking"]);
 
 function ok(body: Record<string, unknown>) {
