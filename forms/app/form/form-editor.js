@@ -209,6 +209,8 @@ function renderSettings() {
   document.getElementById('closesAtInput').value = s.closesAt ? s.closesAt.slice(0, 16) : '';
   document.getElementById('oneResponsePerDeviceInput').checked = !!s.oneResponsePerDevice;
   document.getElementById('captchaInput').checked = !!s.captcha;
+  document.getElementById('notifyOwnerInput').checked = s.notifyOwner !== false;
+  document.getElementById('sendConfirmationInput').checked = !!s.sendConfirmationEmail;
   document.getElementById('confirmationHeadingInput').value = s.confirmationHeading || '';
   document.getElementById('confirmationMessageInput').value = s.confirmationMessage || '';
   document.getElementById('redirectUrlInput').value = s.redirectUrl || '';
@@ -222,6 +224,8 @@ document.getElementById('saveSettingsBtn').addEventListener('click', async () =>
     closesAt: closesVal ? new Date(closesVal).toISOString() : null,
     oneResponsePerDevice: document.getElementById('oneResponsePerDeviceInput').checked,
     captcha: document.getElementById('captchaInput').checked,
+    notifyOwner: document.getElementById('notifyOwnerInput').checked,
+    sendConfirmationEmail: document.getElementById('sendConfirmationInput').checked,
     confirmationHeading: document.getElementById('confirmationHeadingInput').value.trim() || null,
     confirmationMessage: document.getElementById('confirmationMessageInput').value.trim() || null,
     redirectUrl: document.getElementById('redirectUrlInput').value.trim() || null,
@@ -315,11 +319,34 @@ async function loadResponses() {
     return;
   }
   lastResponses = data || [];
-  document.getElementById('responseCount').textContent = `${lastResponses.length} response${lastResponses.length === 1 ? '' : 's'}`;
   renderStats();
+  renderResponsesTable();
+}
+
+function matchesSearch(response, query) {
+  if (!query) return true;
+  const haystack = Object.values(response.answers || {})
+    .map(v => (Array.isArray(v) ? v.join(' ') : (v && typeof v === 'object' ? JSON.stringify(v) : String(v ?? ''))))
+    .join(' ')
+    .toLowerCase();
+  return haystack.includes(query.toLowerCase());
+}
+
+function renderResponsesTable() {
+  const wrap = document.getElementById('responsesTableWrap');
+  const query = document.getElementById('responseSearchInput').value.trim();
+  const filtered = lastResponses.filter(r => matchesSearch(r, query));
+
+  document.getElementById('responseCount').textContent = query
+    ? `${filtered.length} of ${lastResponses.length} response${lastResponses.length === 1 ? '' : 's'}`
+    : `${lastResponses.length} response${lastResponses.length === 1 ? '' : 's'}`;
 
   if (!lastResponses.length) {
     wrap.innerHTML = `<div class="empty-note">No responses yet.</div>`;
+    return;
+  }
+  if (!filtered.length) {
+    wrap.innerHTML = `<div class="empty-note">No responses match "${query}".</div>`;
     return;
   }
 
@@ -333,8 +360,8 @@ async function loadResponses() {
         </tr>
       </thead>
       <tbody>
-        ${lastResponses.map(r => `
-          <tr>
+        ${filtered.map(r => `
+          <tr data-id="${r.id}">
             <td>${new Date(r.submitted_at).toLocaleString('en-GB')}</td>
             ${cols.map(c => `<td>${formatAnswer(r.answers[c.id], c)}</td>`).join('')}
           </tr>
@@ -344,11 +371,53 @@ async function loadResponses() {
   `;
 }
 
+document.getElementById('responseSearchInput').addEventListener('input', renderResponsesTable);
+
+document.getElementById('responsesTableWrap').addEventListener('click', (e) => {
+  if (e.target.closest('.file-link')) return; // handled separately below
+  const row = e.target.closest('tr[data-id]');
+  if (!row) return;
+  const r = lastResponses.find(x => x.id === row.dataset.id);
+  if (r) openResponseDetail(r);
+});
+
+function openResponseDetail(r) {
+  const body = document.getElementById('responseDetailBody');
+  body.innerHTML = `
+    <div class="detail-row"><div class="lbl">Submitted</div><div class="val">${new Date(r.submitted_at).toLocaleString('en-GB')}</div></div>
+    ${form.fields.map(c => `
+      <div class="detail-row"><div class="lbl">${c.label}</div><div class="val">${formatAnswer(r.answers[c.id], c) || '<span style="opacity:0.4;">(no answer)</span>'}</div></div>
+    `).join('')}
+  `;
+  document.getElementById('responseDetailOverlay').classList.add('show');
+}
+
+document.getElementById('detailCloseBtn').addEventListener('click', () => {
+  document.getElementById('responseDetailOverlay').classList.remove('show');
+});
+document.getElementById('responseDetailOverlay').addEventListener('click', (e) => {
+  if (e.target.id === 'responseDetailOverlay') e.currentTarget.classList.remove('show');
+});
+
+async function openFileLink(path) {
+  const { supabase } = ctx;
+  const { data, error } = await supabase.storage.from('form-uploads').createSignedUrl(path, 3600);
+  if (error || !data) { toast('Could not open file: ' + (error?.message || 'unknown error')); return; }
+  window.open(data.signedUrl, '_blank', 'noopener');
+}
+
+document.addEventListener('click', (e) => {
+  const link = e.target.closest('.file-link');
+  if (!link) return;
+  e.preventDefault();
+  openFileLink(link.dataset.path);
+});
+
 function formatAnswer(val, field) {
   if (val === undefined || val === null || val === '') return '';
   if (Array.isArray(val)) return val.join(', ');
-  if (field.type === 'file' && typeof val === 'string') {
-    return `<a href="${val}" target="_blank" rel="noopener">file</a>`;
+  if ((field.type === 'file' || field.type === 'signature') && typeof val === 'string') {
+    return `<a href="#" class="file-link" data-path="${val}">${field.type === 'signature' ? 'View signature' : 'View file'}</a>`;
   }
   return String(val);
 }

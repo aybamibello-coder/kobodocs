@@ -282,6 +282,23 @@ async function onSubmit(e, formDef) {
     if (error) throw error;
     if (!data || !data.success) throw new Error((data && data.error) || 'Could not submit the form.');
 
+    // Fire-and-forget: never let email notification issues affect the
+    // submission the respondent just successfully made.
+    try {
+      const emailField = formDef.fields.find(fld => fld.type === 'email' && answers[fld.id]);
+      const fieldLabels = {};
+      formDef.fields.forEach(fld => { fieldLabels[fld.id] = fld.label; });
+      supabase.functions.invoke('send-form-notification', {
+        body: {
+          product: 'form',
+          slug,
+          answers,
+          field_labels: fieldLabels,
+          respondent_email: emailField ? answers[emailField.id] : null,
+        },
+      });
+    } catch { /* non-critical */ }
+
     if (formDef.settings && formDef.settings.oneResponsePerDevice) {
       localStorage.setItem(`kobodocs_form_submitted_${formDef.id}`, '1');
     }

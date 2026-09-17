@@ -3,7 +3,7 @@ let survey = null;
 const surveyId = new URLSearchParams(window.location.search).get('id');
 
 const TYPE_LABELS = {
-  text: 'Short text', textarea: 'Paragraph', multiple_choice: 'Multiple choice',
+  text: 'Short text', textarea: 'Paragraph', email: 'Email', multiple_choice: 'Multiple choice',
   checkbox: 'Checkboxes', yesno: 'Yes / No', rating: 'Rating', nps: 'NPS', likert: 'Likert', ranking: 'Ranking',
   matrix: 'Matrix (grid)',
 };
@@ -226,6 +226,8 @@ function renderSettings() {
   document.getElementById('oneResponsePerDeviceInput').checked = !!s.oneResponsePerDevice;
   document.getElementById('anonymousInput').checked = !!s.anonymous;
   document.getElementById('captchaInput').checked = !!s.captcha;
+  document.getElementById('notifyOwnerInput').checked = s.notifyOwner !== false;
+  document.getElementById('sendConfirmationInput').checked = !!s.sendConfirmationEmail;
   document.getElementById('confirmationHeadingInput').value = s.confirmationHeading || '';
   document.getElementById('confirmationMessageInput').value = s.confirmationMessage || '';
   document.getElementById('redirectUrlInput').value = s.redirectUrl || '';
@@ -240,6 +242,8 @@ document.getElementById('saveSettingsBtn').addEventListener('click', async () =>
     oneResponsePerDevice: document.getElementById('oneResponsePerDeviceInput').checked,
     anonymous: document.getElementById('anonymousInput').checked,
     captcha: document.getElementById('captchaInput').checked,
+    notifyOwner: document.getElementById('notifyOwnerInput').checked,
+    sendConfirmationEmail: document.getElementById('sendConfirmationInput').checked,
     confirmationHeading: document.getElementById('confirmationHeadingInput').value.trim() || null,
     confirmationMessage: document.getElementById('confirmationMessageInput').value.trim() || null,
     redirectUrl: document.getElementById('redirectUrlInput').value.trim() || null,
@@ -333,11 +337,34 @@ async function loadResponses() {
     return;
   }
   lastResponses = data || [];
-  document.getElementById('responseCount').textContent = `${lastResponses.length} response${lastResponses.length === 1 ? '' : 's'}`;
   renderStats();
+  renderResponsesTable();
+}
+
+function matchesSearch(response, query) {
+  if (!query) return true;
+  const haystack = Object.values(response.answers || {})
+    .map(v => (Array.isArray(v) ? v.join(' ') : (v && typeof v === 'object' ? JSON.stringify(v) : String(v ?? ''))))
+    .join(' ')
+    .toLowerCase();
+  return haystack.includes(query.toLowerCase());
+}
+
+function renderResponsesTable() {
+  const wrap = document.getElementById('responsesTableWrap');
+  const query = document.getElementById('responseSearchInput').value.trim();
+  const filtered = lastResponses.filter(r => matchesSearch(r, query));
+
+  document.getElementById('responseCount').textContent = query
+    ? `${filtered.length} of ${lastResponses.length} response${lastResponses.length === 1 ? '' : 's'}`
+    : `${lastResponses.length} response${lastResponses.length === 1 ? '' : 's'}`;
 
   if (!lastResponses.length) {
     wrap.innerHTML = `<div class="empty-note">No responses yet.</div>`;
+    return;
+  }
+  if (!filtered.length) {
+    wrap.innerHTML = `<div class="empty-note">No responses match "${query}".</div>`;
     return;
   }
 
@@ -351,8 +378,8 @@ async function loadResponses() {
         </tr>
       </thead>
       <tbody>
-        ${lastResponses.map(r => `
-          <tr>
+        ${filtered.map(r => `
+          <tr data-id="${r.id}">
             <td>${new Date(r.submitted_at).toLocaleString('en-GB')}</td>
             ${cols.map(c => `<td>${formatAnswer(r.answers[c.id])}</td>`).join('')}
           </tr>
@@ -361,6 +388,33 @@ async function loadResponses() {
     </table>
   `;
 }
+
+document.getElementById('responseSearchInput').addEventListener('input', renderResponsesTable);
+
+document.getElementById('responsesTableWrap').addEventListener('click', (e) => {
+  const row = e.target.closest('tr[data-id]');
+  if (!row) return;
+  const r = lastResponses.find(x => x.id === row.dataset.id);
+  if (r) openResponseDetail(r);
+});
+
+function openResponseDetail(r) {
+  const body = document.getElementById('responseDetailBody');
+  body.innerHTML = `
+    <div class="detail-row"><div class="lbl">Submitted</div><div class="val">${new Date(r.submitted_at).toLocaleString('en-GB')}</div></div>
+    ${survey.questions.map(c => `
+      <div class="detail-row"><div class="lbl">${c.label}</div><div class="val">${formatAnswer(r.answers[c.id]) || '<span style="opacity:0.4;">(no answer)</span>'}</div></div>
+    `).join('')}
+  `;
+  document.getElementById('responseDetailOverlay').classList.add('show');
+}
+
+document.getElementById('detailCloseBtn').addEventListener('click', () => {
+  document.getElementById('responseDetailOverlay').classList.remove('show');
+});
+document.getElementById('responseDetailOverlay').addEventListener('click', (e) => {
+  if (e.target.id === 'responseDetailOverlay') e.currentTarget.classList.remove('show');
+});
 
 function formatAnswer(val) {
   if (val === undefined || val === null || val === '') return '';

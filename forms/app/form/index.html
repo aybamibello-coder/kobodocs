@@ -64,6 +64,15 @@
   .stat-card{ background:var(--paper); border:1px solid var(--line); border-radius:8px; padding:12px 14px; }
   .stat-card .num{ font-family:'Fraunces', serif; font-size:1.3rem; font-weight:600; }
   .stat-card .lbl{ font-size:0.72rem; opacity:0.6; text-transform:uppercase; letter-spacing:0.03em; }
+  .resp-table tbody tr{ cursor:pointer; }
+  .resp-table tbody tr:hover{ background:rgba(20,52,43,0.04); }
+  .detail-overlay{ display:none; position:fixed; inset:0; background:rgba(13,38,32,0.5); z-index:100; align-items:center; justify-content:center; padding:20px; }
+  .detail-overlay.show{ display:flex; }
+  .detail-panel{ background:var(--paper); border-radius:10px; max-width:560px; width:100%; max-height:85vh; overflow-y:auto; padding:24px; position:relative; }
+  .detail-close{ position:absolute; top:14px; right:16px; border:none; background:none; font-size:1.4rem; cursor:pointer; line-height:1; }
+  .detail-row{ margin-bottom:14px; }
+  .detail-row .lbl{ font-size:0.78rem; opacity:0.6; margin-bottom:3px; }
+  .detail-row .val{ font-size:0.92rem; }
   .share-url{ display:flex; gap:8px; margin:12px 0; }
   .share-url input{ flex:1; padding:8px 10px; border:1px solid var(--line); border-radius:6px; font-family:'Space Mono', monospace; font-size:0.82rem; background:rgba(0,0,0,0.02); }
   .status-toggle{ display:flex; gap:8px; margin-bottom:16px; }
@@ -158,6 +167,8 @@
       <input type="datetime-local" id="closesAtInput">
       <label class="settings-check"><input type="checkbox" id="oneResponsePerDeviceInput"> Limit to one response per device (uses the visitor's browser storage)</label>
       <label class="settings-check"><input type="checkbox" id="captchaInput"> Require a quick human-check before submitting</label>
+      <label class="settings-check"><input type="checkbox" id="notifyOwnerInput" checked> Email me when someone submits a response</label>
+      <label class="settings-check"><input type="checkbox" id="sendConfirmationInput"> Email the respondent a confirmation (only if the form has an email field)</label>
       <hr style="border:none; border-top:1px solid var(--line); margin:16px 0;">
       <label class="settings-label" for="confirmationHeadingInput">Confirmation heading</label>
       <input type="text" id="confirmationHeadingInput" placeholder="Thank you!">
@@ -197,14 +208,22 @@
 
   <div class="fb-panel" id="panel-responses">
     <div class="stats-row" id="statsRow"></div>
-    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
-      <div id="responseCount" style="font-size:0.85rem; opacity:0.7;"></div>
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; gap:10px; flex-wrap:wrap;">
+      <input type="text" id="responseSearchInput" placeholder="Search responses…" style="flex:1; min-width:180px; padding:8px 10px; border:1px solid var(--line); border-radius:6px; font-family:inherit; font-size:0.85rem;">
+      <div id="responseCount" style="font-size:0.85rem; opacity:0.7; white-space:nowrap;"></div>
       <div>
         <button class="btn" id="exportCsvBtn">Export CSV</button>
         <button class="btn" id="exportJsonBtn">Export JSON</button>
       </div>
     </div>
     <div class="resp-table-wrap" id="responsesTableWrap"><div class="empty-note">Loading…</div></div>
+  </div>
+</div>
+
+<div id="responseDetailOverlay" class="detail-overlay">
+  <div class="detail-panel">
+    <button class="detail-close" id="detailCloseBtn">&times;</button>
+    <div id="responseDetailBody"></div>
   </div>
 </div>
 

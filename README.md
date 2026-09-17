@@ -82,6 +82,12 @@ Two new standalone products, each with its own Supabase schema, plan-limits tabl
 - Responses tab: mini stats row (total / today / last 7 days) plus CSV and now JSON export.
 - Deliberately not built from the fuller spec this pass: **quiz/exam mode** (confirmed skipped for now — no product-overlap reason, just not needed yet); **team roles/collaboration, version history, webhooks/public API, CRM/Zapier/Make integrations, custom domains** (all substantial, multi-day builds better scoped as their own future work than squeezed into a feature-parity pass); **piping/randomization/quotas/geographic targeting** (research-survey-tool depth beyond what a first pass needs — candidates for a later round if Ayo wants deeper SurveyMonkey-style research tooling); **real per-response-per-email uniqueness** (would require collecting email, which cuts against the anonymous-by-default posture — the one-per-device localStorage check is the privacy-preserving stand-in).
 
+### Follow-up round: email notifications + response search/detail
+- Email type added to Survey (Forms already had it) — needed so the confirmation-email feature has something to detect.
+- New `send-form-notification` edge function (verify_jwt off, service-role lookups, same Resend infra as `send-welcome-email`): sends the form/survey owner an email on every new response (default on, toggle in Settings) and, if the owner opts in and the response includes an email field/question, a confirmation email to the respondent reusing the same confirmation heading/message text. Both are fire-and-forget from the public fill pages — a failed or unconfigured email never blocks or delays the submission.
+- Responses tab (both products): a search box that filters the table client-side across all answer values, and clicking a row opens a detail panel with every field/question and its full answer (useful for long text answers the table truncates).
+- Bug fixes found and fixed while doing this pass: Survey's Yes/No question type had no branch in the response-submission code, so submitting a required Yes/No question would have thrown — fixed. File/signature answers in the Forms responses table were rendering as broken links (the raw private-bucket storage path was used directly as an `href`) — now resolved to a real signed URL on click instead.
+
 ## Business Suite tiers
 
 Business Suite now has two tiers, gated by `businesses.suite_tier`:

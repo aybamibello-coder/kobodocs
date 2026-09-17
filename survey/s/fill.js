@@ -33,6 +33,8 @@ function questionHtml(q) {
   switch (q.type) {
     case 'textarea':
       return `<textarea ${common} rows="3"></textarea>`;
+    case 'email':
+      return `<input type="email" ${common}>`;
     case 'multiple_choice':
       return `<div class="fill-choice-list">${(q.options || []).map(o => `
         <label><input type="radio" name="q_${q.id}" value="${o}"> ${o}</label>
@@ -224,7 +226,7 @@ async function onSubmit(e, surveyDef) {
     for (const q of visibleQuestions) {
       if (q.type === 'checkbox') {
         answers[q.id] = Array.from(document.querySelectorAll(`input[name="q_${q.id}"]:checked`)).map(el => el.value);
-      } else if (q.type === 'multiple_choice' || q.type === 'likert') {
+      } else if (q.type === 'multiple_choice' || q.type === 'likert' || q.type === 'yesno') {
         const checked = document.querySelector(`input[name="q_${q.id}"]:checked`);
         answers[q.id] = checked ? checked.value : null;
       } else if (q.type === 'ranking') {
@@ -258,6 +260,23 @@ async function onSubmit(e, surveyDef) {
     const { data, error } = await supabase.rpc('submit_survey_response', { p_slug: slug, p_answers: answers, p_honeypot: honeypot });
     if (error) throw error;
     if (!data || !data.success) throw new Error((data && data.error) || 'Could not submit the survey.');
+
+    // Fire-and-forget: never let email notification issues affect the
+    // submission the respondent just successfully made.
+    try {
+      const emailQuestion = surveyDef.questions.find(q => q.type === 'email' && answers[q.id]);
+      const fieldLabels = {};
+      surveyDef.questions.forEach(q => { fieldLabels[q.id] = q.label; });
+      supabase.functions.invoke('send-form-notification', {
+        body: {
+          product: 'survey',
+          slug,
+          answers,
+          field_labels: fieldLabels,
+          respondent_email: emailQuestion ? answers[emailQuestion.id] : null,
+        },
+      });
+    } catch { /* non-critical */ }
 
     if (surveyDef.settings && surveyDef.settings.oneResponsePerDevice) {
       localStorage.setItem(`kobodocs_survey_submitted_${surveyDef.id}`, '1');
