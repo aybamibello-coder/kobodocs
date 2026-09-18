@@ -6,7 +6,7 @@ const TYPE_LABELS = {
   text: 'Short text', textarea: 'Paragraph', number: 'Number', email: 'Email',
   phone: 'Phone', url: 'Website/URL', date: 'Date', time: 'Time', select: 'Dropdown', radio: 'Multiple choice',
   checkbox: 'Checkboxes', rating: 'Star rating', scale: 'Linear scale', emoji: 'Emoji rating',
-  file: 'File upload', signature: 'Signature',
+  file: 'File upload', signature: 'Signature', section: 'Section break',
 };
 const OPTION_TYPES = new Set(['select', 'radio', 'checkbox']);
 const COND_OPERATORS = [
@@ -56,17 +56,18 @@ function renderFields() {
     return;
   }
   list.innerHTML = form.fields.map((f, i) => `
-    <div class="field-row" data-id="${f.id}">
+    <div class="field-row ${f.type === 'section' ? 'section-row' : ''}" data-id="${f.id}">
       <div class="field-row-top">
         <span class="field-type-badge">${TYPE_LABELS[f.type] || f.type}</span>
-        <input class="field-label-input" data-role="label" value="${(f.label || '').replace(/"/g, '&quot;')}" placeholder="Field label">
-        <label class="field-required"><input type="checkbox" data-role="required" ${f.required ? 'checked' : ''}> Required</label>
+        <input class="field-label-input" data-role="label" value="${(f.label || '').replace(/"/g, '&quot;')}" placeholder="${f.type === 'section' ? 'Section title' : 'Field label'}">
+        ${f.type !== 'section' ? `<label class="field-required"><input type="checkbox" data-role="required" ${f.required ? 'checked' : ''}> Required</label>` : ''}
         <div class="field-actions">
           <button class="icon-btn" data-role="up" ${i === 0 ? 'disabled' : ''} title="Move up">↑</button>
           <button class="icon-btn" data-role="down" ${i === form.fields.length - 1 ? 'disabled' : ''} title="Move down">↓</button>
           <button class="icon-btn" data-role="delete" title="Delete">✕</button>
         </div>
       </div>
+      ${f.type === 'section' ? `<div class="field-options-hint">Everything after this starts a new page, up to the next section break.</div>` : ''}
       ${OPTION_TYPES.has(f.type) ? `
         <div class="field-options">
           ${(f.options || []).map((opt, oi) => `
@@ -209,21 +210,28 @@ function renderSettings() {
   document.getElementById('closesAtInput').value = s.closesAt ? s.closesAt.slice(0, 16) : '';
   document.getElementById('oneResponsePerDeviceInput').checked = !!s.oneResponsePerDevice;
   document.getElementById('captchaInput').checked = !!s.captcha;
+  document.getElementById('accessCodeInput').value = s.accessCode || '';
   document.getElementById('notifyOwnerInput').checked = s.notifyOwner !== false;
   document.getElementById('sendConfirmationInput').checked = !!s.sendConfirmationEmail;
   document.getElementById('confirmationHeadingInput').value = s.confirmationHeading || '';
   document.getElementById('confirmationMessageInput').value = s.confirmationMessage || '';
   document.getElementById('redirectUrlInput').value = s.redirectUrl || '';
+  document.getElementById('brandColorInput').value = s.brandColor || '#0D2620';
+  const logoPreview = document.getElementById('logoPreview');
+  if (s.logoUrl) { logoPreview.src = s.logoUrl; logoPreview.style.display = 'inline-block'; }
+  else { logoPreview.style.display = 'none'; }
 }
 
 document.getElementById('saveSettingsBtn').addEventListener('click', async () => {
   const limitVal = document.getElementById('responseLimitInput').value;
   const closesVal = document.getElementById('closesAtInput').value;
   const settings = {
+    ...(form.settings || {}),
     responseLimit: limitVal ? parseInt(limitVal, 10) : null,
     closesAt: closesVal ? new Date(closesVal).toISOString() : null,
     oneResponsePerDevice: document.getElementById('oneResponsePerDeviceInput').checked,
     captcha: document.getElementById('captchaInput').checked,
+    accessCode: document.getElementById('accessCodeInput').value.trim() || null,
     notifyOwner: document.getElementById('notifyOwnerInput').checked,
     sendConfirmationEmail: document.getElementById('sendConfirmationInput').checked,
     confirmationHeading: document.getElementById('confirmationHeadingInput').value.trim() || null,
@@ -232,6 +240,31 @@ document.getElementById('saveSettingsBtn').addEventListener('click', async () =>
   };
   await saveForm({ settings });
   toast('Settings saved.');
+});
+
+document.getElementById('logoUploadInput').addEventListener('change', async (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const { supabase, session } = ctx;
+  const path = `${session.user.id}/${Math.random().toString(36).slice(2, 10)}-${file.name}`;
+  const { error } = await supabase.storage.from('brand-logos').upload(path, file, { upsert: true });
+  if (error) { toast('Could not upload logo: ' + error.message); return; }
+  const { data } = supabase.storage.from('brand-logos').getPublicUrl(path);
+  document.getElementById('logoPreview').src = data.publicUrl;
+  document.getElementById('logoPreview').style.display = 'inline-block';
+  document.getElementById('logoPreview').dataset.pendingUrl = data.publicUrl;
+  toast('Logo uploaded — click "Save branding" to apply.');
+});
+
+document.getElementById('saveBrandingBtn').addEventListener('click', async () => {
+  const logoPreview = document.getElementById('logoPreview');
+  const settings = {
+    ...(form.settings || {}),
+    brandColor: document.getElementById('brandColorInput').value,
+    logoUrl: logoPreview.dataset.pendingUrl || form.settings?.logoUrl || (logoPreview.style.display !== 'none' ? logoPreview.src : null),
+  };
+  await saveForm({ settings });
+  toast('Branding saved.');
 });
 
 // ---------- Share tab ----------
@@ -290,6 +323,8 @@ document.getElementById('copyEmbedBtn').addEventListener('click', () => {
 
 // ---------- Responses tab ----------
 let lastResponses = [];
+let selectedResponseIds = new Set();
+let sortState = { col: 'submitted_at', dir: 'desc' };
 
 function renderStats() {
   const now = new Date();
@@ -319,6 +354,7 @@ async function loadResponses() {
     return;
   }
   lastResponses = data || [];
+  selectedResponseIds.clear();
   renderStats();
   renderResponsesTable();
 }
@@ -332,10 +368,30 @@ function matchesSearch(response, query) {
   return haystack.includes(query.toLowerCase());
 }
 
+function sortValue(r, col) {
+  if (col === 'submitted_at') return new Date(r.submitted_at).getTime();
+  const v = r.answers[col];
+  if (Array.isArray(v)) return v.join(', ');
+  if (v && typeof v === 'object') return JSON.stringify(v);
+  return v ?? '';
+}
+
+function updateBulkDeleteVisibility() {
+  document.getElementById('deleteSelectedBtn').style.display = selectedResponseIds.size ? 'inline-block' : 'none';
+  document.getElementById('deleteSelectedBtn').textContent = `Delete selected (${selectedResponseIds.size})`;
+}
+
 function renderResponsesTable() {
   const wrap = document.getElementById('responsesTableWrap');
   const query = document.getElementById('responseSearchInput').value.trim();
-  const filtered = lastResponses.filter(r => matchesSearch(r, query));
+  let filtered = lastResponses.filter(r => matchesSearch(r, query));
+
+  filtered = filtered.slice().sort((a, b) => {
+    const av = sortValue(a, sortState.col);
+    const bv = sortValue(b, sortState.col);
+    const cmp = av < bv ? -1 : av > bv ? 1 : 0;
+    return sortState.dir === 'asc' ? cmp : -cmp;
+  });
 
   document.getElementById('responseCount').textContent = query
     ? `${filtered.length} of ${lastResponses.length} response${lastResponses.length === 1 ? '' : 's'}`
@@ -343,25 +399,30 @@ function renderResponsesTable() {
 
   if (!lastResponses.length) {
     wrap.innerHTML = `<div class="empty-note">No responses yet.</div>`;
+    updateBulkDeleteVisibility();
     return;
   }
   if (!filtered.length) {
     wrap.innerHTML = `<div class="empty-note">No responses match "${query}".</div>`;
+    updateBulkDeleteVisibility();
     return;
   }
 
-  const cols = form.fields;
+  const cols = form.fields.filter(f => f.type !== 'section');
+  const arrow = (col) => sortState.col === col ? (sortState.dir === 'asc' ? ' ▲' : ' ▼') : '';
   wrap.innerHTML = `
     <table class="resp-table">
       <thead>
         <tr>
-          <th>Submitted</th>
-          ${cols.map(c => `<th>${c.label}</th>`).join('')}
+          <th><input type="checkbox" id="selectAllCheckbox"></th>
+          <th class="sortable" data-col="submitted_at">Submitted${arrow('submitted_at')}</th>
+          ${cols.map(c => `<th class="sortable" data-col="${c.id}">${c.label}${arrow(c.id)}</th>`).join('')}
         </tr>
       </thead>
       <tbody>
         ${filtered.map(r => `
           <tr data-id="${r.id}">
+            <td><input type="checkbox" class="row-select" data-id="${r.id}" ${selectedResponseIds.has(r.id) ? 'checked' : ''}></td>
             <td>${new Date(r.submitted_at).toLocaleString('en-GB')}</td>
             ${cols.map(c => `<td>${formatAnswer(r.answers[c.id], c)}</td>`).join('')}
           </tr>
@@ -369,23 +430,62 @@ function renderResponsesTable() {
       </tbody>
     </table>
   `;
+
+  const selectAll = document.getElementById('selectAllCheckbox');
+  const idsOnScreen = filtered.map(r => r.id);
+  selectAll.checked = idsOnScreen.length > 0 && idsOnScreen.every(id => selectedResponseIds.has(id));
+  updateBulkDeleteVisibility();
 }
 
 document.getElementById('responseSearchInput').addEventListener('input', renderResponsesTable);
 
 document.getElementById('responsesTableWrap').addEventListener('click', (e) => {
   if (e.target.closest('.file-link')) return; // handled separately below
+
+  const th = e.target.closest('th.sortable');
+  if (th) {
+    if (sortState.col === th.dataset.col) sortState.dir = sortState.dir === 'asc' ? 'desc' : 'asc';
+    else sortState = { col: th.dataset.col, dir: 'asc' };
+    renderResponsesTable();
+    return;
+  }
+
+  if (e.target.id === 'selectAllCheckbox') {
+    const rows = Array.from(document.querySelectorAll('.row-select'));
+    const allChecked = e.target.checked;
+    rows.forEach(cb => { cb.checked = allChecked; allChecked ? selectedResponseIds.add(cb.dataset.id) : selectedResponseIds.delete(cb.dataset.id); });
+    updateBulkDeleteVisibility();
+    return;
+  }
+
+  if (e.target.classList.contains('row-select')) {
+    e.target.checked ? selectedResponseIds.add(e.target.dataset.id) : selectedResponseIds.delete(e.target.dataset.id);
+    updateBulkDeleteVisibility();
+    return;
+  }
+
   const row = e.target.closest('tr[data-id]');
   if (!row) return;
   const r = lastResponses.find(x => x.id === row.dataset.id);
   if (r) openResponseDetail(r);
 });
 
+document.getElementById('deleteSelectedBtn').addEventListener('click', async () => {
+  if (!selectedResponseIds.size) return;
+  if (!confirm(`Delete ${selectedResponseIds.size} response(s)? This can't be undone.`)) return;
+  const { supabase } = ctx;
+  const ids = Array.from(selectedResponseIds);
+  const { error } = await supabase.from('form_responses').delete().in('id', ids);
+  if (error) { toast('Could not delete: ' + error.message); return; }
+  toast(`${ids.length} response(s) deleted.`);
+  loadResponses();
+});
+
 function openResponseDetail(r) {
   const body = document.getElementById('responseDetailBody');
   body.innerHTML = `
     <div class="detail-row"><div class="lbl">Submitted</div><div class="val">${new Date(r.submitted_at).toLocaleString('en-GB')}</div></div>
-    ${form.fields.map(c => `
+    ${form.fields.filter(f => f.type !== 'section').map(c => `
       <div class="detail-row"><div class="lbl">${c.label}</div><div class="val">${formatAnswer(r.answers[c.id], c) || '<span style="opacity:0.4;">(no answer)</span>'}</div></div>
     `).join('')}
   `;
@@ -429,7 +529,7 @@ function csvEscape(v) {
 
 document.getElementById('exportCsvBtn').addEventListener('click', () => {
   if (!lastResponses.length) { toast('No responses to export yet.'); return; }
-  const cols = form.fields;
+  const cols = form.fields.filter(f => f.type !== 'section');
   const header = ['Submitted', ...cols.map(c => c.label)];
   const rows = lastResponses.map(r => [
     new Date(r.submitted_at).toISOString(),
@@ -448,7 +548,7 @@ document.getElementById('exportCsvBtn').addEventListener('click', () => {
 
 document.getElementById('exportJsonBtn').addEventListener('click', () => {
   if (!lastResponses.length) { toast('No responses to export yet.'); return; }
-  const cols = form.fields;
+  const cols = form.fields.filter(f => f.type !== 'section');
   const rows = lastResponses.map(r => {
     const obj = { submitted_at: r.submitted_at };
     cols.forEach(c => { obj[c.label] = r.answers[c.id] ?? null; });

@@ -13,6 +13,15 @@ function renderError(message) {
   card.innerHTML = `<div class="fill-logo">KoboDocs Survey</div><div class="fill-error" style="display:block;">${message}</div>`;
 }
 
+function applyBranding(settings) {
+  if (settings.brandColor) document.documentElement.style.setProperty('--ink-green-deep', settings.brandColor);
+}
+
+function brandHeaderHtml(settings) {
+  if (settings.logoUrl) return `<img src="${settings.logoUrl}" alt="" style="max-height:52px; margin-bottom:14px; display:block;">`;
+  return `<div class="fill-logo">KoboDocs Survey</div>`;
+}
+
 // ---------- Simple human-check (only shown when the survey owner enables it) ----------
 let captchaAnswer = null;
 function captchaHtml() {
@@ -132,11 +141,55 @@ function evaluateConditions(allQuestions) {
   });
 }
 
+// ---------- Pagination (section breaks) ----------
+function buildPages(questions) {
+  const pages = [{ title: null, fields: [] }];
+  questions.forEach(q => {
+    if (q.type === 'section') {
+      pages.push({ title: q.label, fields: [] });
+    } else {
+      pages[pages.length - 1].fields.push(q);
+    }
+  });
+  return pages;
+}
+
+let currentPageIdx = 0;
+let totalPages = 1;
+
+function showPage(idx, allQuestions) {
+  document.querySelectorAll('.form-page').forEach((el, i) => { el.style.display = i === idx ? '' : 'none'; });
+  const backBtn = document.getElementById('pageBackBtn');
+  const nextBtn = document.getElementById('pageNextBtn');
+  const submitBtn = document.getElementById('submitBtn');
+  if (backBtn) backBtn.style.display = idx === 0 ? 'none' : 'inline-block';
+  if (nextBtn) nextBtn.style.display = idx === totalPages - 1 ? 'none' : 'inline-block';
+  if (submitBtn) submitBtn.style.display = idx === totalPages - 1 ? 'block' : 'none';
+  const progress = document.getElementById('pageProgress');
+  if (progress) progress.textContent = totalPages > 1 ? `Page ${idx + 1} of ${totalPages}` : '';
+  currentPageIdx = idx;
+  evaluateConditions(allQuestions);
+}
+
+function validatePage(pageQuestions, allQuestions) {
+  for (const q of pageQuestions) {
+    if (!isVisible(q, allQuestions) || !q.required) continue;
+    if (q.type === 'matrix') {
+      const val = currentValue(q);
+      if (Object.keys(val || {}).length < (q.rows || []).length) return `Please answer every row of "${q.label}".`;
+      continue;
+    }
+    const val = currentValue(q);
+    if (val === null || val === '' || (Array.isArray(val) && !val.length)) return `Please answer "${q.label}".`;
+  }
+  return null;
+}
+
 function renderSurvey(s) {
   const submittedKey = `kobodocs_survey_submitted_${s.id}`;
   if (s.settings && s.settings.oneResponsePerDevice && localStorage.getItem(submittedKey)) {
     card.innerHTML = `
-      <div class="fill-logo">KoboDocs Survey</div>
+      ${brandHeaderHtml(s.settings || {})}
       <div class="fill-success">
         <h2>${(s.settings && s.settings.confirmationHeading) || 'Already submitted'}</h2>
         <p style="opacity:0.75; font-size:0.9rem;">${(s.settings && s.settings.confirmationMessage) || 'Looks like you\u2019ve already responded to this survey from this device.'}</p>
@@ -145,22 +198,39 @@ function renderSurvey(s) {
     return;
   }
 
+  applyBranding(s.settings || {});
+  const pages = buildPages(s.questions);
+  totalPages = pages.length;
+
   card.innerHTML = `
-    <div class="fill-logo">KoboDocs Survey</div>
+    ${brandHeaderHtml(s.settings || {})}
     <div class="fill-title">${s.title}</div>
     ${s.description ? `<div class="fill-desc">${s.description}</div>` : ''}
     <form id="fillForm">
-      ${s.questions.map(q => `
-        <div class="fill-field" id="wrap_${q.id}">
-          <label class="qlabel">${q.label}${q.required ? ' <span class="req">*</span>' : ''}</label>
-          ${questionHtml(q)}
+      ${pages.map((page, pi) => `
+        <div class="form-page" data-page="${pi}" style="${pi === 0 ? '' : 'display:none;'}">
+          ${page.title ? `<h3 style="font-family:'Fraunces', serif; font-size:1.1rem; margin:${pi === 0 ? '0' : '18px'} 0 14px;">${page.title}</h3>` : ''}
+          ${page.fields.map(q => `
+            <div class="fill-field" id="wrap_${q.id}">
+              <label class="qlabel">${q.label}${q.required ? ' <span class="req">*</span>' : ''}</label>
+              ${questionHtml(q)}
+            </div>
+          `).join('')}
+          ${pi === pages.length - 1 && s.settings && s.settings.captcha ? captchaHtml() : ''}
         </div>
       `).join('')}
-      ${(s.settings && s.settings.captcha) ? captchaHtml() : ''}
       <input type="text" name="website" id="hpField" tabindex="-1" autocomplete="off" style="position:absolute; left:-9999px; width:1px; height:1px; opacity:0;">
+      <div class="page-nav" style="display:flex; justify-content:space-between; align-items:center; margin-top:10px;">
+        <span id="pageProgress" style="font-size:0.78rem; opacity:0.55;"></span>
+        <div>
+          <button type="button" class="btn" id="pageBackBtn" style="display:none; margin-right:8px;">Back</button>
+          <button type="button" class="btn primary" id="pageNextBtn" style="display:none;">Next</button>
+        </div>
+      </div>
       <button type="submit" class="fill-submit" id="submitBtn">Submit</button>
       <div class="fill-error" id="fillErrorMsg"></div>
     </form>
+    ${s.settings && s.settings.logoUrl ? `<div style="text-align:center; font-size:0.72rem; opacity:0.4; margin-top:18px;">Powered by KoboDocs</div>` : ''}
   `;
 
   document.querySelectorAll('.rating-stars').forEach(wrap => {
@@ -204,7 +274,26 @@ function renderSurvey(s) {
   formEl.addEventListener('change', () => evaluateConditions(s.questions));
   formEl.addEventListener('submit', (e) => onSubmit(e, s));
 
-  evaluateConditions(s.questions);
+  const errEl = document.getElementById('fillErrorMsg');
+  const nextBtn = document.getElementById('pageNextBtn');
+  const backBtn = document.getElementById('pageBackBtn');
+  if (nextBtn) {
+    nextBtn.addEventListener('click', () => {
+      errEl.style.display = 'none';
+      const msg = validatePage(pages[currentPageIdx].fields, s.questions);
+      if (msg) { errEl.textContent = msg; errEl.style.display = 'block'; return; }
+      showPage(currentPageIdx + 1, s.questions);
+      window.scrollTo({ top: card.offsetTop - 20, behavior: 'smooth' });
+    });
+  }
+  if (backBtn) {
+    backBtn.addEventListener('click', () => {
+      errEl.style.display = 'none';
+      showPage(currentPageIdx - 1, s.questions);
+    });
+  }
+
+  showPage(0, s.questions);
 }
 
 async function onSubmit(e, surveyDef) {
@@ -212,6 +301,10 @@ async function onSubmit(e, surveyDef) {
   const btn = document.getElementById('submitBtn');
   const errEl = document.getElementById('fillErrorMsg');
   errEl.style.display = 'none';
+
+  const lastPageMsg = validatePage(buildPages(surveyDef.questions)[totalPages - 1].fields, surveyDef.questions);
+  if (lastPageMsg) { errEl.textContent = lastPageMsg; errEl.style.display = 'block'; return; }
+
   btn.disabled = true;
   btn.textContent = 'Submitting…';
 
@@ -221,7 +314,7 @@ async function onSubmit(e, surveyDef) {
       if (val !== captchaAnswer) throw new Error('That answer doesn\u2019t look right — please try again.');
     }
 
-    const visibleQuestions = surveyDef.questions.filter(q => isVisible(q, surveyDef.questions));
+    const visibleQuestions = surveyDef.questions.filter(q => q.type !== 'section' && isVisible(q, surveyDef.questions));
     const answers = {};
     for (const q of visibleQuestions) {
       if (q.type === 'checkbox') {
@@ -288,7 +381,7 @@ async function onSubmit(e, surveyDef) {
     }
 
     card.innerHTML = `
-      <div class="fill-logo">KoboDocs Survey</div>
+      ${brandHeaderHtml(surveyDef.settings || {})}
       <div class="fill-success">
         <h2>${(surveyDef.settings && surveyDef.settings.confirmationHeading) || 'Thank you! 🎉'}</h2>
         <p style="opacity:0.75; font-size:0.9rem;">${(surveyDef.settings && surveyDef.settings.confirmationMessage) || 'Your response has been recorded.'}</p>
@@ -300,6 +393,46 @@ async function onSubmit(e, surveyDef) {
     btn.disabled = false;
     btn.textContent = 'Submit';
   }
+}
+
+// ---------- Access-code gate ----------
+function renderAccessGate(data) {
+  applyBranding(data.settings || {});
+  card.innerHTML = `
+    ${brandHeaderHtml(data.settings || {})}
+    <div class="fill-title">${data.title}</div>
+    <div class="fill-desc">This survey is protected. Enter the access code to continue.</div>
+    <div class="fill-field">
+      <label for="accessCodeField">Access code</label>
+      <input type="text" id="accessCodeField">
+    </div>
+    <button type="button" class="fill-submit" id="unlockBtn">Continue</button>
+    <div class="fill-error" id="gateErrorMsg"></div>
+  `;
+  document.getElementById('unlockBtn').addEventListener('click', () => unlockAndRender());
+  document.getElementById('accessCodeField').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') unlockAndRender();
+  });
+}
+
+async function unlockAndRender() {
+  const btn = document.getElementById('unlockBtn');
+  const errEl = document.getElementById('gateErrorMsg');
+  const code = document.getElementById('accessCodeField').value.trim();
+  errEl.style.display = 'none';
+  btn.disabled = true;
+  btn.textContent = 'Checking…';
+
+  const { data, error } = await supabase.rpc('unlock_survey', { p_slug: slug, p_code: code });
+  btn.disabled = false;
+  btn.textContent = 'Continue';
+
+  if (error || !data || !data.success) {
+    errEl.textContent = (data && data.error) || 'Could not verify that code — please try again.';
+    errEl.style.display = 'block';
+    return;
+  }
+  renderSurvey(data);
 }
 
 (async () => {
@@ -321,6 +454,11 @@ async function onSubmit(e, surveyDef) {
     }
     if (settings.responseLimit && data.response_count >= settings.responseLimit) {
       renderError('This survey has reached its maximum number of responses.');
+      return;
+    }
+
+    if (data.requires_access_code) {
+      renderAccessGate(data);
       return;
     }
 
