@@ -135,7 +135,7 @@
         <li>Branding removed</li>
         <li>CSV/Excel export</li>
       </ul>
-      <a href="/survey/app/" class="btn">Get started</a>
+      <button type="button" class="btn" data-plan="plus">Upgrade to Plus</button>
     </div>
     <div class="price-card featured">
       <h3>Pro</h3>
@@ -146,7 +146,7 @@
         <li>Skip logic</li>
         <li>Multilingual, AI summary</li>
       </ul>
-      <a href="/survey/app/" class="btn primary">Get started</a>
+      <button type="button" class="btn primary" data-plan="pro">Upgrade to Pro</button>
     </div>
     <div class="price-card">
       <h3>Team</h3>
@@ -157,10 +157,10 @@
         <li>5 seats</li>
         <li>Cross-tab analytics</li>
       </ul>
-      <a href="/survey/app/" class="btn">Get started</a>
+      <button type="button" class="btn" data-plan="team">Upgrade to Team</button>
     </div>
   </div>
-  <div class="note-box">Every account starts on Free. To move to a paid plan right now, reach out to us directly — self-serve upgrades are coming soon.</div>
+  <div class="note-box">Every account starts on Free — sign in and upgrade any time, billed in Naira via Squad.</div>
 </div>
 
 <div class="sh-section" id="faq">
@@ -247,6 +247,17 @@
 }
 </script>
 
+<script src="/assets/subscribe.js" defer></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  document.querySelectorAll('[data-plan]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      window.KoboSubscribe.startSafely('init-survey-payment', { mode: 'subscription', plan: btn.dataset.plan });
+    });
+  });
+  if (window.KoboSubscribe) window.KoboSubscribe.resumePendingIfAny();
+});
+</script>
 <script type="module" src="/assets/auth.js"></script>
 <script src="/assets/nav-auth.js" defer></script>
 </body>

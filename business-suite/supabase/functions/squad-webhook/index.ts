@@ -517,6 +517,46 @@ Deno.serve(async (req) => {
         expires_at: newExpiry.toISOString(),
         updated_at: new Date().toISOString(),
       }, { onConflict: "user_id" });
+    } else if (metadata?.product === "kobodocs_form") {
+      const { data: existing } = await supabase
+        .from("form_subscriptions")
+        .select("expires_at")
+        .eq("user_id", metadata.user_id)
+        .maybeSingle();
+
+      const currentExpiry = existing?.expires_at ? new Date(existing.expires_at) : null;
+      const base = currentExpiry && currentExpiry > new Date() ? currentExpiry : new Date();
+      const newExpiry = new Date(base);
+      newExpiry.setDate(newExpiry.getDate() + cycleDays);
+
+      await supabase.from("form_subscriptions").upsert({
+        user_id: metadata.user_id,
+        plan: metadata.plan,
+        status: "active",
+        billing_cycle: "monthly",
+        expires_at: newExpiry.toISOString(),
+        updated_at: new Date().toISOString(),
+      }, { onConflict: "user_id" });
+    } else if (metadata?.product === "kobodocs_survey") {
+      const { data: existing } = await supabase
+        .from("survey_subscriptions")
+        .select("expires_at")
+        .eq("user_id", metadata.user_id)
+        .maybeSingle();
+
+      const currentExpiry = existing?.expires_at ? new Date(existing.expires_at) : null;
+      const base = currentExpiry && currentExpiry > new Date() ? currentExpiry : new Date();
+      const newExpiry = new Date(base);
+      newExpiry.setDate(newExpiry.getDate() + cycleDays);
+
+      await supabase.from("survey_subscriptions").upsert({
+        user_id: metadata.user_id,
+        plan: metadata.plan,
+        status: "active",
+        billing_cycle: "monthly",
+        expires_at: newExpiry.toISOString(),
+        updated_at: new Date().toISOString(),
+      }, { onConflict: "user_id" });
     } else if (metadata?.product === "cv_builder") {
       // Pay-as-you-go clean-download credits for KoboDocs Resume. No
       // subscription mode here — Pro/Business subscribers get unlimited
