@@ -18,13 +18,13 @@ function addExpEntry(data = {}) {
   div.innerHTML = `
     <button type="button" class="entry-remove">Remove</button>
     <div class="field-row">
-      <div class="field-group"><label>Job title</label><input class="exp-title" value="${escapeHtml(data.title)}"></div>
-      <div class="field-group"><label>Company</label><input class="exp-company" value="${escapeHtml(data.company)}"></div>
+      <div class="field-group"><label>Job title</label><input type="text" class="exp-title" placeholder="Product Manager" value="${escapeHtml(data.title)}"></div>
+      <div class="field-group"><label>Company</label><input type="text" class="exp-company" placeholder="Company name" value="${escapeHtml(data.company)}"></div>
     </div>
     <div class="field-row">
-      <div class="field-group"><label>Location</label><input class="exp-location" value="${escapeHtml(data.location)}"></div>
-      <div class="field-group"><label>Start (e.g. Jan 2023)</label><input class="exp-start" value="${escapeHtml(data.start)}"></div>
-      <div class="field-group"><label>End</label><input class="exp-end" value="${escapeHtml(data.end)}" ${data.current ? 'disabled' : ''}></div>
+      <div class="field-group"><label>Location</label><input type="text" class="exp-location" placeholder="Lagos, Nigeria" value="${escapeHtml(data.location)}"></div>
+      <div class="field-group"><label>Start (e.g. Jan 2023)</label><input type="text" class="exp-start" placeholder="Jan 2023" value="${escapeHtml(data.start)}"></div>
+      <div class="field-group"><label>End</label><input type="text" class="exp-end" placeholder="Dec 2024" value="${escapeHtml(data.end)}" ${data.current ? 'disabled' : ''}></div>
     </div>
     <div class="field-group toggle-row">
       <input type="checkbox" class="exp-current" ${data.current ? 'checked' : ''}>
@@ -32,7 +32,8 @@ function addExpEntry(data = {}) {
     </div>
     <div class="field-group">
       <label>Key achievements (one per line)</label>
-      <textarea class="exp-bullets" rows="3">${escapeHtml((data.bullets || []).join('\n'))}</textarea>
+      <textarea class="exp-bullets" rows="3" placeholder="Grew monthly active users by 40% in 6 months
+Led a team of 4 engineers to ship the mobile app redesign">${escapeHtml((data.bullets || []).join('\n'))}</textarea>
     </div>
   `;
   document.getElementById('expContainer').appendChild(div);
@@ -47,13 +48,13 @@ function addEduEntry(data = {}) {
   div.innerHTML = `
     <button type="button" class="entry-remove">Remove</button>
     <div class="field-row">
-      <div class="field-group"><label>School</label><input class="edu-school" value="${escapeHtml(data.school)}"></div>
-      <div class="field-group"><label>Degree</label><input class="edu-degree" value="${escapeHtml(data.degree)}" placeholder="B.Sc."></div>
+      <div class="field-group"><label>School</label><input type="text" class="edu-school" placeholder="University of Lagos" value="${escapeHtml(data.school)}"></div>
+      <div class="field-group"><label>Degree</label><input type="text" class="edu-degree" placeholder="B.Sc." value="${escapeHtml(data.degree)}"></div>
     </div>
     <div class="field-row">
-      <div class="field-group"><label>Field of study</label><input class="edu-field" value="${escapeHtml(data.field)}"></div>
-      <div class="field-group"><label>Start</label><input class="edu-start" value="${escapeHtml(data.start)}"></div>
-      <div class="field-group"><label>End</label><input class="edu-end" value="${escapeHtml(data.end)}"></div>
+      <div class="field-group"><label>Field of study</label><input type="text" class="edu-field" placeholder="Economics" value="${escapeHtml(data.field)}"></div>
+      <div class="field-group"><label>Start</label><input type="text" class="edu-start" placeholder="Sep 2019" value="${escapeHtml(data.start)}"></div>
+      <div class="field-group"><label>End</label><input type="text" class="edu-end" placeholder="Jul 2023" value="${escapeHtml(data.end)}"></div>
     </div>
   `;
   document.getElementById('eduContainer').appendChild(div);
