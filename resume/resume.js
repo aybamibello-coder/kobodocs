@@ -1,4 +1,12 @@
 // ---------- KoboDocs Resume: builder logic ----------
+function track(name, params) {
+  if (window.KoboTrack) { window.KoboTrack(name, params); }
+  else if (typeof gtag === 'function') {
+    try { gtag('event', name, params || {}); } catch (e) { /* no-op */ }
+  }
+}
+track('tool_view', { tool: 'cv_builder' });
+
 let currentTemplate = 'classic';
 let expCount = 0, eduCount = 0;
 let creditBalance = 0;
@@ -262,6 +270,8 @@ document.getElementById('downloadFreeBtn').addEventListener('click', async () =>
     const doc = await buildCvPdf(true);
     const name = (document.getElementById('fullName').value || 'resume').replace(/\s+/g, '-');
     KoboExport.download(`${name}-cv.pdf`, doc);
+    track('cv_completed', { tool: 'cv_builder' });
+    track('download_clicked', { tool: 'cv_builder' });
   } catch (err) {
     alert('Could not generate PDF: ' + err.message);
   }
@@ -275,6 +285,8 @@ document.getElementById('downloadCleanBtn').addEventListener('click', async () =
       const doc = await buildCvPdf(false);
       const name = (document.getElementById('fullName').value || 'resume').replace(/\s+/g, '-');
       KoboExport.download(`${name}-cv.pdf`, doc);
+      track('cv_completed', { tool: 'cv_builder' });
+      track('download_clicked', { tool: 'cv_builder', clean: true });
       return;
     }
     const session = window.KoboAuth ? await window.KoboAuth.getSession() : null;
@@ -284,6 +296,8 @@ document.getElementById('downloadCleanBtn').addEventListener('click', async () =
     const doc = await buildCvPdf(false);
     const name = (document.getElementById('fullName').value || 'resume').replace(/\s+/g, '-');
     KoboExport.download(`${name}-cv.pdf`, doc);
+    track('cv_completed', { tool: 'cv_builder' });
+    track('download_clicked', { tool: 'cv_builder', clean: true });
     await refreshCreditStatus();
   } catch (err) {
     alert('Could not generate PDF: ' + err.message);
