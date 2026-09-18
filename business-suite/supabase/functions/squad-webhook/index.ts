@@ -517,6 +517,28 @@ Deno.serve(async (req) => {
         expires_at: newExpiry.toISOString(),
         updated_at: new Date().toISOString(),
       }, { onConflict: "user_id" });
+    } else if (metadata?.product === "cv_builder") {
+      // Pay-as-you-go clean-download credits for KoboDocs Resume. No
+      // subscription mode here — Pro/Business subscribers get unlimited
+      // clean downloads via the existing profiles.plan check instead, so
+      // this table only ever grows via credit purchases.
+      const { data: existing } = await supabase
+        .from("cv_builder_credits")
+        .select("credits_balance")
+        .eq("user_id", metadata.user_id)
+        .maybeSingle();
+
+      if (existing) {
+        await supabase
+          .from("cv_builder_credits")
+          .update({ credits_balance: Number(existing.credits_balance || 0) + Number(metadata.credit_count || 0), updated_at: new Date().toISOString() })
+          .eq("user_id", metadata.user_id);
+      } else {
+        await supabase.from("cv_builder_credits").insert({
+          user_id: metadata.user_id,
+          credits_balance: Number(metadata.credit_count || 0),
+        });
+      }
     }
 
     await supabase.from("payment_intents").delete().eq("order_reference", reference);
