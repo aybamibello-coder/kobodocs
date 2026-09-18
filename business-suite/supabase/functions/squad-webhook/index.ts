@@ -517,6 +517,68 @@ Deno.serve(async (req) => {
         expires_at: newExpiry.toISOString(),
         updated_at: new Date().toISOString(),
       }, { onConflict: "user_id" });
+    } else if (metadata?.product === "kobodocs_form") {
+      const { data: existing } = await supabase
+        .from("form_subscriptions")
+        .select("expires_at")
+        .eq("user_id", metadata.user_id)
+        .maybeSingle();
+
+      const currentExpiry = existing?.expires_at ? new Date(existing.expires_at) : null;
+      const base = currentExpiry && currentExpiry > new Date() ? currentExpiry : new Date();
+      const newExpiry = new Date(base);
+      newExpiry.setDate(newExpiry.getDate() + cycleDays);
+
+      await supabase.from("form_subscriptions").upsert({
+        user_id: metadata.user_id,
+        plan: metadata.plan,
+        status: "active",
+        billing_cycle: "monthly",
+        expires_at: newExpiry.toISOString(),
+        updated_at: new Date().toISOString(),
+      }, { onConflict: "user_id" });
+    } else if (metadata?.product === "kobodocs_survey") {
+      const { data: existing } = await supabase
+        .from("survey_subscriptions")
+        .select("expires_at")
+        .eq("user_id", metadata.user_id)
+        .maybeSingle();
+
+      const currentExpiry = existing?.expires_at ? new Date(existing.expires_at) : null;
+      const base = currentExpiry && currentExpiry > new Date() ? currentExpiry : new Date();
+      const newExpiry = new Date(base);
+      newExpiry.setDate(newExpiry.getDate() + cycleDays);
+
+      await supabase.from("survey_subscriptions").upsert({
+        user_id: metadata.user_id,
+        plan: metadata.plan,
+        status: "active",
+        billing_cycle: "monthly",
+        expires_at: newExpiry.toISOString(),
+        updated_at: new Date().toISOString(),
+      }, { onConflict: "user_id" });
+    } else if (metadata?.product === "cv_builder") {
+      // Pay-as-you-go clean-download credits for KoboDocs Resume. No
+      // subscription mode here — Pro/Business subscribers get unlimited
+      // clean downloads via the existing profiles.plan check instead, so
+      // this table only ever grows via credit purchases.
+      const { data: existing } = await supabase
+        .from("cv_builder_credits")
+        .select("credits_balance")
+        .eq("user_id", metadata.user_id)
+        .maybeSingle();
+
+      if (existing) {
+        await supabase
+          .from("cv_builder_credits")
+          .update({ credits_balance: Number(existing.credits_balance || 0) + Number(metadata.credit_count || 0), updated_at: new Date().toISOString() })
+          .eq("user_id", metadata.user_id);
+      } else {
+        await supabase.from("cv_builder_credits").insert({
+          user_id: metadata.user_id,
+          credits_balance: Number(metadata.credit_count || 0),
+        });
+      }
     }
 
     await supabase.from("payment_intents").delete().eq("order_reference", reference);
