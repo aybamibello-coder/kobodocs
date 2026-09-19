@@ -55,12 +55,12 @@ async function renderApp(ctx) {
       <div class="plans-grid">
         <div class="plan-card">
           <h3>Pay as you go</h3>
-          <div class="plan-price">₦500<span style="font-size:0.7rem;">/envelope</span></div>
+          <div class="plan-price">₦800<span style="font-size:0.7rem;">/envelope</span></div>
           <div style="display:flex; align-items:center; justify-content:center; gap:8px; margin-bottom:12px;">
             <label for="paygQty" style="font-size:0.78rem; opacity:0.7;">Qty</label>
             <input type="number" id="paygQty" value="1" min="1" max="50" style="width:56px; padding:5px; border:1px solid var(--line); border-radius:6px; text-align:center;">
           </div>
-          <button class="btn primary" id="buyPaygBtn">Buy for ₦500</button>
+          <button class="btn primary" id="buyPaygBtn">Buy for ₦800</button>
         </div>
         <div class="plan-card">
           <h3>Starter</h3>
@@ -299,7 +299,7 @@ async function renderApp(ctx) {
     const updatePaygBtnText = () => {
       const qty = Math.max(1, Math.min(50, Number(paygQty.value) || 1));
       paygQty.value = qty;
-      paygBtn.textContent = `Buy for ₦${(qty * 500).toLocaleString('en-NG')}`;
+      paygBtn.textContent = `Buy for ₦${(qty * 800).toLocaleString('en-NG')}`;
     };
     paygQty.addEventListener('input', updatePaygBtnText);
     updatePaygBtnText();
