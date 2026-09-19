@@ -7,10 +7,7 @@
 
 import { createClient } from "jsr:@supabase/supabase-js@2";
 
-// TEMPORARY: price dropped to ₦100/credit (from ₦1,000) at AY's request,
-// purely so a real end-to-end payment can be tested cheaply while
-// debugging the webhook. Revert to 100000 once confirmed working.
-const CREDIT_PRICE_KOBO = 10000; // TEMP: ₦100 per clean-download credit
+const CREDIT_PRICE_KOBO = 100000; // ₦1,000 per clean-download credit
 const MAX_QTY = 20;
 
 const corsHeaders = {
