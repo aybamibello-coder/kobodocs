@@ -23,6 +23,22 @@
   .sh-hero p{ opacity:0.8; max-width:520px; margin:0 auto 26px; }
   .sh-hero .btn{ font-size:0.95rem; padding:12px 26px; border-radius:24px; background:var(--stamp-gold); color:var(--charcoal); border:none; font-weight:600; text-decoration:none; }
 
+  /* Marketing-only animated preview, decorative only. */
+  .survey-demo-preview{ max-width:400px; margin:28px auto 0; text-align:left; background:var(--paper); border:1px solid var(--line); border-radius:10px; padding:22px 24px; box-shadow:0 18px 40px -20px rgba(13,38,32,0.35); }
+  .survey-demo-q{ opacity:0; margin-bottom:16px; animation-duration:11s; animation-iteration-count:infinite; animation-timing-function:ease-in-out; }
+  .survey-demo-q p{ font-size:0.85rem; color:var(--charcoal); margin-bottom:8px; font-weight:600; }
+  .survey-demo-stars{ color:var(--stamp-gold); font-size:1.1rem; letter-spacing:2px; }
+  .survey-demo-scale{ display:flex; gap:6px; font-size:0.78rem; color:#999; }
+  .survey-demo-scale span{ width:22px; height:22px; display:flex; align-items:center; justify-content:center; border-radius:50%; }
+  .survey-demo-scale span.picked{ background:var(--ink-green-deep); color:#fff; font-weight:600; }
+  .survey-demo-success{ opacity:0; display:flex; align-items:center; gap:8px; color:var(--ink-green-deep); font-weight:600; font-size:0.9rem; animation:survey-demo-reveal-3 11s ease-in-out infinite; }
+  .survey-demo-d1{ animation-name:survey-demo-reveal-1; }
+  .survey-demo-d2{ animation-name:survey-demo-reveal-2; }
+  @keyframes survey-demo-reveal-1{ 0%,4%{opacity:0;transform:translateY(6px);} 12%,80%{opacity:1;transform:translateY(0);} 90%,100%{opacity:0;transform:translateY(0);} }
+  @keyframes survey-demo-reveal-2{ 0%,32%{opacity:0;transform:translateY(6px);} 40%,80%{opacity:1;transform:translateY(0);} 90%,100%{opacity:0;transform:translateY(0);} }
+  @keyframes survey-demo-reveal-3{ 0%,60%{opacity:0;transform:translateY(6px);} 68%,80%{opacity:1;transform:translateY(0);} 90%,100%{opacity:0;transform:translateY(0);} }
+  @media (prefers-reduced-motion: reduce){ .survey-demo-q,.survey-demo-success{ animation:none !important; opacity:1 !important; transform:none !important; } }
+
   .sh-section{ max-width:980px; margin:0 auto; padding:44px 20px; }
   .sh-section h2{ font-size:1.4rem; margin-bottom:22px; text-align:center; }
   .feature-grid{ display:grid; grid-template-columns:repeat(3, 1fr); gap:18px; }
@@ -80,6 +96,20 @@
   <h1>An online survey tool without the per-response tax</h1>
   <p>NPS, CSAT, Likert scales, and ranking questions — a SurveyMonkey alternative built for Nigerian researchers, NGOs, schools, and CX teams.</p>
   <a href="/survey/app/" class="btn">Create your first survey free</a>
+
+  <div class="survey-demo-preview" aria-hidden="true">
+    <div class="survey-demo-q survey-demo-d1">
+      <p>How satisfied were you with our service?</p>
+      <div class="survey-demo-stars">★★★★★</div>
+    </div>
+    <div class="survey-demo-q survey-demo-d2">
+      <p>How likely are you to recommend us? (0–10)</p>
+      <div class="survey-demo-scale">
+        <span>7</span><span>8</span><span class="picked">9</span><span>10</span>
+      </div>
+    </div>
+    <div class="survey-demo-success">✓ Response recorded</div>
+  </div>
 </div>
 
 <div class="sh-section">

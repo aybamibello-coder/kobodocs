@@ -23,6 +23,23 @@
   .fh-hero p{ opacity:0.8; max-width:520px; margin:0 auto 26px; }
   .fh-hero .btn{ font-size:0.95rem; padding:12px 26px; border-radius:24px; background:var(--stamp-gold); color:var(--charcoal); border:none; font-weight:600; text-decoration:none; }
 
+  /* Marketing-only animated preview -- built from the same field-style
+     language as the real builder, decorative only, never touches the
+     live JS-driven form. */
+  .form-demo-preview{ max-width:400px; margin:28px auto 0; text-align:left; background:var(--paper); border:1px solid var(--line); border-radius:10px; padding:22px 24px; box-shadow:0 18px 40px -20px rgba(13,38,32,0.35); }
+  .form-demo-field{ opacity:0; margin-bottom:14px; animation-duration:10s; animation-iteration-count:infinite; animation-timing-function:ease-in-out; }
+  .form-demo-field label{ display:block; font-size:0.72rem; color:var(--mutedGrey,#888); text-transform:uppercase; letter-spacing:0.04em; margin-bottom:4px; }
+  .form-demo-input{ border:1px solid var(--line); border-radius:6px; padding:8px 10px; font-size:0.9rem; color:var(--charcoal); background:#fff; }
+  .form-demo-success{ opacity:0; display:flex; align-items:center; gap:8px; color:var(--ink-green-deep); font-weight:600; font-size:0.9rem; animation:form-demo-reveal-4 10s ease-in-out infinite; }
+  .form-demo-d1{ animation-name:form-demo-reveal-1; }
+  .form-demo-d2{ animation-name:form-demo-reveal-2; }
+  .form-demo-d3{ animation-name:form-demo-reveal-3; }
+  @keyframes form-demo-reveal-1{ 0%,4%{opacity:0;transform:translateY(6px);} 12%,80%{opacity:1;transform:translateY(0);} 90%,100%{opacity:0;transform:translateY(0);} }
+  @keyframes form-demo-reveal-2{ 0%,20%{opacity:0;transform:translateY(6px);} 28%,80%{opacity:1;transform:translateY(0);} 90%,100%{opacity:0;transform:translateY(0);} }
+  @keyframes form-demo-reveal-3{ 0%,36%{opacity:0;transform:translateY(6px);} 44%,80%{opacity:1;transform:translateY(0);} 90%,100%{opacity:0;transform:translateY(0);} }
+  @keyframes form-demo-reveal-4{ 0%,55%{opacity:0;transform:translateY(6px);} 63%,80%{opacity:1;transform:translateY(0);} 90%,100%{opacity:0;transform:translateY(0);} }
+  @media (prefers-reduced-motion: reduce){ .form-demo-field,.form-demo-success{ animation:none !important; opacity:1 !important; transform:none !important; } }
+
   .fh-section{ max-width:980px; margin:0 auto; padding:44px 20px; }
   .fh-section h2{ font-size:1.4rem; margin-bottom:22px; text-align:center; }
   .feature-grid{ display:grid; grid-template-columns:repeat(3, 1fr); gap:18px; }
@@ -80,6 +97,22 @@
   <h1>The online form builder built for Nigerian businesses, schools, and churches</h1>
   <p>Drag-and-drop builder, conditional logic, file uploads, and Nigerian templates — a Google Forms alternative without US pricing or hard response caps.</p>
   <a href="/forms/app/" class="btn">Create your first form free</a>
+
+  <div class="form-demo-preview" aria-hidden="true">
+    <div class="form-demo-field form-demo-d1">
+      <label>Full name</label>
+      <div class="form-demo-input">Ngozi Adeyemi</div>
+    </div>
+    <div class="form-demo-field form-demo-d2">
+      <label>Event type</label>
+      <div class="form-demo-input">Church registration</div>
+    </div>
+    <div class="form-demo-field form-demo-d3">
+      <label>ID document</label>
+      <div class="form-demo-input">📎 id-photo.jpg</div>
+    </div>
+    <div class="form-demo-success">✓ Submitted — response recorded</div>
+  </div>
 </div>
 
 <div class="fh-section">
