@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KoboDocs Booking — Free Appointment Scheduling for Nigerian Businesses</title>
+<meta name="description" content="Let customers book appointments online — salons, clinics, tutors, consultants. WhatsApp-ready confirmations, no per-seat fees, priced in Naira. Free to start.">
+<link rel="canonical" href="https://kobodocs.com.ng/booking/">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Work+Sans:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/style.css">
+<style>
+  .fh-hero{ background:var(--ink-green-deep); color:var(--paper); padding:60px 20px 48px; text-align:center; }
+  .fh-hero .eyebrow{ font-family:'Space Mono', monospace; font-size:0.75rem; text-transform:uppercase; letter-spacing:0.08em; color:var(--stamp-gold); margin-bottom:12px; }
+  .fh-hero h1{ font-size:2.1rem; margin-bottom:14px; max-width:640px; margin-left:auto; margin-right:auto; }
+  .fh-hero p{ opacity:0.8; max-width:520px; margin:0 auto 26px; }
+  .fh-hero .btn{ font-size:0.95rem; padding:12px 26px; border-radius:24px; background:var(--stamp-gold); color:var(--charcoal); border:none; font-weight:600; text-decoration:none; }
+
+  .fh-section{ max-width:980px; margin:0 auto; padding:44px 20px; }
+  .fh-section h2{ font-size:1.4rem; margin-bottom:22px; text-align:center; }
+  .feature-grid{ display:grid; grid-template-columns:repeat(3, 1fr); gap:18px; }
+  @media (max-width:760px){ .feature-grid{ grid-template-columns:1fr; } }
+  .feature-card{ background:var(--paper); border:1px solid var(--line); border-radius:10px; padding:20px; }
+  .feature-card h3{ font-size:1rem; margin-bottom:6px; }
+  .feature-card p{ font-size:0.85rem; opacity:0.75; line-height:1.5; }
+
+  .use-case-row{ display:flex; flex-wrap:wrap; gap:10px; justify-content:center; margin-top:10px; }
+  .use-case-chip{ background:rgba(199,154,60,0.12); border:1px solid var(--stamp-gold); border-radius:20px; padding:6px 16px; font-size:0.85rem; }
+
+  .pricing-cards{ display:grid; grid-template-columns:repeat(4, 1fr); gap:16px; margin-top:20px; }
+  @media (max-width:900px){ .pricing-cards{ grid-template-columns:1fr 1fr; } }
+  @media (max-width:520px){ .pricing-cards{ grid-template-columns:1fr; } }
+  .price-card{ background:var(--paper); border:1px solid var(--line); border-radius:10px; padding:20px; }
+  .price-card.featured{ border-color:var(--stamp-gold); }
+  .price-card h3{ font-size:1.05rem; margin-bottom:4px; }
+  .price-card .amt{ font-family:'Fraunces', serif; font-size:1.3rem; color:var(--stamp-gold); margin-bottom:14px; }
+  .price-card ul{ list-style:none; padding:0; margin:0; }
+  .price-card li{ font-size:0.83rem; opacity:0.8; padding:4px 0; }
+  .price-card .btn{ margin-top:16px; width:100%; text-align:center; box-sizing:border-box; }
+
+  .btn{ font-size:0.85rem; border:1px solid var(--line); background:none; border-radius:20px; padding:9px 18px; cursor:pointer; font-family:inherit; text-decoration:none; color:inherit; display:inline-block; }
+  .btn.primary{ background:var(--ink-green-deep); color:var(--paper); border-color:var(--ink-green-deep); }
+
+  .faq-item{ margin-bottom:18px; }
+  .faq-item h3{ font-size:0.95rem; margin-bottom:4px; }
+  .faq-item p{ font-size:0.88rem; opacity:0.78; line-height:1.6; }
+
+  .note-box{ background:rgba(20,52,43,0.05); border-radius:8px; padding:16px 20px; font-size:0.85rem; opacity:0.85; max-width:720px; margin:30px auto 0; text-align:center; }
+</style>
+</head>
+<body>
+
+<header>
+  <nav class="nav">
+    <a href="/" class="logo">
+      <svg class="mark" viewBox="0 0 32 32" fill="none">
+        <circle cx="16" cy="16" r="14" stroke="#C79A3C" stroke-width="2.5"/>
+        <circle cx="16" cy="16" r="8" stroke="#C79A3C" stroke-width="1.5"/>
+      </svg>
+      KoboDocs Booking
+    </a>
+    <button class="menu-btn" aria-label="Toggle menu" id="menuBtn"><span></span><span></span><span></span></button>
+    <div class="nav-links" id="navLinks">
+      <a href="/" class="mobile-only-link">Home</a>
+      <a href="/forms/">KoboDocs Form</a>
+      <a href="/survey/">KoboDocs Survey</a>
+      <a href="#pricing">Pricing</a>
+      <a href="/blog/" class="mobile-only-link">Blog</a>
+      <a href="/account/" id="navAccountLink">Sign in</a>
+    </div>
+  </nav>
+</header>
+
+<div class="fh-hero">
+  <div class="eyebrow">Free to start · Priced in Naira</div>
+  <h1>Let customers book you online — no more DMs and missed calls</h1>
+  <p>A booking page for your salon, clinic, studio, or practice. Customers pick a time that works, you get notified, nobody double-books.</p>
+  <a href="/booking/app/" class="btn">Create your booking page free</a>
+  <div class="use-case-row">
+    <span class="use-case-chip">Salons &amp; barbers</span>
+    <span class="use-case-chip">Clinics &amp; hospitals</span>
+    <span class="use-case-chip">Tutors &amp; consultants</span>
+    <span class="use-case-chip">Spas &amp; gyms</span>
+    <span class="use-case-chip">Auto mechanics</span>
+    <span class="use-case-chip">Photographers</span>
+  </div>
+</div>
+
+<div class="fh-section">
+  <h2>Built for how Nigerian service businesses actually book</h2>
+  <div class="feature-grid">
+    <div class="feature-card">
+      <h3>WhatsApp-ready, not email-first</h3>
+      <p>Share your booking link on WhatsApp status, in your bio, or in a chat — customers book without downloading anything or creating an account.</p>
+    </div>
+    <div class="feature-card">
+      <h3>No double-booking</h3>
+      <p>Your calendar updates the moment someone books. Buffer time between appointments is handled automatically.</p>
+    </div>
+    <div class="feature-card">
+      <h3>Multiple services, one page</h3>
+      <p>List every service you offer — haircut, consultation, checkup — each with its own duration and price shown upfront.</p>
+    </div>
+    <div class="feature-card">
+      <h3>No per-seat pricing</h3>
+      <p>Add staff calendars without paying more per person. A 3-person team costs the same as a solo operator on the same plan.</p>
+    </div>
+    <div class="feature-card">
+      <h3>Email confirmations, always</h3>
+      <p>Every customer who leaves an email gets an automatic confirmation with the date, time, and a link to cancel if plans change.</p>
+    </div>
+    <div class="feature-card">
+      <h3>No payment holding</h3>
+      <p>KoboDocs never collects or holds money through a booking. Price is shown for the customer's information; how you get paid is between you and them.</p>
+    </div>
+  </div>
+</div>
+
+<div class="fh-section" id="pricing">
+  <h2>Pricing</h2>
+  <div class="pricing-cards">
+    <div class="price-card">
+      <h3>Free</h3>
+      <div class="amt">₦0</div>
+      <ul>
+        <li>1 service</li>
+        <li>15 bookings/mo</li>
+        <li>KoboDocs branding</li>
+      </ul>
+      <a href="/booking/app/" class="btn">Start free</a>
+    </div>
+    <div class="price-card">
+      <h3>Starter</h3>
+      <div class="amt">₦6,000/mo</div>
+      <ul>
+        <li>Unlimited services</li>
+        <li>100 bookings/mo</li>
+        <li>Branding removable</li>
+        <li>WhatsApp-ready link</li>
+      </ul>
+      <a href="/booking/app/" class="btn">Get started</a>
+    </div>
+    <div class="price-card featured">
+      <h3>Growth</h3>
+      <div class="amt">₦13,000/mo</div>
+      <ul>
+        <li>Unlimited bookings</li>
+        <li>Up to 3 staff calendars</li>
+        <li>Custom branding</li>
+      </ul>
+      <a href="/booking/app/" class="btn primary">Get started</a>
+    </div>
+    <div class="price-card">
+      <h3>Team</h3>
+      <div class="amt">₦25,000/mo</div>
+      <ul>
+        <li>Unlimited staff calendars</li>
+        <li>Priority support</li>
+      </ul>
+      <a href="/booking/app/" class="btn">Get started</a>
+    </div>
+  </div>
+  <div class="note-box">No per-seat fees — Growth and Team stay flat regardless of how many staff calendars you add.</div>
+</div>
+
+<div class="fh-section">
+  <h2>Frequently asked questions</h2>
+  <div class="faq-item">
+    <h3>Do my customers need an account to book?</h3>
+    <p>No. They open your link, pick a service and time, and enter their name and phone number. No password, no download.</p>
+  </div>
+  <div class="faq-item">
+    <h3>Can I take payments through the booking page?</h3>
+    <p>Not through KoboDocs directly — price is shown as information only. This keeps the free and lower-cost plans genuinely free of payment-processing risk. If you need to collect a deposit, share your own payment link separately.</p>
+  </div>
+  <div class="faq-item">
+    <h3>Does it work if I have more than one staff member?</h3>
+    <p>Yes, from the Growth plan up — each staff member gets their own working hours and calendar, and you assign services to whichever staff member handles them.</p>
+  </div>
+  <div class="faq-item">
+    <h3>What happens if two people try to book the same slot?</h3>
+    <p>Only one succeeds — the moment a booking is confirmed, that time slot is removed for everyone else, so double-booking isn't possible.</p>
+  </div>
+</div>
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "Do my customers need an account to book?",
+      "acceptedAnswer": { "@type": "Answer", "text": "No, they open the booking link, pick a service and time, and enter their name and phone number. No password or download is required." }
+    },
+    {
+      "@type": "Question",
+      "name": "Can I take payments through the booking page?",
+      "acceptedAnswer": { "@type": "Answer", "text": "Not directly through KoboDocs. Price is shown as information only, and payment happens separately between the business and the customer." }
+    },
+    {
+      "@type": "Question",
+      "name": "Does it work if I have more than one staff member?",
+      "acceptedAnswer": { "@type": "Answer", "text": "Yes, from the Growth plan up, each staff member gets their own working hours and calendar." }
+    },
+    {
+      "@type": "Question",
+      "name": "What happens if two people try to book the same slot?",
+      "acceptedAnswer": { "@type": "Answer", "text": "Only one booking succeeds. Once a slot is confirmed it is immediately removed from availability for everyone else." }
+    }
+  ]
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "KoboDocs Booking",
+  "applicationCategory": "BusinessApplication",
+  "operatingSystem": "Web",
+  "offers": [
+    { "@type": "Offer", "name": "Free", "price": "0", "priceCurrency": "NGN" },
+    { "@type": "Offer", "name": "Starter", "price": "6000", "priceCurrency": "NGN" },
+    { "@type": "Offer", "name": "Growth", "price": "13000", "priceCurrency": "NGN" },
+    { "@type": "Offer", "name": "Team", "price": "25000", "priceCurrency": "NGN" }
+  ]
+}
+</script>
+
+<script type="module" src="/assets/auth.js"></script>
+<script src="/assets/nav-auth.js" defer></script>
+</body>
+</html>

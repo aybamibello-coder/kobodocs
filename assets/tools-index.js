@@ -59,4 +59,5 @@ window.KOBO_TOOLS_INDEX = [
   { name: "e-Signature", url: "/esign/", keywords: "esignature e-signature envelope sign document signing" },
   { name: "KoboDocs Form", url: "/forms/", keywords: "form builder online forms drag and drop conditional logic file upload jotform google forms alternative nigeria" },
   { name: "KoboDocs Survey", url: "/survey/", keywords: "survey tool nps csat likert questionnaire surveymonkey typeform alternative nigeria" },
+  { name: "KoboDocs Booking", url: "/booking/", keywords: "appointment booking scheduling calendly alternative nigeria salon clinic tutor consultant staff calendar" },
 ];
