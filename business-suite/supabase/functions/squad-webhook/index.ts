@@ -5,6 +5,11 @@
 // pattern nomba-webhook used, since Squad also doesn't reliably echo
 // custom metadata back on every payload variant.
 //
+// TEMPORARY: logs every incoming request (signature match, parsed event,
+// reference, outcome) to webhook_debug_log so we can diagnose why recent
+// cv_builder/kobodocs_form/kobodocs_survey payments never granted
+// entitlements. Remove this table + the logging block once resolved.
+//
 // Squad webhook payload shape (confirmed from Squad docs):
 //   { "Event": "charge_successful", "TransactionRef": "...", "Body": {
 //       "amount": 10000, "transaction_ref": "...", "transaction_status": "Success", ... } }
@@ -39,14 +44,47 @@ function addDays(days: number) {
   return d.toISOString();
 }
 
+async function debugLog(entry: Record<string, unknown>) {
+  try {
+    await supabase.from("webhook_debug_log").insert(entry);
+  } catch (_e) {
+    // never let debug logging break the real webhook
+  }
+}
+
 Deno.serve(async (req) => {
   if (req.method !== "POST") return new Response("Method not allowed", { status: 405 });
 
   const bodyText = await req.text();
   const signature = req.headers.get("x-squad-encrypted-body") || "";
   const expected = await hmacSha512HexUpper(SQUADCO_SECRET_KEY, bodyText);
+  const sigMatched = signature === expected;
 
-  if (signature !== expected) {
+  // Best-effort parse purely for the debug log -- never throws past here.
+  let debugEvent: string | null = null;
+  let debugRef: string | null = null;
+  try {
+    const parsed = JSON.parse(bodyText);
+    debugEvent = parsed?.Event ?? null;
+    debugRef = parsed?.Body?.transaction_ref ?? null;
+  } catch (_e) { /* ignore */ }
+
+  await debugLog({
+    headers: {
+      "content-type": req.headers.get("content-type"),
+      "x-squad-encrypted-body-present": signature.length > 0,
+      "x-squad-encrypted-body-length": signature.length,
+    },
+    raw_body: bodyText.slice(0, 4000),
+    signature_received: signature,
+    signature_expected: expected,
+    signature_matched: sigMatched,
+    parsed_event: debugEvent,
+    parsed_reference: debugRef,
+    outcome: sigMatched ? "signature_ok_processing" : "signature_mismatch_rejected",
+  });
+
+  if (!sigMatched) {
     return new Response("Invalid signature", { status: 401 });
   }
 
@@ -67,6 +105,7 @@ Deno.serve(async (req) => {
 
   if (!reference) {
     console.error("Squad webhook: missing transaction_ref");
+    await debugLog({ outcome: "missing_transaction_ref", parsed_event: event.Event, raw_body: bodyText.slice(0, 4000) });
     return new Response(JSON.stringify({ received: true }), { headers: { "Content-Type": "application/json" } });
   }
 
@@ -82,21 +121,16 @@ Deno.serve(async (req) => {
 
   if (!intent) {
     console.error("Squad webhook: no matching payment_intents row for", reference);
+    await debugLog({ outcome: "no_matching_payment_intent", parsed_reference: reference, parsed_event: event.Event });
     return new Response(JSON.stringify({ received: true }), { headers: { "Content-Type": "application/json" } });
   }
 
   const metadata = intent.metadata ?? {};
   const cycleDays = metadata?.billing_cycle === "yearly" ? 365 : 30;
 
-  // Central revenue log -- covers every product uniformly, regardless of
-  // which branch below handles the actual subscription/entitlement
-  // activation. Additive only: doesn't change any existing behavior.
   const productForLog = metadata?.document_id
     ? "client_document_payment"
     : metadata?.product ?? (metadata?.plan === "pro" ? "legacy_pro" : "unknown");
-  // Wrapped so a logging failure can never block the actual entitlement
-  // activation below, which matters far more than the log row. Supabase-js
-  // returns {error} rather than throwing, so check that too, not just try/catch.
   try {
     const { error: logErr } = await supabase.from("payments_log").insert({
       order_reference: reference,
@@ -493,9 +527,6 @@ Deno.serve(async (req) => {
         updated_at: new Date().toISOString(),
       }, { onConflict: "user_id" });
     } else if (metadata?.product === "pdf_os") {
-      // PDF OS carries its own subscriptions table (pdf_os_subscriptions),
-      // separate from pdf_toolkit_subscriptions/profiles.plan, per the
-      // explicit "own subscription" product decision.
       const { data: existing } = await supabase
         .from("pdf_os_subscriptions")
         .select("expires_at, status")
@@ -558,10 +589,6 @@ Deno.serve(async (req) => {
         updated_at: new Date().toISOString(),
       }, { onConflict: "user_id" });
     } else if (metadata?.product === "cv_builder") {
-      // Pay-as-you-go clean-download credits for KoboDocs Resume. No
-      // subscription mode here — Pro/Business subscribers get unlimited
-      // clean downloads via the existing profiles.plan check instead, so
-      // this table only ever grows via credit purchases.
       const { data: existing } = await supabase
         .from("cv_builder_credits")
         .select("credits_balance")
@@ -582,8 +609,10 @@ Deno.serve(async (req) => {
     }
 
     await supabase.from("payment_intents").delete().eq("order_reference", reference);
+    await debugLog({ outcome: "processed_ok", parsed_reference: reference, parsed_event: event.Event });
   } catch (err) {
     console.error("Webhook processing error:", err);
+    await debugLog({ outcome: "exception: " + String(err), parsed_reference: reference, parsed_event: event.Event });
   }
 
   return new Response(JSON.stringify({ received: true }), {
