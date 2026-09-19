@@ -427,10 +427,26 @@ window.KoboExport = {
       const pageCount = doc.internal.getNumberOfPages();
       for (let p = 1; p <= pageCount; p++) {
         doc.setPage(p);
+
+        // Diagonal repeating stamp -- large, unmistakable, and tiled down
+        // the page so it can't be cropped or scrolled past. Deliberately
+        // stronger than a footer credit: a watermarked CV should look
+        // obviously unfit to submit to an employer, not just branded.
+        doc.setFont('WorkSans', 'bold');
+        doc.setFontSize(34);
+        this._setColor(doc, 'setTextColor', [205, 205, 205]);
+        const stampText = 'KOBODOCS.COM.NG — WATERMARKED COPY';
+        const stampYs = [this.PAGE_HEIGHT * 0.28, this.PAGE_HEIGHT * 0.56, this.PAGE_HEIGHT * 0.84];
+        stampYs.forEach(y => {
+          doc.text(stampText, this.PAGE_WIDTH / 2, y, { align: 'center', angle: 35 });
+        });
+
+        // Small footer credit as a secondary, permanent marker even if
+        // someone manages to crop around the diagonal stamps.
         doc.setFont('WorkSans', 'normal');
         doc.setFontSize(8);
         this._setColor(doc, 'setTextColor', [170, 170, 170]);
-        doc.text('Made with KoboDocs — kobodocs.com.ng', this.PAGE_WIDTH / 2, this.PAGE_HEIGHT - 28, { align: 'center' });
+        doc.text('Unlock a clean copy at kobodocs.com.ng/resume — ₦1,000', this.PAGE_WIDTH / 2, this.PAGE_HEIGHT - 20, { align: 'center' });
       }
     }
 
