@@ -47,6 +47,18 @@
   .qty-select{ display:flex; gap:8px; margin:10px 0; }
   .qty-select button{ flex:1; padding:8px; border:1px solid var(--line); border-radius:6px; background:none; cursor:pointer; font-size:0.82rem; }
   .qty-select button.active{ border-color:var(--gold); font-weight:600; }
+
+  /* Marketing-only animated preview, decorative only -- reuses the real
+     cv-preview classes above so it looks exactly like the live builder. */
+  .cv-demo-preview{ max-width:360px; margin:28px auto 0; text-align:left; padding:22px 24px; box-shadow:0 18px 40px -20px rgba(13,38,32,0.35); }
+  .cv-demo-preview .cv-demo-block{ opacity:0; animation-duration:11s; animation-iteration-count:infinite; animation-timing-function:ease-in-out; }
+  .cv-demo-success{ opacity:0; display:flex; align-items:center; gap:8px; color:var(--ink-green-deep); font-weight:600; font-size:0.78rem; margin-top:10px; animation:cv-demo-reveal-3 11s ease-in-out infinite; }
+  .cv-demo-d1{ animation-name:cv-demo-reveal-1; }
+  .cv-demo-d2{ animation-name:cv-demo-reveal-2; }
+  @keyframes cv-demo-reveal-1{ 0%,4%{opacity:0;transform:translateY(6px);} 12%,80%{opacity:1;transform:translateY(0);} 90%,100%{opacity:0;transform:translateY(0);} }
+  @keyframes cv-demo-reveal-2{ 0%,32%{opacity:0;transform:translateY(6px);} 40%,80%{opacity:1;transform:translateY(0);} 90%,100%{opacity:0;transform:translateY(0);} }
+  @keyframes cv-demo-reveal-3{ 0%,60%{opacity:0;transform:translateY(6px);} 68%,80%{opacity:1;transform:translateY(0);} 90%,100%{opacity:0;transform:translateY(0);} }
+  @media (prefers-reduced-motion: reduce){ .cv-demo-block,.cv-demo-success{ animation:none !important; opacity:1 !important; transform:none !important; } }
 </style>
 <script type="application/ld+json">
 {
@@ -110,6 +122,22 @@
     <h1>Free CV/Resume Builder for Nigeria</h1>
     <p>Build a professional CV with live preview, two templates, and a free PDF download — no login required. Remove the watermark for ₦1,000, or it's included free if you're already on KoboDocs Pro or Business.</p>
     <p style="font-size:0.82rem; margin-top:10px;"><a href="/blog/best-google-forms-alternative-nigeria/" class="link-btn">Looking for other Nigerian-built alternatives to global tools? See our comparisons on the blog →</a></p>
+
+    <div class="cv-demo-preview cv-preview" aria-hidden="true">
+      <div class="cv-demo-block cv-demo-d1">
+        <h2 class="cv-name">Ngozi Adeyemi</h2>
+        <div class="cv-title">Product Manager</div>
+        <div class="cv-contact">ngozi@email.com · Lagos, Nigeria</div>
+      </div>
+      <div class="cv-demo-block cv-demo-d2">
+        <div class="cv-section-h">Experience</div>
+        <div class="cv-exp-item">
+          <div class="cv-exp-title-row"><span>Product Lead</span><span>2022 – Present</span></div>
+          <div class="cv-exp-sub">Flutterwave · Lagos</div>
+        </div>
+      </div>
+      <div class="cv-demo-success">✓ PDF ready to download</div>
+    </div>
   </div>
 </section>
 
