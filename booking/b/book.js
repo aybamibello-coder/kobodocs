@@ -30,6 +30,50 @@ function honeypotHtml() {
   return `<input type="text" name="website" id="hpField" tabindex="-1" autocomplete="off" style="position:absolute; left:-9999px; width:1px; height:1px; opacity:0;">`;
 }
 
+function escapeAttr(str) {
+  return String(str || '').replace(/"/g, '&quot;');
+}
+
+// WhatsApp number as entered may include spaces/+ etc.; normalize to
+// digits only for wa.me / tel: links, which both require that.
+function digitsOnly(str) {
+  return String(str || '').replace(/[^\d]/g, '');
+}
+
+function contactBarHtml(settings) {
+  const pills = [];
+  const waNumber = digitsOnly(settings.whatsappNumber);
+  if (waNumber) {
+    const mode = settings.whatsappMode || 'chat';
+    if (mode === 'chat' || mode === 'both') {
+      pills.push(`<a class="contact-pill" href="https://wa.me/${waNumber}" target="_blank" rel="noopener">💬 Chat on WhatsApp</a>`);
+    }
+    if (mode === 'call' || mode === 'both') {
+      pills.push(`<a class="contact-pill" href="tel:+${waNumber}">📞 Call us</a>`);
+    }
+  }
+  const social = settings.socialLinks || {};
+  if (social.instagram) pills.push(`<a class="contact-pill" href="${escapeAttr(social.instagram)}" target="_blank" rel="noopener">Instagram</a>`);
+  if (social.facebook) pills.push(`<a class="contact-pill" href="${escapeAttr(social.facebook)}" target="_blank" rel="noopener">Facebook</a>`);
+  if (social.tiktok) pills.push(`<a class="contact-pill" href="${escapeAttr(social.tiktok)}" target="_blank" rel="noopener">TikTok</a>`);
+  if (social.twitter) pills.push(`<a class="contact-pill" href="${escapeAttr(social.twitter)}" target="_blank" rel="noopener">X</a>`);
+  if (!pills.length) return '';
+  return `<div class="contact-bar">${pills.join('')}</div>`;
+}
+
+function depositBoxHtml(settings) {
+  const bank = settings.bankAccount || {};
+  if (!bank.accountNumber && !bank.accountName && !bank.bankName) return '';
+  return `
+    <div class="deposit-box">
+      <span class="lbl">To secure your booking, you can send a deposit to:</span>
+      ${bank.bankName ? `<div class="row">${bank.bankName}</div>` : ''}
+      ${bank.accountNumber ? `<div class="row">${bank.accountNumber}</div>` : ''}
+      ${bank.accountName ? `<div class="row">${bank.accountName}</div>` : ''}
+    </div>
+  `;
+}
+
 // ---------- Step 1: service list ----------
 function renderServices() {
   const s = pageData.settings || {};
@@ -37,6 +81,8 @@ function renderServices() {
     ${brandHeaderHtml(s)}
     <div class="fill-title">${pageData.business_name}</div>
     ${pageData.description ? `<div class="fill-desc">${pageData.description}</div>` : ''}
+    ${contactBarHtml(s)}
+    ${s.businessInfo ? `<div class="biz-info">${s.businessInfo}</div>` : ''}
     <div class="service-list" id="serviceList">
       ${pageData.event_types.map(et => `
         <button type="button" class="service-card" data-id="${et.id}">
@@ -290,6 +336,8 @@ function renderSuccess(data) {
       <h2>${s.confirmationHeading || "You're booked! 🎉"}</h2>
       <p style="opacity:0.85; font-size:0.95rem; margin-bottom:10px;"><strong>${selectedEventType.name}</strong><br>${dt.toLocaleString('en-GB', { weekday: 'long', day: '2-digit', month: 'long', hour: '2-digit', minute: '2-digit' })}</p>
       <p style="opacity:0.75; font-size:0.9rem;">${s.confirmationMessage || "We'll see you then."}</p>
+      ${depositBoxHtml(s)}
+      ${contactBarHtml(s)}
       <p style="opacity:0.55; font-size:0.78rem; margin-top:16px;"><a href="/booking/cancel/?t=${data.cancel_token}">Need to cancel?</a></p>
     </div>
   `;

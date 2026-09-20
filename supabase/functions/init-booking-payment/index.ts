@@ -5,9 +5,9 @@
 import { createClient } from "jsr:@supabase/supabase-js@2";
 
 const PLAN_PRICE_KOBO: Record<string, number> = {
-  starter: 600000,  // ₦6,000
-  growth: 1300000,  // ₦13,000
-  team: 2500000,    // ₦25,000
+  starter: 600000,   // ₦6,000
+  growth: 1300000,   // ₦13,000
+  team: 2500000,     // ₦25,000
 };
 
 const corsHeaders = {

@@ -284,6 +284,12 @@ document.getElementById('statusToggle').addEventListener('click', async (e) => {
   toast('Form is now ' + btn.dataset.status + '.');
 });
 
+document.getElementById('publishNowBtn').addEventListener('click', async () => {
+  await saveForm({ status: 'published' });
+  renderShare();
+  toast('Form published — link is live.');
+});
+
 document.getElementById('copyShareBtn').addEventListener('click', () => {
   navigator.clipboard.writeText(document.getElementById('shareUrlInput').value);
   toast('Link copied.');

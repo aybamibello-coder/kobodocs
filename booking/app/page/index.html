@@ -36,10 +36,13 @@
   .btn.danger{ color:var(--stamp-red); border-color:rgba(168,52,42,0.4); }
   .empty-note{ font-size:0.88rem; opacity:0.6; padding:30px 0; text-align:center; }
 
-  .share-box{ background:var(--paper); border:1px solid var(--line); border-radius:8px; padding:20px; }
-  .share-url{ display:flex; gap:8px; margin:12px 0; }
+  .share-box{ background:var(--paper); border:1px solid var(--line); border-radius:8px; padding:24px; }
+  .share-actions-row{ display:flex; gap:12px; flex-wrap:wrap; margin-top:16px; }
+  .share-url{ display:flex; gap:8px; margin:16px 0; }
   .share-url input{ flex:1; padding:8px 10px; border:1px solid var(--line); border-radius:6px; font-family:'Space Mono', monospace; font-size:0.82rem; background:rgba(0,0,0,0.02); }
-  .status-toggle{ display:flex; gap:8px; margin-bottom:16px; }
+  .status-toggle{ display:flex; gap:8px; margin-bottom:18px; }
+  .btn-publish-now{ background:var(--stamp-gold); border-color:var(--stamp-gold); color:var(--charcoal); font-weight:600; margin-left:10px; }
+  .btn-publish-now:hover{ opacity:0.9; }
   .status-toggle button{ font-size:0.82rem; border:1px solid var(--line); background:none; border-radius:20px; padding:6px 14px; cursor:pointer; font-family:inherit; }
   .status-toggle button.active{ background:var(--ink-green-deep); color:var(--paper); border-color:var(--ink-green-deep); }
 
@@ -94,6 +97,7 @@
   <div class="fb-panel active" id="panel-services">
     <div id="eventTypesList"></div>
     <button class="btn primary" id="addEventTypeBtn">+ Add service</button>
+    <button class="btn btn-publish-now" id="publishNowBtn">🚀 Publish now</button>
   </div>
 
   <div class="fb-panel" id="panel-availability">
@@ -129,6 +133,45 @@
     </div>
 
     <div class="share-box" style="margin-top:20px;">
+      <h3 style="font-size:1rem; margin-bottom:4px;">Business profile</h3>
+      <p style="font-size:0.82rem; opacity:0.7; margin-bottom:14px;">Shown on your public booking page so customers can reach you directly or send a deposit.</p>
+
+      <label class="settings-label" for="whatsappNumberInput">WhatsApp number</label>
+      <input type="text" id="whatsappNumberInput" placeholder="e.g. 2348031234567 (with country code, no spaces)">
+      <label class="settings-label" for="whatsappModeInput">Show as</label>
+      <select id="whatsappModeInput" style="width:100%; padding:8px 10px; border:1px solid var(--line); border-radius:6px; font-family:inherit; font-size:0.9rem;">
+        <option value="chat">Chat on WhatsApp</option>
+        <option value="call">Call this number</option>
+        <option value="both">Both — chat and call buttons</option>
+      </select>
+
+      <hr style="border:none; border-top:1px solid var(--line); margin:16px 0;">
+      <p style="font-size:0.82rem; opacity:0.7; margin-bottom:10px;">Social media (optional — leave any blank to hide it)</p>
+      <label class="settings-label" for="instagramInput">Instagram</label>
+      <input type="text" id="instagramInput" placeholder="https://instagram.com/yourbusiness">
+      <label class="settings-label" for="facebookInput">Facebook</label>
+      <input type="text" id="facebookInput" placeholder="https://facebook.com/yourbusiness">
+      <label class="settings-label" for="tiktokInput">TikTok</label>
+      <input type="text" id="tiktokInput" placeholder="https://tiktok.com/@yourbusiness">
+      <label class="settings-label" for="twitterInput">X (Twitter)</label>
+      <input type="text" id="twitterInput" placeholder="https://x.com/yourbusiness">
+
+      <hr style="border:none; border-top:1px solid var(--line); margin:16px 0;">
+      <p style="font-size:0.82rem; opacity:0.7; margin-bottom:10px;">Bank account details (optional — for customers paying a deposit directly to you; KoboDocs never holds or processes this money)</p>
+      <label class="settings-label" for="bankNameInput">Bank name</label>
+      <input type="text" id="bankNameInput" placeholder="e.g. GTBank">
+      <label class="settings-label" for="bankAccountNameInput">Account name</label>
+      <input type="text" id="bankAccountNameInput" placeholder="e.g. Ayobami Ventures Ltd">
+      <label class="settings-label" for="bankAccountNumberInput">Account number</label>
+      <input type="text" id="bankAccountNumberInput" placeholder="0123456789">
+
+      <label class="settings-label" for="businessInfoInput" style="margin-top:14px;">Other information (optional)</label>
+      <textarea id="businessInfoInput" rows="3" placeholder="Anything else customers should know — parking, policies, what to bring, etc."></textarea>
+
+      <button class="btn primary" id="saveProfileBtn" style="margin-top:14px;">Save business profile</button>
+    </div>
+
+    <div class="share-box" style="margin-top:20px;">
       <h3 style="font-size:1rem; margin-bottom:4px;">Branding</h3>
       <p style="font-size:0.82rem; opacity:0.7; margin-bottom:6px;">Applies to the public booking page. The "Powered by KoboDocs" footer stays on the Free plan.</p>
       <label class="settings-label" for="logoUploadInput">Logo</label>
@@ -154,9 +197,11 @@
         <input type="text" id="shareUrlInput" readonly>
         <button class="btn" id="copyShareBtn">Copy link</button>
       </div>
-      <a class="btn" id="waShareBtn" href="#" target="_blank" rel="noopener">Share on WhatsApp</a>
-      <button class="btn" id="toggleQrBtn" style="margin-left:6px;">Show QR code</button>
-      <button class="btn" id="toggleEmbedBtn" style="margin-left:6px;">Embed code</button>
+      <div class="share-actions-row">
+        <a class="btn" id="waShareBtn" href="#" target="_blank" rel="noopener">Share on WhatsApp</a>
+        <button class="btn" id="toggleQrBtn">Show QR code</button>
+        <button class="btn" id="toggleEmbedBtn">Embed code</button>
+      </div>
       <div id="qrWrap" style="display:none; margin-top:16px;">
         <div id="qrCanvas"></div>
         <button class="btn" id="downloadQrBtn" style="margin-top:8px;">Download PNG</button>
