@@ -3,9 +3,14 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>KoboDocs Booking — Free Appointment Scheduling for Nigerian Businesses</title>
-<meta name="description" content="Let customers book appointments online — salons, clinics, tutors, consultants. WhatsApp-ready confirmations, no per-seat fees, priced in Naira. Free to start.">
+<title>Free Appointment Scheduling & Online Booking Software for Nigeria | KoboDocs Booking</title>
+<meta name="description" content="Online appointment scheduling software for Nigerian service businesses — WhatsApp-ready booking links, no per-seat staff fees, priced in Naira. A Calendly alternative built for local businesses, free to start.">
+<meta name="keywords" content="appointment scheduling software, online booking system, booking software Nigeria, calendly alternative, appointment booking app, online appointment scheduling software">
 <link rel="canonical" href="https://kobodocs.com.ng/booking/">
+<meta property="og:title" content="Free Appointment Scheduling & Online Booking Software for Nigeria">
+<meta property="og:description" content="WhatsApp-ready booking links, no per-seat staff fees, priced in Naira — a Calendly alternative for Nigerian service businesses.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://kobodocs.com.ng/booking/">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Work+Sans:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
@@ -25,8 +30,21 @@
   .feature-card h3{ font-size:1rem; margin-bottom:6px; }
   .feature-card p{ font-size:0.85rem; opacity:0.75; line-height:1.5; }
 
-  .use-case-row{ display:flex; flex-wrap:wrap; gap:10px; justify-content:center; margin-top:10px; }
-  .use-case-chip{ background:rgba(199,154,60,0.12); border:1px solid var(--stamp-gold); border-radius:20px; padding:6px 16px; font-size:0.85rem; }
+  /* Marketing-only animated preview, decorative only. */
+  .booking-demo-preview{ max-width:400px; margin:28px auto 0; text-align:left; background:var(--paper); border:1px solid var(--line); border-radius:10px; padding:22px 24px; box-shadow:0 18px 40px -20px rgba(13,38,32,0.35); color:var(--charcoal); }
+  .booking-demo-step{ opacity:0; margin-bottom:16px; animation-duration:11s; animation-iteration-count:infinite; animation-timing-function:ease-in-out; }
+  .booking-demo-label{ font-size:0.72rem; color:#888; text-transform:uppercase; letter-spacing:0.04em; margin-bottom:6px; }
+  .booking-demo-chip{ display:inline-block; background:rgba(199,154,60,0.12); border:1px solid var(--stamp-gold); border-radius:20px; padding:6px 14px; font-size:0.82rem; }
+  .booking-demo-slots{ display:flex; gap:8px; }
+  .booking-demo-slots span{ border:1px solid var(--line); border-radius:16px; padding:6px 12px; font-size:0.78rem; color:#999; }
+  .booking-demo-slots span.picked{ background:var(--ink-green-deep); color:#fff; border-color:var(--ink-green-deep); font-weight:600; }
+  .booking-demo-success{ opacity:0; display:flex; align-items:center; gap:8px; color:var(--ink-green-deep); font-weight:600; font-size:0.9rem; animation:booking-demo-reveal-3 11s ease-in-out infinite; }
+  .booking-demo-d1{ animation-name:booking-demo-reveal-1; }
+  .booking-demo-d2{ animation-name:booking-demo-reveal-2; }
+  @keyframes booking-demo-reveal-1{ 0%,4%{opacity:0;transform:translateY(6px);} 12%,80%{opacity:1;transform:translateY(0);} 90%,100%{opacity:0;transform:translateY(0);} }
+  @keyframes booking-demo-reveal-2{ 0%,32%{opacity:0;transform:translateY(6px);} 40%,80%{opacity:1;transform:translateY(0);} 90%,100%{opacity:0;transform:translateY(0);} }
+  @keyframes booking-demo-reveal-3{ 0%,60%{opacity:0;transform:translateY(6px);} 68%,80%{opacity:1;transform:translateY(0);} 90%,100%{opacity:0;transform:translateY(0);} }
+  @media (prefers-reduced-motion: reduce){ .booking-demo-step,.booking-demo-success{ animation:none !important; opacity:1 !important; transform:none !important; } }
 
   .pricing-cards{ display:grid; grid-template-columns:repeat(4, 1fr); gap:16px; margin-top:20px; }
   @media (max-width:900px){ .pricing-cards{ grid-template-columns:1fr 1fr; } }
@@ -74,16 +92,22 @@
 
 <div class="fh-hero">
   <div class="eyebrow">Free to start · Priced in Naira</div>
-  <h1>Let customers book you online — no more DMs and missed calls</h1>
-  <p>A booking page for your salon, clinic, studio, or practice. Customers pick a time that works, you get notified, nobody double-books.</p>
+  <h1>Online appointment scheduling — no more DMs and missed calls</h1>
+  <p>A booking page for your service business. Customers pick a time that works, you get notified, nobody double-books.</p>
   <a href="/booking/app/" class="btn">Create your booking page free</a>
-  <div class="use-case-row">
-    <span class="use-case-chip">Salons &amp; barbers</span>
-    <span class="use-case-chip">Clinics &amp; hospitals</span>
-    <span class="use-case-chip">Tutors &amp; consultants</span>
-    <span class="use-case-chip">Spas &amp; gyms</span>
-    <span class="use-case-chip">Auto mechanics</span>
-    <span class="use-case-chip">Photographers</span>
+
+  <div class="booking-demo-preview" aria-hidden="true">
+    <div class="booking-demo-step booking-demo-d1">
+      <div class="booking-demo-label">Select a service</div>
+      <div class="booking-demo-chip">Haircut &amp; beard trim — ₦8,000 · 45 min</div>
+    </div>
+    <div class="booking-demo-step booking-demo-d2">
+      <div class="booking-demo-label">Pick a time</div>
+      <div class="booking-demo-slots">
+        <span>2:00pm</span><span class="picked">2:45pm</span><span>3:30pm</span>
+      </div>
+    </div>
+    <div class="booking-demo-success">✓ Booking confirmed — Tue, 2:45pm</div>
   </div>
 </div>
 
@@ -167,6 +191,10 @@
 <div class="fh-section">
   <h2>Frequently asked questions</h2>
   <div class="faq-item">
+    <h3>Is KoboDocs Booking a Calendly alternative?</h3>
+    <p>Yes — same core idea (a link customers use to pick an open time), but priced in Naira with no per-seat charge for adding staff calendars, and built around WhatsApp sharing rather than assuming an email-first audience.</p>
+  </div>
+  <div class="faq-item">
     <h3>Do my customers need an account to book?</h3>
     <p>No. They open your link, pick a service and time, and enter their name and phone number. No password, no download.</p>
   </div>
@@ -189,6 +217,11 @@
   "@context": "https://schema.org",
   "@type": "FAQPage",
   "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "Is KoboDocs Booking a Calendly alternative?",
+      "acceptedAnswer": { "@type": "Answer", "text": "Yes — same core idea of a link customers use to pick an open time, but priced in Naira with no per-seat charge for adding staff calendars, and built around WhatsApp sharing." }
+    },
     {
       "@type": "Question",
       "name": "Do my customers need an account to book?",
