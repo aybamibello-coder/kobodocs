@@ -36,10 +36,13 @@
   .btn.danger{ color:var(--stamp-red); border-color:rgba(168,52,42,0.4); }
   .empty-note{ font-size:0.88rem; opacity:0.6; padding:30px 0; text-align:center; }
 
-  .share-box{ background:var(--paper); border:1px solid var(--line); border-radius:8px; padding:20px; }
-  .share-url{ display:flex; gap:8px; margin:12px 0; }
+  .share-box{ background:var(--paper); border:1px solid var(--line); border-radius:8px; padding:24px; }
+  .share-actions-row{ display:flex; gap:12px; flex-wrap:wrap; margin-top:16px; }
+  .share-url{ display:flex; gap:8px; margin:16px 0; }
   .share-url input{ flex:1; padding:8px 10px; border:1px solid var(--line); border-radius:6px; font-family:'Space Mono', monospace; font-size:0.82rem; background:rgba(0,0,0,0.02); }
-  .status-toggle{ display:flex; gap:8px; margin-bottom:16px; }
+  .status-toggle{ display:flex; gap:8px; margin-bottom:18px; }
+  .btn-publish-now{ background:var(--stamp-gold); border-color:var(--stamp-gold); color:var(--charcoal); font-weight:600; margin-left:10px; }
+  .btn-publish-now:hover{ opacity:0.9; }
   .status-toggle button{ font-size:0.82rem; border:1px solid var(--line); background:none; border-radius:20px; padding:6px 14px; cursor:pointer; font-family:inherit; }
   .status-toggle button.active{ background:var(--ink-green-deep); color:var(--paper); border-color:var(--ink-green-deep); }
 
@@ -94,6 +97,7 @@
   <div class="fb-panel active" id="panel-services">
     <div id="eventTypesList"></div>
     <button class="btn primary" id="addEventTypeBtn">+ Add service</button>
+    <button class="btn btn-publish-now" id="publishNowBtn">🚀 Publish now</button>
   </div>
 
   <div class="fb-panel" id="panel-availability">
@@ -154,9 +158,11 @@
         <input type="text" id="shareUrlInput" readonly>
         <button class="btn" id="copyShareBtn">Copy link</button>
       </div>
-      <a class="btn" id="waShareBtn" href="#" target="_blank" rel="noopener">Share on WhatsApp</a>
-      <button class="btn" id="toggleQrBtn" style="margin-left:6px;">Show QR code</button>
-      <button class="btn" id="toggleEmbedBtn" style="margin-left:6px;">Embed code</button>
+      <div class="share-actions-row">
+        <a class="btn" id="waShareBtn" href="#" target="_blank" rel="noopener">Share on WhatsApp</a>
+        <button class="btn" id="toggleQrBtn">Show QR code</button>
+        <button class="btn" id="toggleEmbedBtn">Embed code</button>
+      </div>
       <div id="qrWrap" style="display:none; margin-top:16px;">
         <div id="qrCanvas"></div>
         <button class="btn" id="downloadQrBtn" style="margin-top:8px;">Download PNG</button>

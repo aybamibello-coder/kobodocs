@@ -44,6 +44,15 @@
   .ai-generate-box{ background:var(--paper); border:1px solid var(--line); border-radius:8px; padding:16px; margin-top:10px; }
   .ai-generate-box textarea{ width:100%; padding:9px 10px; border:1px solid var(--line); border-radius:6px; font-family:inherit; font-size:0.88rem; }
 
+  .btn-publish-now{ background:var(--stamp-gold); border-color:var(--stamp-gold); color:var(--charcoal); font-weight:600; margin-left:10px; }
+  .btn-publish-now:hover{ opacity:0.9; }
+
+  .ai-generate-header{ background:var(--paper); border:1px solid var(--line); border-radius:8px; padding:16px 18px; margin-top:18px; }
+  .ai-generate-title{ font-size:1rem; margin:0 0 6px; }
+  .ai-generate-subtitle{ font-size:0.85rem; opacity:0.75; line-height:1.5; margin:0 0 12px; }
+  .ai-generate-cta-row{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+  #aiPlanHint{ font-size:0.78rem; opacity:0.65; }
+
   .add-field-wrap{ position:relative; }
   .add-field-menu{ display:none; position:absolute; z-index:10; background:var(--paper); border:1px solid var(--line); border-radius:8px; box-shadow:0 6px 24px rgba(0,0,0,0.12); padding:8px; margin-top:6px; min-width:240px; max-height:340px; overflow-y:auto; }
   .add-field-menu.show{ display:block; }
@@ -54,7 +63,8 @@
   .btn.primary{ background:var(--ink-green-deep); color:var(--paper); border-color:var(--ink-green-deep); }
   .empty-note{ font-size:0.88rem; opacity:0.6; padding:30px 0; text-align:center; }
 
-  .share-box{ background:var(--paper); border:1px solid var(--line); border-radius:8px; padding:20px; }
+  .share-box{ background:var(--paper); border:1px solid var(--line); border-radius:8px; padding:24px; }
+  .share-actions-row{ display:flex; gap:12px; flex-wrap:wrap; margin-top:16px; }
   .settings-label{ display:block; font-size:0.8rem; opacity:0.7; margin:12px 0 4px; }
   .settings-check{ display:flex; align-items:center; gap:8px; font-size:0.85rem; margin:10px 0; }
   .share-box input[type=number], .share-box input[type=datetime-local], .share-box input[type=text], .share-box textarea{
@@ -77,9 +87,9 @@
   .detail-row{ margin-bottom:14px; }
   .detail-row .lbl{ font-size:0.78rem; opacity:0.6; margin-bottom:3px; }
   .detail-row .val{ font-size:0.92rem; }
-  .share-url{ display:flex; gap:8px; margin:12px 0; }
+  .share-url{ display:flex; gap:8px; margin:16px 0; }
   .share-url input{ flex:1; padding:8px 10px; border:1px solid var(--line); border-radius:6px; font-family:'Space Mono', monospace; font-size:0.82rem; background:rgba(0,0,0,0.02); }
-  .status-toggle{ display:flex; gap:8px; margin-bottom:16px; }
+  .status-toggle{ display:flex; gap:8px; margin-bottom:18px; }
   .status-toggle button{ font-size:0.82rem; border:1px solid var(--line); background:none; border-radius:20px; padding:6px 14px; cursor:pointer; font-family:inherit; }
   .status-toggle button.active{ background:var(--ink-green-deep); color:var(--paper); border-color:var(--ink-green-deep); }
 
@@ -131,6 +141,7 @@
     <div id="questionsList"></div>
     <div class="add-field-wrap">
       <button class="btn primary" id="addQuestionBtn">+ Add question</button>
+      <button class="btn btn-publish-now" id="publishNowBtn">🚀 Publish now</button>
       <div class="add-field-menu" id="addQuestionMenu">
         <button data-type="text">Short text</button>
         <button data-type="textarea">Paragraph</button>
@@ -146,9 +157,13 @@
         <button data-type="section" style="border-top:1px solid var(--line); margin-top:4px; padding-top:10px;">— Section break —</button>
       </div>
     </div>
-    <div style="margin-top:14px;">
-      <button class="btn" id="aiGenerateBtn">✨ Generate with AI</button>
-      <span id="aiPlanHint" style="font-size:0.78rem; opacity:0.6; margin-left:8px;"></span>
+    <div class="ai-generate-header">
+      <h3 class="ai-generate-title">✨ AI survey generator</h3>
+      <p class="ai-generate-subtitle">Describe the survey you need in plain language, and AI will build the questions for you — review and adjust before publishing.</p>
+      <div class="ai-generate-cta-row">
+        <button class="btn" id="aiGenerateBtn">Generate with AI</button>
+        <span id="aiPlanHint"></span>
+      </div>
     </div>
     <div class="ai-generate-box" id="aiGenerateBox" style="display:none;">
       <textarea id="aiPromptInput" rows="3" placeholder="Describe the survey you want — e.g. 'A post-event feedback survey for a wedding vendor expo in Lagos: overall satisfaction, likelihood to recommend, best and worst parts, and how they heard about the event.'"></textarea>
@@ -209,9 +224,11 @@
         <input type="text" id="shareUrlInput" readonly>
         <button class="btn" id="copyShareBtn">Copy link</button>
       </div>
-      <a class="btn" id="waShareBtn" href="#" target="_blank" rel="noopener">Share on WhatsApp</a>
-      <button class="btn" id="toggleQrBtn" style="margin-left:6px;">Show QR code</button>
-      <button class="btn" id="toggleEmbedBtn" style="margin-left:6px;">Embed code</button>
+      <div class="share-actions-row">
+        <a class="btn" id="waShareBtn" href="#" target="_blank" rel="noopener">Share on WhatsApp</a>
+        <button class="btn" id="toggleQrBtn">Show QR code</button>
+        <button class="btn" id="toggleEmbedBtn">Embed code</button>
+      </div>
       <div id="qrWrap" style="display:none; margin-top:16px;">
         <div id="qrCanvas"></div>
         <button class="btn" id="downloadQrBtn" style="margin-top:8px;">Download PNG</button>

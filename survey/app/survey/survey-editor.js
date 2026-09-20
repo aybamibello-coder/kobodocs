@@ -302,6 +302,12 @@ document.getElementById('statusToggle').addEventListener('click', async (e) => {
   toast('Survey is now ' + btn.dataset.status + '.');
 });
 
+document.getElementById('publishNowBtn').addEventListener('click', async () => {
+  await saveSurvey({ status: 'published' });
+  renderShare();
+  toast('Survey published — link is live.');
+});
+
 document.getElementById('copyShareBtn').addEventListener('click', () => {
   navigator.clipboard.writeText(document.getElementById('shareUrlInput').value);
   toast('Link copied.');

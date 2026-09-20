@@ -362,6 +362,12 @@ document.getElementById('statusToggle').addEventListener('click', async (e) => {
   toast('Page is now ' + btn.dataset.status + '.');
 });
 
+document.getElementById('publishNowBtn').addEventListener('click', async () => {
+  await savePage({ status: 'published' });
+  renderShare();
+  toast('Booking page published — link is live.');
+});
+
 document.getElementById('copyShareBtn').addEventListener('click', () => {
   navigator.clipboard.writeText(document.getElementById('shareUrlInput').value);
   toast('Link copied.');
