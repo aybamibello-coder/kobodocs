@@ -15,7 +15,7 @@
     client_document_payment: 'Client Document Payment', legacy_pro: 'Legacy Pro Plan', unknown: 'Unknown',
     merge_pdf: 'Merge PDF', split_pdf: 'Split PDF', compress_pdf: 'Compress PDF', jpg_to_pdf: 'JPG/PNG to PDF',
     pdf_to_jpg: 'PDF to JPG', word_to_pdf: 'Word to PDF', watermark_pdf: 'Watermark PDF', ocr_pdf: 'OCR PDF',
-    cv_builder: 'CV/Resume Builder', kobodocs_form: 'KoboDocs Forms', kobodocs_survey: 'KoboDocs Survey'
+    cv_builder: 'CV/Resume Builder', kobodocs_form: 'KoboDocs Forms', kobodocs_survey: 'KoboDocs Survey', kobodocs_booking: 'KoboDocs Booking'
   };
   function label(key) { return PRODUCT_LABELS[key] || key; }
 
