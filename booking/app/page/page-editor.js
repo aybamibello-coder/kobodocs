@@ -305,6 +305,19 @@ function renderSettings() {
   const logoPreview = document.getElementById('logoPreview');
   if (s.logoUrl) { logoPreview.src = s.logoUrl; logoPreview.style.display = 'inline-block'; }
   else { logoPreview.style.display = 'none'; }
+
+  document.getElementById('whatsappNumberInput').value = s.whatsappNumber || '';
+  document.getElementById('whatsappModeInput').value = s.whatsappMode || 'chat';
+  const social = s.socialLinks || {};
+  document.getElementById('instagramInput').value = social.instagram || '';
+  document.getElementById('facebookInput').value = social.facebook || '';
+  document.getElementById('tiktokInput').value = social.tiktok || '';
+  document.getElementById('twitterInput').value = social.twitter || '';
+  const bank = s.bankAccount || {};
+  document.getElementById('bankNameInput').value = bank.bankName || '';
+  document.getElementById('bankAccountNameInput').value = bank.accountName || '';
+  document.getElementById('bankAccountNumberInput').value = bank.accountNumber || '';
+  document.getElementById('businessInfoInput').value = s.businessInfo || '';
 }
 
 document.getElementById('saveSettingsBtn').addEventListener('click', async () => {
@@ -318,6 +331,28 @@ document.getElementById('saveSettingsBtn').addEventListener('click', async () =>
   };
   await savePage({ settings });
   toast('Settings saved.');
+});
+
+document.getElementById('saveProfileBtn').addEventListener('click', async () => {
+  const settings = {
+    ...(page.settings || {}),
+    whatsappNumber: document.getElementById('whatsappNumberInput').value.trim() || null,
+    whatsappMode: document.getElementById('whatsappModeInput').value,
+    socialLinks: {
+      instagram: document.getElementById('instagramInput').value.trim() || null,
+      facebook: document.getElementById('facebookInput').value.trim() || null,
+      tiktok: document.getElementById('tiktokInput').value.trim() || null,
+      twitter: document.getElementById('twitterInput').value.trim() || null,
+    },
+    bankAccount: {
+      bankName: document.getElementById('bankNameInput').value.trim() || null,
+      accountName: document.getElementById('bankAccountNameInput').value.trim() || null,
+      accountNumber: document.getElementById('bankAccountNumberInput').value.trim() || null,
+    },
+    businessInfo: document.getElementById('businessInfoInput').value.trim() || null,
+  };
+  await savePage({ settings });
+  toast('Business profile saved.');
 });
 
 document.getElementById('logoUploadInput').addEventListener('change', async (e) => {

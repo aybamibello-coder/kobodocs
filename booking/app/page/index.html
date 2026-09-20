@@ -133,6 +133,45 @@
     </div>
 
     <div class="share-box" style="margin-top:20px;">
+      <h3 style="font-size:1rem; margin-bottom:4px;">Business profile</h3>
+      <p style="font-size:0.82rem; opacity:0.7; margin-bottom:14px;">Shown on your public booking page so customers can reach you directly or send a deposit.</p>
+
+      <label class="settings-label" for="whatsappNumberInput">WhatsApp number</label>
+      <input type="text" id="whatsappNumberInput" placeholder="e.g. 2348031234567 (with country code, no spaces)">
+      <label class="settings-label" for="whatsappModeInput">Show as</label>
+      <select id="whatsappModeInput" style="width:100%; padding:8px 10px; border:1px solid var(--line); border-radius:6px; font-family:inherit; font-size:0.9rem;">
+        <option value="chat">Chat on WhatsApp</option>
+        <option value="call">Call this number</option>
+        <option value="both">Both — chat and call buttons</option>
+      </select>
+
+      <hr style="border:none; border-top:1px solid var(--line); margin:16px 0;">
+      <p style="font-size:0.82rem; opacity:0.7; margin-bottom:10px;">Social media (optional — leave any blank to hide it)</p>
+      <label class="settings-label" for="instagramInput">Instagram</label>
+      <input type="text" id="instagramInput" placeholder="https://instagram.com/yourbusiness">
+      <label class="settings-label" for="facebookInput">Facebook</label>
+      <input type="text" id="facebookInput" placeholder="https://facebook.com/yourbusiness">
+      <label class="settings-label" for="tiktokInput">TikTok</label>
+      <input type="text" id="tiktokInput" placeholder="https://tiktok.com/@yourbusiness">
+      <label class="settings-label" for="twitterInput">X (Twitter)</label>
+      <input type="text" id="twitterInput" placeholder="https://x.com/yourbusiness">
+
+      <hr style="border:none; border-top:1px solid var(--line); margin:16px 0;">
+      <p style="font-size:0.82rem; opacity:0.7; margin-bottom:10px;">Bank account details (optional — for customers paying a deposit directly to you; KoboDocs never holds or processes this money)</p>
+      <label class="settings-label" for="bankNameInput">Bank name</label>
+      <input type="text" id="bankNameInput" placeholder="e.g. GTBank">
+      <label class="settings-label" for="bankAccountNameInput">Account name</label>
+      <input type="text" id="bankAccountNameInput" placeholder="e.g. Ayobami Ventures Ltd">
+      <label class="settings-label" for="bankAccountNumberInput">Account number</label>
+      <input type="text" id="bankAccountNumberInput" placeholder="0123456789">
+
+      <label class="settings-label" for="businessInfoInput" style="margin-top:14px;">Other information (optional)</label>
+      <textarea id="businessInfoInput" rows="3" placeholder="Anything else customers should know — parking, policies, what to bring, etc."></textarea>
+
+      <button class="btn primary" id="saveProfileBtn" style="margin-top:14px;">Save business profile</button>
+    </div>
+
+    <div class="share-box" style="margin-top:20px;">
       <h3 style="font-size:1rem; margin-bottom:4px;">Branding</h3>
       <p style="font-size:0.82rem; opacity:0.7; margin-bottom:6px;">Applies to the public booking page. The "Powered by KoboDocs" footer stays on the Free plan.</p>
       <label class="settings-label" for="logoUploadInput">Logo</label>
