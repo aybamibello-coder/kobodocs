@@ -22,7 +22,7 @@ function applyBranding(settings) {
 }
 
 function brandHeaderHtml(settings) {
-  if (settings.logoUrl) return `<div style="text-align:center;"><img src="${settings.logoUrl}" alt="" style="max-height:40px; max-width:120px; margin-bottom:14px; display:inline-block;"></div>`;
+  if (settings.logoUrl) return `<div style="text-align:center;"><img src="${settings.logoUrl}" alt="" style="max-height:72px; max-width:200px; margin-bottom:16px; display:inline-block;"></div>`;
   return `<div class="fill-logo">KoboDocs Booking</div>`;
 }
 
