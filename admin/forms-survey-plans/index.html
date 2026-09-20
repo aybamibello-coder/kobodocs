@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Forms & Survey Plans | Admin | KoboDocs</title>
+<title>Forms, Survey & Booking Plans | Admin | KoboDocs</title>
 <meta name="robots" content="noindex, nofollow">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Work+Sans:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/assets/style.css">
@@ -42,8 +42,8 @@
     <p style="opacity:0.7; font-size:0.9rem;">This page is restricted to KoboDocs admins.</p>
   </div>
   <div id="adminContent" style="display:none;">
-    <h1 style="font-size:1.3rem; margin-bottom:6px;">Forms &amp; Survey plan assignment</h1>
-    <p style="font-size:0.85rem; opacity:0.7; margin-bottom:20px;">Neither product has payment integration yet, so plan changes are manual. Look up a user by email, then set their plan.</p>
+    <h1 style="font-size:1.3rem; margin-bottom:6px;">Forms, Survey &amp; Booking plan assignment</h1>
+    <p style="font-size:0.85rem; opacity:0.7; margin-bottom:20px;">Squad checkout handles most upgrades now — use this for manual overrides, refunds/adjustments, or if a payment doesn't go through cleanly. Look up a user by email, then set their plan.</p>
 
     <div class="plan-box">
       <label for="lookupEmail">User's email</label>
@@ -80,6 +80,21 @@
         <label for="surveyExpiryInput">Expires on (optional)</label>
         <input type="date" id="surveyExpiryInput">
         <button class="btn primary" id="saveSurveyPlanBtn">Save Survey plan</button>
+      </div>
+
+      <div class="plan-box">
+        <h3 style="font-size:1rem;">KoboDocs Booking</h3>
+        <div class="current-plan" id="currentBookingPlan"></div>
+        <label for="bookingPlanSelect">Set plan</label>
+        <select id="bookingPlanSelect">
+          <option value="free">Free</option>
+          <option value="starter">Starter — ₦6,000/mo</option>
+          <option value="growth">Growth — ₦13,000/mo</option>
+          <option value="team">Team — ₦25,000/mo</option>
+        </select>
+        <label for="bookingExpiryInput">Expires on (optional)</label>
+        <input type="date" id="bookingExpiryInput">
+        <button class="btn primary" id="saveBookingPlanBtn">Save Booking plan</button>
       </div>
     </div>
   </div>

@@ -25,10 +25,13 @@ document.getElementById('lookupBtn').addEventListener('click', async () => {
   lookedUpEmail = email;
   document.getElementById('currentFormPlan').textContent = describePlan(data.form);
   document.getElementById('currentSurveyPlan').textContent = describePlan(data.survey);
+  document.getElementById('currentBookingPlan').textContent = describePlan(data.booking);
   document.getElementById('formPlanSelect').value = data.form.plan || 'free';
   document.getElementById('surveyPlanSelect').value = data.survey.plan || 'free';
+  document.getElementById('bookingPlanSelect').value = data.booking.plan || 'free';
   document.getElementById('formExpiryInput').value = data.form.expires_at ? data.form.expires_at.slice(0, 10) : '';
   document.getElementById('surveyExpiryInput').value = data.survey.expires_at ? data.survey.expires_at.slice(0, 10) : '';
+  document.getElementById('bookingExpiryInput').value = data.booking.expires_at ? data.booking.expires_at.slice(0, 10) : '';
   document.getElementById('planEditor').style.display = 'block';
 });
 
@@ -50,6 +53,16 @@ document.getElementById('saveSurveyPlanBtn').addEventListener('click', async () 
   if (error || !data.success) { toast((data && data.error) || (error && error.message) || 'Could not save.'); return; }
   toast('Survey plan updated.');
   document.getElementById('currentSurveyPlan').textContent = `Currently on ${plan[0].toUpperCase() + plan.slice(1)}, status: active${expiry ? ` (expires ${new Date(expiry).toLocaleDateString('en-GB')})` : ' (no expiry set)'}.`;
+});
+
+document.getElementById('saveBookingPlanBtn').addEventListener('click', async () => {
+  if (!lookedUpEmail) return;
+  const plan = document.getElementById('bookingPlanSelect').value;
+  const expiry = document.getElementById('bookingExpiryInput').value || null;
+  const { data, error } = await supabase.rpc('admin_set_booking_plan', { p_email: lookedUpEmail, p_plan: plan, p_expires_at: expiry });
+  if (error || !data.success) { toast((data && data.error) || (error && error.message) || 'Could not save.'); return; }
+  toast('Booking plan updated.');
+  document.getElementById('currentBookingPlan').textContent = `Currently on ${plan[0].toUpperCase() + plan.slice(1)}, status: active${expiry ? ` (expires ${new Date(expiry).toLocaleDateString('en-GB')})` : ' (no expiry set)'}.`;
 });
 
 (async () => {
