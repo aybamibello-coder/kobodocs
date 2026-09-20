@@ -22,8 +22,19 @@ function applyBranding(settings) {
 }
 
 function brandHeaderHtml(settings) {
-  if (settings.logoUrl) return `<img src="${settings.logoUrl}" alt="" style="max-height:52px; margin-bottom:14px; display:block;">`;
+  if (settings.logoUrl) return `<div style="text-align:center;"><img src="${settings.logoUrl}" alt="" style="max-height:40px; max-width:120px; margin-bottom:14px; display:inline-block;"></div>`;
   return `<div class="fill-logo">KoboDocs Booking</div>`;
+}
+
+// price_display is free text (a business can write "Free consult" or
+// "Starting from ₦5,000"), so we never force a numeric field -- but if
+// someone just typed a bare number/amount, prefix the Naira sign rather
+// than showing an unlabeled figure.
+function formatPrice(priceDisplay) {
+  if (!priceDisplay) return '';
+  const trimmed = String(priceDisplay).trim();
+  if (/^\d[\d,.\s]*$/.test(trimmed)) return '₦' + trimmed;
+  return trimmed;
 }
 
 function honeypotHtml() {
@@ -81,13 +92,11 @@ function renderServices() {
     ${brandHeaderHtml(s)}
     <div class="fill-title">${pageData.business_name}</div>
     ${pageData.description ? `<div class="fill-desc">${pageData.description}</div>` : ''}
-    ${contactBarHtml(s)}
-    ${s.businessInfo ? `<div class="biz-info">${s.businessInfo}</div>` : ''}
     <div class="service-list" id="serviceList">
       ${pageData.event_types.map(et => `
         <button type="button" class="service-card" data-id="${et.id}">
           <div class="name">${et.name}</div>
-          <div class="meta">${et.duration_minutes} min${et.price_display ? ' · ' + et.price_display : ''}</div>
+          <div class="meta">${et.duration_minutes} min${et.price_display ? ' · ' + formatPrice(et.price_display) : ''}</div>
           ${et.description ? `<div class="desc">${et.description}</div>` : ''}
         </button>
       `).join('')}
@@ -131,7 +140,7 @@ function renderDatePicker() {
     ${brandHeaderHtml(pageData.settings || {})}
     <div class="back-link" id="backToServices">&larr; Choose a different service</div>
     <div class="fill-title" style="font-size:1.2rem;">${selectedEventType.name}</div>
-    <div class="fill-desc">${selectedEventType.duration_minutes} minutes${selectedEventType.price_display ? ' · ' + selectedEventType.price_display : ''}</div>
+    <div class="fill-desc">${selectedEventType.duration_minutes} minutes${selectedEventType.price_display ? ' · ' + formatPrice(selectedEventType.price_display) : ''}</div>
     <div class="day-picker" id="dayPicker">
       ${days.map(d => `
         <button type="button" class="day-btn" data-date="${dateStr(d)}">
@@ -333,12 +342,14 @@ function renderSuccess(data) {
   card.innerHTML = `
     ${brandHeaderHtml(s)}
     <div class="fill-success">
-      <h2>${s.confirmationHeading || "You're booked! 🎉"}</h2>
-      <p style="opacity:0.85; font-size:0.95rem; margin-bottom:10px;"><strong>${selectedEventType.name}</strong><br>${dt.toLocaleString('en-GB', { weekday: 'long', day: '2-digit', month: 'long', hour: '2-digit', minute: '2-digit' })}</p>
-      <p style="opacity:0.75; font-size:0.9rem;">${s.confirmationMessage || "We'll see you then."}</p>
+      <div class="success-check">✓</div>
+      <h2>${s.confirmationHeading || "You're booked!"}</h2>
+      <p class="success-detail"><strong>${selectedEventType.name}</strong><br>${dt.toLocaleString('en-GB', { weekday: 'long', day: '2-digit', month: 'long', hour: '2-digit', minute: '2-digit' })}</p>
+      <p class="success-message">${s.confirmationMessage || "We'll see you then."}</p>
       ${depositBoxHtml(s)}
+      ${s.businessInfo ? `<div class="biz-info" style="text-align:left;">${s.businessInfo}</div>` : ''}
       ${contactBarHtml(s)}
-      <p style="opacity:0.55; font-size:0.78rem; margin-top:16px;"><a href="/booking/cancel/?t=${data.cancel_token}">Need to cancel?</a></p>
+      <p class="cancel-link"><a href="/booking/cancel/?t=${data.cancel_token}">Need to cancel?</a></p>
     </div>
   `;
 }
