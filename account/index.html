@@ -256,8 +256,12 @@
       <div class="auth-panel" id="panel-signup">
         <form id="signupForm">
           <div class="field-group">
+            <label for="signupFullName">Full name</label>
+            <input type="text" id="signupFullName" placeholder="Ayobami Bello" required>
+          </div>
+          <div class="field-group">
             <label for="signupBiz">Business name</label>
-            <input type="text" id="signupBiz" placeholder="Adaeze Fabrics Co.">
+            <input type="text" id="signupBiz" placeholder="Adaeze Fabrics Co." required>
           </div>
           <div class="field-group">
             <label for="signupEmail">Email</label>
@@ -790,10 +794,14 @@
 
     document.getElementById('signupForm').addEventListener('submit', async (e) => {
       e.preventDefault();
+      const fullName = document.getElementById('signupFullName').value.trim();
       const bizName = document.getElementById('signupBiz').value.trim();
       const email = document.getElementById('signupEmail').value.trim();
       const password = document.getElementById('signupPassword').value;
       const msg = document.getElementById('signupMsg');
+
+      if (!fullName) { showMsg(msg, 'Please enter your full name.', 'error'); return; }
+      if (!bizName) { showMsg(msg, 'Please enter your business name.', 'error'); return; }
 
       const pwField = document.getElementById('signupPassword');
       if (pwField.dataset.pwned === 'true') {
@@ -805,7 +813,7 @@
         return;
       }
 
-      const { data, error } = await window.KoboAuth.signUp(email, password, { business_name: bizName || null });
+      const { data, error } = await window.KoboAuth.signUp(email, password, { full_name: fullName, business_name: bizName });
       if (error) { showMsg(msg, error.message, 'error'); return; }
 
       if (data && data.session) {
