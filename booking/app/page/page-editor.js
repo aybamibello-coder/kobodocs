@@ -40,6 +40,10 @@ document.getElementById('pageDescInput').addEventListener('input', debounce((e) 
 let eventTypes = [];
 let staffList = [];
 
+function newQuestionId() {
+  return Math.random().toString(36).slice(2, 9);
+}
+
 function renderEventTypes() {
   const list = document.getElementById('eventTypesList');
   if (!eventTypes.length) {
@@ -83,8 +87,33 @@ function renderEventTypes() {
           <textarea data-role="description" rows="2" placeholder="Shown to the customer when booking">${et.description || ''}</textarea>
         </div>
       </div>
+      <div class="questions-block">
+        <label style="display:block; margin-bottom:8px;">Custom questions <span style="opacity:0.6; font-weight:400;">(asked when someone books this service, in addition to name/phone/email)</span></label>
+        <div class="questions-list">
+          ${(et.questions || []).map(q => questionRowHtml(et.id, q)).join('')}
+        </div>
+        <button type="button" class="btn btn-add-question" data-role="add-question" data-et="${et.id}">+ Add question</button>
+      </div>
     </div>
   `).join('');
+}
+
+function questionRowHtml(etId, q) {
+  return `
+    <div class="question-row" data-qid="${q.id}">
+      <div class="question-row-top">
+        <input type="text" class="q-label-input" data-role="q-label" value="${(q.label || '').replace(/"/g, '&quot;')}" placeholder="e.g. What is the issue?">
+        <select class="q-type-select" data-role="q-type">
+          <option value="text" ${q.type === 'text' || !q.type ? 'selected' : ''}>Short answer</option>
+          <option value="textarea" ${q.type === 'textarea' ? 'selected' : ''}>Long answer</option>
+          <option value="select" ${q.type === 'select' ? 'selected' : ''}>Multiple choice</option>
+        </select>
+        <label class="q-required-check"><input type="checkbox" data-role="q-required" ${q.required ? 'checked' : ''}> Required</label>
+        <button type="button" class="icon-btn" data-role="q-remove" title="Remove">X</button>
+      </div>
+      <input type="text" class="q-options-input" data-role="q-options" value="${((q.options || []).join(', ')).replace(/"/g, '&quot;')}" placeholder="Options, comma-separated" style="${q.type === 'select' ? '' : 'display:none;'}">
+    </div>
+  `;
 }
 
 async function loadEventTypes() {
@@ -129,6 +158,56 @@ document.getElementById('eventTypesList').addEventListener('click', async (e) =>
   if (error) { toast('Could not delete: ' + error.message); return; }
   eventTypes = eventTypes.filter(x => x.id !== row.dataset.id);
   renderEventTypes();
+});
+
+const saveQuestionsDebounced = debounce(async (etId, questions) => {
+  const { supabase } = ctx;
+  const { error } = await supabase.from('booking_event_types').update({ questions }).eq('id', etId);
+  if (error) toast('Could not save question: ' + error.message);
+}, 600);
+
+document.getElementById('eventTypesList').addEventListener('click', async (e) => {
+  const addBtn = e.target.closest('button[data-role="add-question"]');
+  if (addBtn) {
+    const et = eventTypes.find(x => x.id === addBtn.dataset.et);
+    if (!et) return;
+    et.questions = et.questions || [];
+    et.questions.push({ id: newQuestionId(), label: '', type: 'text', required: false, options: [] });
+    renderEventTypes();
+    saveQuestionsDebounced(et.id, et.questions);
+    return;
+  }
+  const removeBtn = e.target.closest('button[data-role="q-remove"]');
+  if (removeBtn) {
+    const row = removeBtn.closest('.card-row');
+    const qRow = removeBtn.closest('.question-row');
+    const et = eventTypes.find(x => x.id === row.dataset.id);
+    if (!et) return;
+    et.questions = (et.questions || []).filter(q => q.id !== qRow.dataset.qid);
+    renderEventTypes();
+    saveQuestionsDebounced(et.id, et.questions);
+  }
+});
+
+document.getElementById('eventTypesList').addEventListener('input', (e) => {
+  const qRow = e.target.closest('.question-row');
+  if (!qRow) return;
+  const row = e.target.closest('.card-row');
+  const et = eventTypes.find(x => x.id === row.dataset.id);
+  if (!et) return;
+  const q = (et.questions || []).find(x => x.id === qRow.dataset.qid);
+  if (!q) return;
+
+  const role = e.target.dataset.role;
+  if (role === 'q-label') q.label = e.target.value;
+  if (role === 'q-options') q.options = e.target.value.split(',').map(s => s.trim()).filter(Boolean);
+  if (role === 'q-required') q.required = e.target.checked;
+  if (role === 'q-type') {
+    q.type = e.target.value;
+    const optionsInput = qRow.querySelector('[data-role="q-options"]');
+    optionsInput.style.display = q.type === 'select' ? '' : 'none';
+  }
+  saveQuestionsDebounced(et.id, et.questions);
 });
 
 document.getElementById('addEventTypeBtn').addEventListener('click', async () => {
