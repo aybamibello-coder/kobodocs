@@ -11,7 +11,10 @@ function render(title, desc, showButton) {
   card.innerHTML = `
     <div class="fill-title">${title}</div>
     <div class="fill-desc">${desc}</div>
-    ${showButton ? `<button class="fill-submit" id="confirmCancelBtn">Yes, cancel my booking</button>` : ''}
+    ${showButton ? `
+      <button class="fill-submit" id="confirmCancelBtn" style="background:var(--stamp-red); border:none; border-radius:24px; color:#fff; padding:11px 24px; cursor:pointer; font-family:inherit; font-size:0.92rem;">Yes, cancel my booking</button>
+      <p style="margin-top:14px; font-size:0.85rem;"><a href="/booking/reschedule/?t=${token}">Reschedule instead</a></p>
+    ` : ''}
   `;
   if (showButton) {
     document.getElementById('confirmCancelBtn').addEventListener('click', doCancel);
@@ -33,5 +36,5 @@ async function doCancel() {
 if (!token) {
   render('Link incomplete', 'This cancellation link is missing information. Please use the link from your confirmation email or message.', false);
 } else {
-  render('Cancel this booking?', "This can't be undone. If you'd rather reschedule, contact the business directly.", true);
+  render('Cancel this booking?', "This can't be undone. If you'd rather keep your appointment but change the time, use the reschedule option below instead.", true);
 }

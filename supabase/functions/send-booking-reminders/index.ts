@@ -66,6 +66,7 @@ Deno.serve(async (req: Request) => {
       const dt = new Date(b.starts_at);
       const whenText = dt.toLocaleString("en-GB", { weekday: "long", day: "2-digit", month: "long", hour: "2-digit", minute: "2-digit" });
       const cancelUrl = `${Deno.env.get("SITE_URL") ?? "https://kobodocs.com.ng"}/booking/cancel/?t=${b.cancel_token}`;
+      const rescheduleUrl = `${Deno.env.get("SITE_URL") ?? "https://kobodocs.com.ng"}/booking/reschedule/?t=${b.cancel_token}`;
 
       if (resendKey) {
         const html = `
@@ -79,7 +80,7 @@ Deno.serve(async (req: Request) => {
               <strong>${serviceName}</strong><br>${whenText}
             </p>
             <p style="font-size: 0.85rem; opacity: 0.6;">
-              Need to cancel? <a href="${cancelUrl}">Click here</a>.
+              Need to <a href="${rescheduleUrl}">reschedule</a> or <a href="${cancelUrl}">cancel</a>?
             </p>
           </div>
         `;

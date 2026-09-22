@@ -349,7 +349,7 @@ function renderSuccess(data) {
       ${depositBoxHtml(s)}
       ${s.businessInfo ? `<div class="biz-info" style="text-align:left;">${s.businessInfo}</div>` : ''}
       ${contactBarHtml(s)}
-      <p class="cancel-link"><a href="/booking/cancel/?t=${data.cancel_token}">Need to cancel?</a></p>
+      <p class="cancel-link"><a href="/booking/reschedule/?t=${data.cancel_token}">Need to reschedule?</a> · <a href="/booking/cancel/?t=${data.cancel_token}">Cancel</a></p>
     </div>
   `;
 }
