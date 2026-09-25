@@ -1,10 +1,9 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { computeAvailableSlots } from '/booking/b/booking-availability.js';
 
 const SUPABASE_URL = 'https://vwmzulzluaxedkozxjfy.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_4HDVb8ZzRh1W-Z97m2uT1Q_4FwH6bTt';
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-const DAY_KEYS = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
 
 const token = new URLSearchParams(window.location.search).get('t');
 const card = document.getElementById('card');
@@ -27,14 +26,6 @@ function nextNDays(n) {
 
 function dateStr(d) {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-}
-
-function getWorkingHoursFor(et) {
-  if (et.staff_id) {
-    const staff = (pageData.staff || []).find(s => s.id === et.staff_id);
-    return { hours: (staff && staff.working_hours) || {}, blackout: (staff && staff.blackout_dates) || [] };
-  }
-  return { hours: (pageData.settings || {}).workingHours || {}, blackout: (pageData.settings || {}).blackoutDates || [] };
 }
 
 function renderError(title, desc) {
@@ -75,62 +66,23 @@ async function loadSlotsForDate(dStr) {
   const wrap = document.getElementById('slotsWrap');
   wrap.innerHTML = `<div class="empty-note">Loading times…</div>`;
 
-  const { hours, blackout } = getWorkingHoursFor(eventType);
-  if (blackout.includes(dStr)) {
-    wrap.innerHTML = `<div class="empty-note">Not available on this day. Please pick another.</div>`;
-    return;
-  }
-
   const [y, m, d] = dStr.split('-').map(Number);
-  const dayDate = new Date(y, m - 1, d);
-  const dayKey = DAY_KEYS[dayDate.getDay()];
-  const window = hours[dayKey];
-  if (!window || !window.enabled) {
-    wrap.innerHTML = `<div class="empty-note">Not available on this day. Please pick another.</div>`;
-    return;
-  }
-
   const dayStart = new Date(y, m - 1, d, 0, 0, 0);
   const dayEnd = new Date(y, m - 1, d, 23, 59, 59);
 
-  const { data: existing } = await supabase.rpc('get_booking_availability', {
+  const eligible = eventType.eligible_staff_ids || (eventType.staff_id ? [eventType.staff_id] : []);
+
+  const { data: existing } = await supabase.rpc('get_booking_availability_multi', {
     p_slug: pageData.slug || bookingInfo.slug,
-    p_staff_id: eventType.staff_id || null,
+    p_staff_ids: eligible.length ? eligible : null,
     p_from: dayStart.toISOString(),
     p_to: dayEnd.toISOString(),
   });
 
-  // Exclude this booking's own current slot from the conflict list --
-  // otherwise it would block itself from showing as available (matched
-  // by start time, since get_booking_availability doesn't return an id).
+  // Exclude this booking's own current slot -- otherwise it would
+  // block itself from showing as available.
   const currentStartIso = new Date(bookingInfo.current_starts_at).toISOString();
-  const otherBookings = (existing || []).filter(b => new Date(b.starts_at).toISOString() !== currentStartIso);
-
-  const [wsH, wsM] = window.start.split(':').map(Number);
-  const [weH, weM] = window.end.split(':').map(Number);
-  const winStart = new Date(y, m - 1, d, wsH, wsM);
-  const winEnd = new Date(y, m - 1, d, weH, weM);
-
-  const step = ((pageData.settings || {}).slotStepMinutes) || 30;
-  const durationMs = eventType.duration_minutes * 60000;
-  const bufBeforeMs = (eventType.buffer_before_minutes || 0) * 60000;
-  const bufAfterMs = (eventType.buffer_after_minutes || 0) * 60000;
-  const now = new Date();
-  const slots = [];
-
-  for (let t = winStart.getTime(); t + durationMs <= winEnd.getTime(); t += step * 60000) {
-    const slotStart = new Date(t);
-    if (slotStart <= now) continue;
-
-    const rangeStart = t - bufBeforeMs;
-    const rangeEnd = t + durationMs + bufAfterMs;
-    const conflict = otherBookings.some(b => {
-      const bs = new Date(b.starts_at).getTime();
-      const be = new Date(b.ends_at).getTime();
-      return bs < rangeEnd && be > rangeStart;
-    });
-    if (!conflict) slots.push(slotStart);
-  }
+  const slots = computeAvailableSlots(dStr, eventType, pageData, existing || [], currentStartIso);
 
   if (!slots.length) {
     wrap.innerHTML = `<div class="empty-note">No times left on this day. Please pick another.</div>`;

@@ -76,11 +76,15 @@ function renderEventTypes() {
           <input type="number" data-role="buffer_after" value="${et.buffer_after_minutes}" min="0" step="5">
         </div>
         <div style="grid-column:1/-1;">
-          <label>Staff member (optional — leave blank for default hours)</label>
-          <select data-role="staff">
-            <option value="">Default hours</option>
-            ${staffList.map(s => `<option value="${s.id}" ${et.staff_id === s.id ? 'selected' : ''}>${s.name}</option>`).join('')}
-          </select>
+          <label>Staff who can take this booking <span style="opacity:0.6; font-weight:400;">(none selected = default hours; 2+ selected = customer is auto-assigned to whoever's free)</span></label>
+          <div class="staff-check-row" data-et="${et.id}">
+            ${staffList.length ? staffList.map(s => `
+              <label class="staff-check-item">
+                <input type="checkbox" data-role="staff-check" value="${s.id}" ${(et.eligible_staff_ids || []).includes(s.id) ? 'checked' : ''}>
+                ${s.name}
+              </label>
+            `).join('') : '<span style="opacity:0.6; font-size:0.85rem;">No staff added yet — add staff calendars in the Availability tab.</span>'}
+          </div>
         </div>
         <div style="grid-column:1/-1;">
           <label>Description (optional)</label>
@@ -120,8 +124,27 @@ async function loadEventTypes() {
   const { supabase } = ctx;
   const { data } = await supabase.from('booking_event_types').select('*').eq('booking_page_id', pageId).order('sort_order');
   eventTypes = data || [];
+
+  if (eventTypes.length) {
+    const { data: links } = await supabase
+      .from('booking_event_type_staff')
+      .select('event_type_id, staff_id')
+      .in('event_type_id', eventTypes.map(et => et.id));
+    for (const et of eventTypes) {
+      et.eligible_staff_ids = (links || []).filter(l => l.event_type_id === et.id).map(l => l.staff_id);
+    }
+  }
+
   renderEventTypes();
 }
+
+const saveEventTypeStaffDebounced = debounce(async (etId, staffIds) => {
+  const { supabase } = ctx;
+  await supabase.from('booking_event_type_staff').delete().eq('event_type_id', etId);
+  if (staffIds.length) {
+    await supabase.from('booking_event_type_staff').insert(staffIds.map(sid => ({ event_type_id: etId, staff_id: sid })));
+  }
+}, 600);
 
 const saveEventTypeDebounced = debounce(async (id, patch) => {
   const { supabase } = ctx;
@@ -141,11 +164,16 @@ document.getElementById('eventTypesList').addEventListener('input', (e) => {
   if (role === 'buffer_before') et.buffer_before_minutes = parseInt(e.target.value, 10) || 0;
   if (role === 'buffer_after') et.buffer_after_minutes = parseInt(e.target.value, 10) || 0;
   if (role === 'description') et.description = e.target.value;
-  if (role === 'staff') et.staff_id = e.target.value || null;
+  if (role === 'staff-check') {
+    const container = row.querySelector(`.staff-check-row[data-et="${et.id}"]`);
+    et.eligible_staff_ids = [...container.querySelectorAll('input[data-role="staff-check"]:checked')].map(cb => cb.value);
+    saveEventTypeStaffDebounced(et.id, et.eligible_staff_ids);
+    return;
+  }
   saveEventTypeDebounced(et.id, {
     name: et.name, duration_minutes: et.duration_minutes, price_display: et.price_display,
     buffer_before_minutes: et.buffer_before_minutes, buffer_after_minutes: et.buffer_after_minutes,
-    description: et.description, staff_id: et.staff_id,
+    description: et.description,
   });
 });
 
