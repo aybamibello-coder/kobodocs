@@ -116,6 +116,10 @@ async function doReschedule() {
     alert((data && data.error) || 'Could not reschedule. Please try again.');
     return;
   }
+  supabase.functions.invoke('sync-booking-to-google', {
+    body: { cancel_token: data.cancel_token, action: 'update' },
+  }).catch(() => { /* non-critical */ });
+
   const dt = new Date(data.starts_at);
   renderError('Rescheduled!', `Your appointment is now ${dt.toLocaleString('en-GB', { weekday: 'long', day: '2-digit', month: 'long', hour: '2-digit', minute: '2-digit' })}.`);
 }

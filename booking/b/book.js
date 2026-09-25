@@ -163,14 +163,21 @@ async function loadSlotsForDate(dateStr) {
 
   const eligible = selectedEventType.eligible_staff_ids || (selectedEventType.staff_id ? [selectedEventType.staff_id] : []);
 
-  const { data: existing } = await supabase.rpc('get_booking_availability_multi', {
-    p_slug: slug,
-    p_staff_ids: eligible.length ? eligible : null,
-    p_from: dayStart.toISOString(),
-    p_to: dayEnd.toISOString(),
-  });
+  const [{ data: existing }, googleBusy] = await Promise.all([
+    supabase.rpc('get_booking_availability_multi', {
+      p_slug: slug,
+      p_staff_ids: eligible.length ? eligible : null,
+      p_from: dayStart.toISOString(),
+      p_to: dayEnd.toISOString(),
+    }),
+    eligible.length
+      ? supabase.functions.invoke('get-google-busy', {
+          body: { staff_ids: eligible, from: dayStart.toISOString(), to: dayEnd.toISOString() },
+        }).then(r => r.data || []).catch(() => [])
+      : Promise.resolve([]),
+  ]);
 
-  const slots = computeAvailableSlots(dateStr, selectedEventType, pageData, existing || []);
+  const slots = computeAvailableSlots(dateStr, selectedEventType, pageData, [...(existing || []), ...googleBusy]);
 
   if (!slots.length) {
     wrap.innerHTML = `<div class="empty-note">No times left on this day. Please pick another.</div>`;
@@ -282,6 +289,10 @@ async function onSubmit(e) {
         },
       });
     } catch { /* non-critical */ }
+
+    supabase.functions.invoke('sync-booking-to-google', {
+      body: { cancel_token: data.cancel_token, action: 'create' },
+    }).catch(() => { /* non-critical */ });
 
     renderSuccess(data);
   } catch (err) {

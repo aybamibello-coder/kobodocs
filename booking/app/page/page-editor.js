@@ -39,6 +39,7 @@ document.getElementById('pageDescInput').addEventListener('input', debounce((e) 
 // ---------- Services (event types) ----------
 let eventTypes = [];
 let staffList = [];
+let googleStatus = {}; // staff_id -> { connected, google_email, sync_enabled }
 
 function newQuestionId() {
   return Math.random().toString(36).slice(2, 9);
@@ -309,11 +310,14 @@ document.getElementById('saveHoursBtn').addEventListener('click', async () => {
 
 async function loadStaff() {
   const { supabase, session } = ctx;
-  const [{ data }, { data: limits }] = await Promise.all([
+  const [{ data }, { data: limits }, { data: gStatus }] = await Promise.all([
     supabase.from('booking_staff').select('*').eq('booking_page_id', pageId).order('sort_order'),
     supabase.rpc('get_booking_plan_limits', { p_user_id: session.user.id }),
+    supabase.rpc('get_staff_google_status', { p_page_id: pageId }),
   ]);
   staffList = data || [];
+  googleStatus = {};
+  (gStatus || []).forEach(g => { googleStatus[g.staff_id] = g; });
   const row = Array.isArray(limits) ? limits[0] : limits;
   const hint = document.getElementById('staffPlanHint');
   if (row) {
@@ -339,8 +343,32 @@ function renderStaff() {
       </div>
       <div data-role="staff-hours">${hoursGridHtml(s.id, s.working_hours)}</div>
       <button class="btn" data-role="staff-save" style="margin-top:10px;">Save hours</button>
+      ${googleCalendarHtml(s.id)}
     </div>
   `).join('');
+}
+
+function googleCalendarHtml(staffId) {
+  const g = googleStatus[staffId];
+  if (!g || !g.connected) {
+    return `
+      <div style="margin-top:12px; padding-top:12px; border-top:1px solid #eee; display:flex; align-items:center; justify-content:space-between; gap:10px;">
+        <span style="font-size:0.85rem; opacity:0.75;">Google Calendar: not connected</span>
+        <button class="btn" data-role="google-connect" style="font-size:0.85rem;">Connect Google Calendar</button>
+      </div>
+    `;
+  }
+  return `
+    <div style="margin-top:12px; padding-top:12px; border-top:1px solid #eee; display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;">
+      <span style="font-size:0.85rem;">Google Calendar: connected${g.google_email ? ` (${g.google_email})` : ''}</span>
+      <div style="display:flex; align-items:center; gap:10px;">
+        <label style="font-size:0.85rem; display:flex; align-items:center; gap:6px;">
+          <input type="checkbox" data-role="google-sync-toggle" ${g.sync_enabled ? 'checked' : ''}> Sync
+        </label>
+        <button class="btn" data-role="google-disconnect" style="font-size:0.85rem;">Disconnect</button>
+      </div>
+    </div>
+  `;
 }
 
 document.getElementById('staffList').addEventListener('change', (e) => {
@@ -378,6 +406,59 @@ document.getElementById('staffList').addEventListener('click', async (e) => {
     if (error) { toast('Could not save: ' + error.message); return; }
     toast('Staff hours saved.');
   }
+
+  if (e.target.dataset.role === 'google-connect') {
+    const btn = e.target;
+    btn.disabled = true;
+    btn.textContent = 'Opening Google…';
+    const { data, error } = await supabase.functions.invoke('google-calendar-connect', {
+      body: { staff_id: card.dataset.id },
+    });
+    if (error || !data || !data.url) {
+      toast('Could not start Google connection.');
+      btn.disabled = false;
+      btn.textContent = 'Connect Google Calendar';
+      return;
+    }
+    const popup = window.open(data.url, 'kobodocs-google-connect', 'width=500,height=650');
+    const onMessage = (ev) => {
+      if (!ev.data || ev.data.type !== 'kobodocs-google-calendar') return;
+      window.removeEventListener('message', onMessage);
+      toast(ev.data.ok ? 'Google Calendar connected.' : 'Could not connect Google Calendar.');
+      loadStaff();
+    };
+    window.addEventListener('message', onMessage);
+    // Fallback in case the popup is closed manually without completing the flow.
+    const poll = setInterval(() => {
+      if (popup && popup.closed) {
+        clearInterval(poll);
+        window.removeEventListener('message', onMessage);
+        loadStaff();
+      }
+    }, 1000);
+  }
+
+  if (e.target.dataset.role === 'google-disconnect') {
+    if (!confirm('Disconnect Google Calendar for this staff member? Existing calendar events will stay on Google but no longer sync.')) return;
+    const { error } = await supabase.functions.invoke('google-calendar-disconnect', {
+      body: { staff_id: card.dataset.id },
+    });
+    if (error) { toast('Could not disconnect: ' + error.message); return; }
+    toast('Google Calendar disconnected.');
+    loadStaff();
+  }
+});
+
+document.getElementById('staffList').addEventListener('change', async (e) => {
+  if (e.target.dataset.role !== 'google-sync-toggle') return;
+  const { supabase } = ctx;
+  const card = e.target.closest('.card-row');
+  const { error } = await supabase.rpc('set_staff_google_sync_enabled', {
+    p_staff_id: card.dataset.id,
+    p_enabled: e.target.checked,
+  });
+  if (error) { toast('Could not update sync setting.'); return; }
+  toast(e.target.checked ? 'Google sync enabled.' : 'Google sync paused.');
 });
 
 document.getElementById('addStaffBtn').addEventListener('click', async () => {

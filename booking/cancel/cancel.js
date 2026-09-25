@@ -30,6 +30,10 @@ async function doCancel() {
     render('Could not cancel', (data && data.error) || 'Something went wrong. Please contact the business directly.', false);
     return;
   }
+  supabase.functions.invoke('sync-booking-to-google', {
+    body: { cancel_token: token, action: 'cancel' },
+  }).catch(() => { /* non-critical */ });
+
   render('Booking cancelled', 'Your appointment has been cancelled.', false);
 }
 
