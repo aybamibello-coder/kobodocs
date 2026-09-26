@@ -56,11 +56,11 @@ Deno.serve(async (req: Request) => {
 
     if (!booking) return new Response(JSON.stringify(result), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
 
-    const { data: conn } = await supabase
+    const connQuery = supabase
       .from("booking_calendar_connections")
       .select("*")
-      .eq("booking_page_id", booking.booking_page_id)
-      .is("staff_id", booking.staff_id ?? null)
+      .eq("booking_page_id", booking.booking_page_id);
+    const { data: conn } = await (booking.staff_id ? connQuery.eq("staff_id", booking.staff_id) : connQuery.is("staff_id", null))
       .maybeSingle();
 
     if (!conn) return new Response(JSON.stringify(result), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });

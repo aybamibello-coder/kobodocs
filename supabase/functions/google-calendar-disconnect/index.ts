@@ -46,11 +46,11 @@ Deno.serve(async (req: Request) => {
 
     const supabaseAdmin = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
 
-    const { data: conn } = await supabaseAdmin
+    const connQuery = supabaseAdmin
       .from("booking_calendar_connections")
       .select("id, refresh_token")
-      .eq("booking_page_id", booking_page_id)
-      .is("staff_id", staff_id ?? null)
+      .eq("booking_page_id", booking_page_id);
+    const { data: conn } = await (staff_id ? connQuery.eq("staff_id", staff_id) : connQuery.is("staff_id", null))
       .maybeSingle();
 
     if (conn?.refresh_token) {
