@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Connecting Google Calendar… | KoboDocs Booking</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600&family=Work+Sans:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/style.css">
+<style>
+  body{ display:flex; align-items:center; justify-content:center; min-height:100vh; margin:0; background:var(--paper, #fdfcf9); font-family:'Work Sans', sans-serif; }
+  .gc-box{ max-width:380px; text-align:center; padding:32px 28px; }
+  .gc-box h1{ font-family:'Fraunces', serif; font-size:1.3rem; margin:0 0 10px; }
+  .gc-box p{ font-size:0.9rem; opacity:0.75; margin:0 0 6px; }
+  .gc-spinner{ width:28px; height:28px; margin:0 auto 18px; border:3px solid var(--line, #ddd); border-top-color:var(--ink-green-deep, #1a4d3a); border-radius:50%; animation:spin 0.8s linear infinite; }
+  .gc-icon{ font-size:2rem; margin-bottom:12px; }
+  @keyframes spin{ to{ transform:rotate(360deg); } }
+</style>
+</head>
+<body>
+  <div class="gc-box" id="gcBox">
+    <div class="gc-spinner"></div>
+    <h1>Connecting your Google Calendar…</h1>
+    <p>Please wait a moment.</p>
+  </div>
+
+  <script type="module" src="/assets/auth.js"></script>
+  <script type="module">
+    const box = document.getElementById('gcBox');
+
+    function show(icon, title, message) {
+      box.innerHTML = `
+        <div class="gc-icon">${icon}</div>
+        <h1>${title}</h1>
+        <p>${message}</p>
+        <p style="margin-top:14px; font-size:0.8rem;">You can close this window.</p>
+      `;
+    }
+
+    function finish(ok) {
+      try {
+        if (window.opener) {
+          window.opener.postMessage({ type: 'kobodocs-google-calendar', ok }, window.location.origin);
+          setTimeout(() => window.close(), 1200);
+        } else {
+          setTimeout(() => { window.location.href = '/booking/app/'; }, 1800);
+        }
+      } catch (e) { /* ignore */ }
+    }
+
+    (async () => {
+      const params = new URLSearchParams(window.location.search);
+      const oauthError = params.get('error');
+      const code = params.get('code');
+      const state = params.get('state');
+
+      if (oauthError) {
+        show('⚠️', 'Connection cancelled', 'You declined the Google Calendar connection.');
+        finish(false);
+        return;
+      }
+      if (!code || !state) {
+        show('⚠️', 'Something went wrong', 'This connection link is incomplete.');
+        finish(false);
+        return;
+      }
+
+      await new Promise(r => {
+        if (window.KoboAuth) return r();
+        window.addEventListener('kobo-auth-ready', r, { once: true });
+        setTimeout(r, 2000); // fail-safe if the ready event never fires
+      });
+
+      if (!window.KoboAuth) {
+        show('⚠️', 'Could not connect', 'Please try again from the booking page editor.');
+        finish(false);
+        return;
+      }
+
+      const session = await window.KoboAuth.getSession();
+      if (!session) {
+        show('⚠️', 'You\u2019re signed out', 'Please sign back in and try connecting again.');
+        finish(false);
+        return;
+      }
+
+      const { data, error } = await window.KoboAuth.supabase.functions.invoke('google-calendar-oauth-callback', {
+        body: { code, state },
+      });
+
+      if (error || !data || data.error || !data.success) {
+        show('⚠️', 'Could not connect', (data && data.error) || 'Please try again from the booking page editor.');
+        finish(false);
+        return;
+      }
+
+      show('✅', 'Google Calendar connected', data.google_email ? `Connected to ${data.google_email}.` : 'Your calendar is now connected.');
+      finish(true);
+    })();
+  </script>
+</body>
+</html>

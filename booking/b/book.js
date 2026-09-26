@@ -170,11 +170,13 @@ async function loadSlotsForDate(dateStr) {
       p_from: dayStart.toISOString(),
       p_to: dayEnd.toISOString(),
     }),
-    eligible.length
-      ? supabase.functions.invoke('get-google-busy', {
-          body: { staff_ids: eligible, from: dayStart.toISOString(), to: dayEnd.toISOString() },
-        }).then(r => r.data || []).catch(() => [])
-      : Promise.resolve([]),
+    Promise.all(eligible.map(staffId =>
+      supabase.functions.invoke('get-google-calendar-busy', {
+        body: { booking_page_id: pageData.id, staff_id: staffId, from: dayStart.toISOString(), to: dayEnd.toISOString() },
+      })
+        .then(r => (r.data?.busy || []).map(b => ({ staff_id: staffId, starts_at: b.starts_at, ends_at: b.ends_at })))
+        .catch(() => [])
+    )).then(arrays => arrays.flat()),
   ]);
 
   const slots = computeAvailableSlots(dateStr, selectedEventType, pageData, [...(existing || []), ...googleBusy]);
@@ -290,8 +292,8 @@ async function onSubmit(e) {
       });
     } catch { /* non-critical */ }
 
-    supabase.functions.invoke('sync-booking-to-google', {
-      body: { cancel_token: data.cancel_token, action: 'create' },
+    supabase.functions.invoke('create-google-calendar-event', {
+      body: { cancel_token: data.cancel_token },
     }).catch(() => { /* non-critical */ });
 
     renderSuccess(data);

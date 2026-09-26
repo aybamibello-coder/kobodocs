@@ -116,8 +116,8 @@ async function doReschedule() {
     alert((data && data.error) || 'Could not reschedule. Please try again.');
     return;
   }
-  supabase.functions.invoke('sync-booking-to-google', {
-    body: { cancel_token: data.cancel_token, action: 'update' },
+  supabase.functions.invoke('update-google-calendar-event', {
+    body: { cancel_token: data.cancel_token },
   }).catch(() => { /* non-critical */ });
 
   const dt = new Date(data.starts_at);
